@@ -229,7 +229,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.10.0';
+const APP_VERSION='1.10.1';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -941,6 +941,26 @@ function jointLevel(t){
   if(t.mean>=1.5) return 3;
   return 2;
 }
+/* One cumulative number for the Dashboard — averages every tracked joint's
+   comfort (same 0-100 inversion the Progress-tab sparklines use) over the
+   same rolling window jointTrend() already reads. A joint never flagged
+   still counts as comfortable (that's what "overall" means); null only
+   when there's no check-in data at all yet. Nothing new is stored — this
+   is a pure aggregate computed on read, same as everything else here. */
+function overallJointScore(){
+  const vals=JOINTS.map(j=>jointTrend(j,6)).filter(t=>t.n>0);
+  if(!vals.length) return null;
+  // mean can run below 1 (an untapped joint contributes 0, "no issue"), so
+  // clamp rather than let the comfort conversion run past 100
+  const comforts=vals.map(t=>Math.max(0,Math.min(100,Math.round((5-t.mean)/4*100))));
+  return Math.round(comforts.reduce((a,b)=>a+b,0)/comforts.length);
+}
+function jointScoreLabel(score){
+  if(score>=85) return 'No issues';
+  if(score>=65) return 'Normal';
+  if(score>=45) return 'Some soreness';
+  return 'Flagged — see Progress';
+}
 const JOINT_ACTION={
   1:'No action — logged only',
   2:'Longer warmup ramp, consider a variation swap. No load change.',
@@ -1324,14 +1344,23 @@ function renderDash(){
   v.appendChild(cw);
 
   const lastReadiness=[...LOG].reverse().find(e=>e.type==='readiness');
-  if(lastReadiness){
-    const score=readinessScoreFromEvent(lastReadiness);
+  const jointScore=overallJointScore();
+  if(lastReadiness||jointScore!=null){
     const rc=el('div','card pad');
-    rc.innerHTML=`<div class="row between">
-        <span style="font-weight:650">Readiness</span>
-        <span class="dim tiny">${new Date(lastReadiness.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></div>
-      <div style="margin-top:6px"><span style="font-size:27px;font-weight:790;letter-spacing:-.03em">${Math.round(score*100)}</span>
-        <span class="muted sm"> / 100 · ${esc(readinessLabel(score))}</span></div>`;
+    const cols=[];
+    if(lastReadiness){
+      const score=readinessScoreFromEvent(lastReadiness);
+      cols.push(`<span class="grow"><div class="row between"><span style="font-weight:650">Readiness</span>
+          <span class="dim tiny">${new Date(lastReadiness.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></div>
+        <div style="margin-top:6px"><span style="font-size:27px;font-weight:790;letter-spacing:-.03em">${Math.round(score*100)}</span>
+          <span class="muted sm"> / 100 · ${esc(readinessLabel(score))}</span></div></span>`);
+    }
+    if(jointScore!=null){
+      cols.push(`<span class="grow"><div style="font-weight:650">Joints</div>
+        <div style="margin-top:6px"><span style="font-size:27px;font-weight:790;letter-spacing:-.03em">${jointScore}</span>
+          <span class="muted sm"> / 100 · ${esc(jointScoreLabel(jointScore))}</span></div></span>`);
+    }
+    rc.innerHTML=`<div class="row" style="align-items:flex-start;gap:16px">${cols.join('')}</div>`;
     v.appendChild(rc);
   }
 
@@ -1709,6 +1738,10 @@ function renderPreview(v){
   go.style.marginTop='13px';
   if(day.slots.length) go.onclick=()=>{ startSession(day); PENDING=null; savePending(); }; else go.disabled=true;
   head.appendChild(go);
+  if(day.slots.length){
+    const pv=el('button','btn ghost wide','Preview workout');
+    pv.style.marginTop='8px'; pv.onclick=()=>openWorkoutPreview(rawDay); head.appendChild(pv);
+  }
   const wk=el('button','btn ghost wide','See the whole week');
   wk.style.marginTop='8px'; wk.onclick=openWeekPreview; head.appendChild(wk);
   const alt=el('button','btn ghost wide','Train a different day');
@@ -1731,28 +1764,11 @@ function renderPreview(v){
     lab.appendChild(rs);
   }
   c.appendChild(lab);
-  if((CFG.dayOverrides||{})[rawDay.id]){
-    const rp=el('div','pad dim tiny'); rp.style.cssText='padding-top:0;padding-bottom:8px';
-    const rb=el('button','btn s','Reset to generated plan');
-    rb.onclick=()=>{ delete CFG.dayOverrides[rawDay.id]; saveCfg(); render(); toast('Preset reset'); };
-    rp.append('This day has a saved preset. ', rb);
-    c.appendChild(rp);
-  }
-  const toggle=el('div','pad'); toggle.style.cssText='padding-top:0;padding-bottom:8px';
-  toggle.innerHTML=`<label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-    <input type="checkbox" id="savePreset"${SAVE_TO_PRESET?' checked':''}>
-    <span class="dim tiny">Also save changes below to my preset</span></label>`;
-  toggle.querySelector('#savePreset').onchange=e=>{ SAVE_TO_PRESET=e.target.checked; };
-  c.appendChild(toggle);
   day.slots.forEach((slot,i)=>{
     const ex=exById[slot.ex];
     const pr=nextPrescription(slot), lb=pr.lb;
     const reps=slot.reps[0]===slot.reps[1]?slot.reps[0]:slot.reps[0]+'–'+slot.reps[1];
     const loadTxt=ex.load==='bodyweight'?(lb?'+'+fmt(lb,0)+' lb':'bodyweight'):(lb!=null?fmt(lb,0)+' lb':'—');
-    const setLines=Array.from({length:slot.sets},(_,si)=>
-      `<div class="dim tiny">Set ${si+1}: ${loadTxt} × ${reps} @ RPE ${slot.rpe}</div>`).join('');
-    const ramp=lb!=null?warmupRamp(slot,lb):[];
-    const rampTxt=ramp.length?ramp.map(r=>`${fmt(r.lb,0)}×${r.reps}`).join(' → '):null;
     const r=el('div','pad');
     r.style.cssText='padding-top:11px;padding-bottom:11px'+(i?';border-top:1px solid var(--line)':'');
     r.innerHTML=`<div class="row between">
@@ -1764,27 +1780,14 @@ function renderPreview(v){
           <div class="sload" style="font-size:16px">${loadTxt}</div>
           <div class="dim tiny">${(()=>{const b=bestE1RM(slot.ex);
             return (lb&&b&&ex.load!=='bodyweight')?`${Math.round(lb/b.v*100)}% of ${fmt(b.v,0)}`:(pr.src||'no estimate yet');})()}</div></span>
-      </div>
-      <div style="margin-top:6px">${rampTxt?`<div class="dim tiny">Warmup: ${esc(rampTxt)}</div>`:(ex.load!=='bodyweight'&&ex.load!=='stack'?'<div class="dim tiny">Warmup: no estimate yet</div>':'')}
-      ${setLines}</div>`;
-    const ctl=el('div','row'); ctl.style.cssText='gap:6px;margin-top:8px';
-    const mk=(label,aria,fn)=>{ const b=el('button','btn s',label); b.setAttribute('aria-label',aria); b.onclick=fn; return b; };
-    ctl.appendChild(mk('−','One set fewer',()=>editPlan(rawDay,d=>{ if(d.slots[i].sets>1) d.slots[i].sets--; })));
-    ctl.appendChild(mk('+','One set more',()=>editPlan(rawDay,d=>{ d.slots[i].sets++; })));
-    ctl.appendChild(mk('Swap','Swap exercise',()=>openPlanSwap(rawDay,i)));
-    const rm=mk('✕','Remove exercise',()=>editPlan(rawDay,d=>{ d.slots.splice(i,1); }));
-    rm.style.color='var(--skip)'; ctl.appendChild(rm);
-    r.appendChild(ctl);
+      </div>`;
     c.appendChild(r);
   });
   c.appendChild(el('div','pad dim tiny','Loads come from your logged history. The check-in adjusts them if it needs to.'))
    .style.paddingTop='0';
   v.appendChild(c);
-  const addB=el('button','btn ghost wide','Add an exercise');
-  addB.onclick=()=>openPlanAdd(rawDay); v.appendChild(addB);
   if(day.slots.some(sl=>nextPrescription(sl).lb==null)){
     const seed=el('button','btn ghost wide','Set starting estimates');
-    seed.style.marginTop='8px';
     seed.onclick=openEstimates; v.appendChild(seed);
   }
 
@@ -1795,6 +1798,68 @@ function renderPreview(v){
       `<span>${esc(x.day_name||'Session')}</span><span class="dim tiny">${new Date(x.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}${x.session_rpe?' · RPE '+x.session_rpe:''}</span>`)));
     v.appendChild(r);
   }
+}
+
+/* The full numbers behind the plan — warmup ramp, every working set,
+   editing — one tap away from the lean pre-training screen rather than
+   shown unconditionally every time that screen renders. */
+function openWorkoutPreview(rawDay){
+  const day=planFor(rawDay), p=currentPhase();
+  let html=`<h2 style="font-size:20px;margin-bottom:2px">${esc(day.name)}</h2>
+    <div class="muted tiny" style="margin-bottom:2px">${esc(p.label)} · ${day.slots.length} exercises · ${day.slots.reduce((a,s)=>a+s.sets,0)} working sets${day.slots.length?' · ~'+estSessionLength(day)+' min (estimate)':''}</div>
+    <div class="dim tiny" style="margin-bottom:13px">Based on how things stand now — the check-in may adjust this.</div>`;
+  if((CFG.dayOverrides||{})[rawDay.id]){
+    html+=`<div class="qblock"><span class="dim tiny">This day has a saved preset. </span>
+      <button class="btn s" id="wpreset">Reset to generated plan</button></div>`;
+  }
+  html+=`<div class="qblock">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="savePreset"${SAVE_TO_PRESET?' checked':''}>
+        <span class="dim tiny">Also save changes below to my preset</span></label>
+    </div>
+    <div id="wpbody"></div>
+    <button class="btn ghost wide" id="wpadd" style="margin-top:4px">Add an exercise</button>
+    <div class="dim tiny" style="margin:10px 0">Loads come from your logged history. The check-in adjusts them if it needs to.</div>
+    <button class="btn ghost wide" id="wpclose">Close</button>`;
+  sheet(html);
+  if($('#wpreset')) $('#wpreset').onclick=()=>{
+    delete CFG.dayOverrides[rawDay.id]; saveCfg(); render(); openWorkoutPreview(rawDay); toast('Preset reset');
+  };
+  $('#savePreset').onchange=e=>{ SAVE_TO_PRESET=e.target.checked; };
+  const body=$('#wpbody');
+  day.slots.forEach((slot,i)=>{
+    const ex=exById[slot.ex];
+    const pr=nextPrescription(slot), lb=pr.lb;
+    const reps=slot.reps[0]===slot.reps[1]?slot.reps[0]:slot.reps[0]+'–'+slot.reps[1];
+    const loadTxt=ex.load==='bodyweight'?(lb?'+'+fmt(lb,0)+' lb':'bodyweight'):(lb!=null?fmt(lb,0)+' lb':'—');
+    const setLines=Array.from({length:slot.sets},(_,si)=>
+      `<div class="dim tiny">Set ${si+1}: ${loadTxt} × ${reps} @ RPE ${slot.rpe}</div>`).join('');
+    const ramp=lb!=null?warmupRamp(slot,lb):[];
+    const rampTxt=ramp.length?ramp.map(r=>`${fmt(r.lb,0)}×${r.reps}`).join(' → '):null;
+    const r=el('div',''); r.style.cssText='padding:11px 0'+(i?';border-top:1px solid var(--line)':'');
+    r.innerHTML=`<div class="row between">
+        <span class="grow"><div style="font-weight:620;font-size:15px">${esc(ex.name)}${
+          slot.role==='primary'?' <span class="tiny" style="color:var(--str);font-weight:650">· Lead lift</span>':''}</div>
+          <div class="exmeta">${slot.role?slot.role:''}${slot.prio?' · priority':''}${slot.joint?` · <span style="color:var(--str)">${esc(slot.joint.joint)}: ${esc(slot.joint.msg)}</span>`:''}</div>
+          ${(()=>{const f=flagFor(slot.ex); return f?`<div class="tiny" style="color:${f.level==='red'?'var(--peak)':'var(--str)'};margin-top:3px">${f.level==='red'?'▲':'●'} ${esc(f.why)}</div>`:'';})()}</span>
+        <span style="text-align:right;flex:none">
+          <div class="dim tiny">${(()=>{const b=bestE1RM(slot.ex);
+            return (lb&&b&&ex.load!=='bodyweight')?`${Math.round(lb/b.v*100)}% of ${fmt(b.v,0)}`:(pr.src||'no estimate yet');})()}</div></span>
+      </div>
+      <div style="margin-top:6px">${rampTxt?`<div class="dim tiny">Warmup: ${esc(rampTxt)}</div>`:(ex.load!=='bodyweight'&&ex.load!=='stack'?'<div class="dim tiny">Warmup: no estimate yet</div>':'')}
+      ${setLines}</div>`;
+    const ctl=el('div','row'); ctl.style.cssText='gap:6px;margin-top:8px';
+    const mk=(label,aria,fn)=>{ const b=el('button','btn s',label); b.setAttribute('aria-label',aria); b.onclick=fn; return b; };
+    ctl.appendChild(mk('−','One set fewer',()=>{ editPlan(rawDay,d=>{ if(d.slots[i].sets>1) d.slots[i].sets--; }); openWorkoutPreview(rawDay); }));
+    ctl.appendChild(mk('+','One set more',()=>{ editPlan(rawDay,d=>{ d.slots[i].sets++; }); openWorkoutPreview(rawDay); }));
+    ctl.appendChild(mk('Swap','Swap exercise',()=>openPlanSwap(rawDay,i)));
+    const rm=mk('✕','Remove exercise',()=>{ editPlan(rawDay,d=>{ d.slots.splice(i,1); }); openWorkoutPreview(rawDay); });
+    rm.style.color='var(--skip)'; ctl.appendChild(rm);
+    r.appendChild(ctl);
+    body.appendChild(r);
+  });
+  $('#wpadd').onclick=()=>openPlanAdd(rawDay);
+  $('#wpclose').onclick=()=>{ $('#dlg').close(); render(); };
 }
 
 /* Stated starting maxes, so the first session isn't a row of dashes.
@@ -2253,12 +2318,16 @@ function exPicker(title, filterFn, onPick, opts){
 }
 function openPlanSwap(rawDay,i){
   const cur=exById[planFor(rawDay).slots[i].ex];
-  exPicker('Swap '+cur.name, e=>e.id!==cur.id,
-    e=>editPlan(rawDay,d=>{ d.slots[i].ex=e.id; d.slots[i].swapped=true; }));
+  exPicker('Swap '+cur.name, e=>e.id!==cur.id, e=>{
+    editPlan(rawDay,d=>{ d.slots[i].ex=e.id; d.slots[i].swapped=true; });
+    openWorkoutPreview(rawDay);
+  });
 }
 function openPlanAdd(rawDay){
-  exPicker('Add an exercise', ()=>true,
-    e=>editPlan(rawDay,d=>{ d.slots.push({ex:e.id,role:'accessory',sets:3,reps:[10,15],rpe:9}); }));
+  exPicker('Add an exercise', ()=>true, e=>{
+    editPlan(rawDay,d=>{ d.slots.push({ex:e.id,role:'accessory',sets:3,reps:[10,15],rpe:9}); });
+    openWorkoutPreview(rawDay);
+  });
 }
 
 function openSwap(slot,idx){
