@@ -1,0 +1,17 @@
+# Training data — never commit. These contain your full log, bodyweight,
+# readiness answers and joint history.
+*.jsonl
+trainlog-backup-*
+training-*.jsonl
+backups/
+
+# Anything holding the Apps Script endpoint
+*.secret
+.env
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
