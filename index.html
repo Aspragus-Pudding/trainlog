@@ -224,7 +224,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.9.2';
+const APP_VERSION='1.9.3';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -2613,6 +2613,10 @@ function renderLifts(){
 
   const imp=el('button','btn ghost wide','Restore from backup'); imp.style.marginTop='8px';
   imp.onclick=()=>$('#fileIn').click(); lg.appendChild(imp);
+  if((CFG.syncUrl||'').trim()){
+    const rs=el('button','btn ghost wide','Restore from sheet'); rs.style.marginTop='8px';
+    rs.onclick=restoreFromSheet; lg.appendChild(rs);
+  }
   lg.appendChild(el('div','dim tiny','Restoring merges by event id — importing the same file twice changes nothing, and it never deletes anything newer.'))
     .style.marginTop='7px';
 
@@ -3509,6 +3513,56 @@ function importBackup(text){
   LOG=merged;
   return {added:added.length, cfg:!!cfgIn, cfgData:cfgIn};
 }
+
+/* Shared tail end of both restore paths (file + sheet): offer to restore the
+   program config, then report what changed. */
+function finishImport(res){
+  if(res.cfg&&confirm('This backup contains a program (roadmap, goals, split). Restore it too?\n\nYour current program will be replaced.')){
+    CFG={...CFG,...res.cfgData}; ROADMAP=(CFG.roadmap&&CFG.roadmap.length)?CFG.roadmap:ROADMAP;
+    ROADMAP.forEach(b=>{ if(!b.vol||!b.vol.length) applyShape(b); });
+    mergeCustom();
+    applySetupLink(); saveCfg();
+  }
+  render();
+  alert(res.added?`Restored ${res.added} new event${res.added>1?'s':''}.`:'Nothing new in that backup — your log already had everything in it.');
+}
+
+/* Fetches a script.google.com exec URL via JSONP. A plain cross-origin fetch()
+   can't read the response body from these URLs, but a <script> tag isn't
+   subject to CORS at all, so this works regardless. */
+function jsonpFetch(url){
+  return new Promise((resolve,reject)=>{
+    const cb='trainlogJsonp'+Date.now()+Math.floor(Math.random()*1e6);
+    const script=document.createElement('script');
+    let done=false;
+    const cleanup=()=>{ delete window[cb]; script.remove(); clearTimeout(timer); };
+    const timer=setTimeout(()=>{ if(done) return; done=true; cleanup(); reject(new Error('timeout')); },15000);
+    window[cb]=data=>{ if(done) return; done=true; cleanup(); resolve(data); };
+    script.onerror=()=>{ if(done) return; done=true; cleanup(); reject(new Error('network')); };
+    script.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+    document.head.appendChild(script);
+  });
+}
+
+/* Recovery path for when local data is gone: pulls the Raw backup tab
+   straight from the sheet instead of requiring a manual copy-paste into a
+   .jsonl file. Feeds the same importBackup() merge used by the file restore
+   — no separate import/merge logic. */
+async function restoreFromSheet(){
+  const url=(CFG.syncUrl||'').trim();
+  if(!url) return;
+  if(session&&!confirm('You have a session in progress. Restoring now will replace your log underneath it.\n\nFinish or end that session first. Continue anyway?')) return;
+  let text;
+  try{ text=await jsonpFetch(url+'?action=fetch'); }
+  catch(e){ alert('Could not reach your sheet — check your connection. Your local log was not modified.'); return; }
+  if(typeof text!=='string'||!text.trim()){ alert('No backup found on the sheet yet. Your local log was not modified.'); return; }
+  const lines=text.split('\n').filter(Boolean);
+  const parseable=lines.filter(l=>{ try{ JSON.parse(l); return true; }catch{ return false; } });
+  if(!parseable.length){ alert('That backup looked malformed and could not be read. Your local log was not modified.'); return; }
+  const res=importBackup(text);
+  finishImport(res);
+}
+
 /* Self-update. A new build on the host is noticed on launch and hourly, but
    never installs itself mid-session — you tap when you're ready. */
 let waitingSW=null;
@@ -3671,14 +3725,7 @@ $('#fileIn').onchange=e=>{
   r.onload=()=>{
     if(session&&!confirm('You have a session in progress. Restoring now will replace your log underneath it.\n\nFinish or end that session first. Continue anyway?')){ return; }
     const res=importBackup(String(r.result));
-    if(res.cfg&&confirm('This backup contains a program (roadmap, goals, split). Restore it too?\n\nYour current program will be replaced.')){
-      CFG={...CFG,...res.cfgData}; ROADMAP=(CFG.roadmap&&CFG.roadmap.length)?CFG.roadmap:ROADMAP;
-      ROADMAP.forEach(b=>{ if(!b.vol||!b.vol.length) applyShape(b); });
-  mergeCustom();
-  applySetupLink(); saveCfg();
-    }
-    render();
-    alert(res.added?`Restored ${res.added} new event${res.added>1?'s':''}.`:'Nothing new in that file — your log already had everything in it.');
+    finishImport(res);
   };
   r.onerror=()=>alert('Could not read that file.');
   r.readAsText(f); e.target.value='';

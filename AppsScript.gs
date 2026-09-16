@@ -38,8 +38,33 @@ function doPost(e) {
   }
 }
 
-function doGet() {
-  return ok('Trainlog receiver is live. The app posts here.');
+function doGet(e) {
+  var params = (e && e.parameter) || {};
+  if (params.action !== 'fetch') {
+    return ok('Trainlog receiver is live. The app posts here.');
+  }
+  return fetchRaw(params.callback);
+}
+
+/** Serves the Raw backup sheet back to the app, same NDJSON shape it posted.
+    A plain fetch() can't read a cross-origin response from a script.google.com
+    exec URL, so this also supports JSONP (?callback=) for the app to use. */
+function fetchRaw(callback) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName('Raw backup');
+  var text = '';
+  if (sh) {
+    var lastRow = sh.getLastRow();
+    if (lastRow >= 3) {
+      var values = sh.getRange(3, 1, lastRow - 2, 1).getValues();
+      text = values.map(function (r) { return r[0]; }).filter(function (v) { return v; }).join('\n');
+    }
+  }
+  if (callback) {
+    var payload = callback + '(' + JSON.stringify(text) + ')';
+    return ContentService.createTextOutput(payload).setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(text).setMimeType(ContentService.MimeType.TEXT);
 }
 
 function ok(msg) {
