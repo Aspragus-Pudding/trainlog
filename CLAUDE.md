@@ -22,6 +22,7 @@ manifest.webmanifest    PWA manifest
 icon-192.png/512.png    icons
 AppsScript.gs           Google Sheets backup receiver (lives in Apps Script, not deployed here)
 shoulder-protocol.md    reference doc, not used by the app
+tests/prescription-invariants.js   prescription direction/pairing tests, run with node
 ```
 
 ## Hard invariants — do not break these
@@ -124,8 +125,17 @@ new Function(src + '\n;');   // syntax check at minimum
 ```
 
 For logic changes, stub `localStorage`/`document` and call the pure functions
-directly (`buildDay`, `prescribe`, `warmupRamp`, `isPR`, `importBackup`). Always
-syntax-check before committing — a syntax error ships a completely dead app.
+directly (`buildDay`, `nextPrescription`, `warmupRamp`, `isPR`, `importBackup`).
+Always syntax-check before committing — a syntax error ships a completely dead app.
+
+**After ANY change to prescription logic** (`nextPrescription`, `suggestFor`,
+`seedDraft`, `logSet`'s post-set recompute, `schemeFor`, anything that produces a
+weight/reps pair), run `node tests/prescription-invariants.js`. It must exit 0.
+It checks that the reps a load is priced for are the reps returned with it, that
+direction follows effort (easier set → more load or reps, harder → less, on
+target → hold exactly), that load and reps never both rise, and that sets past
+the %1RM chart are reported rather than silently ignored. This bug was reported
+three times before the test existed; don't fix a case by patching one branch.
 
 **Bump `APP_VERSION` in `index.html` on every meaningful change.** It's displayed
 on the Lifts tab so the user can confirm which build is running.

@@ -233,7 +233,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.11.0';
+const APP_VERSION='1.12.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -654,7 +654,15 @@ SPLITS.ppl6.template=SPLITS.ppl3.template.concat(SPLITS.ppl3.template.map(d=>({.
    claim. Override one movement with a `repRange:[lo,hi]` field on its EX entry
    (or custom exercise). Deload blocks keep their own fixed reps. */
 const MUSCLE_REP_RANGE={biceps:[8,15],triceps:[8,15],forearms:[8,15],
-  side_delts:[10,20],rear_delts:[10,20],calves:[10,20],abs:[10,20]};
+  side_delts:[10,20],rear_delts:[10,20],calves:[10,20],abs:[10,20],
+  abductors:[10,15],adductors:[10,15]};
+/* On machines whose smallest step is coarse (10 lb or more), a high ceiling
+   means sets far past the top of the range, where the load can neither be
+   priced (the %1RM chart stops at 16 reps-to-failure) nor stepped finely. Cap
+   the ceiling at 15 there. Judgement defaults, Grade D. A per-exercise
+   repRange still wins. */
+const COARSE_INC=10, COARSE_REP_CAP=15;
+const isCoarseMachine=ex=>!!ex&&['machine','stack','cable'].includes(ex.load)&&ex.inc>=COARSE_INC;
 const primaryMuscle=ex=>{ const e=Object.entries((ex&&ex.vol)||{}).find(([,w])=>w===1); return e?e[0]:null; };
 /* Which rep range applies, and why: exercise override > muscle default (non-primary
    slots only) > the block/role table. Returns null to mean "use the table". */
@@ -663,7 +671,12 @@ function repRangeOverride(ex, role, blockType){
   if(ex.repRange) return {reps:ex.repRange.slice(), src:'exercise'};
   if(role!=='primary'){
     const m=primaryMuscle(ex);
-    if(m&&MUSCLE_REP_RANGE[m]) return {reps:MUSCLE_REP_RANGE[m].slice(), src:'muscle', muscle:m};
+    if(m&&MUSCLE_REP_RANGE[m]){
+      const r=MUSCLE_REP_RANGE[m].slice();
+      const capped=isCoarseMachine(ex)&&r[1]>COARSE_REP_CAP;
+      if(capped) r[1]=COARSE_REP_CAP;
+      return {reps:r, src:'muscle', muscle:m, capped};
+    }
   }
   return null;
 }
@@ -680,14 +693,14 @@ function schemeFor(role, blockType, weekOfBlock, blockWeeks, ex){
   if(blockType==='hyp'&&blockWeeks>2) s=sets+Math.floor((weekOfBlock-1)/2);
   if(blockType==='str'&&blockWeeks>2) s=Math.max(2,sets-Math.floor((weekOfBlock-1)/2));
   const ov=repRangeOverride(ex,role,blockType);
-  return {sets:s, reps:ov?ov.reps:reps, rpe, repSrc:ov?ov.src:'block', repMuscle:ov&&ov.muscle||null};
+  return {sets:s, reps:ov?ov.reps:reps, rpe, repSrc:ov?ov.src:'block', repMuscle:ov&&ov.muscle||null, repCapped:!!(ov&&ov.capped)};
 }
 /* A fresh slot for an exercise added by hand, using the same scheme the
    generator would give an accessory today. */
 function newSlotFor(ex, role){
   role=role||'accessory';
   const p=currentPhase(), sc=schemeFor(role,p.type,p.week,p.weeks,ex);
-  return {ex:ex.id, role, sets:sc.sets, reps:sc.reps, rpe:sc.rpe, repSrc:sc.repSrc, repMuscle:sc.repMuscle};
+  return {ex:ex.id, role, sets:sc.sets, reps:sc.reps, rpe:sc.rpe, repSrc:sc.repSrc, repMuscle:sc.repMuscle, repCapped:sc.repCapped};
 }
 
 /* Pick an exercise for a pattern+role. Goal lifts win a primary slot;
@@ -749,7 +762,7 @@ function buildDay(tpl, phase){
     const prio=(phase.hyp||[]).some(m=>ex.vol[m]>=1);
     if(easeOff) sc.sets=Math.max(2,sc.sets-1);
     slots.push({ex:ex.id, role, sets:sc.sets+(prio&&role!=='primary'?1:0),
-                reps:sc.reps, rpe:sc.rpe, prio, joint:jointNote, repSrc:sc.repSrc, repMuscle:sc.repMuscle});
+                reps:sc.reps, rpe:sc.rpe, prio, joint:jointNote, repSrc:sc.repSrc, repMuscle:sc.repMuscle, repCapped:sc.repCapped});
   });
   const id=tpl.name.toLowerCase().replace(/\s+/g,'_');
   // A permanently-saved edit to this day (see the preview's "also save to my
@@ -1130,18 +1143,34 @@ const OVERRIDE_MARGIN=0.975; // logged weight must be at least this far below su
 const PROBE_INCREMENT_LB=2.5;
 const UNFAMILIAR_EXPOSURE=6, UNFAMILIAR_CAP=1.025, ESTABLISHED_CAP=1.10;
 
-/* Reprice a set to the load that would cost the target effort at the target
-   REP COUNT. Both reps and RPE are converted to reps-to-failure and read off
-   the same %1RM chart everything else uses. The rep count priced here must be
-   the rep count that is then prescribed: an earlier version held the last
-   set's reps fixed but prescribed the bottom of the range, so 170 x 11 @ 7.5
-   came back as roughly 170 x 6 — a weight priced for 11 reps paired with 6. */
-function repriceTo(actualLb, actualReps, actualRpe, targetReps, targetRpe){
-  if(actualRpe==null) return actualLb;
-  const pctActual=pct1RM(actualReps+(10-actualRpe));
-  const pctTarget=pct1RM(targetReps+(10-targetRpe));
-  if(!pctActual||!pctTarget) return actualLb;
-  return (actualLb/(pctActual/100))*pctTarget/100;
+/* Pricing helpers, all on the same reps-to-failure chart. A set of `reps` at
+   `rpe` is worth reps + (10 - rpe) reps-to-failure; the chart only covers 1-16,
+   so anything past that CANNOT be priced and callers must say so instead of
+   returning "no change". Everything is in total-load space (see bwOffset). */
+const CHART_MAX_RTF=16;
+/* inverse of pct1RM: reps-to-failure for a given %1RM, or null off the chart */
+function rtfFromPct(p){
+  if(p==null||!isFinite(p)||p>100+1e-9||p<PCT[16]-1e-9) return null;
+  for(let n=1;n<16;n++){
+    if(p<=PCT[n]+1e-9&&p>=PCT[n+1]-1e-9) return n+(PCT[n]-p)/(PCT[n]-PCT[n+1]);
+  }
+  return null;
+}
+/* The one-rep max a set implies (total load), or null when it is off the chart */
+function impliedE1(totalLb, reps, rpe){
+  if(rpe==null||!totalLb) return null;
+  const p=pct1RM(reps+(10-rpe));
+  return p?totalLb/(p/100):null;
+}
+/* Load that costs `rpe` at `reps` for a lifter with one-rep max e1 */
+function loadFor(e1, reps, rpe){
+  const p=pct1RM(reps+(10-rpe));
+  return p?e1*p/100:null;
+}
+/* How hard (load, reps) would feel for a lifter with one-rep max e1 */
+function predictedRpe(e1, totalLb, reps){
+  const rtf=rtfFromPct(totalLb/e1*100);
+  return rtf==null?null:10-(rtf-reps);
 }
 /* One entry per session a top set was logged for this exercise, oldest
    first, carrying whatever suggestion was live when that top set was
@@ -1190,97 +1219,182 @@ function lastWasProbe(exId){
   const [prev,last]=hist.slice(-2);
   return last.suggestedLb!=null && last.suggestedLb>prev.topLb+1e-6;
 }
-/* Cap a proposed increase — tighter while the exercise is still unfamiliar,
-   the standard ±10% once it's established — applied before loadable()
-   rounds, then rechecked after so rounding can't push the result past the
-   cap by a whole increment (barbell/plate lifts can't overshoot; fixed-
-   increment lifts can, since Math.round() rounds up past the halfway mark). */
-function capIncrease(slot, fromLb, rawLb){
+/* Highest load a single step may reach — tighter while the exercise is still
+   unfamiliar, the standard 10% once it's established. A % of TOTAL load for
+   bodyweight+added lifts, so 0 added can still progress. */
+function capLimit(slot, L0){
+  const off=bwOffset(exById[slot.ex]);
+  return (L0+off)*(exposureCount(slot.ex)<UNFAMILIAR_EXPOSURE?UNFAMILIAR_CAP:ESTABLISHED_CAP)-off;
+}
+/* Loadable values. gridFloor is the largest loadable at or below lb (plate
+   solving already floors); stepUp / stepDown move exactly one step from a load
+   that may itself be off the grid, e.g. a 55 lb set on a 10 lb machine. */
+function gridFloor(slot, lb){
   const ex=exById[slot.ex];
-  // for bodyweight+added lifts the cap is a % of TOTAL load, so 0 added can still progress
-  const off=bwOffset(ex);
-  const cap=(fromLb+off)*(exposureCount(slot.ex)<UNFAMILIAR_EXPOSURE?UNFAMILIAR_CAP:ESTABLISHED_CAP)-off;
-  const capped=Math.min(rawLb,cap);
-  const rounded=loadable(slot,capped);
-  return rounded>cap ? Math.floor(capped/ex.inc)*ex.inc : rounded;
+  if(ex.load==='barbell'&&ex.plateSet&&PLATE_SETS[ex.plateSet].unit==='lb') return loadable(slot,lb);
+  return Math.floor(lb/ex.inc+1e-9)*ex.inc;
+}
+function stepUp(slot, lb){
+  const inc=exById[slot.ex].inc;
+  let x=gridFloor(slot,lb+inc);
+  if(x<=lb+1e-6) x=gridFloor(slot,lb+2*inc);
+  return x;
+}
+function stepDown(slot, lb){ return gridFloor(slot,lb-1e-6); }
+
+/* Within-session fatigue, measured from YOUR log rather than assumed: the mean
+   RPE rise between consecutive working sets of one exercise at the same load
+   (reps within 2), across sessions. Used only once there is enough of it.
+   JUDGEMENT DEFAULTS, GRADE D: 10 pairs from 4 sessions, most recent 30 pairs. */
+const FATIGUE_MIN_PAIRS=10, FATIGUE_MIN_SESSIONS=4, FATIGUE_WINDOW=30;
+let _fatCache={}, _fatLen=-1;
+function fatigueRise(exId){
+  if(_fatLen!==LOG.length){ _fatCache={}; _fatLen=LOG.length; }
+  if(_fatCache[exId]) return _fatCache[exId];
+  const bySess=new Map();
+  for(const st of sets()){
+    if(st.exercise_id!==exId||st.set_kind==='warmup'||st.group) continue;
+    if(!bySess.has(st.session_id)) bySess.set(st.session_id,[]);
+    bySess.get(st.session_id).push(st);
+  }
+  let pairs=[];
+  for(const [sid,arr] of bySess) for(let i=1;i<arr.length;i++){
+    const a=arr[i-1], b=arr[i];
+    if(a.rpe==null||b.rpe==null) continue;
+    if(Math.abs(toLb(a.weight)-toLb(b.weight))>0.01||Math.abs(a.reps-b.reps)>2) continue;
+    pairs.push({ts:b.ts,sid,d:b.rpe-a.rpe});
+  }
+  pairs.sort((x,y)=>new Date(x.ts)-new Date(y.ts));
+  pairs=pairs.slice(-FATIGUE_WINDOW);
+  const n=pairs.length, sessions=new Set(pairs.map(p=>p.sid)).size;
+  const mean=n?pairs.reduce((s,p)=>s+p.d,0)/n:0;
+  return (_fatCache[exId]={n,sessions,mean,ready:n>=FATIGUE_MIN_PAIRS&&sessions>=FATIGUE_MIN_SESSIONS});
 }
 
 /* The one place a "what next" weight/reps suggestion comes from — used both
-   when a slot is opened fresh (seedDraft, cross-session) and right after
-   logging a working set (logSet, same session), since lastSetFor() always
-   reflects whatever was most recently appended either way. Direction always
-   follows effort (harder → less, easier → more, same → hold); load and reps
-   never move in the same step; suggestions back off if you keep overriding
-   them downward, and recover the moment one is accepted. Returns null lb
-   when there's no history — the UI shows a dash rather than inventing a
-   number. */
+   when a slot is opened fresh (seedDraft) and right after logging a working set
+   (logSet), since lastSetFor() always reflects whatever was most recently
+   appended either way.
+
+   Invariants (checked by tests/prescription-invariants.js — run it after any
+   change here):
+   1. The reps a load is priced for are the reps returned with it.
+   2. Direction follows effort. Last set easier than aimed: more load, or one
+      more rep mid-range. Harder: less load (or fewer reps at the same load
+      when the step is too coarse). On target: hold, exactly, no snapping.
+   3. Load and reps never both go up.
+   4. A set off the chart (reps-to-failure over 16) is reported as too light
+      to price, never silently treated as "no change".
+   Returns null lb when there's no history — the UI shows a dash rather than
+   inventing a number. */
 function nextPrescription(slot){
   const ex=exById[slot.ex];
   const last=lastSetFor(slot.ex);
-  const off=bwOffset(ex);                 // bodyweight added to the logged load (bodyweight+added lifts only)
+  const off=bwOffset(ex);
+  const lo=slot.reps[0], hi=slot.reps[1];
   const noBw=bwMissing(ex)?' Priced on added weight only — no bodyweight logged yet.':'';
-  const fmtR=r=>r[0]===r[1]?String(r[0]):r[0]+'–'+r[1];
   if(!last){
     const b=bestE1RM(slot.ex);
     if(b){
-      const p=pct1RM(slot.reps[1]+(10-slot.rpe))||70;
-      return {lb:loadable(slot,Math.max(0,b.v*p/100-off)), reps:slot.reps[0], src:b.stated?'from your estimate':'from e1RM',
-        note:`No sets logged yet, so the load is ${fmt(p,0)}% of your ${b.stated?'stated':'estimated'} max (${fmt(b.v,0)}), the usual figure for ${slot.reps[1]} reps at RPE ${slot.rpe}.`+noBw};
+      // priced for the top of the range, so it is prescribed for the top of the range
+      const p=pct1RM(hi+(10-slot.rpe))||70;
+      return {lb:loadable(slot,Math.max(0,b.v*p/100-off)), reps:hi, src:b.stated?'from your estimate':'from e1RM',
+        note:`No sets logged yet, so the load is ${fmt(p,0)}% of your ${b.stated?'stated':'estimated'} max (${fmt(b.v,0)}), the usual figure for ${hi} reps at RPE ${slot.rpe}, and it is prescribed for those ${hi} reps.`+noBw};
     }
-    return {lb:null, reps:slot.reps[0], src:null, note:'No sets logged and no starting estimate, so there is nothing to base a load on.'};
+    return {lb:null, reps:lo, src:null, note:'No sets logged and no starting estimate, so there is nothing to base a load on.'};
   }
-  const actualLb=toLb(last.weight), lastReps=last.reps, lastRpe=last.rpe;
-  const lastTxt=`${fmt(actualLb,0)} × ${lastReps}${lastRpe!=null?' @ RPE '+lastRpe:''}`;
-  const atCeiling=lastReps>=slot.reps[1];
-  const readyToLoad=atCeiling&&lastRpe!=null&&lastRpe<=7.5;
-  const reprice=(tReps)=>Math.max(0,repriceTo(actualLb+off,lastReps,lastRpe,tReps,slot.rpe)-off);
+  const L0=toLb(last.weight), R0=last.reps, RPE0=last.rpe;
+  const lastTxt=`${fmt(L0,0)} × ${R0}${RPE0!=null?' @ RPE '+RPE0:''}`;
 
-  // Double progression's "add load" trigger is a hard priority gate — it
-  // always fires ahead of the override back-off logic below.
-  if(readyToLoad){
-    const rate=progressionRate(ex.id);
-    const useRate=rate!=null&&rate>0;   // a flat or falling trailing rate is no reason to hold back a load increase
-    const rawLb=useRate?actualLb+rate:reprice(slot.reps[0]);
-    const lb=capIncrease(slot,actualLb,rawLb), stuck=lb<=actualLb+1e-6;
-    const capTxt=exposureCount(slot.ex)<UNFAMILIAR_EXPOSURE?'2.5%':'10%';
-    return {lb, reps:stuck?slot.reps[1]:slot.reps[0],
-      src:stuck?'load held · step too small':useRate?'from your recent rate':'from e1RM',
-      note:`Last set ${lastTxt} hit the top of the ${fmtR(slot.reps)} range at RPE ${lastRpe}. `
-        +(stuck?`A single step is capped at ${capTxt} of the load, which is less than this exercise's smallest jump (${ex.inc} lb), so the load holds and reps stay at the top of the range rather than resetting.`
-          :(`Load goes up and reps restart at ${slot.reps[0]}. `
-            +(useRate?`Increase follows your recent rate (${rate>=0?'+':''}${fmt(rate,1)} lb per session).`
-              :`Load is what ${slot.reps[0]} reps at RPE ${slot.rpe} would take, given that set.`)
-            +` A single step is capped at ${capTxt}.`))+noBw};
-  }
+  // Within-session fatigue: only when the last set is from THIS session (we are
+  // predicting the next set), and only once your own data supports it.
+  const inSession=!!(session&&last.session_id===session.id);
+  const fat=inSession?fatigueRise(ex.id):null;
+  const rise=fat&&fat.ready&&fat.mean>0?Math.round(fat.mean*2)/2:0;
+  const T=slot.rpe-rise;                       // effort to aim the next set at
+  const fatigue=fat?{n:fat.n,sessions:fat.sessions,mean:fat.mean,rise,applied:rise>0}:null;
+  const fatTxt=rise>0?` Aimed at RPE ${T} rather than ${slot.rpe}: your later sets on this exercise run about ${rise} RPE harder at the same load (${fat.n} same-load set pairs, ${fat.sessions} sessions).`:'';
+  const done=o=>({...o, note:(o.note||'')+noBw+fatTxt, fatigue});
+  const hold=(src,note)=>done({lb:L0,reps:R0,src,note});     // exactly what was lifted, never snapped to the grid
 
-  if(overrideStreak(ex.id)>=OVERRIDE_TRIGGER){
-    if(!lastWasProbe(ex.id)){
-      if(lastReps<slot.reps[1])
-        return {lb:loadable(slot,actualLb), reps:lastReps+1, src:'probe · +1 rep',
-          note:`You've logged below the last few suggestions, so this holds ${fmt(actualLb,0)} and adds one rep to test it.`};
-      return {lb:capIncrease(slot,actualLb,actualLb+PROBE_INCREMENT_LB), reps:slot.reps[0], src:'probe · small bump',
-        note:`You've logged below the last few suggestions, so this tries a small ${PROBE_INCREMENT_LB} lb bump rather than a full step.`};
+  if(RPE0==null) return hold('last session',`Last set ${lastTxt} had no RPE, so it repeats.`);
+
+  const e1=impliedE1(L0+off,R0,RPE0);            // null = this set is off the chart
+  const offChart=e1==null;
+  const rtf=R0+(10-RPE0);
+  const dir=T-RPE0;                              // > 0: last set was easier than aimed
+  const atCeiling=R0>=hi;
+  const toAdded=v=>Math.max(0,v-off);
+
+  // ── harder than aimed: less load, or fewer reps at the same load if the step is too coarse
+  if(dir<0){
+    if(!offChart){
+      const reps0=Math.min(R0,hi);
+      const cands=[];
+      let LA=gridFloor(slot,toAdded(loadFor(e1,reps0,T)||0));
+      if(LA>=L0-1e-6) LA=stepDown(slot,L0);
+      if(LA>=0&&LA<L0-1e-6) cands.push({lb:LA,reps:reps0,kind:'load'});
+      const repsB=Math.max(1,Math.min(hi,Math.floor(R0-(RPE0-T)+1e-9)));
+      if(repsB<R0) cands.push({lb:L0,reps:repsB,kind:'reps'});
+      cands.forEach(c=>{ c.p=predictedRpe(e1,c.lb+off,c.reps); c.gap=c.p==null?99:Math.abs(c.p-T); });
+      cands.sort((a,b)=>a.gap-b.gap||(a.kind===b.kind?0:a.kind==='load'?-1:1));
+      const c=cands[0];
+      if(c) return done({lb:c.lb,reps:c.reps,src:'from e1RM',
+        note:`Last set ${lastTxt} was harder than RPE ${T}, so ${c.kind==='load'?`load drops to ${fmt(c.lb,0)} for the same ${c.reps} reps`:`the load holds at ${fmt(L0,0)} and reps drop to ${c.reps}, because one step down (${fmt(stepDown(slot,L0),0)}) would be far too light`}.`});
     }
-    return {lb:loadable(slot,actualLb), reps:lastReps, src:'holding at what you\'ve set',
-      note:`You've logged below the last few suggestions and the last one was already a probe, so this holds ${lastTxt}.`};
+    return done({lb:L0,reps:Math.max(1,Math.min(R0-1,hi)),src:'harder than aimed · one rep fewer',
+      note:`Last set ${lastTxt} was harder than RPE ${T}${offChart?`, and ${fmt(rtf,0)} reps-to-failure is past the ${CHART_MAX_RTF} the chart covers so it can't be priced`:''}. Same load, one rep fewer.`});
+  }
+  if(dir===0) return hold('last session',`Last set ${lastTxt} was right on target, so it repeats.`);
+
+  // ── easier than aimed
+  const overridden=overrideStreak(ex.id)>=OVERRIDE_TRIGGER;
+  if(!atCeiling){
+    if(overridden&&lastWasProbe(ex.id)) return hold('holding at what you\'ve set',
+      `You've logged below the last few suggestions and the last one was already a probe, so this holds ${lastTxt}.`);
+    return done({lb:L0,reps:R0+1,src:overridden?'probe · +1 rep':'last session',
+      note:`Last set ${lastTxt} was easier than RPE ${T} and below the ${hi}-rep ceiling, so same load, one more rep.`});
+  }
+  const ready=RPE0<=7.5;
+  if(!ready&&overridden){
+    if(lastWasProbe(ex.id)) return hold('holding at what you\'ve set',
+      `You've logged below the last few suggestions and the last one was already a probe, so this holds ${lastTxt}.`);
+    const up=gridFloor(slot,L0+PROBE_INCREMENT_LB);
+    if(up>L0+1e-6) return done({lb:up,reps:R0,src:'probe · small bump',
+      note:`You've logged below the last few suggestions, so this tries a small ${PROBE_INCREMENT_LB} lb bump at the same ${R0} reps rather than a full step.`});
+    return hold('holding · probe smaller than a step',
+      `You've logged below the last few suggestions; a ${PROBE_INCREMENT_LB} lb probe is smaller than this exercise's ${ex.inc} lb step, so this holds ${lastTxt}.`);
   }
 
-  if(lastRpe==null) return {lb:loadable(slot,actualLb), reps:lastReps, src:'last session',
-    note:`Last set ${lastTxt} had no RPE, so it repeats.`};
-  if(lastRpe<slot.rpe){
-    if(!atCeiling) return {lb:loadable(slot,actualLb), reps:lastReps+1, src:'last session',
-      note:`Last set ${lastTxt} was easier than RPE ${slot.rpe} and below the ${slot.reps[1]}-rep ceiling, so same load, one more rep.`};
-    const lb=capIncrease(slot,actualLb,reprice(slot.reps[0])), stuck=lb<=actualLb+1e-6;
-    return {lb, reps:stuck?slot.reps[1]:slot.reps[0], src:stuck?'load held · step too small':'from e1RM',
-      note:`Last set ${lastTxt} was easier than RPE ${slot.rpe} at the top of the range. `
-        +(stuck?`The capped step is less than this exercise's smallest jump (${ex.inc} lb), so the load holds and reps stay at the top of the range.`
-          :`Load goes up and reps restart at ${slot.reps[0]}.`)+noBw};
+  // at or past the top of the range and easier than aimed: add load
+  const rate=ready?progressionRate(ex.id):null;
+  const useRate=rate!=null&&rate>0;              // a flat or falling trailing rate is no reason to hold back
+  let raw=null;
+  if(useRate) raw=L0+rate;
+  else if(!offChart){ const lf=loadFor(e1,lo,T); if(lf!=null) raw=toAdded(lf); }
+  const capLb=capLimit(slot,L0);
+  const capTxt=exposureCount(slot.ex)<UNFAMILIAR_EXPOSURE?'2.5%':'10%';
+  let lb, forced=false;
+  if(raw==null){ lb=stepUp(slot,L0); forced=true; }
+  else{
+    lb=gridFloor(slot,Math.min(raw,capLb));
+    if(lb<=L0+1e-6){ lb=stepUp(slot,L0); forced=true; }     // the smallest move is one step
   }
-  if(lastRpe>slot.rpe)
-    return {lb:loadable(slot,reprice(slot.reps[0])), reps:slot.reps[0], src:'from e1RM',
-      note:`Last set ${lastTxt} was harder than RPE ${slot.rpe}, so load is what ${slot.reps[0]} reps at RPE ${slot.rpe} would take.`+noBw};
-  return {lb:loadable(slot,actualLb), reps:lastReps, src:'last session',
-    note:`Last set ${lastTxt} was right on target, so it repeats.`};
+  // reps priced for the load actually returned, clamped to the range: effort-matched, never harder than aimed
+  let reps=lo;
+  if(!offChart){
+    const rt=rtfFromPct((lb+off)/e1*100);
+    if(rt!=null) reps=Math.max(lo,Math.min(hi,Math.floor(rt-(10-T)+1e-9)));
+  }
+  const stepTxt=`${fmt(L0,0)} → ${fmt(lb,0)}`;
+  const why=offChart
+    ?`Last set ${lastTxt} was too light to price: ${fmt(rtf,0)} reps-to-failure is past the ${CHART_MAX_RTF} the chart covers. Load goes up one step (${stepTxt}) and reps restart at ${reps}.`
+    :`Last set ${lastTxt} was easier than RPE ${T} at the top of the range. Load goes to ${fmt(lb,0)} for ${reps} reps`
+      +(useRate?`, following your recent rate (+${fmt(rate,1)} lb per session).`:`, the load ${reps===lo?`${lo} reps`:`those ${reps} reps`} at RPE ${T} would take, given that set.`)
+      +(forced?` The largest single step allowed (${capTxt} of the load) is smaller than this exercise's smallest jump (${ex.inc} lb), so it takes one step anyway.`:` A single step is capped at ${capTxt}.`);
+  return done({lb,reps,
+    src:offChart?'last set too light to price · load up one step':forced?'load up one step · cap is smaller than a step':useRate?'from your recent rate':'from e1RM',
+    note:why});
 }
 /* Round to something actually loadable */
 function loadable(slot, lb){
@@ -1576,6 +1690,30 @@ function pctOfBest(slot, lb){
   return Math.round((lb+bwOffset(ex))/b.v*100)+'% of '+fmt(b.v,0)+' est. 1RM'
     +(ex.load==='bodyweight_plus'?(bwMissing(ex)?' (added weight only, no bodyweight logged)':' (incl. bodyweight)'):'');
 }
+/* Move an exercise one place. The open panel follows the exercise you moved —
+   moving one up means "I want to do this next" — unless a cluster is mid-flight,
+   where reseeding the draft would break the group. Exercises with logged sets
+   stay put, since their history belongs to that slot. */
+function moveSlot(i, dir){
+  const j=i+dir, sl=session.slots;
+  if(j<0||j>=sl.length||sl[i].sets.length) return false;
+  const moved=sl[i], wasOpen=session.openIdx===i;
+  [sl[i],sl[j]]=[sl[j],sl[i]];
+  if(draft.group){
+    if(session.openIdx===i) session.openIdx=j; else if(session.openIdx===j) session.openIdx=i;
+  }else{
+    session.openIdx=j;
+    if(!wasOpen) seedDraft(moved);
+  }
+  saveSession(); return true;
+}
+/* +/- sets on any exercise, open or not. Never below what is already logged. */
+function adjustSets(slot, idx, delta){
+  if(delta<0){ if(slot.sets_target<=slot.sets.length) return false; slot.sets_target--; }
+  else slot.sets_target++;
+  if(session.openIdx===idx) advanceIfDone(slot,idx);
+  saveSession(); return true;
+}
 function openSessionAdd(){
   exPicker('Add an exercise', ()=>true, e=>{
     const s=newSlotFor(e);
@@ -1722,14 +1860,8 @@ function renderWork(){
     const canMove=!slot.sets.length;   // reordering after logging would orphan set history to the wrong slot
     const mv=(lab,aria,fn)=>{ const b=el('button','iconbtn',lab); b.setAttribute('aria-label',aria);
       b.style.opacity=canMove?'1':'.25'; if(canMove) b.onclick=(e)=>{e.stopPropagation();fn();}; return b; };
-    if(i>0) order.appendChild(mv('↑','Move earlier',()=>{
-      [session.slots[i-1],session.slots[i]]=[session.slots[i],session.slots[i-1]];
-      if(session.openIdx===i)session.openIdx=i-1; else if(session.openIdx===i-1)session.openIdx=i;
-      saveSession(); renderWork(); }));
-    if(i<session.slots.length-1) order.appendChild(mv('↓','Move later',()=>{
-      [session.slots[i+1],session.slots[i]]=[session.slots[i],session.slots[i+1]];
-      if(session.openIdx===i)session.openIdx=i+1; else if(session.openIdx===i+1)session.openIdx=i;
-      saveSession(); renderWork(); }));
+    if(i>0) order.appendChild(mv('↑','Move earlier',()=>{ moveSlot(i,-1); renderWork(); }));
+    if(i<session.slots.length-1) order.appendChild(mv('↓','Move later',()=>{ moveSlot(i,1); renderWork(); }));
     const needsRate = slot.sets.length>0 && slot.sets.length>=slot.sets_target && !session.ratings[slot.ex];
     nameBtn.onclick=()=>{session.openIdx=open?-1:i; if(!open) seedDraft(slot); renderWork();};
     const icons=el('div','exicons');
@@ -1746,8 +1878,9 @@ function renderWork(){
     icons.append(info,swap); head.append(order,icons);
 
     const warms=sets().filter(s=>s.session_id===session.id&&s.exercise_id===slot.ex&&s.set_kind==='warmup');
-    warms.forEach(w=>body.appendChild(srowEl({warm:true,empty:true,badge:'warmup',
-      load:fmt(w.weight.value)+' '+w.weight.unit+' × '+w.reps})));
+    warms.forEach(w=>body.appendChild(srowEl({warm:true,empty:true,badge:'warmup',chev:true,
+      load:fmt(w.weight.value)+' '+w.weight.unit+' × '+w.reps,
+      onclick:()=>openEditWarmup(slot,w), aria:'Edit warmup'})));
     for(let j=0;j<Math.max(slot.sets_target,slot.sets.length);j++){
       const s=slot.sets[j];
       body.appendChild(srowEl({idx:j+1, done:!!s, empty:!s,
@@ -1757,6 +1890,16 @@ function renderWork(){
         badgeOn:!!s, chev:!!s,
         onclick:s?()=>openEditSet(slot,j):null, aria:s?'Edit set '+(j+1):null}));
     }
+    const sc=el('div','row between'); sc.style.cssText='padding:4px 0 2px';
+    sc.appendChild(el('span','dim tiny','Sets on this exercise'));
+    const scb=el('div','row'); scb.style.gap='6px';
+    const canLess=slot.sets_target>slot.sets.length;
+    const less=el('button','btn s','−'); less.setAttribute('aria-label','One set fewer on '+ex.name);
+    less.style.opacity=canLess?'1':'.3';
+    if(canLess) less.onclick=()=>{ adjustSets(slot,i,-1); renderWork(); };
+    const more=el('button','btn s','+'); more.setAttribute('aria-label','One set more on '+ex.name);
+    more.onclick=()=>{ adjustSets(slot,i,1); renderWork(); };
+    scb.append(less,more); sc.appendChild(scb); body.appendChild(sc);
     if(open) body.appendChild(entryPanel(slot,i));
     v.appendChild(box);
   });
@@ -2670,23 +2813,6 @@ function entryPanel(slot,idx){
   }
   p.appendChild(act);
 
-  const setctl=el('div','row'); setctl.style.cssText='gap:16px;margin-top:10px';
-  if(slot.sets.length<slot.sets_target){
-    const skip=el('button','','Skip this set');
-    skip.style.cssText='font-size:13px;color:var(--dim);text-decoration:underline';
-    skip.onclick=()=>{
-      slot.sets_target=Math.max(slot.sets.length,slot.sets_target-1);
-      advanceIfDone(slot,idx);
-      saveSession(); renderWork(); toast('Set skipped');
-    };
-    setctl.appendChild(skip);
-  }
-  const addset=el('button','','Add a set');
-  addset.style.cssText='font-size:13px;color:var(--dim);text-decoration:underline';
-  addset.onclick=()=>{ slot.sets_target++; saveSession(); renderWork(); };
-  setctl.appendChild(addset);
-  p.appendChild(setctl);
-
   if(slot.sets.length){
     const r=session.ratings[slot.ex];
     if(r){ const d=el('div','dim tiny',`Rated · stimulus ${r.stimulus}/5 · enjoyment ${r.enjoyment}/5`);
@@ -2699,11 +2825,14 @@ function entryPanel(slot,idx){
 
 /* Edit a logged set. Never rewrites the original event — appends a
    correction that later reads replay over the top. */
-function openEditSet(slot,j){
-  const orig=slot.sets[j];
+function openEditSet(slot,j){ openEditEvent(slot,slot.sets[j],'Set '+(j+1)); }
+/* A warmup is a logged set like any other: same sheet, same correction events.
+   It just isn't held in slot.sets, so it is re-read from the log on render. */
+function openEditWarmup(slot,w){ openEditEvent(slot,w,'Warmup'); }
+function openEditEvent(slot,orig,title){
   const st={weight:orig.weight.value, unit:orig.weight.unit, reps:orig.reps, rpe:orig.rpe??8};
   const isWarm=orig.set_kind==='warmup';
-  sheet(`<h2 style="font-size:20px;margin-bottom:3px">Set ${j+1}</h2>
+  sheet(`<h2 style="font-size:20px;margin-bottom:3px">${title}</h2>
     <div class="muted tiny" style="margin-bottom:15px">${esc(exById[slot.ex].name)} · logged ${new Date(orig.ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</div>
     <div id="ed"></div>
     <div class="row" style="gap:8px;margin-top:4px">
@@ -2733,12 +2862,12 @@ function openEditSet(slot,j){
       ? slot.sets.filter(x=>x.group&&x.group.id===orig.group.id) : [orig];
     const msg=grp.length>1
       ? `Delete this set and its ${grp.length-1} extension${grp.length>2?'s':''}?`
-      : 'Delete this set? It stays in the log as a voided entry.';
+      : isWarm?'Delete this warmup? It stays in the log as a voided entry.':'Delete this set? It stays in the log as a voided entry.';
     if(!confirm(msg)) return;
     grp.forEach(x=>append({type:'correction', target_id:x.id, patch:null, reason:'deleted in app'}));
     grp.forEach(x=>{ const k=slot.sets.indexOf(x); if(k>-1) slot.sets.splice(k,1); });
     saveSession();
-    $('#dlg').close(); renderWork(); toast(grp.length>1?'Cluster deleted':'Set deleted');
+    $('#dlg').close(); renderWork(); toast(grp.length>1?'Cluster deleted':isWarm?'Warmup deleted':'Set deleted');
   };
   $('#esave').onclick=()=>{
     const p={};
@@ -2747,8 +2876,9 @@ function openEditSet(slot,j){
     if(!isWarm&&st.rpe!==orig.rpe) p.rpe=st.rpe;
     if(!Object.keys(p).length){ $('#dlg').close(); return; }
     append({type:'correction', target_id:orig.id, patch:p, reason:'edited in app'});
-    Object.assign(slot.sets[j], p); saveSession();
-    $('#dlg').close(); renderWork(); toast('Set updated');
+    const k=slot.sets.indexOf(orig); if(k>-1) Object.assign(slot.sets[k], p);
+    saveSession();
+    $('#dlg').close(); renderWork(); toast(isWarm?'Warmup updated':'Set updated');
   };
 }
 
@@ -2855,23 +2985,33 @@ function explainRx(slot, pr, o){
   if(slot.repSrc==='muscle'){
     const mn=(ML[slot.repMuscle]||slot.repMuscle).toLowerCase();
     parts.push(fmtRange(slot.reps)+' reps · '+mn+' default');
-    detail.push('Rep range '+fmtRange(slot.reps)+' is a default for '+mn+' work, not the '+bn+" block's range. It is a judgement default (Grade D) — practical, not an evidence claim.");
+    detail.push('Rep range '+fmtRange(slot.reps)+' is a default for '+mn+' work, not the '+bn+" block's range. It is a judgement default (Grade D) — practical, not an evidence claim."
+      +(slot.repCapped?' Capped at '+COARSE_REP_CAP+' because this machine steps in '+(exById[slot.ex].inc)+' lb jumps.':''));
   }else if(slot.repSrc==='exercise'){
     parts.push(fmtRange(slot.reps)+' reps · set for this exercise');
     detail.push('Rep range '+fmtRange(slot.reps)+" was set on this exercise, overriding the block's range.");
   }else{
     parts.push(bn+' block');
-    detail.push('Rep range '+fmtRange(slot.reps)+' at RPE '+slot.rpe+' comes from the '+bn+' block'+(p.weeks?' (week '+p.week+' of '+p.weeks+')':'')+' for a '+(slot.role||'working')+' lift.');
+    detail.push('Rep range '+fmtRange(slot.reps)+' at RPE '+slot.rpe+' comes from the '+bn+' block'+(p.weeks?' (week '+p.week+' of '+p.weeks+')':'')+' for '+(slot.role==='accessory'?'an accessory':'a '+(slot.role||'working'))+' lift.');
   }
   // 2. where the number came from
   if(pr.src) parts.push(pr.src==='last session'?'from your last set':pr.src);
   else parts.push('no history yet');
   if(pr.note) detail.push(pr.note);
+  // within-session fatigue, from your own history
+  if(pr.fatigue){
+    const f=pr.fatigue;
+    if(f.applied) parts.push('fatigue −'+f.rise+' RPE · '+f.n+' pairs, '+f.sessions+' sessions');
+    else detail.push('Fatigue adjustment: none yet. '+f.n+' of '+FATIGUE_MIN_PAIRS+' same-load set pairs across '+f.sessions+' of '+FATIGUE_MIN_SESSIONS+' sessions logged for this exercise'
+      +(f.n>=FATIGUE_MIN_PAIRS&&f.sessions>=FATIGUE_MIN_SESSIONS?' — enough data, but your later sets do not run harder on average.':'.'));
+  }
   // 3. readiness
   if(o.adj){
-    const cut=Math.round((1-o.adj.load)*100), sc=Math.round(session.score*100);
-    parts.push('readiness '+sc+' · load −'+cut+'%');
-    detail.push('Readiness '+sc+' out of 100 ('+o.adj.label.toLowerCase()+'): today\'s starting loads are cut '+cut+'%'+(session.adjReason?', driven by '+session.adjReason:'')+'.');
+    const cut=Math.round((1-o.adj.load)*100), sc=Math.round(session.score*100), got=o.adjApplied||0;
+    parts.push('readiness '+sc+' · '+(got>0?'load −'+got+'%':'no load change'));
+    detail.push('Readiness '+sc+' out of 100 ('+o.adj.label.toLowerCase()+'): today\'s starting loads are cut '+cut+'%'+(session.adjReason?', driven by '+session.adjReason:'')+'. '
+      +(got===cut?'':got>0?'Rounded to this machine\'s '+exById[slot.ex].inc+' lb steps, the actual change is −'+got+'%.'
+        :'That rounds back to the same load on this machine ('+exById[slot.ex].inc+' lb steps), so the load does not change.'));
   }
   if(session&&session.adj&&session.adj.sets&&o.idx!=null&&o.idx>=0&&o.idx<2&&o.fresh!==false){
     const n=Math.abs(session.adj.sets);
@@ -2880,8 +3020,10 @@ function explainRx(slot, pr, o){
   if(o.fresh===false) detail.push("Based on the set you just logged, which already reflects today's readiness adjustment.");
   // 4. joint
   if(o.jointCut&&slot.joint){
-    parts.push(slot.joint.joint+' flare · load −10%');
-    detail.push('Your '+slot.joint.joint+' trend is flagged, so the starting load on this pattern is cut 10%.');
+    const gj=o.jointApplied||0;
+    parts.push(slot.joint.joint+' flare · '+(gj>0?'load −'+gj+'%':'no load change'));
+    detail.push('Your '+slot.joint.joint+' trend is flagged, so the starting load on this pattern is cut 10%'
+      +(gj===10?'.':gj>0?'; rounded to this exercise\'s steps the actual change is −'+gj+'%.':', which rounds back to the same load on this exercise\'s '+exById[slot.ex].inc+' lb steps.'));
   }
   // 5. easing off after a pain-ended session
   if(lastEarlyPain()){
@@ -2910,8 +3052,9 @@ function suggestFor(slot){
   const pr=nextPrescription(slot);
   const o={idx:session?session.slots.indexOf(slot):null, fresh:!slot.sets.length};
   let lb=pr.lb;
-  if(lb!=null&&o.fresh&&session&&session.adj){ lb=loadable(slot, lb*session.adj.load); o.adj=session.adj; }
-  if(lb!=null&&o.fresh&&slot.joint&&slot.joint.level>=4){ lb=loadable(slot, lb*0.9); o.jointCut=true; }
+  const pct=(a,b)=>a>0?Math.round((1-b/a)*100):0;    // what the cut actually did after rounding to the machine's steps
+  if(lb!=null&&o.fresh&&session&&session.adj){ const b=lb; lb=loadable(slot, lb*session.adj.load); o.adj=session.adj; o.adjApplied=pct(b,lb); }
+  if(lb!=null&&o.fresh&&slot.joint&&slot.joint.level>=4){ const b=lb; lb=loadable(slot, lb*0.9); o.jointCut=true; o.jointApplied=pct(b,lb); }
   return {pr, lb, why:explainRx(slot,pr,o)};
 }
 function seedDraft(slot){
