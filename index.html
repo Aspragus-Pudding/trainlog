@@ -109,6 +109,10 @@ section{display:none;padding-top:14px} section.on{display:block}
 .numin:focus{outline:none}
 .suggested .num,.suggested .numin{color:var(--str)}
 .sugnote{font-size:11.5px;color:var(--str);margin-top:5px}
+.why{margin-top:3px}
+.whyline{font-size:12px;color:var(--muted);text-align:left;padding:2px 0;line-height:1.4}
+.whydetail{font-size:12px;color:var(--dim);margin:3px 0 2px;padding-left:9px;border-left:2px solid var(--line);line-height:1.45}
+.whydetail div+div{margin-top:4px}
 .step .lab{font-size:11px;color:var(--dim)}
 .bar{width:100%;height:70px;display:block;margin:4px 0 3px}
 .plates{font-size:12.5px;color:var(--muted)}
@@ -229,7 +233,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.10.1';
+const APP_VERSION='1.11.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -254,7 +258,7 @@ function repProfile(id){
   let lo=null, hi=null, loN=0, hiN=0;
   for(const st of sets()){
     if(st.exercise_id!==id||st.set_kind==='warmup'||st.rpe==null) continue;
-    const v=e1rm(toLb(st.weight),st.reps); if(v==null) continue;
+    const v=setE1RM(st); if(v==null) continue;
     if(st.reps<=5){ lo=Math.max(lo??0,v); loN++; }
     else if(st.reps<=12){ hi=Math.max(hi??0,v); hiN++; }
   }
@@ -440,9 +444,9 @@ const EX=[
  {id:'rdl',name:'Romanian deadlift',pattern:'hinge',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'double',vol:{hamstrings:1,glutes:.5,upper_back:.5}},
  {id:'leg_curl',name:'Seated leg curl',pattern:'knee_flexion',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',vol:{hamstrings:1}},
  {id:'leg_ext',name:'Leg extension',pattern:'knee_extension',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',vol:{quads:1}},
- {id:'chinup',name:'Weighted chin-up',pattern:'vertical_pull',load:'bodyweight',bar:0,plateSet:null,inc:2.5,prog:'rep',vol:{lats:1,biceps:1,upper_back:.5}},
+ {id:'chinup',name:'Weighted chin-up',pattern:'vertical_pull',load:'bodyweight_plus',bar:0,plateSet:null,inc:2.5,prog:'double',vol:{lats:1,biceps:1,upper_back:.5}},
  {id:'incline_machine',name:'Incline machine chest press',pattern:'horizontal_press',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{chest:1,front_delts:.5,triceps:.5}},
- {id:'pullup',name:'Weighted pull-up',pattern:'vertical_pull',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',vol:{lats:1,biceps:.5,upper_back:.5}},
+ {id:'pullup',name:'Weighted pull-up',pattern:'vertical_pull',load:'bodyweight_plus',bar:0,plateSet:null,inc:5,prog:'double',vol:{lats:1,biceps:.5,upper_back:.5}},
  {id:'pulldown',name:'Lat pulldown',pattern:'vertical_pull',load:'stack',bar:0,plateSet:null,inc:10,prog:'double',vol:{lats:1,biceps:.5,upper_back:.5}},
  {id:'cable_row',name:'Neutral cable row',pattern:'horizontal_pull',load:'stack',bar:0,plateSet:null,inc:10,prog:'double',vol:{upper_back:1,lats:.5,biceps:.5,rear_delts:.5}},
  {id:'chest_row',name:'Chest-supported row',pattern:'horizontal_pull',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',vol:{upper_back:1,lats:.5,rear_delts:.5,biceps:.5}},
@@ -498,7 +502,7 @@ const EX=[
  {id:'back_ext',name:'45° back extension',pattern:'hinge',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',vol:{hamstrings:1,glutes:.5}},
  {id:'lying_curl',name:'Lying leg curl',pattern:'knee_flexion',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{hamstrings:1}},
  {id:'nordic',name:'Nordic curl',pattern:'knee_flexion',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',vol:{hamstrings:1}},
- {id:'ghr',name:'Glute-ham raise',pattern:'knee_flexion',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',vol:{hamstrings:1,glutes:.5}},
+ {id:'ghr',name:'Glute-ham raise',pattern:'knee_flexion',load:'bodyweight_plus',bar:0,plateSet:null,inc:5,prog:'double',vol:{hamstrings:1,glutes:.5}},
  {id:'sissy',name:'Sissy squat',pattern:'knee_extension',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',vol:{quads:1}},
  {id:'rev_nordic',name:'Reverse nordic',pattern:'knee_extension',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',vol:{quads:1}},
  {id:'neutral_pulldown',name:'Neutral-grip pulldown',pattern:'vertical_pull',load:'stack',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{lats:1,biceps:.5,upper_back:.5}},
@@ -516,7 +520,7 @@ const EX=[
  {id:'spider',name:'Spider curl',pattern:'elbow_flexion',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',vol:{biceps:1}},
  {id:'skullcrusher',name:'Skullcrusher',pattern:'elbow_extension',load:'barbell',bar:25,plateSet:'main_lb',inc:5,prog:'double',vol:{triceps:1}},
  {id:'cg_bench',name:'Close-grip bench',pattern:'elbow_extension',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'percentage',vol:{triceps:1,chest:.5,front_delts:.5}},
- {id:'dip',name:'Weighted dip',pattern:'elbow_extension',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',vol:{triceps:1,chest:.5,front_delts:.5}},
+ {id:'dip',name:'Weighted dip',pattern:'elbow_extension',load:'bodyweight_plus',bar:0,plateSet:null,inc:5,prog:'double',vol:{triceps:1,chest:.5,front_delts:.5}},
  {id:'seated_calf',name:'Seated calf raise',pattern:'calf_raise',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{calves:1}},
  {id:'press_calf',name:'Leg press calf raise',pattern:'calf_raise',load:'machine',bar:0,plateSet:null,inc:25,prog:'double',comparable:false,vol:{calves:1}},
  {id:'rev_wrist',name:'Reverse wrist curl',pattern:'wrist',load:'dumbbell',bar:0,plateSet:null,inc:2.5,prog:'double',vol:{forearms:1}},
@@ -547,6 +551,10 @@ const EX=[
  {id:'slant_squat',name:'Slant board squat',pattern:'prehab_knee',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',rehab:true,vol:{quads:1}},
  {id:'atg_split',name:'ATG split squat',pattern:'prehab_knee',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',rehab:true,vol:{quads:1,glutes:.5}},
  {id:'wrist_ext_iso',name:'Wrist extension isometric',pattern:'prehab_wrist',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',rehab:true,vol:{forearms:.5}},
+ {id:'ecc_wrist_ext',name:'Eccentric wrist extension (light)',pattern:'prehab_elbow',load:'dumbbell',bar:0,plateSet:null,inc:2.5,prog:'double',rehab:true,vol:{}},
+ {id:'ecc_wrist_flex',name:'Eccentric wrist flexion (light)',pattern:'prehab_elbow',load:'dumbbell',bar:0,plateSet:null,inc:2.5,prog:'double',rehab:true,vol:{}},
+ {id:'bird_dog',name:'Bird dog',pattern:'prehab_lowback',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',rehab:true,vol:{}},
+ {id:'side_plank',name:'Side plank',pattern:'prehab_lowback',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',rehab:true,vol:{}},
  {id:'wrist_curl',name:'Wrist curl',pattern:'wrist',load:'dumbbell',bar:0,plateSet:null,inc:2.5,prog:'double',vol:{forearms:1}},
 ];
 let exById=Object.fromEntries(EX.map(e=>[e.id,e]));
@@ -639,7 +647,27 @@ const SPLITS={
 SPLITS.ppl6.template=SPLITS.ppl3.template.concat(SPLITS.ppl3.template.map(d=>({...d,name:d.name+' B'})));
 
 /* set/rep/RPE scheme by slot role and block type */
-function schemeFor(role, blockType, weekOfBlock, blockWeeks){
+/* Default rep ranges for non-primary work, by the exercise's primary muscle.
+   JUDGEMENT DEFAULTS, GRADE D. Hypertrophy is driven far more by proximity to
+   failure than by rep range; these are practical choices (coarse load steps on
+   light isolation work, joint comfort, stabiliser limits), not an evidence
+   claim. Override one movement with a `repRange:[lo,hi]` field on its EX entry
+   (or custom exercise). Deload blocks keep their own fixed reps. */
+const MUSCLE_REP_RANGE={biceps:[8,15],triceps:[8,15],forearms:[8,15],
+  side_delts:[10,20],rear_delts:[10,20],calves:[10,20],abs:[10,20]};
+const primaryMuscle=ex=>{ const e=Object.entries((ex&&ex.vol)||{}).find(([,w])=>w===1); return e?e[0]:null; };
+/* Which rep range applies, and why: exercise override > muscle default (non-primary
+   slots only) > the block/role table. Returns null to mean "use the table". */
+function repRangeOverride(ex, role, blockType){
+  if(!ex||blockType==='deload') return null;
+  if(ex.repRange) return {reps:ex.repRange.slice(), src:'exercise'};
+  if(role!=='primary'){
+    const m=primaryMuscle(ex);
+    if(m&&MUSCLE_REP_RANGE[m]) return {reps:MUSCLE_REP_RANGE[m].slice(), src:'muscle', muscle:m};
+  }
+  return null;
+}
+function schemeFor(role, blockType, weekOfBlock, blockWeeks, ex){
   const T={
     hyp:{primary:[4,[6,8],8],   secondary:[3,[8,12],8], accessory:[3,[10,15],9]},
     str:{primary:[4,[3,5],8],   secondary:[3,[5,8],8],  accessory:[3,[8,12],9]},
@@ -651,7 +679,15 @@ function schemeFor(role, blockType, weekOfBlock, blockWeeks){
   let s=sets;
   if(blockType==='hyp'&&blockWeeks>2) s=sets+Math.floor((weekOfBlock-1)/2);
   if(blockType==='str'&&blockWeeks>2) s=Math.max(2,sets-Math.floor((weekOfBlock-1)/2));
-  return {sets:s, reps, rpe};
+  const ov=repRangeOverride(ex,role,blockType);
+  return {sets:s, reps:ov?ov.reps:reps, rpe, repSrc:ov?ov.src:'block', repMuscle:ov&&ov.muscle||null};
+}
+/* A fresh slot for an exercise added by hand, using the same scheme the
+   generator would give an accessory today. */
+function newSlotFor(ex, role){
+  role=role||'accessory';
+  const p=currentPhase(), sc=schemeFor(role,p.type,p.week,p.weeks,ex);
+  return {ex:ex.id, role, sets:sc.sets, reps:sc.reps, rpe:sc.rpe, repSrc:sc.repSrc, repMuscle:sc.repMuscle};
 }
 
 /* Pick an exercise for a pattern+role. Goal lifts win a primary slot;
@@ -689,7 +725,7 @@ function buildDay(tpl, phase){
     if(!ex) ex=resolveEx(pattern,role,used);
     if(!ex) return;
     used.add(ex.id);
-    const sc=schemeFor(role,phase.type,phase.week,phase.weeks);
+    const sc=schemeFor(role,phase.type,phase.week,phase.weeks,ex);
     const k=VOL_EMPHASIS[phase.emphasis||'moderate'];
     const ek=energyCfg().vol;
     sc.sets=Math.max(2,Math.round(sc.sets*k*ek));
@@ -713,7 +749,7 @@ function buildDay(tpl, phase){
     const prio=(phase.hyp||[]).some(m=>ex.vol[m]>=1);
     if(easeOff) sc.sets=Math.max(2,sc.sets-1);
     slots.push({ex:ex.id, role, sets:sc.sets+(prio&&role!=='primary'?1:0),
-                reps:sc.reps, rpe:sc.rpe, prio, joint:jointNote});
+                reps:sc.reps, rpe:sc.rpe, prio, joint:jointNote, repSrc:sc.repSrc, repMuscle:sc.repMuscle});
   });
   const id=tpl.name.toLowerCase().replace(/\s+/g,'_');
   // A permanently-saved edit to this day (see the preview's "also save to my
@@ -849,20 +885,51 @@ function statedE1RM(id){
     if(LOG[i].type==='e1rm_estimate'&&LOG[i].exercise_id===id) return LOG[i].lb;
   return null;
 }
+/* Bodyweight helpers. "Bodyweight + added" lifts log only the added load, but
+   e1RM is computed on total load (bodyweight as of that set + added), so the
+   number stays comparable against itself as bodyweight changes. With no
+   bodyweight logged yet, e1RM falls back to added weight alone and the UI says
+   so — no default is ever substituted. */
+const isBW=ex=>!!ex&&(ex.load==='bodyweight'||ex.load==='bodyweight_plus');
+const loadName=l=>l==='bodyweight_plus'?'bodyweight + added':l;
+const isStackLike=ex=>!!ex&&(ex.load==='stack'||ex.load==='cable');
+let _bwCache=null, _bwLen=-1;
+function bwSeries(){
+  if(_bwCache&&_bwLen===LOG.length) return _bwCache;
+  _bwCache=LOG.filter(e=>e.type==='readiness'&&e.bodyweight>0)
+    .map(e=>({t:new Date(e.ts).getTime(),bw:Number(e.bodyweight)}));
+  _bwLen=LOG.length; return _bwCache;
+}
+function bwAt(ts){
+  const t=new Date(ts).getTime(); let r=null;
+  for(const x of bwSeries()){ if(x.t<=t) r=x.bw; else break; }
+  return r;
+}
+const latestBodyweight=()=>{ const s=bwSeries(); return s.length?s[s.length-1].bw:null; };
+/* Bodyweight added on top of the logged load for this exercise, in lb; 0 for
+   everything else and when no bodyweight has been logged. */
+const bwOffset=(ex,ts)=>ex&&ex.load==='bodyweight_plus'?((ts==null?latestBodyweight():bwAt(ts))||0):0;
+/* Does an estimate for this exercise rest on added weight alone? */
+const bwMissing=ex=>!!ex&&ex.load==='bodyweight_plus'&&latestBodyweight()==null;
+/* e1RM of one logged set, on total load for bodyweight+added lifts */
+function setE1RM(st){
+  const ex=exById[st.exercise_id];
+  return e1rm(toLb(st.weight)+bwOffset(ex,st.ts),st.reps);
+}
 function bestE1RM(id){ let b=null;
   for(const s of sets()){
     if(s.exercise_id!==id||s.set_kind==='warmup') continue;
-    const v=e1rm(toLb(s.weight),s.reps);
+    const v=setE1RM(s);
     if(v!=null&&(!b||v>b.v)) b={v,reps:s.reps};
   }
-  if(!b){ const e=statedE1RM(id); if(e) b={v:e,reps:null,stated:true}; }
+  if(!b){ const e=statedE1RM(id); if(e) b={v:e+bwOffset(exById[id]),reps:null,stated:true}; }
   return b; }
 /* one best e1RM per calendar day, oldest first */
 function e1rmSeries(id){
   const byDay={};
   for(const st of sets()){
     if(st.exercise_id!==id||st.set_kind==='warmup') continue;
-    const v=e1rm(toLb(st.weight),st.reps); if(v==null||st.reps>10) continue;
+    const v=setE1RM(st); if(v==null||st.reps>10) continue;
     const d=st.ts.slice(0,10);
     if(!byDay[d]||v>byDay[d]) byDay[d]=v;
   }
@@ -984,12 +1051,12 @@ function lastPerformance(id){
 }
 /* Is this the best estimate so far for that lift, ignoring the set itself? */
 function isPR(id, ev){
-  const v=e1rm(toLb(ev.weight),ev.reps);
+  const v=setE1RM(ev);
   if(v==null||ev.reps>10||ev.set_kind==='warmup') return null;
   let prev=null;
   for(const st of sets()){
     if(st.exercise_id!==id||(ev.id&&st.id===ev.id)||st.set_kind==='warmup') continue;
-    const p=e1rm(toLb(st.weight),st.reps);
+    const p=setE1RM(st);
     if(p!=null&&st.reps<=10&&(prev==null||p>prev)) prev=p;
   }
   if(prev==null) return null;
@@ -1004,7 +1071,7 @@ function prIds(){
   const best={}, out=new Set();
   for(const st of sets()){
     if(st.set_kind==='warmup'||st.reps>10) continue;
-    const v=e1rm(toLb(st.weight),st.reps); if(v==null) continue;
+    const v=setE1RM(st); if(v==null) continue;
     const b=best[st.exercise_id];
     if(b!=null&&v>b+0.5){ out.add(st.id); best[st.exercise_id]=v; }
     else if(b==null) best[st.exercise_id]=v;
@@ -1034,11 +1101,6 @@ function currentPhase(){
   const l=ROADMAP[ROADMAP.length-1];
   return {...l,idx:ROADMAP.length-1,week:blockLen(l),weeks:blockLen(l)};
 }
-const lastBodyweight=()=>{
-  for(let i=LOG.length-1;i>=0;i--)
-    if(LOG[i].type==='readiness'&&LOG[i].bodyweight) return LOG[i].bodyweight;
-  return 180;
-};
 /* exposure = how many SESSIONS have contained this exercise, not how many sets */
 const exposureCount=id=>new Set(sets().filter(s=>s.exercise_id===id).map(s=>s.session_id)).size;
 
@@ -1068,13 +1130,16 @@ const OVERRIDE_MARGIN=0.975; // logged weight must be at least this far below su
 const PROBE_INCREMENT_LB=2.5;
 const UNFAMILIAR_EXPOSURE=6, UNFAMILIAR_CAP=1.025, ESTABLISHED_CAP=1.10;
 
-/* Reprice a set at a different target RPE, holding the rep count fixed on
-   both sides — isolates the RPE delta instead of mixing in a rep-count
-   effect. Reuses the same reps-to-failure chart everything else reads from. */
-function repriceForRPE(actualLb, actualReps, actualRpe, targetRpe){
+/* Reprice a set to the load that would cost the target effort at the target
+   REP COUNT. Both reps and RPE are converted to reps-to-failure and read off
+   the same %1RM chart everything else uses. The rep count priced here must be
+   the rep count that is then prescribed: an earlier version held the last
+   set's reps fixed but prescribed the bottom of the range, so 170 x 11 @ 7.5
+   came back as roughly 170 x 6 — a weight priced for 11 reps paired with 6. */
+function repriceTo(actualLb, actualReps, actualRpe, targetReps, targetRpe){
   if(actualRpe==null) return actualLb;
   const pctActual=pct1RM(actualReps+(10-actualRpe));
-  const pctTarget=pct1RM(actualReps+(10-targetRpe));
+  const pctTarget=pct1RM(targetReps+(10-targetRpe));
   if(!pctActual||!pctTarget) return actualLb;
   return (actualLb/(pctActual/100))*pctTarget/100;
 }
@@ -1132,7 +1197,9 @@ function lastWasProbe(exId){
    increment lifts can, since Math.round() rounds up past the halfway mark). */
 function capIncrease(slot, fromLb, rawLb){
   const ex=exById[slot.ex];
-  const cap=fromLb*(exposureCount(slot.ex)<UNFAMILIAR_EXPOSURE?UNFAMILIAR_CAP:ESTABLISHED_CAP);
+  // for bodyweight+added lifts the cap is a % of TOTAL load, so 0 added can still progress
+  const off=bwOffset(ex);
+  const cap=(fromLb+off)*(exposureCount(slot.ex)<UNFAMILIAR_EXPOSURE?UNFAMILIAR_CAP:ESTABLISHED_CAP)-off;
   const capped=Math.min(rawLb,cap);
   const rounded=loadable(slot,capped);
   return rounded>cap ? Math.floor(capped/ex.inc)*ex.inc : rounded;
@@ -1150,44 +1217,70 @@ function capIncrease(slot, fromLb, rawLb){
 function nextPrescription(slot){
   const ex=exById[slot.ex];
   const last=lastSetFor(slot.ex);
+  const off=bwOffset(ex);                 // bodyweight added to the logged load (bodyweight+added lifts only)
+  const noBw=bwMissing(ex)?' Priced on added weight only — no bodyweight logged yet.':'';
+  const fmtR=r=>r[0]===r[1]?String(r[0]):r[0]+'–'+r[1];
   if(!last){
     const b=bestE1RM(slot.ex);
     if(b){
       const p=pct1RM(slot.reps[1]+(10-slot.rpe))||70;
-      return {lb:loadable(slot,b.v*p/100), reps:slot.reps[0], src:b.stated?'from your estimate':'from e1RM'};
+      return {lb:loadable(slot,Math.max(0,b.v*p/100-off)), reps:slot.reps[0], src:b.stated?'from your estimate':'from e1RM',
+        note:`No sets logged yet, so the load is ${fmt(p,0)}% of your ${b.stated?'stated':'estimated'} max (${fmt(b.v,0)}), the usual figure for ${slot.reps[1]} reps at RPE ${slot.rpe}.`+noBw};
     }
-    return {lb:null, reps:slot.reps[0], src:null};
+    return {lb:null, reps:slot.reps[0], src:null, note:'No sets logged and no starting estimate, so there is nothing to base a load on.'};
   }
   const actualLb=toLb(last.weight), lastReps=last.reps, lastRpe=last.rpe;
+  const lastTxt=`${fmt(actualLb,0)} × ${lastReps}${lastRpe!=null?' @ RPE '+lastRpe:''}`;
   const atCeiling=lastReps>=slot.reps[1];
   const readyToLoad=atCeiling&&lastRpe!=null&&lastRpe<=7.5;
+  const reprice=(tReps)=>Math.max(0,repriceTo(actualLb+off,lastReps,lastRpe,tReps,slot.rpe)-off);
 
   // Double progression's "add load" trigger is a hard priority gate — it
   // always fires ahead of the override back-off logic below.
   if(readyToLoad){
     const rate=progressionRate(ex.id);
-    const rawLb=rate!=null?actualLb+rate:repriceForRPE(actualLb,lastReps,lastRpe,slot.rpe);
-    return {lb:capIncrease(slot,actualLb,rawLb), reps:slot.reps[0],
-      src:rate!=null?'from your recent rate':'from e1RM'};
+    const useRate=rate!=null&&rate>0;   // a flat or falling trailing rate is no reason to hold back a load increase
+    const rawLb=useRate?actualLb+rate:reprice(slot.reps[0]);
+    const lb=capIncrease(slot,actualLb,rawLb), stuck=lb<=actualLb+1e-6;
+    const capTxt=exposureCount(slot.ex)<UNFAMILIAR_EXPOSURE?'2.5%':'10%';
+    return {lb, reps:stuck?slot.reps[1]:slot.reps[0],
+      src:stuck?'load held · step too small':useRate?'from your recent rate':'from e1RM',
+      note:`Last set ${lastTxt} hit the top of the ${fmtR(slot.reps)} range at RPE ${lastRpe}. `
+        +(stuck?`A single step is capped at ${capTxt} of the load, which is less than this exercise's smallest jump (${ex.inc} lb), so the load holds and reps stay at the top of the range rather than resetting.`
+          :(`Load goes up and reps restart at ${slot.reps[0]}. `
+            +(useRate?`Increase follows your recent rate (${rate>=0?'+':''}${fmt(rate,1)} lb per session).`
+              :`Load is what ${slot.reps[0]} reps at RPE ${slot.rpe} would take, given that set.`)
+            +` A single step is capped at ${capTxt}.`))+noBw};
   }
 
   if(overrideStreak(ex.id)>=OVERRIDE_TRIGGER){
     if(!lastWasProbe(ex.id)){
       if(lastReps<slot.reps[1])
-        return {lb:loadable(slot,actualLb), reps:lastReps+1, src:'probe · +1 rep'};
-      return {lb:capIncrease(slot,actualLb,actualLb+PROBE_INCREMENT_LB), reps:slot.reps[0], src:'probe · small bump'};
+        return {lb:loadable(slot,actualLb), reps:lastReps+1, src:'probe · +1 rep',
+          note:`You've logged below the last few suggestions, so this holds ${fmt(actualLb,0)} and adds one rep to test it.`};
+      return {lb:capIncrease(slot,actualLb,actualLb+PROBE_INCREMENT_LB), reps:slot.reps[0], src:'probe · small bump',
+        note:`You've logged below the last few suggestions, so this tries a small ${PROBE_INCREMENT_LB} lb bump rather than a full step.`};
     }
-    return {lb:loadable(slot,actualLb), reps:lastReps, src:'holding at what you\'ve set'};
+    return {lb:loadable(slot,actualLb), reps:lastReps, src:'holding at what you\'ve set',
+      note:`You've logged below the last few suggestions and the last one was already a probe, so this holds ${lastTxt}.`};
   }
 
-  if(lastRpe==null) return {lb:loadable(slot,actualLb), reps:lastReps, src:'last session'};
+  if(lastRpe==null) return {lb:loadable(slot,actualLb), reps:lastReps, src:'last session',
+    note:`Last set ${lastTxt} had no RPE, so it repeats.`};
   if(lastRpe<slot.rpe){
-    if(!atCeiling) return {lb:loadable(slot,actualLb), reps:lastReps+1, src:'last session'};
-    return {lb:capIncrease(slot,actualLb,repriceForRPE(actualLb,lastReps,lastRpe,slot.rpe)), reps:slot.reps[0], src:'from e1RM'};
+    if(!atCeiling) return {lb:loadable(slot,actualLb), reps:lastReps+1, src:'last session',
+      note:`Last set ${lastTxt} was easier than RPE ${slot.rpe} and below the ${slot.reps[1]}-rep ceiling, so same load, one more rep.`};
+    const lb=capIncrease(slot,actualLb,reprice(slot.reps[0])), stuck=lb<=actualLb+1e-6;
+    return {lb, reps:stuck?slot.reps[1]:slot.reps[0], src:stuck?'load held · step too small':'from e1RM',
+      note:`Last set ${lastTxt} was easier than RPE ${slot.rpe} at the top of the range. `
+        +(stuck?`The capped step is less than this exercise's smallest jump (${ex.inc} lb), so the load holds and reps stay at the top of the range.`
+          :`Load goes up and reps restart at ${slot.reps[0]}.`)+noBw};
   }
   if(lastRpe>slot.rpe)
-    return {lb:loadable(slot,repriceForRPE(actualLb,lastReps,lastRpe,slot.rpe)), reps:slot.reps[0], src:'from e1RM'};
-  return {lb:loadable(slot,actualLb), reps:lastReps, src:'last session'};
+    return {lb:loadable(slot,reprice(slot.reps[0])), reps:slot.reps[0], src:'from e1RM',
+      note:`Last set ${lastTxt} was harder than RPE ${slot.rpe}, so load is what ${slot.reps[0]} reps at RPE ${slot.rpe} would take.`+noBw};
+  return {lb:loadable(slot,actualLb), reps:lastReps, src:'last session',
+    note:`Last set ${lastTxt} was right on target, so it repeats.`};
 }
 /* Round to something actually loadable */
 function loadable(slot, lb){
@@ -1405,7 +1498,7 @@ function renderDash(){
     const cp=el('div','card pad');
     cp.appendChild(el('div','row between','<span style="font-weight:650">Recent bests</span><span class="dim tiny">estimated 1RM</span>'));
     prs.forEach(x=>{
-      const ex=exById[x.exercise_id], v2=e1rm(toLb(x.weight),x.reps);
+      const ex=exById[x.exercise_id], v2=setE1RM(x);
       cp.appendChild(el('div','row between sm',
         `<span class="muted">${esc(ex?ex.name:x.exercise_id)}</span>
          <span>${fmt(v2,0)} lb <span class="dim tiny">· ${new Date(x.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></span>`));
@@ -1450,6 +1543,127 @@ function phaseChart(cur){
 }
 
 /* ═══ WORKOUT ═══ */
+/* Card chrome and set rows shared by the live session and the preview, so what
+   you see before Start Training is what you get after it. */
+function srowEl(o){
+  const r=el(o.onclick?'button':'div','srow');
+  if(o.onclick){ r.style.cssText='width:100%;text-align:left'; r.onclick=o.onclick; if(o.aria) r.setAttribute('aria-label',o.aria); }
+  r.innerHTML=(o.warm?'<span class="sidx" style="background:transparent;border:1px dashed var(--line)">w</span>'
+      :'<span class="sidx '+(o.done?'done':'')+'">'+o.idx+'</span>')
+    +'<span class="sload '+(o.empty?'empty':'')+'">'+o.load+(o.pr?'<span class="pr">PR</span>':'')+'</span>'
+    +'<span class="sbadge '+(o.badgeOn?'on':'')+'">'+o.badge+'</span>'
+    +(o.chev?'<span class="del" aria-hidden="true">›</span>':'');
+  return r;
+}
+function exCard(slot,o){
+  o=o||{};
+  const ex=exById[slot.ex], n=slot.sets_target!=null?slot.sets_target:slot.sets;
+  const box=el('div','ex'), head=el('div','exhead');
+  const nameBtn=el(o.button?'button':'div','grow');
+  nameBtn.style.cssText='text-align:left;padding:0';
+  nameBtn.innerHTML='<div class="exname">'+esc(ex.name)+'</div>'
+    +'<div class="exmeta">'+n+' sets × '+fmtRange(slot.reps)+' reps · RPE '+slot.rpe+(slot.swapped?' · swapped':'')
+    +(slot.prio?' · priority':'')
+    +(slot.joint?' · <span style="color:var(--str)">'+esc(slot.joint.joint)+': '+esc(slot.joint.msg)+'</span>':'')+'</div>';
+  const body=el('div','exbody');
+  head.appendChild(nameBtn); box.appendChild(head); box.appendChild(body);
+  return {box,head,nameBtn,body};
+}
+/* How the suggested load sits against your best estimate, for the preview. */
+function pctOfBest(slot, lb){
+  const ex=exById[slot.ex], b=bestE1RM(slot.ex);
+  if(lb==null||!b||ex.load==='bodyweight'||(isBW(ex)&&!lb&&!bwOffset(ex))) return '';
+  return Math.round((lb+bwOffset(ex))/b.v*100)+'% of '+fmt(b.v,0)+' est. 1RM'
+    +(ex.load==='bodyweight_plus'?(bwMissing(ex)?' (added weight only, no bodyweight logged)':' (incl. bodyweight)'):'');
+}
+function openSessionAdd(){
+  exPicker('Add an exercise', ()=>true, e=>{
+    const s=newSlotFor(e);
+    session.slots.push({...s,sets_target:s.sets,sets:[]});
+    if(session.openIdx===-1){ session.openIdx=session.slots.length-1; seedDraft(session.slots[session.openIdx]); }
+    saveSession(); renderWork(); toast('Added '+e.name);
+  });
+}
+
+/* ─── post-session rehab / prehab ───
+   Chosen from the same inputs buildPrep() reads — declared conditions and
+   joint trends — plus what today's session showed. Tick-only: never appended to
+   the log, so it can't reach volume accounting. Doses are judgement defaults. */
+const REHAB_PATTERN={shoulder:'rehab_shoulder',knee:'prehab_knee',wrist:'prehab_wrist',
+  elbow:'prehab_elbow','low back':'prehab_lowback'};
+/* Rehab movements that load a declared condition's risk position. Checked in
+   addition to flagFor(). prone_t is abduction with external rotation. */
+const REHAB_UNSAFE={shoulder_instability:['prone_t']};
+function rehabUnsafe(exId){
+  if(flagFor(exId)) return true;
+  return (CFG.conditions||[]).some(c=>(REHAB_UNSAFE[c]||[]).includes(exId));
+}
+function buildRehab(){
+  const flagged=new Set(), active=[];
+  const addJ=(j,isFlag)=>{ if(!REHAB_PATTERN[j]) return; if(!active.includes(j)) active.push(j); if(isFlag) flagged.add(j); };
+  Object.keys((session.readiness&&session.readiness.joints)||{}).forEach(j=>addJ(j,true));
+  session.slots.forEach(sl=>{ if(sl.joint&&sl.joint.level>=3) addJ(sl.joint.joint,true); });
+  const ep=lastEarlyPain();
+  if(ep) Object.keys(ep.joints||{}).forEach(j=>addJ(j,true));
+  JOINTS.forEach(j=>{ const lv=jointLevel(jointTrend(j,6)); if(lv>=2) addJ(j,lv>=3); });
+  (CFG.conditions||[]).forEach(c=>{ const cd=CONDITIONS[c]; if(cd&&cd.joint) addJ(cd.joint,false); });
+  if(!active.length) return [];
+  // joints flagged today first
+  active.sort((a,b)=>(flagged.has(b)?1:0)-(flagged.has(a)?1:0));
+  // heavy work through a joint earns a longer block
+  const heavy=new Set();
+  active.forEach(j=>{
+    const pats=JOINT_PATTERNS[j]||[];
+    const n=session.slots.reduce((a,sl)=>a+(pats.includes(exById[sl.ex].pattern)?sl.sets.length:0),0);
+    if(n>=8) heavy.add(j);
+  });
+  const n=Math.min(5, 2+(flagged.size?1:0)+(heavy.size?1:0));
+  const pools=active.map(j=>{
+    const list=EX.filter(e=>e.rehab&&e.pattern===REHAB_PATTERN[j]&&!rehabUnsafe(e.id));
+    const rot=list.length?completedCount()%list.length:0;   // vary between sessions
+    return {j,list:list.slice(rot).concat(list.slice(0,rot))};
+  }).filter(p=>p.list.length);
+  const out=[];
+  for(let round=0; out.length<n; round++){
+    let added=false;
+    for(const p of pools){
+      if(out.length>=n) break;
+      const e=p.list[round]; if(!e) continue;
+      added=true;
+      out.push({ex:e.id,name:e.name,joint:p.j,done:false,
+        why:flagged.has(p.j)?'flagged today':heavy.has(p.j)?'heavy '+p.j+' work today':'your '+p.j,
+        dose:isBW(e)?'2 sets, slow reps or holds':'2 × 12–15, light'});
+    }
+    if(!added) break;
+  }
+  return out;
+}
+function renderRehab(v){
+  const allDone=session.slots.every(sl=>sl.sets.length>=sl.sets_target);
+  if(!allDone||session.rehabSkipped) return;
+  if(!session.rehab){ session.rehab=buildRehab(); saveSession(); }
+  if(!session.rehab.length) return;
+  const items=session.rehab, done=items.filter(m=>m.done).length;
+  const c=el('div','ex');
+  const h=el('div','exhead');
+  h.innerHTML='<span class="grow"><div class="exname">Rehab</div><div class="exmeta">'+done+' of '+items.length+' done · after training, before your check-in</div></span>';
+  c.appendChild(h);
+  const b=el('div','exbody');
+  items.forEach((m,i)=>{
+    const r=el('button','srow'); r.style.cssText='width:100%;text-align:left';
+    r.innerHTML='<span class="sidx '+(m.done?'done':'')+'">'+(m.done?'✓':i+1)+'</span>'
+      +'<span class="grow"><div style="font-size:14.5px;font-weight:'+(m.done?'400':'600')+';'+(m.done?'opacity:.55':'')+'">'+esc(m.name)+'</div>'
+      +'<div class="dim tiny">'+esc(m.dose)+' · '+esc(m.why)+'</div></span>';
+    r.onclick=()=>{ m.done=!m.done; saveSession(); renderWork(); };
+    b.appendChild(r);
+  });
+  b.appendChild(el('div','dim tiny','Chosen from your conditions, joint trends and today\'s work. Doses are starting points, not prescriptions. Doesn\'t count toward training volume.')).style.marginTop='7px';
+  const sk=el('button','','Skip rehab today');
+  sk.style.cssText='font-size:13px;color:var(--dim);text-decoration:underline;margin-top:8px';
+  sk.onclick=()=>{ session.rehabSkipped=true; saveSession(); renderWork(); };
+  b.appendChild(sk);
+  c.appendChild(b); v.appendChild(c);
+}
 function renderWork(){
   const v=$('#v-work'); v.innerHTML='';
   if(!session){ renderPreview(v); return; }
@@ -1503,10 +1717,7 @@ function renderWork(){
 
   session.slots.forEach((slot,i)=>{
     const ex=exById[slot.ex], open=session.openIdx===i;
-    const box=el('div','ex');
-    const head=el('div','exhead');
-    const nameBtn=el('button','grow');
-    nameBtn.style.cssText='text-align:left;padding:0';
+    const {box,head,nameBtn,body}=exCard(slot,{button:true});
     const order=el('div','row'); order.style.cssText='gap:3px;flex:none';
     const canMove=!slot.sets.length;   // reordering after logging would orphan set history to the wrong slot
     const mv=(lab,aria,fn)=>{ const b=el('button','iconbtn',lab); b.setAttribute('aria-label',aria);
@@ -1520,8 +1731,6 @@ function renderWork(){
       if(session.openIdx===i)session.openIdx=i+1; else if(session.openIdx===i+1)session.openIdx=i;
       saveSession(); renderWork(); }));
     const needsRate = slot.sets.length>0 && slot.sets.length>=slot.sets_target && !session.ratings[slot.ex];
-    nameBtn.innerHTML=`<div class="exname">${esc(ex.name)}</div>
-      <div class="exmeta">${slot.sets_target} sets × ${slot.reps[0]===slot.reps[1]?slot.reps[0]:slot.reps[0]+'-'+slot.reps[1]} reps · RPE ${slot.rpe}${slot.swapped?' · swapped':''}</div>`;
     nameBtn.onclick=()=>{session.openIdx=open?-1:i; if(!open) seedDraft(slot); renderWork();};
     const icons=el('div','exicons');
     if(needsRate){
@@ -1534,33 +1743,26 @@ function renderWork(){
     info.setAttribute('aria-label','Exercise details'); info.onclick=()=>openInfo(slot.ex);
     const swap=el('button','iconbtn','<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>');
     swap.setAttribute('aria-label','Swap exercise'); swap.onclick=()=>openSwap(slot,i);
-    icons.append(info,swap); head.append(nameBtn,order,icons);
-    box.appendChild(head);
+    icons.append(info,swap); head.append(order,icons);
 
-    const body=el('div','exbody');
     const warms=sets().filter(s=>s.session_id===session.id&&s.exercise_id===slot.ex&&s.set_kind==='warmup');
-    warms.forEach(w=>{
-      const r=el('div','srow');
-      r.innerHTML=`<span class="sidx" style="background:transparent;border:1px dashed var(--line)">w</span>
-        <span class="sload empty">${fmt(w.weight.value)} ${w.weight.unit} × ${w.reps}</span>
-        <span class="sbadge">warmup</span>`;
-      body.appendChild(r);
-    });
+    warms.forEach(w=>body.appendChild(srowEl({warm:true,empty:true,badge:'warmup',
+      load:fmt(w.weight.value)+' '+w.weight.unit+' × '+w.reps})));
     for(let j=0;j<Math.max(slot.sets_target,slot.sets.length);j++){
       const s=slot.sets[j];
-      const r=el(s?'button':'div','srow');
-      if(s) r.style.cssText='width:100%;text-align:left';
-      r.innerHTML=`<span class="sidx ${s?'done':''}">${j+1}</span>
-        <span class="sload ${s?'':'empty'}">${s?`${fmt(s.weight.value)} ${s.weight.unit} × ${s.reps}`:'—'}${s&&isPRSet(s.id)?'<span class="pr">PR</span>':''}</span>
-        <span class="sbadge ${s?'on':''}">${s?(s.group&&s.group.pos>0?TECHNIQUES[s.group.kind].extend:(s.rpe?'RPE '+s.rpe:'warmup')):'RPE '+slot.rpe}</span>
-        ${s?'<span class="del" aria-hidden="true">›</span>':''}`;
-      if(s){ r.setAttribute('aria-label',`Edit set ${j+1}`);
-        r.onclick=()=>openEditSet(slot,j); }
-      body.appendChild(r);
+      body.appendChild(srowEl({idx:j+1, done:!!s, empty:!s,
+        load:s?fmt(s.weight.value)+' '+s.weight.unit+' × '+s.reps:'—',
+        pr:s&&isPRSet(s.id),
+        badge:s?(s.group&&s.group.pos>0?TECHNIQUES[s.group.kind].extend:(s.rpe?'RPE '+s.rpe:'warmup')):'RPE '+slot.rpe,
+        badgeOn:!!s, chev:!!s,
+        onclick:s?()=>openEditSet(slot,j):null, aria:s?'Edit set '+(j+1):null}));
     }
     if(open) body.appendChild(entryPanel(slot,i));
-    box.appendChild(body); v.appendChild(box);
+    v.appendChild(box);
   });
+  const addEx=el('button','btn ghost wide','Add an exercise'); addEx.style.marginTop='8px';
+  addEx.onclick=openSessionAdd; v.appendChild(addEx);
+  renderRehab(v);
   const fin=el('button','btn go wide','Finish session'); fin.onclick=openPost; v.appendChild(fin);
   const ee=el('button','btn ghost wide','End early'); ee.style.marginTop='8px';
   ee.onclick=openEndEarly; v.appendChild(ee);
@@ -1644,7 +1846,7 @@ function openWeekPreview(openDayId){
   const addB=el('button','btn wide','Add an exercise to '+day.name);
   addB.style.marginTop='11px';
   addB.onclick=()=>exPicker('Add an exercise',()=>true,e=>{
-    editWeekDay(rawDay,d=>{ d.slots.push({ex:e.id,role:'accessory',sets:3,reps:[10,15],rpe:9}); });
+    editWeekDay(rawDay,d=>{ d.slots.push(newSlotFor(e)); });
     openWeekPreview(active);
   });
   body.appendChild(addB);
@@ -1755,37 +1957,30 @@ function renderPreview(v){
   head.appendChild(alt);
   v.appendChild(head);
 
-  const c=el('div','card');
-  const lab=el('div','row between'); lab.style.cssText='padding:10px 14px 5px';
+  const lab=el('div','row between'); lab.style.cssText='padding:4px 4px 2px';
   lab.innerHTML=`<span class="muted tiny">Planned work${day.edited?' · edited':''}</span>`;
   if(day.edited){
     const rs=el('button','btn s','Reset');
     rs.onclick=()=>{ PENDING=null; savePending(); render(); toast('Back to the generated plan'); };
     lab.appendChild(rs);
   }
-  c.appendChild(lab);
-  day.slots.forEach((slot,i)=>{
+  v.appendChild(lab);
+  day.slots.forEach(slot=>{
     const ex=exById[slot.ex];
     const pr=nextPrescription(slot), lb=pr.lb;
-    const reps=slot.reps[0]===slot.reps[1]?slot.reps[0]:slot.reps[0]+'–'+slot.reps[1];
-    const loadTxt=ex.load==='bodyweight'?(lb?'+'+fmt(lb,0)+' lb':'bodyweight'):(lb!=null?fmt(lb,0)+' lb':'—');
-    const r=el('div','pad');
-    r.style.cssText='padding-top:11px;padding-bottom:11px'+(i?';border-top:1px solid var(--line)':'');
-    r.innerHTML=`<div class="row between">
-        <span class="grow"><div style="font-weight:620;font-size:15px">${esc(ex.name)}${
-          slot.role==='primary'?' <span class="tiny" style="color:var(--str);font-weight:650">· Lead lift</span>':''}</div>
-          <div class="exmeta">${slot.sets} × ${reps} @ RPE ${slot.rpe}${slot.role?' · '+slot.role:''}${slot.prio?' · priority':''}${slot.joint?` · <span style="color:var(--str)">${esc(slot.joint.joint)}: ${esc(slot.joint.msg)}</span>`:''}</div>
-          ${(()=>{const f=flagFor(slot.ex); return f?`<div class="tiny" style="color:${f.level==='red'?'var(--peak)':'var(--str)'};margin-top:3px">${f.level==='red'?'▲':'●'} ${esc(f.why)}</div>`:'';})()}</span>
-        <span style="text-align:right;flex:none">
-          <div class="sload" style="font-size:16px">${loadTxt}</div>
-          <div class="dim tiny">${(()=>{const b=bestE1RM(slot.ex);
-            return (lb&&b&&ex.load!=='bodyweight')?`${Math.round(lb/b.v*100)}% of ${fmt(b.v,0)}`:(pr.src||'no estimate yet');})()}</div></span>
-      </div>`;
-    c.appendChild(r);
+    const loadTxt=isBW(ex)?(lb?'+'+fmt(lb,0)+' lb':'bodyweight'):(lb!=null?fmt(lb,0)+' lb':'—');
+    const {box,body}=exCard(slot);
+    for(let j=0;j<slot.sets;j++)
+      body.appendChild(srowEl({idx:j+1, load:loadTxt+' × '+fmtRange(slot.reps), badge:'RPE '+slot.rpe}));
+    const f=flagFor(slot.ex);
+    if(f) body.appendChild(el('div','tiny',(f.level==='red'?'▲ ':'● ')+esc(f.why))).style.cssText='color:'+(f.level==='red'?'var(--peak)':'var(--str)')+';margin-top:6px';
+    const pct=pctOfBest(slot,lb);
+    if(pct) body.appendChild(el('div','dim tiny',esc(pct))).style.marginTop='4px';
+    body.appendChild(whyEl(explainRx(slot,pr,{idx:null,fresh:true}),'p:'+slot.ex));
+    v.appendChild(box);
   });
-  c.appendChild(el('div','pad dim tiny','Loads come from your logged history. The check-in adjusts them if it needs to.'))
-   .style.paddingTop='0';
-  v.appendChild(c);
+  v.appendChild(el('div','dim tiny','Loads come from your logged history. The check-in adjusts them if it needs to.'))
+   .style.padding='4px 4px 10px';
   if(day.slots.some(sl=>nextPrescription(sl).lb==null)){
     const seed=el('button','btn ghost wide','Set starting estimates');
     seed.onclick=openEstimates; v.appendChild(seed);
@@ -1830,8 +2025,8 @@ function openWorkoutPreview(rawDay){
   day.slots.forEach((slot,i)=>{
     const ex=exById[slot.ex];
     const pr=nextPrescription(slot), lb=pr.lb;
-    const reps=slot.reps[0]===slot.reps[1]?slot.reps[0]:slot.reps[0]+'–'+slot.reps[1];
-    const loadTxt=ex.load==='bodyweight'?(lb?'+'+fmt(lb,0)+' lb':'bodyweight'):(lb!=null?fmt(lb,0)+' lb':'—');
+    const reps=fmtRange(slot.reps);
+    const loadTxt=isBW(ex)?(lb?'+'+fmt(lb,0)+' lb':'bodyweight'):(lb!=null?fmt(lb,0)+' lb':'—');
     const setLines=Array.from({length:slot.sets},(_,si)=>
       `<div class="dim tiny">Set ${si+1}: ${loadTxt} × ${reps} @ RPE ${slot.rpe}</div>`).join('');
     const ramp=lb!=null?warmupRamp(slot,lb):[];
@@ -1843,11 +2038,11 @@ function openWorkoutPreview(rawDay){
           <div class="exmeta">${slot.role?slot.role:''}${slot.prio?' · priority':''}${slot.joint?` · <span style="color:var(--str)">${esc(slot.joint.joint)}: ${esc(slot.joint.msg)}</span>`:''}</div>
           ${(()=>{const f=flagFor(slot.ex); return f?`<div class="tiny" style="color:${f.level==='red'?'var(--peak)':'var(--str)'};margin-top:3px">${f.level==='red'?'▲':'●'} ${esc(f.why)}</div>`:'';})()}</span>
         <span style="text-align:right;flex:none">
-          <div class="dim tiny">${(()=>{const b=bestE1RM(slot.ex);
-            return (lb&&b&&ex.load!=='bodyweight')?`${Math.round(lb/b.v*100)}% of ${fmt(b.v,0)}`:(pr.src||'no estimate yet');})()}</div></span>
+          <div class="dim tiny">${esc(pctOfBest(slot,lb)||pr.src||'no estimate yet')}</div></span>
       </div>
-      <div style="margin-top:6px">${rampTxt?`<div class="dim tiny">Warmup: ${esc(rampTxt)}</div>`:(ex.load!=='bodyweight'&&ex.load!=='stack'?'<div class="dim tiny">Warmup: no estimate yet</div>':'')}
+      <div style="margin-top:6px">${rampTxt?`<div class="dim tiny">Warmup: ${esc(rampTxt)}</div>`:(ex.load!=='bodyweight'&&!isStackLike(ex)?'<div class="dim tiny">Warmup: no estimate yet</div>':'')}
       ${setLines}</div>`;
+    r.appendChild(whyEl(explainRx(slot,pr,{idx:null,fresh:true}),'w:'+slot.ex));
     const ctl=el('div','row'); ctl.style.cssText='gap:6px;margin-top:8px';
     const mk=(label,aria,fn)=>{ const b=el('button','btn s',label); b.setAttribute('aria-label',aria); b.onclick=fn; return b; };
     ctl.appendChild(mk('−','One set fewer',()=>{ editPlan(rawDay,d=>{ if(d.slots[i].sets>1) d.slots[i].sets--; }); openWorkoutPreview(rawDay); }));
@@ -1877,13 +2072,13 @@ function openEstimates(){
   const host=$('#es');
   ids.forEach(id=>{
     const ex=exById[id], cur=bestE1RM(id);
-    let val=cur?Math.round(cur.v):(ex.load==='bodyweight'?0:100);
+    let val=cur?Math.round(Math.max(0,cur.v-bwOffset(ex))):(isBW(ex)?0:100);
     vals[id]=null;
     const blk=el('div','qblock');
     blk.innerHTML=`<div class="qlab">${esc(ex.name)}</div>`;
     const h=el('div','');
     const drawS=()=>{ h.innerHTML=''; h.appendChild(stepper(
-      ex.load==='bodyweight'?'added lb':'lb', val, ex.inc, nv=>{val=Math.max(0,nv);vals[id]=val;drawS();})); };
+      isBW(ex)?'added lb':'lb', val, ex.inc, nv=>{val=Math.max(0,nv);vals[id]=val;drawS();})); };
     drawS(); blk.appendChild(h);
     if(cur&&!cur.stated) blk.appendChild(el('div','anchor',`Already estimated at ${fmt(cur.v,0)} lb from your logs`));
     host.appendChild(blk);
@@ -1927,7 +2122,7 @@ function openLibrary(){
       b.style.cssText='width:100%;text-align:left;padding:9px 2px;border-top:1px solid var(--line)';
       b.innerHTML=`<span class="grow"><div style="font-weight:600">${esc(e.name)}${
           f?`<span style="color:${f.level==='red'?'var(--peak)':'var(--str)'}"> ${f.level==='red'?'▲':'●'}</span>`:''}</div>
-        <div class="dim tiny">${esc(e.load)}${e.custom?' · yours':''}${e.rehab?' · rehab':''} · ${
+        <div class="dim tiny">${esc(loadName(e.load))}${e.custom?' · yours':''}${e.rehab?' · rehab':''} · ${
           Object.entries(e.vol).filter(([,w])=>w>=1).map(([m])=>ML[m]||m).join(', ')||'support'}</div></span>
         <span class="dim">›</span>`;
       b.onclick=()=>{ $('#dlg').close(); openInfo(e.id); };
@@ -1946,6 +2141,26 @@ function exerciseNameTaken(name, excludeId){
   const n=name.trim().toLowerCase();
   return EX.some(e=>e.id!==excludeId&&e.name.trim().toLowerCase()===n);
 }
+/* How an exercise is loaded decides three things: whether the plate solver runs,
+   whether its e1RM can be compared across equipment, and which progression
+   model applies. Chosen explicitly rather than guessed. */
+const LOADING_TYPES=[
+  {load:'barbell',label:'Barbell',prog:'percentage',plate:true,comparable:true,inc:5,bar:45,
+    hint:'Plate solver applies. Comparable across gyms.'},
+  {load:'machine',label:'Plate-loaded machine',prog:'double',comparable:false,inc:10,
+    hint:'Not comparable across machines — valid against itself only.'},
+  {load:'stack',label:'Pin/stack machine',prog:'double',comparable:false,inc:10,
+    hint:'Not comparable across machines — valid against itself only.'},
+  {load:'cable',label:'Cable',prog:'double',comparable:false,inc:5,
+    hint:'Not comparable — pulley ratios and stacks differ between stations.'},
+  {load:'dumbbell',label:'Dumbbell',prog:'double',comparable:true,inc:5,
+    hint:'Comparable across gyms.'},
+  {load:'bodyweight',label:'Bodyweight',prog:'rep',comparable:true,inc:5,
+    hint:'Progresses by reps. No added load.'},
+  {load:'bodyweight_plus',label:'Bodyweight + added weight',prog:'double',comparable:true,inc:2.5,
+    hint:'Log the weight you add, not the total. Estimated 1RM uses your latest logged bodyweight plus the added weight.'}
+];
+const loadingType=load=>LOADING_TYPES.find(t=>t.load===load)||LOADING_TYPES[1];
 function openCustomEx(onCreate, editingEx){
   const st=editingEx?{name:editingEx.name,pattern:editingEx.pattern,load:editingEx.load,
       primary:Object.entries(editingEx.vol).find(([,w])=>w===1)?.[0]||'chest',
@@ -2020,9 +2235,9 @@ const MOVEMENT_TYPES=[
       "Fine to pick this — it just means the app won't be able to suggest swap alternatives for it later."));
     host.appendChild(mtBlock);
 
-    mk('Equipment',['barbell','dumbbell','machine','stack','bodyweight'],st.load,v=>{
-      st.load=v; st.inc=v==='machine'||v==='stack'?10:v==='dumbbell'?5:5;
-      st.bar=v==='barbell'?45:0; });
+    mk('How is it loaded?',LOADING_TYPES.map(t=>t.load),st.load,v=>{
+      const t=loadingType(v); st.load=v; st.inc=t.inc; st.bar=t.bar||0; },v=>loadingType(v).label);
+    host.lastChild.appendChild(el('div','anchor',esc(loadingType(st.load).hint)));
     mk('Main muscle',Object.keys(LANDMARKS),st.primary,v=>st.primary=v,v=>ML[v]);
 
     const sec=el('div','qblock');
@@ -2053,20 +2268,20 @@ const MOVEMENT_TYPES=[
     if(name.length<2){ toast('Give it a name first'); return; }
     const vol={[st.primary]:1}; st.secondary.forEach(m=>vol[m]=0.5);
     if(editingEx){
+      const lt=loadingType(st.load);
       Object.assign(editingEx,{name,pattern:st.pattern,load:st.load,bar:st.bar||0,
-        plateSet:st.load==='barbell'?'main_lb':null,inc:st.inc,
-        prog:st.load==='barbell'?'percentage':st.load==='bodyweight'?'rep':'double',
-        comparable:!(st.load==='machine'||st.load==='stack'),unitPref:st.unitPref,vol});
+        plateSet:lt.plate?'main_lb':null,inc:st.inc,prog:lt.prog,
+        comparable:lt.comparable,unitPref:st.unitPref,vol});
       CFG.customEx=(CFG.customEx||[]).map(c=>c.id===editingEx.id?editingEx:c); saveCfg();
       $('#dlg').close(); toast(name+' updated');
       if(onCreate) onCreate(editingEx); else render();
       return;
     }
     const id='cx_'+name.toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,28)+'_'+Math.random().toString(36).slice(2,5);
+    const lt=loadingType(st.load);
     const ex={id,name,pattern:st.pattern,load:st.load,bar:st.bar||0,
-      plateSet:st.load==='barbell'?'main_lb':null,inc:st.inc,
-      prog:st.load==='barbell'?'percentage':st.load==='bodyweight'?'rep':'double',
-      comparable:!(st.load==='machine'||st.load==='stack'),custom:true,unitPref:st.unitPref,vol};
+      plateSet:lt.plate?'main_lb':null,inc:st.inc,prog:lt.prog,
+      comparable:lt.comparable,custom:true,unitPref:st.unitPref,vol};
     CFG.customEx=(CFG.customEx||[]).concat(ex); saveCfg(); mergeCustom();
     $('#dlg').close(); toast(name+' added');
     if(onCreate) onCreate(ex); else render();
@@ -2212,7 +2427,7 @@ function openInfo(exId){
       ${tips.map(t=>`<div class="muted sm" style="margin-bottom:7px">• ${esc(t)}</div>`).join('')}
       <div class="dim tiny" style="margin-top:2px">Standard technique points, not a substitute for a coach watching you move.</div></div>` : '';
   sheet(`<h2 style="font-size:20px;margin-bottom:2px">${esc(ex.name)}</h2>
-    <div class="muted tiny" style="margin-bottom:15px">${esc(ex.pattern.replace(/_/g,' '))} · ${esc(ex.load)}</div>
+    <div class="muted tiny" style="margin-bottom:15px">${esc(ex.pattern.replace(/_/g,' '))} · ${esc(loadName(ex.load))}</div>
     ${tipsHtml}
     ${(()=>{const f=flagFor(exId); if(!f) return '';
       const col=f.level==='red'?'var(--peak)':'var(--str)';
@@ -2304,7 +2519,7 @@ function exPicker(title, filterFn, onPick, opts){
       const b=el('button','btn wide'); b.style.cssText='text-align:left';
       b.innerHTML=`<div>${esc(e.name)}${e.custom?' <span class="dim tiny">· custom</span>':''}${
         f?`<span style="color:${f.level==='red'?'var(--peak)':'var(--str)'};font-size:12px"> ${f.level==='red'?'▲':'●'}</span>`:''}</div>
-        <div class="dim tiny" style="font-weight:400">${esc(e.pattern.replace(/_/g,' '))} · ${esc(e.load)}${
+        <div class="dim tiny" style="font-weight:400">${esc(e.pattern.replace(/_/g,' '))} · ${esc(loadName(e.load))}${
           rt?` · stimulus ${rt.st.toFixed(1)}/5 across ${rt.n}`:''}${
           f?` · ${esc(f.why)}`:''}</div>`;
       b.onclick=()=>{ $('#dlg').close(); onPick(e); };
@@ -2325,7 +2540,7 @@ function openPlanSwap(rawDay,i){
 }
 function openPlanAdd(rawDay){
   exPicker('Add an exercise', ()=>true, e=>{
-    editPlan(rawDay,d=>{ d.slots.push({ex:e.id,role:'accessory',sets:3,reps:[10,15],rpe:9}); });
+    editPlan(rawDay,d=>{ d.slots.push(newSlotFor(e)); });
     openWorkoutPreview(rawDay);
   });
 }
@@ -2344,7 +2559,7 @@ function entryPanel(slot,idx){
   p.appendChild(el('div','hr'));
   const lp=lastPerformance(slot.ex);
   if(lp){
-    const est=e1rm(toLb(lp.set.weight),lp.set.reps);
+    const est=setE1RM(lp.set);
     p.appendChild(el('div','row between sm',
       `<span class="muted">Last time · ${esc(lp.when)}</span>
        <span style="font-weight:600">${fmt(lp.set.weight.value)} ${lp.set.weight.unit} × ${lp.set.reps}${lp.set.rpe?` @ ${lp.set.rpe}`:''}${est?` · ${fmt(est,0)}`:''}</span>`))
@@ -2363,8 +2578,10 @@ function entryPanel(slot,idx){
     null,{typeable:true,min:5,max:10}));
   p.appendChild(g);
   p.appendChild(el('div','dim tiny','Target RPE '+slot.rpe)).style.marginTop='4px';
-  if(draft.suggested) p.appendChild(el('div','sugnote',
-    'Suggested from your last set — tap any value to change it.'));
+  if(draft.suggested){
+    p.appendChild(el('div','sugnote','Suggested — tap any value to change it.'));
+    if(draft.why) p.appendChild(whyEl(draft.why,'e:'+slot.ex));
+  }
 
   if(ex.load==='barbell'&&ex.plateSet){
     // use whichever plate set matches what's on screen, so the diagram works
@@ -2378,11 +2595,11 @@ function entryPanel(slot,idx){
       ?`${sol.plates.join(' + ')} per side · ${ex.bar} ${draft.unit} bar`
       :`Bar only · ${ex.bar} ${draft.unit}`));
   }
-  const est=e1rm(draft.unit==='kg'?draft.weight*LB:draft.weight,draft.reps);
+  const est=e1rm((draft.unit==='kg'?draft.weight*LB:draft.weight)+bwOffset(ex),draft.reps);
   if(est){
     const c=conf(draft.reps), d=el('div','sm',
       `<span style="font-size:27px;font-weight:760;letter-spacing:-.03em">${fmt(est,0)}</span>
-       <span class="muted tiny"> est. 1RM lb</span>${c!=='high'?`<span class="dim tiny"> · ${c} confidence at ${draft.reps} reps</span>`:''}`);
+       <span class="muted tiny"> est. 1RM lb${ex.load==='bodyweight_plus'?(bwMissing(ex)?' · added weight only, no bodyweight logged':' · incl. bodyweight'):''}</span>${c!=='high'?`<span class="dim tiny"> · ${c} confidence at ${draft.reps} reps</span>`:''}`);
     d.style.margin='9px 0 2px'; p.appendChild(d);
   }
   // technique picker
@@ -2422,8 +2639,7 @@ function entryPanel(slot,idx){
         b.style.cssText='width:100%;text-align:left;padding:7px 0;border-top:1px solid var(--line)';
         b.innerHTML=`<span class="muted">${r.bar?'Bar':'Set '+(i+1)}</span>
           <span style="font-weight:600">${fmt(r.lb,0)} lb × ${r.reps}</span>`;
-        b.onclick=()=>{ draft.weight=r.lb; draft.unit='lb'; draft.reps=r.reps;
-          draft.alt=null; logSet(slot,idx,'warmup'); };
+        b.onclick=()=>logSet(slot,idx,'warmup',false,{weight:r.lb,unit:'lb',reps:r.reps});
         wu.appendChild(b);
       });
       wu.appendChild(el('div','dim tiny','Tap one to log it. Skip them if you\'re already warm.'));
@@ -2547,7 +2763,7 @@ function openEditSet(slot,j){
    3+ on this pattern also extends the ramp, on top of readiness. */
 function warmupRamp(slot, workingLb){
   const ex=exById[slot.ex];
-  if(!workingLb||ex.load==='bodyweight'||ex.load==='stack') return [];
+  if(!workingLb||ex.load==='bodyweight'||isStackLike(ex)) return [];
   const score = session&&session.score!=null ? session.score : 0.7;
   const jointExtend = slot.joint&&slot.joint.level>=2;
   let steps;
@@ -2627,22 +2843,93 @@ function startSession(day){
     slots:day.slots.map(s=>({...s,sets_target:s.sets,sets:[]}))};
   session.startedAt=Date.now(); saveSession(); seedDraft(session.slots[0]); openCheckin();
 }
+/* Plain-language account of how a prescribed number was reached: the block,
+   where the load came from, and each adjustment that actually applied. */
+const BLOCK_NAME={hyp:'hypertrophy',str:'strength',peak:'peak',deload:'deload'};
+const fmtRange=r=>r[0]===r[1]?String(r[0]):r[0]+'–'+r[1];
+function explainRx(slot, pr, o){
+  o=o||{};
+  const p=currentPhase(), bn=BLOCK_NAME[p.type]||p.type;
+  const parts=[], detail=[];
+  // 1. which block, and where the rep range came from
+  if(slot.repSrc==='muscle'){
+    const mn=(ML[slot.repMuscle]||slot.repMuscle).toLowerCase();
+    parts.push(fmtRange(slot.reps)+' reps · '+mn+' default');
+    detail.push('Rep range '+fmtRange(slot.reps)+' is a default for '+mn+' work, not the '+bn+" block's range. It is a judgement default (Grade D) — practical, not an evidence claim.");
+  }else if(slot.repSrc==='exercise'){
+    parts.push(fmtRange(slot.reps)+' reps · set for this exercise');
+    detail.push('Rep range '+fmtRange(slot.reps)+" was set on this exercise, overriding the block's range.");
+  }else{
+    parts.push(bn+' block');
+    detail.push('Rep range '+fmtRange(slot.reps)+' at RPE '+slot.rpe+' comes from the '+bn+' block'+(p.weeks?' (week '+p.week+' of '+p.weeks+')':'')+' for a '+(slot.role||'working')+' lift.');
+  }
+  // 2. where the number came from
+  if(pr.src) parts.push(pr.src==='last session'?'from your last set':pr.src);
+  else parts.push('no history yet');
+  if(pr.note) detail.push(pr.note);
+  // 3. readiness
+  if(o.adj){
+    const cut=Math.round((1-o.adj.load)*100), sc=Math.round(session.score*100);
+    parts.push('readiness '+sc+' · load −'+cut+'%');
+    detail.push('Readiness '+sc+' out of 100 ('+o.adj.label.toLowerCase()+'): today\'s starting loads are cut '+cut+'%'+(session.adjReason?', driven by '+session.adjReason:'')+'.');
+  }
+  if(session&&session.adj&&session.adj.sets&&o.idx!=null&&o.idx>=0&&o.idx<2&&o.fresh!==false){
+    const n=Math.abs(session.adj.sets);
+    detail.push('Readiness also removed '+n+' set'+(n>1?'s':'')+' from the first two exercises.');
+  }
+  if(o.fresh===false) detail.push("Based on the set you just logged, which already reflects today's readiness adjustment.");
+  // 4. joint
+  if(o.jointCut&&slot.joint){
+    parts.push(slot.joint.joint+' flare · load −10%');
+    detail.push('Your '+slot.joint.joint+' trend is flagged, so the starting load on this pattern is cut 10%.');
+  }
+  // 5. easing off after a pain-ended session
+  if(lastEarlyPain()){
+    parts.push('easing off after last session');
+    detail.push('Your last session ended early with pain, so every exercise today has one set fewer.');
+  }
+  return {line:parts.join(' · '), detail};
+}
+/* One expandable line: tap for the full reasoning. */
+const WHY_OPEN=new Set();
+function whyEl(exp, key, cls){
+  const w=el('div',cls||'why');
+  const draw=()=>{
+    const open=WHY_OPEN.has(key);
+    w.innerHTML='<button type="button" class="whyline" aria-expanded="'+open+'">'+esc(exp.line)+' <span class="dim">'+(open?'▾':'▸')+'</span></button>'
+      +(open?'<div class="whydetail">'+exp.detail.map(d=>'<div>'+esc(d)+'</div>').join('')+'</div>':'');
+    w.querySelector('button').onclick=e=>{ e.stopPropagation(); if(WHY_OPEN.has(key)) WHY_OPEN.delete(key); else WHY_OPEN.add(key); draw(); };
+  };
+  draw(); return w;
+}
+/* The suggestion for a slot. Readiness and joint cuts apply only to the first
+   set of an exercise: once a set is logged today, the next suggestion is priced
+   from what you actually lifted, which already reflects them. Applying them
+   again would compound the cut set after set. */
+function suggestFor(slot){
+  const pr=nextPrescription(slot);
+  const o={idx:session?session.slots.indexOf(slot):null, fresh:!slot.sets.length};
+  let lb=pr.lb;
+  if(lb!=null&&o.fresh&&session&&session.adj){ lb=loadable(slot, lb*session.adj.load); o.adj=session.adj; }
+  if(lb!=null&&o.fresh&&slot.joint&&slot.joint.level>=4){ lb=loadable(slot, lb*0.9); o.jointCut=true; }
+  return {pr, lb, why:explainRx(slot,pr,o)};
+}
 function seedDraft(slot){
   const ex=exById[slot.ex];
-  const pr=nextPrescription(slot);
-  let lb=pr.lb;
-  if(lb!=null && session&&session.adj) lb=loadable(slot, lb*session.adj.load);
-  if(lb!=null && slot.joint&&slot.joint.level>=4) lb=loadable(slot, lb*0.9);
+  const {pr,lb,why}=suggestFor(slot);
   const fixedUnit=ex.unitPref&&ex.unitPref!=='both'?ex.unitPref:null;
   if(lb!=null){
     if(fixedUnit==='kg'){ draft.weight=Math.round(lb/LB*2)/2; draft.unit='kg'; }
     else{ draft.weight=lb; draft.unit='lb'; }
-  }else{ draft.weight=ex.load==='bodyweight'?0:(ex.bar||50); draft.unit=fixedUnit||CFG.units||'lb'; }
+  }else{ draft.weight=isBW(ex)?0:(ex.bar||50); draft.unit=fixedUnit||CFG.units||'lb'; }
   draft.reps=pr.reps??slot.reps[0]; draft.rpe=slot.rpe; draft.group=null; draft.alt=null;
-  draft.suggestedLb=lb; draft.suggestedReps=draft.reps; draft.suggested=lb!=null;
+  draft.suggestedLb=lb; draft.suggestedReps=draft.reps; draft.suggested=lb!=null; draft.why=why;
 }
-function logSet(slot,idx,kind,extend){
+function logSet(slot,idx,kind,extend,over){
   const ex=exById[slot.ex];
+  // over: {weight,unit,reps} — a warmup rung logs its own numbers and leaves
+  // the working-set draft (and its suggestion) exactly as it was
+  const W=over||draft;
   const T=TECHNIQUES[draft.tech];
   let group=null, setKind=kind;
   if(kind!=='warmup'&&draft.tech!=='straight'){
@@ -2662,8 +2949,8 @@ function logSet(slot,idx,kind,extend){
   // logged, without ever rewriting the event later.
   const stampSuggestion=kind!=='warmup'&&!group&&slot.sets.length===0;
   const candidate={type:'set',session_id:session.id,slot:slot.ex,exercise_id:ex.id,
-    weight:{value:draft.weight,unit:draft.unit}, bar:ex.bar?{value:ex.bar,unit:draft.unit}:null,
-    reps:draft.reps, rpe:kind==='warmup'?null:draft.rpe, set_kind:setKind, group,
+    weight:{value:W.weight,unit:W.unit}, bar:ex.bar?{value:ex.bar,unit:W.unit}:null,
+    reps:W.reps, rpe:kind==='warmup'?null:draft.rpe, set_kind:setKind, group,
     target:{reps:slot.reps,rpe:slot.rpe},
     suggested_lb:stampSuggestion?(draft.suggestedLb??null):null};
   // PR must be decided BEFORE the event is written, or the flag never persists
@@ -2683,11 +2970,11 @@ function logSet(slot,idx,kind,extend){
      is only a pre-fill: whatever the steppers show when Log Set is tapped
      is what gets logged, exactly like every other set. */
   if(kind!=='warmup'&&!group){
-    const next=nextPrescription(slot);
+    const next=suggestFor(slot);
     if(next.lb!=null){
       draft.weight = draft.unit==='kg' ? Math.round(next.lb/LB*2)/2 : next.lb;
-      draft.reps=next.reps; draft.suggestedLb=next.lb; draft.suggestedReps=next.reps;
-      draft.suggested=true; draft.alt=null;
+      draft.reps=next.pr.reps; draft.suggestedLb=next.lb; draft.suggestedReps=next.pr.reps;
+      draft.suggested=true; draft.alt=null; draft.why=next.why;
     }
   }
   saveSession();
@@ -2743,8 +3030,11 @@ function openCheckin(){
       <button class="btn go grow" id="ckgo">Start training</button></div>`);
   const host=$('#ck');
   const bw=el('div','qblock'); bw.innerHTML='<div class="qlab">Current bodyweight</div>';
-  let bwv=lastBodyweight(); st.bodyweight=bwv; const bwHost=el('div','');
-  const drawBw=()=>{bwHost.innerHTML='';bwHost.appendChild(stepper('lb',bwv,.5,v=>{bwv=v;st.bodyweight=v;drawBw();}));};
+  // Nothing is logged until you set it: the stepper's starting point is not a reading.
+  let bwv=latestBodyweight(); st.bodyweight=bwv; if(bwv==null) bwv=180;
+  const bwHost=el('div','');
+  const drawBw=()=>{bwHost.innerHTML='';bwHost.appendChild(stepper('lb',bwv,.5,v=>{bwv=v;st.bodyweight=v;drawBw();}));
+    if(st.bodyweight==null) bwHost.appendChild(el('div','dim tiny','Not set yet. Until you set it, bodyweight lifts are estimated from added weight alone.')).style.marginTop='4px'; };
   drawBw(); bw.appendChild(bwHost); host.appendChild(bw);
 
   host.appendChild(scaleBlock('How did you sleep last night?',SCALE.sleep,3,v=>st.sleep=v));
@@ -3139,7 +3429,7 @@ function renderHist(){
         <div class="big" style="font-size:26px">${last?fmt(last.v,0):'—'}</div>
         <div class="tiny" style="color:${delta==null?'var(--dim)':delta>=0?'var(--ok,#4ADE80)':'var(--peak)'}">${
           delta==null?'lb':(delta>=0?'+':'')+fmt(delta,0)+' lb'}</div></span>`));
-    if(last&&ex.load!=='bodyweight'){
+    if(last&&!isBW(ex)){
       const rm=el('div','row'); rm.style.cssText='gap:14px;margin:8px 0 2px;flex-wrap:wrap';
       [[3,'3RM'],[5,'5RM'],[10,'10RM']].forEach(([r,lab])=>{
         const v=repMax(last.v,r); if(v==null) return;
@@ -3381,6 +3671,8 @@ const PATTERN_TIPS={
   prehab_knee:['Full range of motion through pain-free depth is the point — don\'t rush the tempo.',
     'Consistency matters more than load; this is a durability investment, not a strength exercise.'],
   prehab_wrist:['Light and frequent beats heavy and occasional for this kind of work.'],
+  prehab_elbow:['Keep the load light and the lowering slow — stop short of anything sharp.'],
+  prehab_lowback:['Hold a neutral spine and breathe normally; quality of position matters more than duration.'],
 };
 const PATTERN_CATEGORY={
   horizontal_press:'push', vertical_press:'push', abduction:'push', elbow_extension:'push',
@@ -3388,7 +3680,7 @@ const PATTERN_CATEGORY={
   squat:'legs', hinge:'legs', knee_extension:'legs', knee_flexion:'legs', calf_raise:'legs',
   hip_abduction:'legs', hip_adduction:'legs',
   trunk:'core', wrist:'core',
-  rehab_shoulder:'rehab', prehab_knee:'rehab', prehab_wrist:'rehab',
+  rehab_shoulder:'rehab', prehab_knee:'rehab', prehab_wrist:'rehab', prehab_elbow:'rehab', prehab_lowback:'rehab',
   other:'other'
 };
 const CATEGORY_LABEL={push:'Push',pull:'Pull',legs:'Legs',core:'Core',rehab:'Rehab',other:'Other'};
