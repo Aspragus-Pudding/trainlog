@@ -233,7 +233,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.12.0';
+const APP_VERSION='1.13.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -3055,7 +3055,24 @@ function suggestFor(slot){
   const pct=(a,b)=>a>0?Math.round((1-b/a)*100):0;    // what the cut actually did after rounding to the machine's steps
   if(lb!=null&&o.fresh&&session&&session.adj){ const b=lb; lb=loadable(slot, lb*session.adj.load); o.adj=session.adj; o.adjApplied=pct(b,lb); }
   if(lb!=null&&o.fresh&&slot.joint&&slot.joint.level>=4){ const b=lb; lb=loadable(slot, lb*0.9); o.jointCut=true; o.jointApplied=pct(b,lb); }
-  return {pr, lb, why:explainRx(slot,pr,o)};
+  return {pr, lb, why:explainRx(slot,pr,o), o};
+}
+/* What the engine actually recommended for this set, independent of whether
+   the lifter followed it. Additive-only logging (see logSet): never read by
+   any prescription or display code, so a set logged before this field
+   existed just doesn't have one, and nothing about prescribing, logging or
+   showing a set changes. This is what lets "is the engine improving?" become
+   a measurable trend later (tests/backtest.js). */
+function recordedSuggestion(slot, rec){
+  if(!rec||rec.pr.lb==null) return undefined;
+  const {pr,lb,o}=rec;
+  return {
+    lb, reps:pr.reps, target_rpe:slot.rpe, basis:pr.src,
+    readiness:o.adj?{score:Math.round(session.score*100),cut_pct:Math.round((1-o.adj.load)*100),applied_pct:o.adjApplied||0}:null,
+    joint:o.jointCut?{joint:slot.joint.joint,applied_pct:o.jointApplied||0}:null,
+    fatigue:(pr.fatigue&&pr.fatigue.applied)?{rise:pr.fatigue.rise,pairs:pr.fatigue.n,sessions:pr.fatigue.sessions}:null,
+    rep_range:slot.repSrc!=='block'?{src:slot.repSrc,muscle:slot.repMuscle||null,capped:!!slot.repCapped}:null
+  };
 }
 function seedDraft(slot){
   const ex=exById[slot.ex];
@@ -3091,11 +3108,14 @@ function logSet(slot,idx,kind,extend,over){
   // so future sessions can tell what was suggested vs. what you actually
   // logged, without ever rewriting the event later.
   const stampSuggestion=kind!=='warmup'&&!group&&slot.sets.length===0;
+  const rec=(kind!=='warmup'&&!group)?suggestFor(slot):null;
+  const suggestion=recordedSuggestion(slot,rec);
   const candidate={type:'set',session_id:session.id,slot:slot.ex,exercise_id:ex.id,
     weight:{value:W.weight,unit:W.unit}, bar:ex.bar?{value:ex.bar,unit:W.unit}:null,
     reps:W.reps, rpe:kind==='warmup'?null:draft.rpe, set_kind:setKind, group,
     target:{reps:slot.reps,rpe:slot.rpe},
-    suggested_lb:stampSuggestion?(draft.suggestedLb??null):null};
+    suggested_lb:stampSuggestion?(draft.suggestedLb??null):null,
+    ...(suggestion&&{suggestion})};
   // PR must be decided BEFORE the event is written, or the flag never persists
   const pr=kind==='warmup'?null:isPR(ex.id,candidate);
   if(pr) candidate.pr=true;
