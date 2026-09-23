@@ -233,7 +233,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.13.0';
+const APP_VERSION='1.14.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -906,6 +906,14 @@ function statedE1RM(id){
 const isBW=ex=>!!ex&&(ex.load==='bodyweight'||ex.load==='bodyweight_plus');
 const loadName=l=>l==='bodyweight_plus'?'bodyweight + added':l;
 const isStackLike=ex=>!!ex&&(ex.load==='stack'||ex.load==='cable');
+/* Which exercises use direct RPE-delta stepping instead of the %1RM chart:
+   machines, pin/stack machines and cables — the classes that produced 23% of
+   all off-chart sets in the first backtest, concentrated at 4x the error
+   rate of everything else (see tests/backtest.js). Barbell, dumbbell and
+   bodyweight work keeps the chart, where it has research grounding and the
+   backtest showed no comparable problem. An exercise can override this with
+   `pricingPath:'chart'` or `pricingPath:'rpe'`. */
+const isChartFree=ex=>!!ex&&(ex.pricingPath?ex.pricingPath==='rpe':(ex.load==='machine'||isStackLike(ex)));
 let _bwCache=null, _bwLen=-1;
 function bwSeries(){
   if(_bwCache&&_bwLen===LOG.length) return _bwCache;
@@ -1184,7 +1192,7 @@ function exerciseSessionHistory(exId){
     const cur=bySession.get(st.session_id);
     if(!cur||w>cur.topLb)
       bySession.set(st.session_id,{session_id:st.session_id,ts:st.ts,
-        topLb:w,reps:st.reps,rpe:st.rpe,suggestedLb:st.suggested_lb??null});
+        topLb:w,reps:st.reps,rpe:st.rpe,suggestedLb:st.suggested_lb??null,suggestion:st.suggestion??null});
   }
   return [...bySession.values()].sort((a,b)=>new Date(a.ts)-new Date(b.ts));
 }
@@ -1242,6 +1250,77 @@ function stepUp(slot, lb){
 }
 function stepDown(slot, lb){ return gridFloor(slot,lb-1e-6); }
 
+/* Direct RPE-delta stepping for machines/stack/cable — see isChartFree(). RPE
+   is used by its own definition (one point = one rep in reserve) instead of
+   being converted through the %1RM chart, so there is no reps-to-failure
+   ceiling to run past. Same invariants as the chart path (checked by
+   tests/prescription-invariants.js): the reps a load is priced for are the
+   reps returned; load and reps never move in the same step; on-target holds
+   exactly. Judgement default, Grade D: RPE_HOLD_TOL is a tolerance, not a
+   measured value. */
+const RPE_HOLD_TOL=0.5;
+function rpeDeltaStep(slot, L0, R0, RPE0, T){
+  const lo=slot.reps[0], hi=slot.reps[1];
+  const lastTxt=`${fmt(L0,0)} × ${R0} @ RPE ${RPE0}`;
+  const delta=T-RPE0;                          // >0 easier than aimed, <0 harder
+  if(Math.abs(delta)<=RPE_HOLD_TOL){
+    // "hold" means repeat the last set — landing exactly at the ceiling at
+    // target RPE is a normal, correctly-dosed top set, not a signal on its
+    // own (see tests/backtest.js: firing here on every at-ceiling set was
+    // more aggressive than this lifter's actual practice warranted, and
+    // raised backtest error). Only strictly PAST the ceiling overrides —
+    // sitting at it is what the stagnation probe is for.
+    if(R0<=hi) return {lb:L0, reps:R0, src:'last session', note:`Last set ${lastTxt} was right on target, so it repeats.`};
+    return {lb:stepUp(slot,L0), reps:lo, src:'hit top of range · load up',
+      note:`Last set ${lastTxt} was right on target but already past the top of the ${lo}–${hi} range, so load goes up one step and reps restart at ${lo}.`};
+  }
+  if(delta>0){
+    const g=Math.max(1,Math.round(delta)), proposed=R0+g;
+    if(proposed<=hi) return {lb:L0, reps:proposed, src:'reps in reserve',
+      note:`Last set ${lastTxt} — about ${g} rep${g===1?'':'s'} in reserve left against target RPE ${T}, so same load, ${proposed} reps.`};
+    return {lb:stepUp(slot,L0), reps:lo, src:'hit top of range · load up',
+      note:`Last set ${lastTxt} — hit the top of the ${lo}–${hi} range with reserve left, so load goes up one step and reps restart at ${lo}.`};
+  }
+  const g=Math.max(1,Math.round(-delta)), proposed=R0-g;
+  if(proposed>=lo) return {lb:L0, reps:proposed, src:'harder than aimed',
+    note:`Last set ${lastTxt} was harder than target RPE ${T}, so same load, ${proposed} reps.`};
+  return {lb:stepDown(slot,L0), reps:lo, src:'harder than aimed · load down',
+    note:`Last set ${lastTxt} was harder than target RPE ${T}, and ${lo} is already the floor of the range, so load drops one step and reps reset to ${lo}.`};
+}
+/* RPE-delta stepping already reacts to any drop in RPE, so it covers most
+   progress on its own — a flat suggestion only happens when nothing actually
+   changed. The one gap: three sessions running with the exact same load,
+   reps AND an RPE that's still at or under target is genuine stagnation, not
+   a correctly-held plateau. Suggest one small step; back off for
+   STAGNATION_SUPPRESS sessions if it's declined (logged numbers didn't match
+   what was probed), so it never nags every session. Chart-free exercises
+   only — the chart path already has its own override-damping/probe logic.
+   Judgement defaults, Grade D. */
+const STAGNATION_SESSIONS=3, STAGNATION_SUPPRESS=2;
+function stagnationProbe(slot){
+  const ex=exById[slot.ex];
+  const hist=exerciseSessionHistory(ex.id);
+  if(hist.length<STAGNATION_SESSIONS) return null;
+  const recent=hist.slice(-STAGNATION_SESSIONS);
+  const flat=recent.every(h=>Math.abs(h.topLb-recent[0].topLb)<1e-6 && h.reps===recent[0].reps);
+  if(!flat) return null;
+  const last=recent[recent.length-1];
+  if(last.rpe==null||last.rpe>slot.rpe) return null;
+  const priorProbes=hist.filter(h=>h.suggestion&&h.suggestion.basis==='stagnation probe');
+  if(priorProbes.length){
+    const lastProbe=priorProbes[priorProbes.length-1];
+    const sessionsSince=hist.length-1-hist.indexOf(lastProbe);
+    const accepted=Math.abs(lastProbe.topLb-lastProbe.suggestion.lb)<1e-6 && lastProbe.reps===lastProbe.suggestion.reps;
+    if(!accepted&&sessionsSince<STAGNATION_SUPPRESS) return null;
+  }
+  const lo=slot.reps[0], hi=slot.reps[1];
+  const tag=`Same ${fmt(last.topLb,0)} × ${last.reps} for ${STAGNATION_SESSIONS} sessions running`;
+  if(last.reps<hi) return {lb:last.topLb, reps:last.reps+1, src:'stagnation probe',
+    note:`${tag} — small push: one more rep.`};
+  return {lb:stepUp(slot,last.topLb), reps:lo, src:'stagnation probe',
+    note:`${tag}, already at the top of the range — small push: one load step up, reps back to ${lo}.`};
+}
+
 /* Within-session fatigue, measured from YOUR log rather than assumed: the mean
    RPE rise between consecutive working sets of one exercise at the same load
    (reps within 2), across sessions. Used only once there is enough of it.
@@ -1274,7 +1353,9 @@ function fatigueRise(exId){
 /* The one place a "what next" weight/reps suggestion comes from — used both
    when a slot is opened fresh (seedDraft) and right after logging a working set
    (logSet), since lastSetFor() always reflects whatever was most recently
-   appended either way.
+   appended either way. Dispatches to one of two pricing paths (isChartFree):
+   the %1RM chart for barbell/dumbbell/bodyweight, or direct RPE-delta
+   stepping (rpeDeltaStep) for machine/stack/cable. Both must satisfy:
 
    Invariants (checked by tests/prescription-invariants.js — run it after any
    change here):
@@ -1283,8 +1364,9 @@ function fatigueRise(exId){
       more rep mid-range. Harder: less load (or fewer reps at the same load
       when the step is too coarse). On target: hold, exactly, no snapping.
    3. Load and reps never both go up.
-   4. A set off the chart (reps-to-failure over 16) is reported as too light
-      to price, never silently treated as "no change".
+   4. Chart path only: a set off the chart (reps-to-failure over 16) is
+      reported as too light to price, never silently treated as "no change".
+      The RPE-delta path has no chart, so this can't happen there.
    Returns null lb when there's no history — the UI shows a dash rather than
    inventing a number. */
 function nextPrescription(slot){
@@ -1318,6 +1400,8 @@ function nextPrescription(slot){
   const hold=(src,note)=>done({lb:L0,reps:R0,src,note});     // exactly what was lifted, never snapped to the grid
 
   if(RPE0==null) return hold('last session',`Last set ${lastTxt} had no RPE, so it repeats.`);
+
+  if(isChartFree(ex)) return done(rpeDeltaStep(slot,L0,R0,RPE0,T));
 
   const e1=impliedE1(L0+off,R0,RPE0);            // null = this set is off the chart
   const offChart=e1==null;
@@ -1421,11 +1505,22 @@ function soreGroupsFor(day){
   return [...g];
 }
 
+/* Re-centered so a rating of 3 — "about average" on every anchored scale —
+   contributes nothing, matching what the descriptors actually say (sleep 3 is
+   "6-8 hours of decent sleep", motivation 3 is "neutral, will get it done",
+   soreness 3 is "mild to no soreness"). The old norm(v)=(v-1)/4 scored an
+   honest all-3s check-in at 0.50 against a 0.65 "normal" cutoff, so a
+   completely average day cut load every session (100% of sessions in the
+   first backtest — see tests/backtest.js). This score now drives ONLY the
+   warmup ramp length, the prep-block length, and the display label — load
+   and set cuts are decided separately, by physicalCut(), which sleep and
+   motivation never touch. Judgement default, Grade D. */
 function readinessScore(st, groups){
-  const norm=v=>(v-1)/4;                       // 1–5 → 0–1, higher is better
+  const neutral=v=>(v-3)/2;                    // 1→-1, 2→-.5, 3→0, 4→.5, 5→1
   const vals=(groups||[]).map(g=>st.sore[g]).filter(v=>v!=null);
   const sore=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:3;
-  return norm(st.sleep)*0.30 + norm(st.motivation)*0.20 + norm(sore)*0.50 + energyCfg().ready;
+  const raw=neutral(st.sleep)*0.30 + neutral(st.motivation)*0.20 + neutral(sore)*0.50 + energyCfg().ready;
+  return Math.max(0,Math.min(1, 0.7+raw*0.3));  // all-3s -> 0.70, squarely "Normal"
 }
 /* Same formula, replayed straight from a logged 'readiness' event instead
    of the live check-in form — works retroactively on every readiness event
@@ -1434,37 +1529,36 @@ function readinessScore(st, groups){
    (it doesn't record which ones applied that day), which is an
    approximation for old data but exact for the live in-session score. */
 function readinessScoreFromEvent(ev){
-  const norm=v=>(v-1)/4;
+  const neutral=v=>(v-3)/2;
   const vals=Object.values(ev.soreness||{}).filter(v=>v!=null);
   const sore=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:3;
-  return norm(ev.sleep_quality)*0.30 + norm(ev.motivation)*0.20 + norm(sore)*0.50 + energyCfg().ready;
+  const raw=neutral(ev.sleep_quality)*0.30 + neutral(ev.motivation)*0.20 + neutral(sore)*0.50 + energyCfg().ready;
+  return Math.max(0,Math.min(1, 0.7+raw*0.3));
 }
-/* One set of bands, reused everywhere a readiness score needs a plain-
-   language label — the two low bands are the same thresholds adjustment()
-   already uses, so there's no second copy to drift out of sync. */
+/* Plain-language label for the display score only. This no longer implies a
+   load cut — that's physicalCut()'s call, on a different signal entirely. */
 function readinessLabel(score){
   if(score>=0.85) return 'Feeling great';
-  if(score>=0.65) return 'Normal';
-  const adj=adjustment(score);
-  return adj?adj.label:'Normal';
+  if(score>=0.45) return 'Normal';
+  return 'Rough day';
 }
-/* Downward only. The 'normal' band is deliberately wide — most days
-   should produce no change at all, because the underlying effect sizes
-   are small (see engine-constants readiness.effect_size_context). */
-function adjustment(score){
-  if(score>=0.65) return null;
-  // Warmup length isn't set here — warmupRamp() reads session.score directly
-  // and lengthens the ramp on its own thresholds, so there's one source of
-  // truth for "how long is the warmup" instead of two that can drift apart.
-  if(score>=0.45) return {load:0.95, sets:-1, label:'Slightly reduced'};
-  return {load:0.90, sets:-2, label:'Reduced'};
-}
-function adjReason(st,groups){
-  const out=[];
-  if(st.sleep<=2) out.push('sleep');
-  if((groups||[]).some(g=>(st.sore[g]??3)<=2)) out.push('soreness');
-  if(st.motivation<=2) out.push('motivation');
-  return out.length?out.join(' and '):'your check-in';
+/* Load and set cuts require a PHYSICAL signal — soreness in a muscle group
+   this session actually trains, or a flagged joint whose patterns appear in
+   it — never sleep or motivation alone (see docs/calibration-plan.md and the
+   readinessScore comment above for why: a blended score cut load on every
+   session for an honest "everything's average" check-in). Same magnitudes as
+   before, just gated on a direct physical trigger instead of a blended
+   score. Judgement defaults, Grade D. */
+function physicalCut(st, groups, patterns){
+  const soreVals=(groups||[]).map(g=>st.sore[g]).filter(v=>v!=null);
+  const worstSore=soreVals.length?Math.min(...soreVals):3;
+  const soreGroup=soreVals.length?groups.find(g=>st.sore[g]===worstSore):null;
+  const soreLabel=soreGroup?(GROUP_LABEL[soreGroup]||soreGroup):null;
+  const jointHit=Object.keys(st.joints||{}).find(j=>(JOINT_PATTERNS[j]||[]).some(p=>(patterns||[]).includes(p)));
+  if(worstSore<=1) return {load:0.90, sets:-2, label:'Reduced', signal:'sore '+(soreLabel||'muscles')};
+  if(worstSore<=2) return {load:0.95, sets:-1, label:'Slightly reduced', signal:'sore '+(soreLabel||'muscles')};
+  if(jointHit) return {load:0.95, sets:-1, label:'Slightly reduced', signal:'flagged '+jointHit};
+  return null;
 }
 
 let TAB='dash', session=null, draft={weight:135,reps:5,rpe:8,unit:'lb',tech:'straight',group:null,alt:null};
@@ -3049,8 +3143,16 @@ function whyEl(exp, key, cls){
    from what you actually lifted, which already reflects them. Applying them
    again would compound the cut set after set. */
 function suggestFor(slot){
-  const pr=nextPrescription(slot);
+  let pr=nextPrescription(slot);
   const o={idx:session?session.slots.indexOf(slot):null, fresh:!slot.sets.length};
+  // Stagnation probe only on the first set of a session, and only on the
+  // chart-free path — the chart path already has its own override-damping
+  // and probe logic (overrideStreak/lastWasProbe), and layering both would
+  // fight over the same exercise.
+  if(o.fresh&&isChartFree(exById[slot.ex])){
+    const probe=stagnationProbe(slot);
+    if(probe) pr={...pr, ...probe};
+  }
   let lb=pr.lb;
   const pct=(a,b)=>a>0?Math.round((1-b/a)*100):0;    // what the cut actually did after rounding to the machine's steps
   if(lb!=null&&o.fresh&&session&&session.adj){ const b=lb; lb=loadable(slot, lb*session.adj.load); o.adj=session.adj; o.adjApplied=pct(b,lb); }
@@ -3220,10 +3322,11 @@ function openCheckin(){
             motivation:st.motivation,soreness:st.sore,joints:st.joints});
     session.readiness={sleep:st.sleep,motivation:st.motivation,sore:st.sore,joints:st.joints};
     const score=readinessScore(st, session.soreGroups);
-    const adj=adjustment(score);
+    const patterns=session.slots.map(s=>exById[s.ex].pattern);
+    const adj=physicalCut(st, session.soreGroups, patterns);
     session.score=score; session.adj=adj;
     if(adj){
-      session.adjReason=adjReason(st, session.soreGroups);
+      session.adjReason=adj.signal;
       // fewer sets on the main work only — accessories keep their volume
       session.slots.slice(0,2).forEach(s=>
         s.sets_target=Math.max(1, s.sets_target+adj.sets));

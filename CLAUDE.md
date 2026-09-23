@@ -24,6 +24,7 @@ AppsScript.gs           Google Sheets backup receiver (lives in Apps Script, not
 shoulder-protocol.md    reference doc, not used by the app
 tests/prescription-invariants.js   prescription direction/pairing tests, run with node
 tests/backtest.js       replays the engine against a real exported log to measure suggestion accuracy
+docs/calibration-plan.md   phase-2 personal-calibration spec, not yet implemented
 ```
 
 ## Hard invariants — do not break these
@@ -57,7 +58,10 @@ silent divergence means sets that look logged and vanish on reload.
 ## Evidence discipline
 
 This app deliberately distinguishes what's established from what's a guess.
-`engine-constants` (from the design phase) graded every constant A–D.
+An earlier design-phase document called `engine-constants` graded every
+constant A-D but was never committed to this repo — don't cite it, it isn't
+here. `docs/calibration-plan.md` is the current spec for personal calibration
+(phase 2, not yet built); read that instead.
 
 - Don't invent numbers. If there's no evidence for a coefficient, it's a
   judgement default and should be marked as such in a comment.
@@ -137,6 +141,22 @@ direction follows effort (easier set → more load or reps, harder → less, on
 target → hold exactly), that load and reps never both rise, and that sets past
 the %1RM chart are reported rather than silently ignored. This bug was reported
 three times before the test existed; don't fix a case by patching one branch.
+`nextPrescription()` dispatches between two pricing paths — `isChartFree()`
+picks the %1RM chart for barbell/dumbbell/bodyweight, direct RPE-delta
+stepping (`rpeDeltaStep()`) for machine/stack/cable — both must satisfy the
+same invariants.
+
+**Also run `node tests/backtest.js <export.jsonl>`** against a real exported
+log for any change with a real effect on suggested numbers — readiness,
+pricing paths, caps, fatigue, stagnation probing. Record the error numbers
+before and after; a change is only worth keeping if error drops. Read the
+output carefully rather than skimming the top line — a change can look
+better overall while making one exercise or one segment (first-set vs.
+later, one equipment type) meaningfully worse, and a backtest necessarily
+measures agreement with what was logged under the OLD engine, so some
+disagreement after a genuine fix (the engine correctly suggesting a
+progression the old one never surfaced) is expected, not automatically a
+regression — use judgement, don't just read the overall percentage.
 
 **Bump `APP_VERSION` in `index.html` on every meaningful change.** It's displayed
 on the Lifts tab so the user can confirm which build is running.

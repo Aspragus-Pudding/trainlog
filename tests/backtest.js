@@ -59,8 +59,8 @@ function stub(){
   });
 }
 const EXPORTS=['nextPrescription','suggestFor','schemeFor','EX','exById','LOG','sets','toLb','setE1RM','bestE1RM',
-  'currentPhase','readinessScoreFromEvent','adjustment','jointLevel','jointTrend','JOINT_PATTERNS','JOINTS',
-  'lastEarlyPain','impliedE1','predictedRpe','rtfFromPct','repProfile','CFG','pct1RM','isCoarseMachine'];
+  'currentPhase','readinessScoreFromEvent','physicalCut','jointLevel','jointTrend','JOINT_PATTERNS','JOINTS',
+  'lastEarlyPain','impliedE1','predictedRpe','rtfFromPct','repProfile','CFG','pct1RM','isCoarseMachine','isChartFree'];
 function loadApp(){
   const store={};
   if(cfgSnapshot) store['trainlog.cfg.v1']=JSON.stringify(cfgSnapshot);
@@ -106,6 +106,16 @@ console.log('Loaded '+events.length+' events -> '+allSets.length+' resolved sets
   +workingSets.length+' with target metadata to backtest.');
 if(!workingSets.length){ console.error('Nothing to backtest — no working sets carry target.reps/target.rpe.'); process.exit(1); }
 
+// Which patterns each session actually trained — a structural fact of that
+// day's plan, fixed before the first set was ever logged, so using the full
+// (not truncated) history to build this map isn't hindsight about anything
+// the engine wouldn't have known at check-in time.
+const sessionPatterns={};
+allSets.forEach(s=>{
+  const ex=A.exById[s.exercise_id]; if(!ex) return;
+  (sessionPatterns[s.session_id]=sessionPatterns[s.session_id]||new Set()).add(ex.pattern);
+});
+
 /* ---------- walk forward: predict each set from only what came before it ---------- */
 const rows=[]; const skipped={no_exercise:0, no_prediction:0};
 const seenFirst=new Set();   // session_id:exercise_id already has a logged working set
@@ -135,11 +145,23 @@ for(const w of workingSets){
 
   // Readiness for the session this set belongs to: the nearest preceding
   // readiness-or-session_end marker. If a session_end comes first, the
-  // check-in for this session was skipped, so there is no adjustment.
+  // check-in for this session was skipped, so there is no adjustment. The
+  // load/set cut now needs a physical signal (soreness or a flagged joint in
+  // today's patterns) rather than a blended score — see physicalCut() in
+  // index.html and the v1.14.0 investigation for why. The readiness event's
+  // own soreness keys ARE that session's trained groups: the check-in only
+  // ever asks about groups the day's plan actually trains.
   let adj=null, score=null;
   for(let i=truncated.length-1;i>=0;i--){
     const e=truncated[i];
-    if(e.type==='readiness'){ score=A.readinessScoreFromEvent(e); adj=A.adjustment(score); break; }
+    if(e.type==='readiness'){
+      score=A.readinessScoreFromEvent(e);
+      const st={sleep:e.sleep_quality,motivation:e.motivation,sore:e.soreness||{},joints:e.joints||{}};
+      const groups=Object.keys(e.soreness||{});
+      const patterns=[...(sessionPatterns[w.session_id]||[])];
+      adj=A.physicalCut(st,groups,patterns);
+      break;
+    }
     if(e.type==='session_end') break;
   }
 
