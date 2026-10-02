@@ -115,6 +115,13 @@ never swapped out mid-workout.
 - **Generation flow:** `currentPhase()` → `generatedDays()` → `buildDay()` →
   `resolveEx()` + `schemeFor()`. Roadmap blocks are ordered intents; dates are
   derived from anchor + order + durations, never stored per block.
+- **Program position counts sessions, not calendar days.** `currentPhase()`
+  uses `programSessions()` (trained sessions since `CFG.start`); the calendar
+  only enters through `programProjection()`. Don't reintroduce date-based
+  week counting anywhere — it made the week and the day rotation disagree.
+- **Joint ladder:** `jointNoteFor(pattern)` is the one place a joint level is
+  computed (buildDay, the check-in, and tests/backtest.js all call it). Flags
+  count per session, weighted by severity; levels 3+ really do hold load.
 - **`PENDING`** holds pre-workout plan edits until the session starts.
 - **Readiness** drives load adjustment (discrete tiers) and warmup length
   (continuous score). Adjustments are downward-only by design.

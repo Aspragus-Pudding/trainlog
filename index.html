@@ -233,7 +233,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.14.0';
+const APP_VERSION='1.15.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -280,10 +280,11 @@ function solvePlates(total,bar,setId){
 const LANDMARKS={chest:{MEV:10,MRV:20},front_delts:{MEV:6,MRV:14},side_delts:{MEV:10,MRV:24},
  rear_delts:{MEV:10,MRV:24},lats:{MEV:10,MRV:20},upper_back:{MEV:10,MRV:20},traps:{MEV:8,MRV:24},
  biceps:{MEV:10,MRV:24},triceps:{MEV:10,MRV:24},forearms:{MEV:8,MRV:24},quads:{MEV:8,MRV:16},
- hamstrings:{MEV:8,MRV:16},glutes:{MEV:8,MRV:16},calves:{MEV:10,MRV:24},abs:{MEV:6,MRV:24},abductors:{MEV:6,MRV:16},adductors:{MEV:6,MRV:16}};
+ hamstrings:{MEV:8,MRV:16},glutes:{MEV:8,MRV:16},calves:{MEV:10,MRV:24},abs:{MEV:6,MRV:24},abductors:{MEV:6,MRV:16},adductors:{MEV:6,MRV:16},
+ lower_back:{MEV:6,MRV:16}};   // lower_back: judgement default, Grade D — erector work had never counted toward volume
 const ML={chest:'Chest',front_delts:'Front delts',side_delts:'Side delts',rear_delts:'Rear delts',
  lats:'Lats',upper_back:'Upper back',traps:'Traps',biceps:'Biceps',triceps:'Triceps',
- forearms:'Forearms',quads:'Quads',hamstrings:'Hamstrings',glutes:'Glutes',calves:'Calves',abs:'Abs',abductors:'Abductors',adductors:'Adductors'};
+ forearms:'Forearms',quads:'Quads',hamstrings:'Hamstrings',glutes:'Glutes',calves:'Calves',abs:'Abs',abductors:'Abductors',adductors:'Adductors',lower_back:'Lower back'};
 /* Set techniques. A technique set is logged as a GROUP: the first entry is
    the activation/top set, subsequent entries are extensions of it. */
 const TECHNIQUES={
@@ -416,7 +417,9 @@ const SCALE={
             'Fresh','No soreness, ready for extra work'],
   effort:['Very easy','Easy','Moderate','Hard','All I had'],
   stimulus:['Barely felt it','A little','Solid','Strong','Best I have felt it'],
-  enjoy:['Hated it','Not keen','Fine','Good','Love it']
+  enjoy:['Hated it','Not keen','Fine','Good','Love it'],
+  recovery:['Sick, or wiped out — barely here','Rough: high stress, under-fed, or run-down',
+            'Normal — nothing dragging','Good — well-fed, low stress','Feel great']
 };
 const SORE_GROUPS=[{id:'push',label:'Pecs / shoulders / triceps'},
  {id:'pull',label:'Lats / traps / biceps'},{id:'upperback',label:'Upper back'},
@@ -432,16 +435,16 @@ const EX=[
  {id:'landmine',name:'Landmine press',pattern:'vertical_press',load:'barbell',bar:22,plateSet:'main_lb',inc:5,prog:'double',vol:{front_delts:1,triceps:.5}},
  {id:'db_press',name:'Neutral DB shoulder press',pattern:'vertical_press',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',vol:{front_delts:1,triceps:.5,side_delts:.5}},
  {id:'ssb_squat',name:'Transformer bar squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:1,glutes:.5,upper_back:.5,hamstrings:.5}},
- {id:'transformer_hinge',name:'Transformer bar hinge',pattern:'hinge',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{hamstrings:1,glutes:1,upper_back:.5}},
+ {id:'transformer_hinge',name:'Transformer bar hinge',pattern:'hinge',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{hamstrings:1,glutes:1,upper_back:.5,lower_back:0.5}},
  {id:'transformer_low_bar',name:'Transformer bar low-bar squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:.5,glutes:1,hamstrings:.5,upper_back:.5}},
  {id:'transformer_high_bar',name:'Transformer bar high-bar squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:1,glutes:.5,upper_back:.5}},
  {id:'transformer_front',name:'Transformer bar front squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:1,upper_back:.5}},
  {id:'transformer_goblet',name:'Transformer bar goblet squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'double',vol:{quads:1,glutes:.5}},
  {id:'squat',name:'Back squat',pattern:'squat',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:1,glutes:.5,hamstrings:.5}},
- {id:'hack',name:'Hack squat',pattern:'squat',load:'machine',bar:0,plateSet:null,inc:25,prog:'double',vol:{quads:1,glutes:.5}},
- {id:'pendulum',name:'Pendulum squat',pattern:'squat',load:'machine',bar:0,plateSet:null,inc:25,prog:'double',vol:{quads:1,glutes:.5}},
- {id:'deadlift',name:'Deadlift',pattern:'hinge',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'percentage',vol:{hamstrings:1,glutes:1,upper_back:.5,lats:.5}},
- {id:'rdl',name:'Romanian deadlift',pattern:'hinge',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'double',vol:{hamstrings:1,glutes:.5,upper_back:.5}},
+ {id:'hack',name:'Hack squat',pattern:'squat',load:'machine',plateLoaded:true,bar:0,plateSet:null,inc:25,prog:'double',vol:{quads:1,glutes:.5}},
+ {id:'pendulum',name:'Pendulum squat',pattern:'squat',load:'machine',plateLoaded:true,bar:0,plateSet:null,inc:25,prog:'double',vol:{quads:1,glutes:.5}},
+ {id:'deadlift',name:'Deadlift',pattern:'hinge',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'percentage',vol:{hamstrings:1,glutes:1,upper_back:.5,lats:.5,lower_back:1}},
+ {id:'rdl',name:'Romanian deadlift',pattern:'hinge',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'double',vol:{hamstrings:1,glutes:.5,upper_back:.5,lower_back:0.5}},
  {id:'leg_curl',name:'Seated leg curl',pattern:'knee_flexion',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',vol:{hamstrings:1}},
  {id:'leg_ext',name:'Leg extension',pattern:'knee_extension',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',vol:{quads:1}},
  {id:'chinup',name:'Weighted chin-up',pattern:'vertical_pull',load:'bodyweight_plus',bar:0,plateSet:null,inc:2.5,prog:'double',vol:{lats:1,biceps:1,upper_back:.5}},
@@ -469,20 +472,20 @@ const EX=[
  {id:'seated_add',name:'Seated machine hip adduction',pattern:'hip_adduction',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{adductors:1}},
  {id:'seated_abd',name:'Seated machine hip abduction',pattern:'hip_abduction',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{abductors:1,glutes:.5}},
  {id:'captains_leg',name:"Captain's chair straight leg raise",pattern:'trunk',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',vol:{abs:1,forearms:.5}},
- {id:'uh_pl_pulldown',name:'Underhand plate-loaded lat pulldown',pattern:'vertical_pull',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{lats:1,biceps:.5,upper_back:.5,forearms:.5}},
- {id:'sa_plate_pulldown',name:'Single-arm plate lat pulldown',pattern:'vertical_pull',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,unilateral:true,vol:{lats:1,biceps:.5,upper_back:.5}},
+ {id:'uh_pl_pulldown',name:'Underhand plate-loaded lat pulldown',pattern:'vertical_pull',load:'machine',plateLoaded:true,bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{lats:1,biceps:.5,upper_back:.5,forearms:.5}},
+ {id:'sa_plate_pulldown',name:'Single-arm plate lat pulldown',pattern:'vertical_pull',load:'machine',plateLoaded:true,bar:0,plateSet:null,inc:10,prog:'double',comparable:false,unilateral:true,vol:{lats:1,biceps:.5,upper_back:.5}},
  {id:'rope_pushdown',name:'Cable rope triceps pushdown',pattern:'elbow_extension',load:'stack',bar:0,plateSet:null,inc:5,prog:'double',comparable:false,vol:{triceps:1}},
- {id:'ln_pl_press',name:'Lying neutral-grip plate-loaded chest press',pattern:'horizontal_press',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{chest:1,front_delts:.5,triceps:.5}},
+ {id:'ln_pl_press',name:'Lying neutral-grip plate-loaded chest press',pattern:'horizontal_press',load:'machine',plateLoaded:true,bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{chest:1,front_delts:.5,triceps:.5}},
  {id:'pin_chest_press',name:'Pin-loaded machine chest press',pattern:'horizontal_press',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{chest:1,front_delts:.5,triceps:.5}},
  {id:'pin_incline_press',name:'Seated pin-loaded machine incline press',pattern:'horizontal_press',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{chest:1,front_delts:.5,triceps:.5}},
  {id:'pin_tri_dip',name:'Seated pin-loaded machine triceps dip',pattern:'elbow_extension',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{triceps:1,chest:.5}},
  {id:'pin_preacher',name:'Pin-loaded machine preacher curl',pattern:'elbow_flexion',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{biceps:1}},
  {id:'stand_m_raise',name:'Standing machine lateral raise',pattern:'abduction',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{side_delts:1}},
  {id:'seat_m_raise',name:'Seated machine lateral raise',pattern:'abduction',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{side_delts:1}},
- {id:'roman_hinge',name:'Weighted roman chair hip hinge',pattern:'hinge',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',vol:{hamstrings:1,glutes:1,upper_back:.5}},
+ {id:'roman_hinge',name:'Weighted roman chair hip hinge',pattern:'hinge',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',vol:{hamstrings:1,glutes:1,upper_back:.5,lower_back:0.5}},
  {id:'belt_rdl',name:'Pulley belt squat machine RDL',pattern:'hinge',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{hamstrings:1,glutes:1}},
  {id:'stand_m_calf',name:'Standing machine calf raise',pattern:'calf_raise',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{calves:1}},
- {id:'seat_pl_calf',name:'Seated plate-loaded machine calf raise',pattern:'calf_raise',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{calves:1}},
+ {id:'seat_pl_calf',name:'Seated plate-loaded machine calf raise',pattern:'calf_raise',load:'machine',plateLoaded:true,bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{calves:1}},
  {id:'db_bench',name:'Flat DB press',pattern:'horizontal_press',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',vol:{chest:1,front_delts:.5,triceps:.5}},
  {id:'decline_press',name:'Decline barbell press',pattern:'horizontal_press',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'percentage',vol:{chest:1,triceps:.5}},
  {id:'board_press',name:'Board press',pattern:'horizontal_press',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'percentage',vol:{chest:1,triceps:1}},
@@ -492,14 +495,14 @@ const EX=[
  {id:'machine_ohp',name:'Machine shoulder press',pattern:'vertical_press',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{front_delts:1,triceps:.5,side_delts:.5}},
  {id:'z_press',name:'Z press',pattern:'vertical_press',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'double',vol:{front_delts:1,triceps:.5,abs:.5}},
  {id:'front_squat',name:'Front squat',pattern:'squat',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:1,glutes:.5,upper_back:.5}},
- {id:'leg_press',name:'Leg press',pattern:'squat',load:'machine',bar:0,plateSet:null,inc:25,prog:'double',comparable:false,vol:{quads:1,glutes:.5}},
+ {id:'leg_press',name:'Leg press',pattern:'squat',load:'machine',plateLoaded:true,bar:0,plateSet:null,inc:25,prog:'double',comparable:false,vol:{quads:1,glutes:.5}},
  {id:'bulgarian',name:'Bulgarian split squat',pattern:'squat',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',unilateral:true,vol:{quads:1,glutes:1}},
  {id:'goblet',name:'Goblet squat',pattern:'squat',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',vol:{quads:1,glutes:.5}},
- {id:'belt_squat',name:'Belt squat',pattern:'squat',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{quads:1,glutes:.5}},
- {id:'trap_bar',name:'Trap bar deadlift',pattern:'hinge',load:'barbell',bar:60,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:.5,glutes:1,hamstrings:1,upper_back:.5}},
- {id:'good_morning',name:'Good morning',pattern:'hinge',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'double',vol:{hamstrings:1,glutes:.5,upper_back:.5}},
+ {id:'belt_squat',name:'Belt squat',pattern:'squat',load:'machine',plateLoaded:true,bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{quads:1,glutes:.5}},
+ {id:'trap_bar',name:'Trap bar deadlift',pattern:'hinge',load:'barbell',bar:60,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:.5,glutes:1,hamstrings:1,upper_back:.5,lower_back:0.5}},
+ {id:'good_morning',name:'Good morning',pattern:'hinge',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'double',vol:{hamstrings:1,glutes:.5,upper_back:.5,lower_back:1}},
  {id:'hip_thrust',name:'Hip thrust',pattern:'hinge',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'double',vol:{glutes:1,hamstrings:.5}},
- {id:'back_ext',name:'45° back extension',pattern:'hinge',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',vol:{hamstrings:1,glutes:.5}},
+ {id:'back_ext',name:'45° back extension',pattern:'hinge',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',vol:{hamstrings:1,glutes:.5,lower_back:1}},
  {id:'lying_curl',name:'Lying leg curl',pattern:'knee_flexion',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{hamstrings:1}},
  {id:'nordic',name:'Nordic curl',pattern:'knee_flexion',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',vol:{hamstrings:1}},
  {id:'ghr',name:'Glute-ham raise',pattern:'knee_flexion',load:'bodyweight_plus',bar:0,plateSet:null,inc:5,prog:'double',vol:{hamstrings:1,glutes:.5}},
@@ -522,7 +525,7 @@ const EX=[
  {id:'cg_bench',name:'Close-grip bench',pattern:'elbow_extension',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'percentage',vol:{triceps:1,chest:.5,front_delts:.5}},
  {id:'dip',name:'Weighted dip',pattern:'elbow_extension',load:'bodyweight_plus',bar:0,plateSet:null,inc:5,prog:'double',vol:{triceps:1,chest:.5,front_delts:.5}},
  {id:'seated_calf',name:'Seated calf raise',pattern:'calf_raise',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{calves:1}},
- {id:'press_calf',name:'Leg press calf raise',pattern:'calf_raise',load:'machine',bar:0,plateSet:null,inc:25,prog:'double',comparable:false,vol:{calves:1}},
+ {id:'press_calf',name:'Leg press calf raise',pattern:'calf_raise',load:'machine',plateLoaded:true,bar:0,plateSet:null,inc:25,prog:'double',comparable:false,vol:{calves:1}},
  {id:'rev_wrist',name:'Reverse wrist curl',pattern:'wrist',load:'dumbbell',bar:0,plateSet:null,inc:2.5,prog:'double',vol:{forearms:1}},
  {id:'wrist_roller',name:'Wrist roller',pattern:'wrist',load:'bodyweight',bar:0,plateSet:null,inc:2.5,prog:'rep',vol:{forearms:1}},
  {id:'farmer',name:'Farmer carry',pattern:'grip',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',vol:{forearms:1,traps:1,abs:.5}},
@@ -668,7 +671,9 @@ const primaryMuscle=ex=>{ const e=Object.entries((ex&&ex.vol)||{}).find(([,w])=>
    slots only) > the block/role table. Returns null to mean "use the table". */
 function repRangeOverride(ex, role, blockType){
   if(!ex||blockType==='deload') return null;
-  if(ex.repRange) return {reps:ex.repRange.slice(), src:'exercise'};
+  // a range you set on the exercise's info sheet (built-in or custom) wins
+  const set=(CFG.repRanges||{})[ex.id]||ex.repRange;
+  if(set) return {reps:set.slice(), src:'exercise'};
   if(role!=='primary'){
     const m=primaryMuscle(ex);
     if(m&&MUSCLE_REP_RANGE[m]){
@@ -694,6 +699,14 @@ function schemeFor(role, blockType, weekOfBlock, blockWeeks, ex){
   if(blockType==='str'&&blockWeeks>2) s=Math.max(2,sets-Math.floor((weekOfBlock-1)/2));
   const ov=repRangeOverride(ex,role,blockType);
   return {sets:s, reps:ov?ov.reps:reps, rpe, repSrc:ov?ov.src:'block', repMuscle:ov&&ov.muscle||null, repCapped:!!(ov&&ov.capped)};
+}
+/* The default rep range for an exercise as an accessory in the current
+   block, ignoring any range you've set on it — so every exercise always
+   resolves to one, and the info sheet can show what "default" means. */
+function defaultRepRange(ex){
+  // a copy with no id or repRange of its own, so no saved range can apply
+  const p=currentPhase(), sc=schemeFor('accessory',p.type,p.week,p.weeks,{...ex,id:null,repRange:undefined});
+  return {reps:sc.reps, src:sc.repSrc, muscle:sc.repMuscle, capped:sc.repCapped, block:BLOCK_NAME[p.type]||p.type};
 }
 /* A fresh slot for an exercise added by hand, using the same scheme the
    generator would give an accessory today. */
@@ -743,21 +756,8 @@ function buildDay(tpl, phase){
     const ek=energyCfg().vol;
     sc.sets=Math.max(2,Math.round(sc.sets*k*ek));
     // joint ladder: targeted at movement patterns, free at the lower rungs
-    let jl=1, jname=null;
-    JOINTS.forEach(j=>{
-      if(!(JOINT_PATTERNS[j]||[]).includes(pattern)) return;
-      const L=jointLevel(jointTrend(j,6));
-      if(L>jl){ jl=L; jname=j; }
-    });
-    const ep=lastEarlyPain();
-    if(ep&&Object.keys(ep.joints||{}).some(j=>(JOINT_PATTERNS[j]||[]).includes(pattern))){
-      jl=Math.max(jl,3);
-      jname=jname||Object.keys(ep.joints)[0];
-    }
-    let jointNote=null;
-    if(jl===2) jointNote={level:2,joint:jname,msg:'longer warmup'};
-    if(jl===3) jointNote={level:3,joint:jname,msg:'load held'};
-    if(jl>=4){ sc.sets=Math.max(2,sc.sets-1); jointNote={level:jl,joint:jname,msg:jl===5?'progression stopped':'load reduced'}; }
+    const jointNote=jointNoteFor(pattern);
+    if(jointNote&&jointNote.level>=4) sc.sets=Math.max(2,sc.sets-1);
     // priority muscles get an extra set on non-primary work
     const prio=(phase.hyp||[]).some(m=>ex.vol[m]>=1);
     if(easeOff) sc.sets=Math.max(2,sc.sets-1);
@@ -788,7 +788,7 @@ const DAYS=[
 
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
-  goals:[],units:'lb',onboarded:false,dayOverrides:{},nameOverrides:{}};
+  goals:[],units:'lb',onboarded:false,dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{}};
 /* A setup link like  ...?sync=<encoded apps script url>  configures a
    tester's backup for them, then strips itself from the address bar so it
    isn't left sitting in history. Only ever accepts a script.google.com URL. */
@@ -980,24 +980,49 @@ function weeklyVolumeSeries(weeks){
   }
   return out;
 }
-/* rolling mean severity per joint, most recent first */
+/* Joint flags are counted per SESSION, weighted by how bad they were. A
+   session's check-in and its finish screen are one session: the worst flag
+   across the two is what counts, so one sore day can't count twice.
+   Severity is mild / moderate / bad (stored 1 / 2 / 3, with joint_scale:3 on
+   the event). Events from before severity existed only ever stored a tap
+   (always 1) — those count as moderate, since a tap meant "this hurt".
+   JUDGEMENT DEFAULTS, GRADE D: the weights, the 6-session window, and the
+   level thresholds in jointLevel(). */
+const JOINT_SEV_WEIGHT={1:0.5, 2:1, 3:2};
+const JOINT_SEV_LABEL={1:'mild',2:'moderate',3:'bad'};
+function jointWeight(e, joint){
+  const v=e.joints&&e.joints[joint];
+  if(!v) return 0;
+  if(e.joint_scale===3) return JOINT_SEV_WEIGHT[v]||1;
+  return 1;
+}
+/* Readiness and session_end events grouped into sessions, newest first. A
+   check-in belongs to the session_end that follows it; one with no
+   session_end after it (today's session in progress, or abandoned) is a
+   session on its own. */
+function jointSessions(){
+  const out=[]; let cur=null;
+  for(let i=LOG.length-1;i>=0;i--){
+    const e=LOG[i];
+    if(e.type==='session_end'){ cur={events:[e],hasCheckin:false}; out.push(cur); }
+    else if(e.type==='readiness'){
+      if(cur&&!cur.hasCheckin){ cur.events.push(e); cur.hasCheckin=true; }
+      else{ cur={events:[e],hasCheckin:true}; out.push(cur); }
+      cur=null;   // anything older starts a new session
+    }
+  }
+  return out;
+}
 let _jointCache={}, _jointLen=-1;
 function jointTrend(joint, n){
   if(_jointLen!==LOG.length){ _jointCache={}; _jointLen=LOG.length; }
   const key=joint+':'+n;
   if(_jointCache[key]) return _jointCache[key];
-  const vals=[];
-  for(let i=LOG.length-1;i>=0&&vals.length<n;i--){
-    const e=LOG[i];
-    if(e.type!=='readiness'&&e.type!=='session_end') continue;
-    vals.push(e.joints&&e.joints[joint]?Number(e.joints[joint])||1:0);
-  }
-  if(!vals.length) return (_jointCache[key]={mean:0,rising:false,n:0});
-  const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
-  const half=Math.ceil(vals.length/2);
-  const recent=vals.slice(0,half).reduce((a,b)=>a+b,0)/half;
-  const older=vals.slice(half).length?vals.slice(half).reduce((a,b)=>a+b,0)/vals.slice(half).length:recent;
-  return (_jointCache[key]={mean,rising:recent>older+0.4,n:vals.length});
+  const sess=jointSessions().slice(0,n);
+  const weights=sess.map(x=>Math.max(...x.events.map(e=>jointWeight(e,joint))));
+  const score=weights.reduce((a,b)=>a+b,0);
+  return (_jointCache[key]={score, mean:weights.length?score/weights.length:0,
+    n:weights.length, flagged:weights.filter(w=>w>0).length, weights});
 }
 /* Chronological, for the Progress-tab sparkline — same source events and
    window as jointTrend() above, but the per-point values rather than the
@@ -1005,30 +1030,58 @@ function jointTrend(joint, n){
    so it reads the same direction as the readiness chart; the underlying
    1-5 severity scale (higher = worse) is unchanged everywhere else. */
 function jointComfortSeries(joint, n){
-  const vals=[];
-  for(let i=LOG.length-1;i>=0&&vals.length<n;i--){
-    const e=LOG[i];
-    if(e.type!=='readiness'&&e.type!=='session_end') continue;
-    const sev=e.joints&&e.joints[joint]?Number(e.joints[joint])||1:0;
-    vals.push({d:e.ts.slice(0,10), v: sev===0?100:Math.round((5-sev)/4*100)});
-  }
-  return vals.reverse();
+  // per session: untouched 100, mild 75, moderate 50, bad 0
+  return jointSessions().slice(0,n).map(x=>{
+    const w=Math.max(...x.events.map(e=>jointWeight(e,joint)));
+    return {d:x.events[0].ts.slice(0,10), v:Math.round(100-w*50)};
+  }).reverse();
 }
 /* response ladder — graded, pattern-targeted, free at the lower rungs */
 const JOINT_PATTERNS={
-  shoulder:['horizontal_press','vertical_press','horizontal_pull','vertical_pull'],
+  shoulder:['horizontal_press','vertical_press','horizontal_pull','vertical_pull','abduction'],
   elbow:['horizontal_press','vertical_press','elbow_flexion','elbow_extension'],
   wrist:['horizontal_press','vertical_press','wrist','grip'],
   'low back':['hinge','squat','shrug'], hip:['squat','hinge'],
   knee:['squat','knee_extension','knee_flexion'], ankle:['squat','calf_raise']
 };
+/* Level from the weighted score over the last 6 sessions, where a moderate
+   flag counts 1. Any flag: longer warmup. 2: load held. 4: load −10% and one
+   set fewer. 5+: no progression at all. JUDGEMENT DEFAULTS, GRADE D. */
 function jointLevel(t){
-  if(!t.n||t.mean<1.5&&!t.rising) return 1;
-  if(t.mean>=4&&t.rising) return 5;
-  if(t.mean>=3) return 4;
-  if(t.mean>=1.5) return 3;
-  return 2;
+  const s=t.score||0;
+  if(s<=0) return 1;
+  if(s<2) return 2;
+  if(s<4) return 3;
+  if(s<5) return 4;
+  return 5;
 }
+/* Lateral raises are abduction without external rotation, so they don't load
+   the anterior capsule the way pressing does: they count at half weight and
+   never past "load held" — a precaution, not a cut. Rear-delt work belongs
+   under horizontal_pull, which counts in full. */
+const JOINT_PATTERN_SCALE={shoulder:{abduction:{weight:0.5,cap:3}}};
+/* The ladder note for one movement pattern, from the log as it stands —
+   including today's check-in once it's been logged. Shared by buildDay(),
+   the check-in, and tests/backtest.js so they can't drift apart. */
+function jointNoteFor(pattern){
+  let jl=1, jname=null;
+  JOINTS.forEach(j=>{
+    if(!(JOINT_PATTERNS[j]||[]).includes(pattern)) return;
+    const sc=(JOINT_PATTERN_SCALE[j]||{})[pattern];
+    const t=jointTrend(j,6);
+    let L=jointLevel(sc?{...t,score:t.score*sc.weight}:t);
+    if(sc) L=Math.min(L,sc.cap);
+    if(L>jl){ jl=L; jname=j; }
+  });
+  const ep=lastEarlyPain();
+  if(ep){
+    const j=Object.keys(ep.joints||{}).find(j=>(JOINT_PATTERNS[j]||[]).includes(pattern));
+    if(j&&jl<3){ jl=3; jname=j; }
+  }
+  if(jl<2) return null;
+  return {level:jl, joint:jname, msg:JOINT_MSG[jl]};
+}
+const JOINT_MSG={2:'longer warmup',3:'load held',4:'load reduced, one set fewer',5:'no progression'};
 /* One cumulative number for the Dashboard — averages every tracked joint's
    comfort (same 0-100 inversion the Progress-tab sparklines use) over the
    same rolling window jointTrend() already reads. A joint never flagged
@@ -1038,9 +1091,9 @@ function jointLevel(t){
 function overallJointScore(){
   const vals=JOINTS.map(j=>jointTrend(j,6)).filter(t=>t.n>0);
   if(!vals.length) return null;
-  // mean can run below 1 (an untapped joint contributes 0, "no issue"), so
-  // clamp rather than let the comfort conversion run past 100
-  const comforts=vals.map(t=>Math.max(0,Math.min(100,Math.round((5-t.mean)/4*100))));
+  // mean is the average per-session weight (0 untouched … 2 bad) — the same
+  // basis as jointComfortSeries, so the dashboard and Progress agree
+  const comforts=vals.map(t=>Math.max(0,Math.min(100,Math.round(100-t.mean*50))));
   return Math.round(comforts.reduce((a,b)=>a+b,0)/comforts.length);
 }
 function jointScoreLabel(score){
@@ -1103,11 +1156,81 @@ const isPRSet=id=>prIds().has(id);
 
 const lastSetFor=id=>{const a=sets().filter(s=>s.exercise_id===id&&s.set_kind!=='warmup');
   return a.length?a[a.length-1]:null;};
-const daysOut=()=>CFG.target?Math.max(0,Math.ceil((new Date(CFG.target+'T12:00')-new Date())/864e5)):null;
+/* Program position is counted in SESSIONS, not calendar days. One program
+   week is the split's days-per-week of trained sessions (countsAsTrained, so
+   cancelled and walked-out sessions don't advance it), counted from the
+   program's start date. Miss a week and you're simply where you left off —
+   the day rotation always worked this way; now the block and week do too.
+   The calendar only enters through the projection below. */
+const sessionsPerWeek=()=>(activeSplit()&&activeSplit().days)||5;
+function programSessions(){
+  const from=CFG.start?new Date(CFG.start+'T00:00').getTime():0;
+  return LOG.filter(e=>countsAsTrained(e)&&new Date(e.ts).getTime()>=from).length;
+}
+/* Recent pace in sessions per calendar week, used only to project when the
+   program will finish. JUDGEMENT DEFAULTS, GRADE D: a 28-day window; the
+   split's planned frequency while the program is younger than that and has
+   fewer than 4 sessions; never below half a session a week, so the
+   projection stays finite through a long break. */
+const PACE_WINDOW_DAYS=28, PACE_MIN_SESSIONS=4, DRIFT_DAYS=7;
+function recentPace(){
+  const now=Date.now(), startT=CFG.start?new Date(CFG.start+'T00:00').getTime():0;
+  const from=Math.max(now-PACE_WINDOW_DAYS*864e5, startT);
+  const n=LOG.filter(e=>countsAsTrained(e)&&new Date(e.ts).getTime()>=from).length;
+  if(now-startT<PACE_WINDOW_DAYS*864e5&&n<PACE_MIN_SESSIONS) return {perWeek:sessionsPerWeek(), planned:true, n};
+  const weeks=Math.max(1,(now-from)/(7*864e5));
+  return {perWeek:Math.max(0.5,Math.min(7,n/weeks)), planned:false, n};
+}
+/* When the program will finish at your recent pace, and how that compares
+   with the target date. Never adds work to catch up — missing sessions means
+   fewer sessions, and the fix is more sessions, not more per session. */
+function programProjection(roadmap){
+  const rm=roadmap||ROADMAP;
+  if(!rm.length) return null;
+  const dpw=sessionsPerWeek(), total=rm.reduce((a,b)=>a+blockLen(b),0)*dpw;
+  const done=Math.min(total,programSessions()), remaining=total-done, pace=recentPace();
+  const days=Math.ceil(remaining/pace.perWeek*7);
+  const end=new Date(); end.setHours(12,0,0,0); end.setDate(end.getDate()+days);
+  const target=CFG.target?new Date(CFG.target+'T12:00'):null;
+  return {total, done, remaining, pace, days, dpw, end, endISO:end.toISOString().slice(0,10),
+    behindDays:target?Math.round((end-target)/864e5):null};
+}
+/* Program weeks you can still fit before a target date at your recent pace,
+   plus the weeks already trained. Before the program starts this is plain
+   calendar weeks, as it always was. Shared by the linter, the settings
+   sizing line and fillToTarget, so extending the target to match the
+   projection doesn't make them think there's room for more blocks. */
+function weeksAvailable(startISO, targetISO, splitKey){
+  if(!startISO||!targetISO) return null;
+  const start=new Date(startISO+'T12:00'), target=new Date(targetISO+'T12:00'), now=new Date();
+  if(start>=now) return Math.round((target-start)/864e5/7);
+  const dpw=((SPLITS[splitKey]||activeSplit()).days)||5, pace=recentPace();
+  return Math.round(programSessions()/dpw + Math.max(0,(target-now)/864e5/7)*pace.perWeek/dpw);
+}
+/* The linter's lower bound per block type. Compression never goes below it. */
+const BLOCK_MIN={hyp:3,str:2,peak:1,deload:1};
+/* Shorten blocks from the end backward to save cutWeeks program weeks: never
+   below a type's minimum, never into weeks already trained, never touching a
+   deload (neither deload blocks nor a block's trailing deload week). Returns
+   the new roadmap and how many weeks it still couldn't save. */
+function compressRoadmap(roadmap, cutWeeks, cur){
+  const draft=roadmap.map(b=>({...b,hyp:[...(b.hyp||[])]}));
+  let left=Math.max(0,cutWeeks);
+  for(let i=draft.length-1;i>=0&&left>0;i--){
+    if(cur&&i<cur.idx) break;
+    const b=draft[i];
+    if(b.type==='deload') continue;
+    let floor=BLOCK_MIN[b.type]||1;
+    if(cur&&i===cur.idx) floor=Math.max(floor,Math.min(b.weeks,cur.week));
+    const cut=Math.min(left,Math.max(0,b.weeks-floor));
+    if(cut){ b.weeks-=cut; applyShape(b); left-=cut; }
+  }
+  return {draft, shortBy:left};
+}
 const EMPTY_PHASE={type:'hyp',label:'No program',weeks:1,week:1,idx:0,vol:[10],int:[70],hyp:[],emphasis:'moderate',empty:true};
 function currentPhase(){
   if(!ROADMAP.length) return {...EMPTY_PHASE};
-  const w=Math.max(0, Math.floor((new Date()-new Date(CFG.start+'T12:00'))/864e5/7));
+  const w=Math.floor(programSessions()/sessionsPerWeek());   // whole program weeks trained
   let acc=0;
   for(let i=0;i<ROADMAP.length;i++){
     const L=blockLen(ROADMAP[i]);
@@ -1496,7 +1619,7 @@ function loadable(slot, lb){
 /* Which soreness groups bear on a session, derived from the muscles it trains */
 const MUSCLE_GROUP={chest:'push',front_delts:'push',side_delts:'push',triceps:'push',
   lats:'pull',upper_back:'upperback',rear_delts:'pull',traps:'pull',biceps:'pull',forearms:'pull',
-  quads:'quads',hamstrings:'post',glutes:'post',calves:'post',abs:'lowback'};
+  quads:'quads',hamstrings:'post',glutes:'post',calves:'post',abs:'lowback',lower_back:'lowback'};
 function soreGroupsFor(day){
   const g=new Set();
   (day.slots||[]).forEach(s=>{ const ex=exById[s.ex]; if(!ex) return;
@@ -1519,7 +1642,9 @@ function readinessScore(st, groups){
   const neutral=v=>(v-3)/2;                    // 1→-1, 2→-.5, 3→0, 4→.5, 5→1
   const vals=(groups||[]).map(g=>st.sore[g]).filter(v=>v!=null);
   const sore=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:3;
-  const raw=neutral(st.sleep)*0.30 + neutral(st.motivation)*0.20 + neutral(sore)*0.50 + energyCfg().ready;
+  // recovery ("rest of life") pulls down with soreness's weight; 4-5 add nothing
+  const raw=neutral(st.sleep)*0.30 + neutral(st.motivation)*0.20 + neutral(sore)*0.50
+    + Math.min(0,neutral(st.recovery??3))*0.50 + energyCfg().ready;
   return Math.max(0,Math.min(1, 0.7+raw*0.3));  // all-3s -> 0.70, squarely "Normal"
 }
 /* Same formula, replayed straight from a logged 'readiness' event instead
@@ -1532,7 +1657,8 @@ function readinessScoreFromEvent(ev){
   const neutral=v=>(v-3)/2;
   const vals=Object.values(ev.soreness||{}).filter(v=>v!=null);
   const sore=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:3;
-  const raw=neutral(ev.sleep_quality)*0.30 + neutral(ev.motivation)*0.20 + neutral(sore)*0.50 + energyCfg().ready;
+  const raw=neutral(ev.sleep_quality)*0.30 + neutral(ev.motivation)*0.20 + neutral(sore)*0.50
+    + Math.min(0,neutral(ev.recovery??3))*0.50 + energyCfg().ready;
   return Math.max(0,Math.min(1, 0.7+raw*0.3));
 }
 /* Plain-language label for the display score only. This no longer implies a
@@ -1549,16 +1675,25 @@ function readinessLabel(score){
    session for an honest "everything's average" check-in). Same magnitudes as
    before, just gated on a direct physical trigger instead of a blended
    score. Judgement defaults, Grade D. */
-function physicalCut(st, groups, patterns){
+function physicalCut(st, groups){
   const soreVals=(groups||[]).map(g=>st.sore[g]).filter(v=>v!=null);
   const worstSore=soreVals.length?Math.min(...soreVals):3;
   const soreGroup=soreVals.length?groups.find(g=>st.sore[g]===worstSore):null;
   const soreLabel=soreGroup?(GROUP_LABEL[soreGroup]||soreGroup):null;
-  const jointHit=Object.keys(st.joints||{}).find(j=>(JOINT_PATTERNS[j]||[]).some(p=>(patterns||[]).includes(p)));
-  if(worstSore<=1) return {load:0.90, sets:-2, label:'Reduced', signal:'sore '+(soreLabel||'muscles')};
-  if(worstSore<=2) return {load:0.95, sets:-1, label:'Slightly reduced', signal:'sore '+(soreLabel||'muscles')};
-  if(jointHit) return {load:0.95, sets:-1, label:'Slightly reduced', signal:'flagged '+jointHit};
-  return null;
+  // A flagged joint is handled per exercise by the joint ladder
+  // (jointNoteFor), not here: a sore shoulder shouldn't cut calf raises.
+  // "Rest of life" (stress, illness, run-down, under-fed) is a whole-session
+  // physical signal in the same weight class as soreness. 3 is neutral; 4-5
+  // never add load. Judgement default, Grade D.
+  const rec=st.recovery??3;
+  const tier=v=>v<=1?2:v<=2?1:0;
+  const ts=tier(worstSore), tr=tier(rec), t=Math.max(ts,tr);
+  if(!t) return null;
+  const sig=[];
+  if(ts===t) sig.push('sore '+(soreLabel||'muscles'));
+  if(tr===t) sig.push(rec<=1?'run-down':'life stress');
+  return t===2?{load:0.90, sets:-2, label:'Reduced', signal:sig.join(' and ')}
+              :{load:0.95, sets:-1, label:'Slightly reduced', signal:sig.join(' and ')};
 }
 
 let TAB='dash', session=null, draft={weight:135,reps:5,rpe:8,unit:'lb',tech:'straight',group:null,alt:null};
@@ -1595,6 +1730,44 @@ function renderInner(){
 }
 
 /* ═══ DASHBOARD ═══ */
+/* Behind the target date: say so plainly and offer exactly one action,
+   depending on whether the date is fixed. Neither adds work per session. */
+function driftCard(proj,p){
+  const wk=Math.round(proj.behindDays/7);
+  const c=el('div','card pad');
+  c.style.cssText='border-left:3px solid var(--str)';
+  c.innerHTML=`<div style="font-weight:650;font-size:14.5px">About ${wk>=1?wk+' week'+(wk>1?'s':''):proj.behindDays+' days'} behind your target date</div>
+    <div class="muted tiny" style="margin-top:3px">Program progress counts sessions trained, not calendar days.
+      ${proj.done} of ${proj.total} sessions done; at your recent pace of ${fmt(proj.pace.perWeek,1)} a week${proj.pace.planned?' (your planned pace — not enough history yet)':''}, you'd finish ${new Date(proj.endISO+'T12:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})}.
+      Nothing gets added to your sessions to catch up.</div>`;
+  const b=el('button','btn s',CFG.targetFixed?'Compress the remaining blocks':'Move target to '+new Date(proj.endISO+'T12:00').toLocaleDateString(undefined,{month:'short',day:'numeric'}));
+  b.style.marginTop='10px';
+  b.onclick=()=>{
+    if(!CFG.targetFixed){ CFG.target=proj.endISO; saveCfg(); render(); toast('Target moved — blocks unchanged'); return; }
+    openCompress(proj,p);
+  };
+  c.appendChild(b);
+  return c;
+}
+function openCompress(proj,p){
+  const cut=Math.ceil(proj.behindDays/7*proj.pace.perWeek/proj.dpw);
+  const r=compressRoadmap(ROADMAP,cut,p), after=programProjection(r.draft);
+  const rows=ROADMAP.map((b,i)=>{
+    const a=r.draft[i], changed=a.weeks!==b.weeks;
+    return `<div class="row between sm" style="padding:5px 0;border-top:1px solid var(--line)">
+      <span>${i+1}. ${esc(TYPE_NAME[b.type])}${b.deload&&b.type!=='deload'?' + deload':''}</span>
+      <span${changed?' style="color:var(--str);font-weight:600"':' class="muted"'}>${b.weeks} → ${a.weeks} wk</span></div>`;
+  }).join('');
+  sheet(`<h2 style="font-size:20px;margin-bottom:3px">Compress to hit your date</h2>
+    <div class="muted tiny" style="margin-bottom:12px">Shortened from the end backward. Never below a block type's minimum (hypertrophy 3, strength 2, peaking 1), never into weeks you've trained, and no deload is removed.</div>
+    <div class="qblock">${rows}</div>
+    <div class="muted sm" style="margin:8px 0">Projected finish: ${after.end.toLocaleDateString(undefined,{month:'long',day:'numeric'})}${r.shortBy?` — still about ${r.shortBy} program week${r.shortBy>1?'s':''} past the target; the blocks are already at their minimums.`:'.'}</div>
+    <div class="row" style="gap:8px">
+      <button class="btn ghost grow" id="cmpno">Cancel</button>
+      <button class="btn pri grow" id="cmpgo"${cut&&r.shortBy<cut?'':' disabled'}>Apply</button></div>`);
+  $('#cmpno').onclick=()=>$('#dlg').close();
+  $('#cmpgo').onclick=()=>{ ROADMAP=r.draft; CFG.roadmap=ROADMAP; saveCfg(); $('#dlg').close(); render(); toast('Blocks compressed'); };
+}
 function blockProgress(p){
   if(!ROADMAP.length) return {done:1,total:1,weeksIn:0};
   let acc=0; for(const b of ROADMAP.slice(0,p.idx)) acc+=blockLen(b);
@@ -1602,13 +1775,19 @@ function blockProgress(p){
 }
 function renderDash(){
   const v=$('#v-dash'); v.innerHTML='';
-  const d=daysOut(), p=currentPhase();
+  const p=currentPhase(), proj=programProjection();
+  const longDate=dt=>dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const tgtDate=CFG.target?new Date(CFG.target+'T12:00'):null;
+  // countdown follows the projection; the original target is secondary when they differ
+  const differs=proj&&tgtDate&&Math.abs(proj.behindDays)>=1;
 
   const hero=el('div','card pad');
   hero.innerHTML=`<div style="text-align:center;margin-bottom:6px">
-      <div class="count">${d!=null?d:'—'} Days Out</div>
-      <div class="countsub">${CFG.target?new Date(CFG.target+'T12:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'}):'No target set'}</div>
-    </div><div id="chart"></div>
+      <div class="count">${proj?proj.days:'—'} Days Out</div>
+      <div class="countsub">${proj?'Projected '+longDate(proj.end):tgtDate?longDate(tgtDate):'No target set'}</div>
+      ${differs?`<div class="dim tiny" style="margin-top:3px">Target ${longDate(tgtDate)}${CFG.targetFixed?' · fixed':''}</div>`:''}
+    </div><div id="chart"></div>`;
+  hero.innerHTML+=`
     <div class="legend">
       <span><i class="sw" style="background:var(--hyp)"></i>Hypertrophy</span>
       <span><i class="sw" style="background:var(--str)"></i>Strength</span>
@@ -1617,6 +1796,7 @@ function renderDash(){
     </div>`;
   v.appendChild(hero);
   $('#chart').appendChild(phaseChart(p));
+  if(proj&&proj.behindDays!=null&&proj.behindDays>DRIFT_DAYS) v.appendChild(driftCard(proj,p));
 
   const bp=blockProgress(p);
   const today=el('div','card pad');
@@ -2402,9 +2582,9 @@ function openCustomEx(onCreate, editingEx){
   const st=editingEx?{name:editingEx.name,pattern:editingEx.pattern,load:editingEx.load,
       primary:Object.entries(editingEx.vol).find(([,w])=>w===1)?.[0]||'chest',
       secondary:Object.entries(editingEx.vol).filter(([,w])=>w<1).map(([m])=>m),
-      inc:editingEx.inc,bar:editingEx.bar||0,unitPref:editingEx.unitPref||'both'}
+      inc:editingEx.inc,bar:editingEx.bar||0,unitPref:editingEx.unitPref||'both',unilateral:!!editingEx.unilateral}
     :{name:'',pattern:'horizontal_press',load:'machine',primary:'chest',  // horizontal_press = 'Chest press' in the picker above
-      secondary:[],inc:10,bar:0,unitPref:'both'};
+      secondary:[],inc:10,bar:0,unitPref:'both',unilateral:false};
   /* Plain-English movement types, shown instead of raw pattern ids. Order
    roughly matches how someone would describe the exercise out loud. */
 const MOVEMENT_TYPES=[
@@ -2413,10 +2593,10 @@ const MOVEMENT_TYPES=[
   {label:'Squat (any bar, machine, or bodyweight)', pattern:'squat'},
   {label:'Hip hinge / deadlift-style', pattern:'hinge'},
   {label:'Pull-down or pull-up (vertical pulling)', pattern:'vertical_pull'},
-  {label:'Row (horizontal pulling)', pattern:'horizontal_pull'},
+  {label:'Row or rear-delt fly (horizontal pulling)', pattern:'horizontal_pull'},
   {label:'Bicep curl', pattern:'elbow_flexion'},
   {label:'Tricep extension / pushdown', pattern:'elbow_extension'},
-  {label:'Side/rear raise (shoulder)', pattern:'abduction'},
+  {label:'Lateral raise (shoulder, arm out to the side)', pattern:'abduction'},
   {label:'Leg extension (knee, quad-focused)', pattern:'knee_extension'},
   {label:'Leg curl (hamstring-focused)', pattern:'knee_flexion'},
   {label:'Calf raise', pattern:'calf_raise'},
@@ -2475,6 +2655,13 @@ const MOVEMENT_TYPES=[
     mk('How is it loaded?',LOADING_TYPES.map(t=>t.load),st.load,v=>{
       const t=loadingType(v); st.load=v; st.inc=t.inc; st.bar=t.bar||0; },v=>loadingType(v).label);
     host.lastChild.appendChild(el('div','anchor',esc(loadingType(st.load).hint)));
+    if(st.load==='machine'){
+      const lab=el('label',''); lab.style.cssText='display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:8px';
+      lab.innerHTML='<input type="checkbox"'+(st.unilateral?' checked':'')+'><span class="sm">Loads one arm or side at a time</span>';
+      lab.querySelector('input').onchange=e=>{ st.unilateral=e.target.checked; };
+      host.lastChild.appendChild(lab);
+      host.lastChild.appendChild(el('div','anchor','Shows a plate diagram — plates per side, or per arm if this is ticked. Never a total: empty machines differ.'));
+    }
     mk('Main muscle',Object.keys(LANDMARKS),st.primary,v=>st.primary=v,v=>ML[v]);
 
     const sec=el('div','qblock');
@@ -2508,7 +2695,8 @@ const MOVEMENT_TYPES=[
       const lt=loadingType(st.load);
       Object.assign(editingEx,{name,pattern:st.pattern,load:st.load,bar:st.bar||0,
         plateSet:lt.plate?'main_lb':null,inc:st.inc,prog:lt.prog,
-        comparable:lt.comparable,unitPref:st.unitPref,vol});
+        comparable:lt.comparable,unitPref:st.unitPref,vol,
+        plateLoaded:st.load==='machine',unilateral:st.load==='machine'&&!!st.unilateral});
       CFG.customEx=(CFG.customEx||[]).map(c=>c.id===editingEx.id?editingEx:c); saveCfg();
       $('#dlg').close(); toast(name+' updated');
       if(onCreate) onCreate(editingEx); else render();
@@ -2518,7 +2706,8 @@ const MOVEMENT_TYPES=[
     const lt=loadingType(st.load);
     const ex={id,name,pattern:st.pattern,load:st.load,bar:st.bar||0,
       plateSet:lt.plate?'main_lb':null,inc:st.inc,prog:lt.prog,
-      comparable:lt.comparable,custom:true,unitPref:st.unitPref,vol};
+      comparable:lt.comparable,custom:true,unitPref:st.unitPref,vol,
+      plateLoaded:st.load==='machine',unilateral:st.load==='machine'&&!!st.unilateral};
     CFG.customEx=(CFG.customEx||[]).concat(ex); saveCfg(); mergeCustom();
     $('#dlg').close(); toast(name+' added');
     if(onCreate) onCreate(ex); else render();
@@ -2672,6 +2861,7 @@ function openInfo(exId){
         <div class="qlab" style="color:${col}">${f.level==='red'?'Flagged':'Worth attention'}</div>
         <div class="muted sm">${esc(f.why)}</div>
         <div class="anchor">From: ${esc(CONDITIONS[f.cond].name)}. A note, not a block.</div></div>`;})()}
+    <div class="qblock" id="irr"></div>
     <div class="qblock"><div class="qlab">Counts toward</div>${vols}</div>
     <div class="qblock"><div class="qlab">Progression</div>
       <div class="muted sm">${esc(mode)}</div>
@@ -2685,6 +2875,7 @@ function openInfo(exId){
     ${ex.custom?'<button class="btn ghost wide" id="idel" style="margin-bottom:8px;color:var(--skip)">Delete this custom exercise</button>':''}
     <button class="btn ghost wide" id="iclose">Close</button>`);
   $('#iclose').onclick=()=>$('#dlg').close();
+  drawRepRangeEditor($('#irr'), ex);
   $('#irename').onclick=()=>openRenameEx(ex);
   if(ex.custom&&$('#iedit')) $('#iedit').onclick=()=>openCustomEx(null,ex);
   if(ex.custom&&$('#idel')) $('#idel').onclick=()=>{
@@ -2695,6 +2886,35 @@ function openInfo(exId){
   };
 }
 
+/* The exercise's stored rep range — every future session, every slot. The
+   per-session edit lives in the set panel and never touches this. */
+function drawRepRangeEditor(host, ex){
+  const saved=(CFG.repRanges||{})[ex.id]||ex.repRange, d=defaultRepRange(ex);
+  const cur=saved||d.reps, why=saved?'set by you':d.src==='muscle'?(ML[d.muscle]||d.muscle).toLowerCase()+' default'+(d.capped?', capped for this machine\'s steps':''):'follows the '+d.block+' block';
+  let lo=cur[0], hi=cur[1], editing=false;
+  const draw=()=>{
+    host.innerHTML=`<div class="qlab">Rep range · default for this exercise</div>
+      <div class="row between sm"><span>${fmtRange(cur)} reps</span><span class="dim tiny">${esc(why)}</span></div>
+      <div class="anchor">Used in every future session, including when it's your lead lift. To change it just for today, use the set panel during the session.</div>`;
+    if(!editing){
+      const b=el('button','btn s','Change default'); b.style.marginTop='8px';
+      b.onclick=()=>{ editing=true; draw(); }; host.appendChild(b);
+      if(saved){ const r=el('button','btn s','Reset to default'); r.style.cssText='margin:8px 0 0 6px';
+        r.onclick=()=>{ delete CFG.repRanges[ex.id]; if(ex.custom&&ex.repRange){ delete ex.repRange; CFG.customEx=(CFG.customEx||[]).map(c=>c.id===ex.id?ex:c); }
+          saveCfg(); render(); openInfo(ex.id); toast('Back to the default range'); };
+        host.appendChild(r); }
+      return;
+    }
+    const g=el('div',''); g.style.cssText='display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:8px';
+    g.appendChild(stepper('lowest',lo,1,v=>{lo=Math.max(1,Math.min(v,hi));draw();}));
+    g.appendChild(stepper('highest',hi,1,v=>{hi=Math.max(lo,Math.min(v,30));draw();}));
+    host.appendChild(g);
+    const sv=el('button','btn pri s','Save as this exercise\'s default'); sv.style.marginTop='8px';
+    sv.onclick=()=>{ CFG.repRanges=CFG.repRanges||{}; CFG.repRanges[ex.id]=[lo,hi]; saveCfg(); render(); openInfo(ex.id); toast('Default range saved'); };
+    host.appendChild(sv);
+  };
+  draw();
+}
 /* Swap: same movement pattern, ranked by your own ratings where you have
    at least 3, then unrated options, then one reserved wildcard. */
 /* Rating snapshot for one exercise: mean stimulus once it has enough data to
@@ -2814,7 +3034,7 @@ function entryPanel(slot,idx){
   g.appendChild(stepper('RPE',draft.rpe,.5,v=>{draft.rpe=v;renderWork()},
     null,{typeable:true,min:5,max:10}));
   p.appendChild(g);
-  p.appendChild(el('div','dim tiny','Target RPE '+slot.rpe)).style.marginTop='4px';
+  p.appendChild(sessionRangeEl(slot)).style.marginTop='4px';
   if(draft.suggested){
     p.appendChild(el('div','sugnote','Suggested — tap any value to change it.'));
     if(draft.why) p.appendChild(whyEl(draft.why,'e:'+slot.ex));
@@ -2831,6 +3051,19 @@ function entryPanel(slot,idx){
     p.appendChild(el('div','plates', sol&&sol.plates.length
       ?`${sol.plates.join(' + ')} per side · ${ex.bar} ${draft.unit} bar`
       :`Bar only · ${ex.bar} ${draft.unit}`));
+  }
+  if(ex.plateLoaded){
+    // Plates only. The empty machine's own resistance varies by model and
+    // isn't on the label, so no total is ever shown. Assumes the logged
+    // weight is all the plates loaded (both sides together; one horn for a
+    // single-arm machine).
+    const setId=draft.unit==='kg'?'main_kg':'main_lb', side=ex.unilateral?'arm':'side';
+    const per=ex.unilateral?draft.weight:draft.weight/2;
+    const sol=solvePlates(per*2,0,setId);
+    p.appendChild(barSVG(sol));
+    if(sol&&!sol.exact) p.appendChild(el('div','warnline',`Closest your plates make: ${fmt(sol.achieved/2)} ${draft.unit} per ${side}`));
+    p.appendChild(el('div','plates', sol&&sol.plates.length?`${sol.plates.join(' + ')} per ${side}`:'No plates'));
+    p.appendChild(el('div','dim tiny','Plates only — the machine\'s own resistance isn\'t counted.'));
   }
   const est=e1rm((draft.unit==='kg'?draft.weight*LB:draft.weight)+bwOffset(ex),draft.reps);
   if(est){
@@ -2917,6 +3150,40 @@ function entryPanel(slot,idx){
   return p;
 }
 
+/* Target line in the set panel, with a this-session-only rep range edit.
+   Changes the live session slot only — never CFG, never the exercise. */
+const SESSION_RANGE_OPEN=new Set();
+function sessionRangeEl(slot){
+  const w=el('div','');
+  const draw=()=>{
+    w.innerHTML='';
+    const row=el('div','row between');
+    row.appendChild(el('span','dim tiny','Target '+fmtRange(slot.reps)+' reps @ RPE '+slot.rpe+(slot.repSrc==='session'?' · this session only':'')));
+    const b=el('button','',SESSION_RANGE_OPEN.has(slot)?'Done':'Change range for today');
+    b.style.cssText='font-size:12px;color:var(--dim);text-decoration:underline';
+    b.onclick=()=>{ if(SESSION_RANGE_OPEN.has(slot)) SESSION_RANGE_OPEN.delete(slot); else SESSION_RANGE_OPEN.add(slot); draw(); };
+    row.appendChild(b); w.appendChild(row);
+    if(!SESSION_RANGE_OPEN.has(slot)) return;
+    let lo=slot.reps[0], hi=slot.reps[1];
+    const g=el('div',''); g.style.cssText='display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:6px';
+    const commit=()=>{
+      if(slot.repSrc!=='session'){ slot.repDefault={reps:slot.reps.slice(),src:slot.repSrc,muscle:slot.repMuscle,capped:slot.repCapped}; }
+      slot.reps=[lo,hi]; slot.repSrc='session';
+      saveSession(); seedDraft(slot); renderWork();
+    };
+    g.appendChild(stepper('lowest',lo,1,v=>{lo=Math.max(1,Math.min(v,hi));commit();}));
+    g.appendChild(stepper('highest',hi,1,v=>{hi=Math.max(lo,Math.min(v,30));commit();}));
+    w.appendChild(g);
+    w.appendChild(el('div','dim tiny','For this session only. The exercise\'s default (its info sheet) is unchanged.')).style.marginTop='4px';
+    if(slot.repSrc==='session'&&slot.repDefault){
+      const r=el('button','btn s','Back to '+fmtRange(slot.repDefault.reps)); r.style.marginTop='6px';
+      r.onclick=()=>{ const d=slot.repDefault; slot.reps=d.reps.slice(); slot.repSrc=d.src; slot.repMuscle=d.muscle; slot.repCapped=d.capped; delete slot.repDefault;
+        saveSession(); seedDraft(slot); renderWork(); };
+      w.appendChild(r);
+    }
+  };
+  draw(); return w;
+}
 /* Edit a logged set. Never rewrites the original event — appends a
    correction that later reads replay over the top. */
 function openEditSet(slot,j){ openEditEvent(slot,slot.sets[j],'Set '+(j+1)); }
@@ -3081,6 +3348,9 @@ function explainRx(slot, pr, o){
     parts.push(fmtRange(slot.reps)+' reps · '+mn+' default');
     detail.push('Rep range '+fmtRange(slot.reps)+' is a default for '+mn+' work, not the '+bn+" block's range. It is a judgement default (Grade D) — practical, not an evidence claim."
       +(slot.repCapped?' Capped at '+COARSE_REP_CAP+' because this machine steps in '+(exById[slot.ex].inc)+' lb jumps.':''));
+  }else if(slot.repSrc==='session'){
+    parts.push(fmtRange(slot.reps)+' reps · changed for this session');
+    detail.push('Rep range '+fmtRange(slot.reps)+' was changed for this session only'+(slot.repDefault?' (default '+fmtRange(slot.repDefault.reps)+')':'')+'. The exercise\'s default is unchanged.');
   }else if(slot.repSrc==='exercise'){
     parts.push(fmtRange(slot.reps)+' reps · set for this exercise');
     detail.push('Rep range '+fmtRange(slot.reps)+" was set on this exercise, overriding the block's range.");
@@ -3112,12 +3382,22 @@ function explainRx(slot, pr, o){
     detail.push('Readiness also removed '+n+' set'+(n>1?'s':'')+' from the first two exercises.');
   }
   if(o.fresh===false) detail.push("Based on the set you just logged, which already reflects today's readiness adjustment.");
-  // 4. joint
-  if(o.jointCut&&slot.joint){
-    const gj=o.jointApplied||0;
-    parts.push(slot.joint.joint+' flare · '+(gj>0?'load −'+gj+'%':'no load change'));
-    detail.push('Your '+slot.joint.joint+' trend is flagged, so the starting load on this pattern is cut 10%'
-      +(gj===10?'.':gj>0?'; rounded to this exercise\'s steps the actual change is −'+gj+'%.':', which rounds back to the same load on this exercise\'s '+exById[slot.ex].inc+' lb steps.'));
+  // 4. joint — named on every set of an affected exercise, not just the first
+  if(slot.joint){
+    const jn=slot.joint.joint, lv=slot.joint.level, t=jointTrend(jn,6);
+    const why=jn+' flagged in '+t.flagged+' of your last '+t.n+' sessions (level '+lv+')';
+    if(o.jointCut){
+      const gj=o.jointApplied||0;
+      parts.push(jn+': '+(gj>0?'load −'+gj+'%':'load reduced'));
+      detail.push(why+', so the starting load on this pattern is cut 10%'
+        +(gj===10?'':gj>0?' — rounded to this exercise\'s steps the actual change is −'+gj+'%':', which rounds back to the same load on this exercise\'s '+exById[slot.ex].inc+' lb steps')
+        +', and there is one set fewer.');
+    }else{
+      parts.push(jn+': '+(lv>=3?(lv>=5?'no progression':'load held'):'longer warmup'));
+      detail.push(why+'. '+(lv>=5?'No load or rep increases on this pattern.'
+        :lv>=3?(o.jointHeld?'The engine wanted more load here; it is held at your last weight instead.':'Load will not go up on this pattern until it settles.')
+        :'Warmup ramp is longer; load is not changed.'));
+    }
   }
   // 5. easing off after a pain-ended session
   if(lastEarlyPain()){
@@ -3153,6 +3433,14 @@ function suggestFor(slot){
     const probe=stagnationProbe(slot);
     if(probe) pr={...pr, ...probe};
   }
+  // Joint ladder level 3+: no load increase on this exercise, every set —
+  // repeat the last logged load. Level 5: no rep increase either.
+  const j=slot.joint, lastJ=(j&&j.level>=3&&pr.lb!=null)?lastSetFor(slot.ex):null;
+  if(lastJ){
+    const L0=toLb(lastJ.weight);
+    if(pr.lb>L0+1e-6){ pr={...pr, lb:L0, reps:lastJ.reps}; o.jointHeld=true; }
+    if(j.level>=5&&pr.lb>=L0-1e-6&&pr.reps>lastJ.reps){ pr={...pr, reps:lastJ.reps}; o.jointHeld=true; }
+  }
   let lb=pr.lb;
   const pct=(a,b)=>a>0?Math.round((1-b/a)*100):0;    // what the cut actually did after rounding to the machine's steps
   if(lb!=null&&o.fresh&&session&&session.adj){ const b=lb; lb=loadable(slot, lb*session.adj.load); o.adj=session.adj; o.adjApplied=pct(b,lb); }
@@ -3171,7 +3459,7 @@ function recordedSuggestion(slot, rec){
   return {
     lb, reps:pr.reps, target_rpe:slot.rpe, basis:pr.src,
     readiness:o.adj?{score:Math.round(session.score*100),cut_pct:Math.round((1-o.adj.load)*100),applied_pct:o.adjApplied||0}:null,
-    joint:o.jointCut?{joint:slot.joint.joint,applied_pct:o.jointApplied||0}:null,
+    joint:slot.joint?{joint:slot.joint.joint,level:slot.joint.level,applied_pct:o.jointApplied||0,held:!!o.jointHeld}:null,
     fatigue:(pr.fatigue&&pr.fatigue.applied)?{rise:pr.fatigue.rise,pairs:pr.fatigue.n,sessions:pr.fatigue.sessions}:null,
     rep_range:slot.repSrc!=='block'?{src:slot.repSrc,muscle:slot.repMuscle||null,capped:!!slot.repCapped}:null
   };
@@ -3277,18 +3565,39 @@ function scaleBlock(label,anchors,initial,onPick,bare){
     x.onclick=()=>{cur=i;onPick(i);paint();}; seg.appendChild(x); }
   onPick(initial); paint(); return b;
 }
+/* Tap a joint to flag it (moderate by default), then say how bad if it isn't
+   moderate. Stored as 1 mild / 2 moderate / 3 bad — events carrying these get
+   joint_scale:3 so older tap-only events stay distinguishable. */
 function jointChips(hostSel,store){
+  const host=$(hostSel);
+  const sevHost=el('div',''); sevHost.style.cssText='width:100%;margin-top:6px';
+  const drawSev=()=>{
+    sevHost.innerHTML='';
+    Object.keys(store).forEach(j=>{
+      const row=el('div','row'); row.style.cssText='gap:6px;align-items:center;margin-top:5px;flex-wrap:wrap';
+      row.appendChild(el('span','dim tiny',esc(j)+':'));
+      [1,2,3].forEach(v=>{
+        const c=el('button','chip',JOINT_SEV_LABEL[v]); c.style.cssText='font-size:12px;padding:4px 9px';
+        c.setAttribute('aria-pressed',store[j]===v?'true':'false');
+        c.onclick=()=>{ store[j]=v; drawSev(); };
+        row.appendChild(c);
+      });
+      sevHost.appendChild(row);
+    });
+  };
   JOINTS.forEach(o=>{
     const b=el('button','chip warn',esc(o)); b.setAttribute('aria-pressed','false');
     b.onclick=()=>{ const on=b.getAttribute('aria-pressed')==='true';
       b.setAttribute('aria-pressed',on?'false':'true');
-      if(on) delete store[o]; else store[o]=1; };
-    $(hostSel).appendChild(b);
+      if(on) delete store[o]; else store[o]=2;
+      drawSev(); };
+    host.appendChild(b);
   });
+  host.appendChild(sevHost);
 }
 
 function openCheckin(){
-  const st={bodyweight:null,sleep:3,motivation:3,sore:{},joints:{}};
+  const st={bodyweight:null,sleep:3,motivation:3,recovery:3,sore:{},joints:{}};
   sheet(`<h2 style="font-size:26px;margin-bottom:14px">Readiness check-in</h2><div id="ck"></div>
     <div class="row" style="gap:8px">
       <button class="btn ghost grow" id="ckskip">Skip</button>
@@ -3304,6 +3613,7 @@ function openCheckin(){
 
   host.appendChild(scaleBlock('How did you sleep last night?',SCALE.sleep,3,v=>st.sleep=v));
   host.appendChild(scaleBlock('Motivation to train today?',SCALE.motivation,3,v=>st.motivation=v));
+  host.appendChild(scaleBlock('How\'s the rest of life treating you?',SCALE.recovery,3,v=>st.recovery=v));
 
   const sore=el('div','qblock'); sore.innerHTML='<div class="qlab">How\'s your body feeling?</div>';
   SORE_GROUPS.filter(g=>!session||session.soreGroups.includes(g.id)).forEach(g=>{
@@ -3319,12 +3629,18 @@ function openCheckin(){
   $('#ckskip').onclick=()=>{$('#dlg').close();render();};
   $('#ckgo').onclick=()=>{
     append({type:'readiness',bodyweight:st.bodyweight,sleep_quality:st.sleep,
-            motivation:st.motivation,soreness:st.sore,joints:st.joints});
-    session.readiness={sleep:st.sleep,motivation:st.motivation,sore:st.sore,joints:st.joints};
+            motivation:st.motivation,recovery:st.recovery,soreness:st.sore,joints:st.joints,joint_scale:3});
+    session.readiness={sleep:st.sleep,motivation:st.motivation,recovery:st.recovery,sore:st.sore,joints:st.joints};
     const score=readinessScore(st, session.soreGroups);
-    const patterns=session.slots.map(s=>exById[s.ex].pattern);
-    const adj=physicalCut(st, session.soreGroups, patterns);
+    const adj=physicalCut(st, session.soreGroups);
     session.score=score; session.adj=adj;
+    // today's joint flags are in the log now, so re-run the ladder for each
+    // exercise: affected patterns only, never a session-wide cut
+    session.slots.forEach(sl=>{
+      const before=sl.joint;
+      sl.joint=jointNoteFor(exById[sl.ex].pattern);
+      if(sl.joint&&sl.joint.level>=4&&!(before&&before.level>=4)&&!sl.sets.length&&sl.sets_target>2) sl.sets_target--;
+    });
     if(adj){
       session.adjReason=adj.signal;
       // fewer sets on the main work only — accessories keep their volume
@@ -3378,7 +3694,7 @@ function openEndEarly(){
     const planned=session.slots.reduce((a,x)=>a+x.sets_target,0);
     const done=session.slots.reduce((a,x)=>a+x.sets.length,0);
     append({type:'session_end', session_id:session.id, day_name:session.dayName,
-      session_rpe:null, ended_early:true, reason:st.reason,
+      session_rpe:null, ended_early:true, reason:st.reason, joint_scale:3,
       duration_s:session.startedAt?Math.round((Date.now()-session.startedAt)/1000):null,
       joints:st.reason==='pain'?st.joints:{}, sets_done:done, sets_planned:planned});
     session=null; saveSession(); stopRest(); $('#dlg').close(); TAB='dash'; render();
@@ -3463,7 +3779,7 @@ function openPost(){
         exposure_index:exposureCount(exId)});
     });
     append({type:'session_end',session_id:session.id,day_name:session.dayName,
-            session_rpe:save?st.rpe:null,joints:save?st.joints:{},
+            session_rpe:save?st.rpe:null,joints:save?st.joints:{},joint_scale:3,
             post_soreness:save?st.post_soreness:{},
             duration_s:session.startedAt?Math.round((Date.now()-session.startedAt)/1000):null});
     session=null; saveSession(); stopRest(); $('#dlg').close(); TAB='dash'; render(); toast('Session saved');
@@ -3627,19 +3943,19 @@ function lintRoadmap(){
     if(run>9){ w.push({sev:'warn',fixAt:i,msg:`${run} weeks without a deload by block ${i+1}.`}); run=0; }
   });
   if(CFG.target&&CFG.start){
-    const avail=Math.round((new Date(CFG.target+'T12:00')-new Date(CFG.start+'T12:00'))/864e5/7);
+    const avail=weeksAvailable(CFG.start,CFG.target,CFG.split);
     const diff=avail-roadmapWeeks();
     if(Math.abs(diff)>1) w.push({sev:'info',
-      msg:`Blocks total ${roadmapWeeks()} weeks but there are ${avail} to your target — ${diff>0?diff+' spare':Math.abs(diff)+' over'}.`});
+      msg:`Blocks total ${roadmapWeeks()} weeks but at your recent pace there are ${avail} to your target — ${diff>0?diff+' spare':Math.abs(diff)+' over'}.`});
   }
   return w;
 }
 
 /* Extending is additive and safe, so it happens automatically. Trimming
    deletes blocks you configured, so that stays a deliberate tap. */
-function fillToTarget(draft, startDate, targetDate){
+function fillToTarget(draft, startDate, targetDate, splitKey){
   if(!startDate||!targetDate) return 0;
-  const avail=Math.round((new Date(targetDate+'T12:00')-new Date(startDate+'T12:00'))/864e5/7);
+  const avail=weeksAvailable(startDate,targetDate,splitKey||CFG.split);
   let have=draft.reduce((a,b)=>a+blockLen(b),0), added=0, guard=0;
   while(avail-have>=4 && guard++<40){
     const last=draft[draft.length-1];
@@ -3758,21 +4074,21 @@ function renderHist(){
 
   // joints
   const cj=el('div','card pad');
-  cj.appendChild(el('div','row between','<span style="font-weight:650">Joints</span><span class="dim tiny">rolling, last 6 check-ins</span>'));
-  const flagged=JOINTS.map(j=>({j,t:jointTrend(j,6)})).filter(x=>x.t.mean>0);
+  cj.appendChild(el('div','row between','<span style="font-weight:650">Joints</span><span class="dim tiny">rolling, last 6 sessions</span>'));
+  const flagged=JOINTS.map(j=>({j,t:jointTrend(j,6)})).filter(x=>x.t.score>0);
   if(!flagged.length){
     cj.appendChild(el('div','empty','Nothing flagged. Joints only appear here once you tap one in a check-in.'));
   }else{
-    flagged.sort((a,b)=>b.t.mean-a.t.mean).forEach(({j,t})=>{
+    flagged.sort((a,b)=>b.t.score-a.t.score).forEach(({j,t})=>{
       const lv=jointLevel(t);
       const col=lv>=4?'var(--peak)':lv>=3?'var(--str)':'var(--muted)';
       const r=el('div',''); r.style.cssText='padding:9px 0;border-top:1px solid var(--line)';
       r.innerHTML=`<div class="row between">
           <span style="font-weight:600;text-transform:capitalize">${esc(j)}</span>
-          <span class="tiny" style="color:${col}">Level ${lv}${t.rising?' · rising':''}</span>
+          <span class="tiny" style="color:${col}">Level ${lv} · flagged in ${t.flagged} of the last ${t.n} sessions</span>
         </div>
         <div class="muted tiny" style="margin-top:2px">${esc(JOINT_ACTION[lv])}</div>
-        ${lv>=3?`<div class="dim tiny" style="margin-top:2px">Affects: ${(JOINT_PATTERNS[j]||[]).map(x=>x.replace(/_/g,' ')).join(', ')}</div>`:''}`;
+        ${lv>=2?`<div class="dim tiny" style="margin-top:2px">Affects: ${(JOINT_PATTERNS[j]||[]).map(x=>x.replace(/_/g,' ')+(((JOINT_PATTERN_SCALE[j]||{})[x])?' (held only, half weight)':'')).join(', ')}</div>`:''}`;
       const comfort=jointComfortSeries(j,12);
       if(comfort.length>=2){
         const cs=sparkline(comfort,col); if(cs){ cs.style.marginTop='6px'; r.appendChild(cs); }
@@ -4129,7 +4445,7 @@ function openSettings(){
     SETTINGS_DRAFT={
       draft: ROADMAP.map(b=>({...b,hyp:[...(b.hyp||[])]})),
       goals: [...(CFG.goals||[])],
-      tgt: CFG.target, srt: CFG.start,
+      tgt: CFG.target, srt: CFG.start, fixed: !!CFG.targetFixed,
       split: CFG.split||'full5', syncUrl: CFG.syncUrl||'',
       energy: CFG.energy||'maintenance', conds: [...(CFG.conditions||[])]
     };
@@ -4147,16 +4463,21 @@ function openSettings(){
     host.innerHTML='';
 
     const dates=el('div','qblock');
-    const availW = (S.tgt&&S.srt) ? Math.round((new Date(S.tgt+'T12:00')-new Date(S.srt+'T12:00'))/864e5/7) : null;
+    const availW = weeksAvailable(S.srt,S.tgt,S.split);
     const haveW  = S.draft.reduce((a,b)=>a+blockLen(b),0);
     dates.innerHTML=`<div class="qlab">Dates</div>
       <div class="field">Target</div><input type="date" id="td" value="${S.tgt||''}">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:8px">
+        <input type="checkbox" id="tfix"${S.fixed?' checked':''}>
+        <span class="sm">This date is fixed</span></label>
+      <div class="anchor">${S.fixed?'If you fall behind, the app offers to shorten the remaining blocks to hit it — never below each block type\'s minimum, never dropping a deload.':'If you fall behind, the app offers to move this date to match your pace. Blocks keep their length.'}</div>
       <div class="field" style="margin-top:10px">Start</div><input type="date" id="sd" value="${S.srt||''}">
-      <div class="anchor">${availW!=null?`${haveW} weeks of blocks against ${availW} weeks available`:'Set both dates to size your blocks'}</div>`;
+      <div class="anchor">${availW!=null?`${haveW} weeks of blocks against ${availW} weeks available at your pace`:'Set both dates to size your blocks'}</div>`;
     host.appendChild(dates);
+    $('#tfix').onchange=e=>{ S.fixed=e.target.checked; draw(); };
     $('#td').onchange=e=>{
       S.tgt=e.target.value;
-      const n=fillToTarget(S.draft,S.srt,S.tgt);
+      const n=fillToTarget(S.draft,S.srt,S.tgt,S.split);
       if(n) toast(`Added ${n} block${n>1?'s':''} to reach that date`);
       draw();
     };
@@ -4165,12 +4486,11 @@ function openSettings(){
       const trim=el('button','btn s',`Trim ${haveW-availW} weeks to fit`);
       trim.style.marginTop='9px';
       trim.onclick=()=>{
-        let over=haveW-availW;
-        while(over>0&&S.draft.length>1){
-          const last=S.draft[S.draft.length-1];
-          if(last.weeks>1){ last.weeks--; applyShape(last); over--; }
-          else { over-=blockLen(last); S.draft.pop(); }
-        }
+        // same rules as the dashboard's compress: minimums, deloads and
+        // weeks already trained are never cut
+        const r=compressRoadmap(S.draft, haveW-availW, S.srt===CFG.start?currentPhase():null);
+        S.draft=r.draft;
+        if(r.shortBy) toast(`${r.shortBy} week${r.shortBy>1?'s':''} still over — blocks are at their minimums`);
         draw();
       };
       dates.appendChild(trim);
@@ -4380,7 +4700,7 @@ function openSettings(){
   $('#rmclose').onclick=()=>{ SETTINGS_DRAFT=null; $('#dlg').close(); };
   $('#rmsave').onclick=()=>{
     S.draft.forEach(b=>b.label=TYPE_NAME[b.type]);
-    CFG.roadmap=S.draft; CFG.goals=S.goals; CFG.target=S.tgt; CFG.start=S.srt;
+    CFG.roadmap=S.draft; CFG.goals=S.goals; CFG.target=S.tgt; CFG.start=S.srt; CFG.targetFixed=!!S.fixed;
     CFG.split=S.split; CFG.syncUrl=S.syncUrl; CFG.energy=S.energy; CFG.conditions=S.conds;
     ROADMAP=S.draft; saveCfg(); SETTINGS_DRAFT=null;
     $('#dlg').close(); render(); toast('Program saved');

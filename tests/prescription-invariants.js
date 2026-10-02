@@ -40,14 +40,17 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'suggestFor','seedDraft','logSet','moveSlot','adjustSets','fatigueRise','impliedE1','predictedRpe','rtfFromPct',
   'MUSCLE_REP_RANGE','CFG','FATIGUE_MIN_PAIRS','FATIGUE_MIN_SESSIONS','CHART_MAX_RTF',
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
-  'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS'];
+  'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
+  'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
+  'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
   const ls={getItem:k=>k in store?store[k]:null,setItem:(k,v)=>{store[k]=String(v);},removeItem:k=>{delete store[k];}};
   // exports are looked up defensively so an older build can be run against the suite
   const pick=EXPORTS.map(n=>n+':(()=>{try{return '+n+'}catch(e){}})()').join(',');
-  const body=src+'\n;return {'+pick+',setSession:x=>{session=x},getSession:()=>session,getDraft:()=>draft};';
+  const body=src+'\n;return {'+pick+',setSession:x=>{session=x},getSession:()=>session,getDraft:()=>draft,'+
+    'setRoadmap:x=>{ROADMAP=x},getRoadmap:()=>ROADMAP,getCFG:()=>CFG};';
   const fn=new Function('document','window','navigator','localStorage','location','history','setTimeout','setInterval',
     'alert','confirm','fetch','Notification','matchMedia','requestAnimationFrame','console',body);
   return fn(stub(),stub(),stub(),ls,stub(),stub(),()=>0,()=>0,()=>{},()=>true,()=>Promise.resolve({}),stub(),()=>stub(),()=>0,{log(){},warn(){},error(){}});
@@ -279,12 +282,11 @@ section('8. readiness — physical signal required for a load cut');
   ok(A.physicalCut({sleep:3,motivation:3,sore:{quads:1},joints:{}},['push'],['horizontal_press'])===null,
     'soreness in an untrained group should not cut','');
 
-  // a flagged joint whose pattern is in today's session cuts; elsewhere, doesn't
-  const jointIn=A.physicalCut({sleep:3,motivation:3,sore:{push:3},joints:{shoulder:1}},['push'],['horizontal_press']);
-  ok(jointIn&&jointIn.label==='Slightly reduced','a flagged joint trained today should cut',JSON.stringify(jointIn));
-  ok(A.physicalCut({sleep:3,motivation:3,sore:{push:3},joints:{knee:1}},['push'],['horizontal_press'])===null,
-    'a flagged joint NOT trained today should not cut','');
-  console.log('  all-3s: no cut · sleep/motivation alone: no cut · soreness/joint in trained group: cuts');
+  // a flagged joint no longer cuts session-wide (v1.15.0): it acts per
+  // exercise through the joint ladder instead — see section 11
+  ok(A.physicalCut({sleep:3,motivation:3,sore:{push:3},joints:{shoulder:2}},['push'])===null,
+    'a flagged joint must not cut load session-wide','');
+  console.log('  all-3s: no cut · sleep/motivation alone: no cut · soreness in trained group: cuts · joints: per exercise only');
 }
 
 /* ─── 9. RPE-delta path: easier / harder / at-target / range-boundary ─── */
@@ -365,6 +367,185 @@ section('10. stagnation probe');
   ok(pAccepted&&pAccepted.lb===60&&pAccepted.reps===14,'accepted probe should not suppress the next stagnation check',JSON.stringify(pAccepted));
 
   console.log('  fires at 3 flat sessions (not before), respects target RPE, backs off 2 sessions after a decline, resumes after acceptance');
+}
+
+/* ─── 11. joint ladder: sessions, severity, abduction, real effects ─── */
+section('11. joint ladder');
+{
+  let t0=60;   // strictly decreasing day offsets, so session order is unambiguous
+  const chk=(joints,scale)=>({type:'readiness',id:'r'+(uid++),ts:day(t0-=1),sleep_quality:3,motivation:3,soreness:{},joints,...(scale?{joint_scale:3}:{})});
+  const end=(joints,scale)=>({type:'session_end',id:'e'+(uid++),ts:day(t0-=0.5),session_id:'x'+uid,joints,...(scale?{joint_scale:3}:{})});
+  const sess=(cj,ej,scale)=>[chk(cj||{},scale),end(ej||{},scale)];
+  const lvl=(ev,j)=>{ const A=load(ev); const t=A.jointTrend(j,6); return {t,L:A.jointLevel(t),A}; };
+
+  // legacy taps (stored 1, no joint_scale) count as moderate
+  let r=lvl([].concat(sess({shoulder:1}),sess(),sess({shoulder:1})),'shoulder');
+  ok(r.t.score===2&&r.L===3,'two legacy taps should be moderate x2 = load held',JSON.stringify(r.t));
+  // check-in and finish of one session count once
+  r=lvl(sess({shoulder:1},{shoulder:1}),'shoulder');
+  ok(r.t.score===1&&r.t.flagged===1,'check-in + finish of the same session must count once',JSON.stringify(r.t));
+  // severity weights on the new scale
+  r=lvl(sess({shoulder:3},null,true),'shoulder');
+  ok(r.t.score===2&&r.L===3,'one bad session should reach load held on its own',JSON.stringify(r.t));
+  r=lvl(sess({shoulder:1},null,true),'shoulder');
+  ok(r.t.score===0.5&&r.L===2,'one mild session should only lengthen the warmup',JSON.stringify(r.t));
+  // conservative thresholds
+  const many=(n,v,scale)=>{ let ev=[]; for(let i=0;i<n;i++) ev=ev.concat(sess({shoulder:v},null,scale)); return ev; };
+  ok(lvl(many(4,1),'shoulder').L===4,'4 moderate sessions should be level 4','');
+  ok(lvl(many(5,1),'shoulder').L===5,'5 moderate sessions should be level 5','');
+  ok(lvl(many(3,1),'shoulder').L===3,'3 moderate sessions should be level 3 (conservative)','');
+  // window is the last 6 sessions
+  r=lvl([].concat(sess({shoulder:1}),many(6,0).map(e=>({...e,joints:{}}))),'shoulder');
+  ok(r.t.score===0&&r.L===1,'a flag 7 sessions back must fall out of the window',JSON.stringify(r.t));
+  // abduction: half weight, never past load held
+  const A6=load(many(6,1));
+  const press=A6.jointNoteFor('horizontal_press'), raise=A6.jointNoteFor('abduction'), curl=A6.jointNoteFor('elbow_flexion');
+  ok(press&&press.level===5,'presses should be level 5 at 6 moderate shoulder sessions',JSON.stringify(press));
+  ok(raise&&raise.level===3,'abduction should be half weight and capped at load held',JSON.stringify(raise));
+  ok(curl===null,'a curl is not a shoulder pattern',JSON.stringify(curl));
+  ok(load(many(2,1)).jointNoteFor('abduction').level===2,'abduction at score 2 (half = 1) should only lengthen the warmup','');
+
+  // level 3 holds load on every set; the line names the joint
+  const hist=many(3,1).concat([set('incline_machine','h1',60,15,7,0.2)]);
+  const A3=load(hist), slot3={ex:'incline_machine',role:'primary',reps:[10,15],rpe:9,sets_target:3,sets:[],
+    joint:A3.jointNoteFor('horizontal_press')};
+  A3.setSession({id:'S3',slots:[slot3],adj:null,score:null});
+  const unheld=A3.nextPrescription(slot3), s3=A3.suggestFor(slot3);
+  ok(unheld.lb>60,'precondition: without the ladder the engine would raise load',JSON.stringify(unheld));
+  ok(s3.lb===60&&s3.pr.reps===15,'level 3 must hold load at the last logged weight',JSON.stringify({lb:s3.lb,reps:s3.pr.reps}));
+  ok(/shoulder: load held/.test(s3.why.line),'explanation line must say "shoulder: load held"',s3.why.line);
+  slot3.sets=[{}];   // a later set in the same session: still held, still named
+  const s3b=A3.suggestFor(slot3);
+  ok(s3b.lb===60&&/shoulder: load held/.test(s3b.why.line),'level 3 must hold and be named on later sets too',s3b.why.line);
+  // level 5: no rep increase either
+  const A5=load(many(5,1).concat([set('incline_machine','h5',60,10,7,0.2)]));
+  const slot5={ex:'incline_machine',role:'primary',reps:[10,15],rpe:9,sets_target:3,sets:[],joint:A5.jointNoteFor('horizontal_press')};
+  A5.setSession({id:'S5',slots:[slot5],adj:null,score:null});
+  const s5=A5.suggestFor(slot5);
+  ok(slot5.joint.level===5&&s5.pr.reps===10&&s5.lb<=60,'level 5 must stop rep progression as well as load',JSON.stringify({lvl:slot5.joint.level,lb:s5.lb,reps:s5.pr.reps}));
+  // level 4: starting load cut, named
+  const A4=load(many(4,1).concat([set('incline_machine','h4',70,12,9,0.2)]));
+  const slot4={ex:'incline_machine',role:'primary',reps:[10,15],rpe:9,sets_target:3,sets:[],joint:A4.jointNoteFor('horizontal_press')};
+  A4.setSession({id:'S4',slots:[slot4],adj:null,score:null});
+  const s4=A4.suggestFor(slot4);
+  ok(slot4.joint.level===4&&s4.lb<70&&/shoulder: load/.test(s4.why.line),'level 4 must cut the starting load and say so',JSON.stringify({lb:s4.lb,line:s4.why.line}));
+  console.log('  legacy taps = moderate · one count per session · severity weights · conservative levels · abduction half/capped · held and named on every set');
+}
+
+/* ─── 12. program position counts sessions; drift; compression ─── */
+section('12. session-based program position');
+{
+  const tsDays=n=>day(n);
+  const endEv=(n,extra)=>({type:'session_end',id:'q'+(uid++),ts:tsDays(n),session_id:'q'+uid,joints:{},...extra});
+  const mkA=(events,startDaysAgo,targetDaysAhead)=>{
+    const A=load(events), C=A.getCFG();
+    C.start=new Date(Date.now()-startDaysAgo*864e5).toISOString().slice(0,10);
+    C.target=new Date(Date.now()+targetDaysAhead*864e5).toISOString().slice(0,10);
+    C.split='full5';
+    A.setRoadmap([A.applyShape({type:'hyp',label:'H',weeks:5,deload:true,hyp:[]}),
+                  A.applyShape({type:'str',label:'S',weeks:4,deload:true,hyp:[]}),
+                  A.applyShape({type:'deload',label:'D',weeks:1,hyp:[]}),
+                  A.applyShape({type:'peak',label:'P',weeks:2,hyp:[]})]);
+    return A;
+  };
+  // 7 trained sessions over 20 days: calendar says week 3, sessions say week 2
+  const ev=[];
+  for(let i=0;i<7;i++) ev.push(endEv(19-i*2.5));
+  ev.push(endEv(3,{cancelled:true}));                                          // cancelled: never counts
+  ev.push(endEv(2,{ended_early:true,reason:'life',sets_done:1,sets_planned:15})); // walked out: doesn't count
+  ev.push(endEv(40));                                                          // before the start date
+  let A=mkA(ev,20,120);
+  ok(A.programSessions()===7,'only trained sessions since the start should count',String(A.programSessions()));
+  let p=A.currentPhase();
+  ok(p.idx===0&&p.week===2,'7 sessions on a 5-day split is block 1 week 2, whatever the calendar says',JSON.stringify({idx:p.idx,week:p.week}));
+  // 10 sessions in 5 days: week 3 already
+  const fast=[]; for(let i=0;i<10;i++) fast.push(endEv(4.5-i*0.4));
+  p=mkA(fast,5,120).currentPhase();
+  ok(p.week===3,'10 sessions should be week 3 even five days in',JSON.stringify(p.week));
+  // into the second block
+  const later=[]; for(let i=0;i<31;i++) later.push(endEv(60-i*1.5));
+  p=mkA(later,61,120).currentPhase();
+  ok(p.idx===1&&p.week===1,'31 sessions is past the 6-week first block (5 + deload): block 2 week 1',JSON.stringify({idx:p.idx,week:p.week}));
+
+  // drift: pace and projection are consistent and honest
+  A=mkA(ev,20,120);
+  const pr=A.programProjection();
+  const wks=(Date.now()-new Date(A.getCFG().start+'T00:00').getTime())/(7*864e5);
+  ok(!pr.pace.planned&&Math.abs(pr.pace.perWeek-7/wks)<0.01,'pace should be observed sessions per week since the start',JSON.stringify(pr.pace));
+  ok(pr.total===70&&pr.done===7&&pr.remaining===63,'70 program sessions (14 weeks incl. deloads x 5), 7 done',JSON.stringify({t:pr.total,d:pr.done,r:pr.remaining}));
+  ok(pr.days===Math.ceil(pr.remaining/pr.pace.perWeek*7),'projection = remaining sessions at recent pace',String(pr.days));
+  ok(pr.behindDays>A.DRIFT_DAYS,'2.45 sessions/week against a 5-day split should be well behind a 120-day target',String(pr.behindDays));
+  const onTime=mkA(ev,20,400).programProjection();
+  ok(onTime.behindDays<0,'a distant target should not read as behind',String(onTime.behindDays));
+  // young program with too few sessions uses the planned pace
+  const young=mkA([endEv(1),endEv(0.5)],3,120).programProjection();
+  ok(young.pace.planned&&young.pace.perWeek===5,'with 2 sessions in a 3-day-old program, use the planned pace',JSON.stringify(young.pace));
+
+  // compression: never below minimum, never a deload, never into trained weeks, never more volume
+  const rm=A.getRoadmap(), cur={idx:0,week:2};
+  const big=A.compressRoadmap(rm,99,cur);
+  const mins=big.draft.map(b=>b.weeks);
+  ok(mins[0]===3&&mins[1]===2&&mins[3]===1,'compression must stop at each type\'s minimum (hyp 3, str 2, peak 1)',JSON.stringify(mins));
+  ok(big.draft[2].type==='deload'&&big.draft[2].weeks===1,'a deload block must never be shortened or removed',JSON.stringify(big.draft[2]));
+  ok(big.draft[0].deload&&big.draft[1].deload,'blocks keep their trailing deload week',JSON.stringify(big.draft.map(b=>b.deload)));
+  ok(big.draft.length===rm.length,'no block is ever removed','');
+  ok(big.shortBy===99-(2+2+1),'it should report what it could not save',String(big.shortBy));
+  ok(rm[0].weeks===5,'compression must not mutate the live roadmap',String(rm[0].weeks));
+  const intoTrained=A.compressRoadmap(rm,99,{idx:0,week:4});
+  ok(intoTrained.draft[0].weeks===4,'the current block must not be cut below the week you are in',String(intoTrained.draft[0].weeks));
+  const fromEnd=A.compressRoadmap(rm,1,cur);
+  ok(fromEnd.draft[3].weeks===1&&fromEnd.draft[1].weeks===4&&fromEnd.draft[0].weeks===5,'shortening starts from the end',JSON.stringify(fromEnd.draft.map(b=>b.weeks)));
+  big.draft.forEach((b,i)=>ok(Math.max(...b.vol)<=Math.max(...rm[i].vol),'compression must never raise weekly volume',b.type+' '+JSON.stringify(b.vol)));
+  // per-session sets never go up either: the hyp ramp only adds sets with more weeks
+  const setsAt=(weeks)=>{ let mx=0; for(let w=1;w<=weeks;w++) mx=Math.max(mx,A.schemeFor('primary','hyp',w,weeks,A.exById.bench).sets); return mx; };
+  ok(setsAt(3)<=setsAt(5),'a shorter hypertrophy block must not prescribe more sets per session','');
+  console.log('  sessions not days · cancelled/walked-out/pre-start ignored · projection from pace · compression rules hold');
+}
+
+/* ─── 13. recovery ("rest of life") check-in item ─── */
+section('13. recovery input');
+{
+  const A=load([]);
+  const st=(rec,sore)=>({sleep:3,motivation:3,recovery:rec,sore:{push:sore??3},joints:{}});
+  const c1=A.physicalCut(st(1),['push']), c2=A.physicalCut(st(2),['push']);
+  ok(c1&&c1.label==='Reduced'&&/run-down/.test(c1.signal),'recovery 1 should cut hard and say run-down',JSON.stringify(c1));
+  ok(c2&&c2.label==='Slightly reduced'&&/life stress/.test(c2.signal),'recovery 2 should cut lightly and say life stress',JSON.stringify(c2));
+  [3,4,5].forEach(v=>ok(A.physicalCut(st(v),['push'])===null,'recovery '+v+' must not cut',''));
+  ok(A.readinessScore(st(5),['push'])===A.readinessScore(st(3),['push']),'recovery 4-5 must never add to readiness','');
+  ok(A.readinessScore(st(4),['push'])===A.readinessScore(st(3),['push']),'recovery 4 must never add to readiness','');
+  ok(A.readinessScore(st(1),['push'])<A.readinessScore(st(3),['push']),'recovery 1 should lower the warmup score','');
+  const both=A.physicalCut(st(2,1),['push']);
+  ok(both&&both.label==='Reduced'&&/sore/.test(both.signal),'the worse of soreness and recovery decides the cut',JSON.stringify(both));
+  const both2=A.physicalCut(st(1,1),['push']);
+  ok(both2&&/sore/.test(both2.signal)&&/run-down/.test(both2.signal),'when both hit the same tier, both are named',JSON.stringify(both2));
+  // legacy readiness events (no recovery field) score as if recovery were 3
+  const legacy={sleep_quality:3,motivation:3,soreness:{push:3}};
+  ok(A.readinessScoreFromEvent(legacy)===A.readinessScoreFromEvent({...legacy,recovery:3}),'events without recovery must read as neutral','');
+  ok(A.SCALE.recovery&&A.SCALE.recovery.length===5,'the recovery scale needs five anchored descriptors','');
+  console.log('  1-2 cut and say why · 3 neutral · 4-5 never add · worst signal wins · legacy events neutral');
+}
+
+/* ─── 14. rep-range defaults and lower back ─── */
+section('14. rep ranges and lower back');
+{
+  const A=load([]);
+  const d=A.defaultRepRange(A.exById.curl);
+  ok(d.reps&&d.reps.length===2,'every exercise must resolve to a default rep range',JSON.stringify(d));
+  A.exById && A.EX.forEach(e=>{ if(e.rehab) return; const r=A.defaultRepRange(e); if(!(r.reps&&r.reps[0]>=1&&r.reps[1]>=r.reps[0])) ok(false,'exercise without a default range',e.id); });
+  A.getCFG().repRanges={curl:[6,9]};
+  const sc=A.schemeFor('accessory','hyp',1,4,A.exById.curl);
+  ok(JSON.stringify(sc.reps)==='[6,9]'&&sc.repSrc==='exercise','a saved per-exercise range must win',JSON.stringify(sc));
+  ok(JSON.stringify(A.defaultRepRange(A.exById.curl).reps)!=='[6,9]','the default shown must ignore the saved range','');
+  ok(JSON.stringify(A.getCFG().repRanges)==='{"curl":[6,9]}','computing the default must not touch the saved ranges','');
+  // session-only range: explanation reflects it, CFG untouched
+  const slot={ex:'curl',role:'accessory',reps:[12,15],rpe:9,repSrc:'session',repDefault:{reps:[8,15]},sets_target:3};
+  const line=A.explainRx(slot,{src:null},{}).line;
+  ok(/changed for this session/.test(line),'a session-only range must be named in the explanation',line);
+  ok(A.LANDMARKS.lower_back&&A.LANDMARKS.lower_back.MEV===6&&A.LANDMARKS.lower_back.MRV===16,'lower_back landmarks 6/16','');
+  ok(A.MUSCLE_GROUP.lower_back==='lowback','lower_back should map to the lower-back soreness group','');
+  ok(A.exById.deadlift.vol.lower_back===1&&A.exById.rdl.vol.lower_back===0.5,'hinges must count toward lower back','');
+  ok(!A.exById.belt_rdl.vol.lower_back,'the belt-loaded RDL stays off lower back on purpose','');
+  console.log('  defaults resolve · saved range wins · session range named · lower back counted');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

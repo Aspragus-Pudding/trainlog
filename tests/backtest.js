@@ -60,7 +60,7 @@ function stub(){
 }
 const EXPORTS=['nextPrescription','suggestFor','schemeFor','EX','exById','LOG','sets','toLb','setE1RM','bestE1RM',
   'currentPhase','readinessScoreFromEvent','physicalCut','jointLevel','jointTrend','JOINT_PATTERNS','JOINTS',
-  'lastEarlyPain','impliedE1','predictedRpe','rtfFromPct','repProfile','CFG','pct1RM','isCoarseMachine','isChartFree'];
+  'lastEarlyPain','impliedE1','predictedRpe','rtfFromPct','repProfile','CFG','pct1RM','isCoarseMachine','isChartFree','jointNoteFor'];
 function loadApp(){
   const store={};
   if(cfgSnapshot) store['trainlog.cfg.v1']=JSON.stringify(cfgSnapshot);
@@ -131,24 +131,18 @@ for(const w of workingSets){
   const key=w.session_id+':'+w.exercise_id;
   const fresh=!seenFirst.has(key);
 
-  // Joint ladder for this pattern, replicating buildDay()'s own logic
-  // (index.html, buildDay) against only the truncated history.
-  let jl=1, jname=null;
-  (A.JOINTS||[]).forEach(j=>{
-    if(!((A.JOINT_PATTERNS||{})[j]||[]).includes(ex.pattern)) return;
-    const L=A.jointLevel(A.jointTrend(j,6));
-    if(L>jl){ jl=L; jname=j; }
-  });
-  const ep=A.lastEarlyPain();
-  if(ep&&Object.keys(ep.joints||{}).some(j=>((A.JOINT_PATTERNS||{})[j]||[]).includes(ex.pattern))) jl=Math.max(jl,3);
-  const joint=jl>=2?{level:jl,joint:jname}:null;
+  // Joint ladder for this pattern — the app's own jointNoteFor(), against
+  // only the truncated history (which includes this session's check-in,
+  // since it was logged before the set). Older builds fall back to none.
+  const joint=A.jointNoteFor?A.jointNoteFor(ex.pattern):null;
 
   // Readiness for the session this set belongs to: the nearest preceding
   // readiness-or-session_end marker. If a session_end comes first, the
   // check-in for this session was skipped, so there is no adjustment. The
-  // load/set cut now needs a physical signal (soreness or a flagged joint in
-  // today's patterns) rather than a blended score — see physicalCut() in
-  // index.html and the v1.14.0 investigation for why. The readiness event's
+  // load/set cut needs a physical signal — soreness in a trained group, or
+  // the "rest of life" recovery item at 1-2 (v1.15.0) — never sleep or
+  // motivation alone; joint flags act per exercise through the ladder above,
+  // not session-wide. The readiness event's
   // own soreness keys ARE that session's trained groups: the check-in only
   // ever asks about groups the day's plan actually trains.
   let adj=null, score=null;
@@ -156,10 +150,9 @@ for(const w of workingSets){
     const e=truncated[i];
     if(e.type==='readiness'){
       score=A.readinessScoreFromEvent(e);
-      const st={sleep:e.sleep_quality,motivation:e.motivation,sore:e.soreness||{},joints:e.joints||{}};
+      const st={sleep:e.sleep_quality,motivation:e.motivation,recovery:e.recovery??3,sore:e.soreness||{},joints:e.joints||{}};
       const groups=Object.keys(e.soreness||{});
-      const patterns=[...(sessionPatterns[w.session_id]||[])];
-      adj=A.physicalCut(st,groups,patterns);
+      adj=A.physicalCut(st,groups,[...(sessionPatterns[w.session_id]||[])]);
       break;
     }
     if(e.type==='session_end') break;
