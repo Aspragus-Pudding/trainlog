@@ -25,7 +25,14 @@ shoulder-protocol.md    reference doc, not used by the app
 tests/prescription-invariants.js   prescription direction/pairing tests, run with node
 tests/backtest.js       replays the engine against a real exported log to measure suggestion accuracy
 docs/calibration-plan.md   phase-2 personal-calibration spec, not yet implemented
+docs/coaching-cues.json    per-exercise coaching cues — the editable source (see below)
 ```
+
+**Coaching cues are a two-step edit.** `docs/coaching-cues.json` is the source.
+`index.html` carries a byte-for-byte copy in `<script type="application/json"
+id="coaching-cues">`, because the app stays one self-contained file. After
+editing the JSON, paste its full contents into that block unchanged.
+`tests/prescription-invariants.js` fails if the two differ.
 
 ## Hard invariants — do not break these
 

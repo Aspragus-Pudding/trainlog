@@ -42,7 +42,8 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
-  'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent'];
+  'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -546,6 +547,75 @@ section('14. rep ranges and lower back');
   ok(A.exById.deadlift.vol.lower_back===1&&A.exById.rdl.vol.lower_back===0.5,'hinges must count toward lower back','');
   ok(!A.exById.belt_rdl.vol.lower_back,'the belt-loaded RDL stays off lower back on purpose','');
   console.log('  defaults resolve · saved range wins · session range named · lower back counted');
+}
+
+/* ─── 15. coaching cues: embedded copy matches docs/coaching-cues.json ─── */
+section('15. coaching cues');
+{
+  const file=fs.readFileSync(path.join(__dirname,'..','docs','coaching-cues.json'),'utf8');
+  const m=html.match(/<script type="application\/json" id="coaching-cues">([\s\S]*?)<\/script>/);
+  ok(!!m,'index.html must embed the coaching cues block','');
+  if(m){
+    ok(m[1]===file,'embedded cues must match docs/coaching-cues.json byte for byte — edit the JSON, then paste it into index.html unchanged',
+      'embedded '+m[1].length+' chars vs file '+file.length);
+    let arr=null; try{ arr=JSON.parse(file); }catch(e){ ok(false,'docs/coaching-cues.json must be valid JSON',e.message); }
+    if(arr){
+      const A=load([]);
+      arr.forEach(c=>ok(!!A.exById[c.id],'every cue id must exist in the exercise library',c.id));
+      ok(arr.every(c=>c.setup&&c.execution&&c.faults&&Array.isArray(c.sources)),'every cue needs setup, execution, faults and sources','');
+      ok(!file.includes('</script'),'cue text must never contain </script','');
+      console.log('  '+arr.length+' exercises, '+arr.filter(c=>c.shoulder).length+' with a shoulder note, copy in sync');
+    }
+  }
+}
+
+/* ─── 16. split per block: position and rotation ─── */
+section('16. split per block');
+{
+  const endEv=n=>({type:'session_end',id:'z'+(uid++),ts:day(n),session_id:'z'+uid,joints:{}});
+  const mk=(nSessions,b2split)=>{
+    const ev=[]; for(let i=0;i<nSessions;i++) ev.push(endEv(200-i));
+    const A=load(ev), C=A.getCFG();
+    C.start=new Date(Date.now()-201*864e5).toISOString().slice(0,10); C.split='full5';
+    const b1=A.applyShape({type:'hyp',label:'H',weeks:3,deload:false,hyp:[]});
+    const b2=A.applyShape({type:'str',label:'S',weeks:3,deload:false,hyp:[]}); if(b2split) b2.split=b2split;
+    A.setRoadmap([b1,b2]); return A;
+  };
+  // block 1: 3 weeks x 5 days = 15 sessions; block 2 on a 4-day split
+  let A=mk(15,'ul4'), pos=A.programPosition();
+  ok(pos.idx===1&&pos.sessionsIn===0&&pos.week===1,'after 15 sessions you are at block 2, week 1, its first session',JSON.stringify(pos));
+  ok(A.todayDay().name===A.SPLITS.ul4.template[0].name,'block 2 starts at day 1 of its own split',A.todayDay().name);
+  A=mk(17,'ul4'); pos=A.programPosition();
+  ok(pos.sessionsIn===2&&A.todayDay().name===A.SPLITS.ul4.template[2].name,'two sessions into block 2: its day 3',JSON.stringify(pos)+' '+A.todayDay().name);
+  A=mk(19,'ul4'); pos=A.programPosition();
+  ok(pos.week===2,'a 4-day block advances a week every 4 sessions',JSON.stringify(pos));
+  // block 1's position is untouched by block 2's split
+  const p1=mk(7,null).programPosition(), p2=mk(7,'ppl3').programPosition();
+  ok(JSON.stringify(p1)===JSON.stringify(p2),'changing a later block\'s split must not move you within an earlier block','');
+  ok(p1.idx===0&&p1.week===2&&p1.sessionsIn===7,'7 sessions into a 5-day block: week 2',JSON.stringify(p1));
+  // the projection sizes each block by its own split
+  A=mk(0,'ul4'); ok(A.programProjection().total===15+12,'total sessions = 3x5 + 3x4',String(A.programProjection().total));
+  // unset block split follows the program
+  ok(A.splitKeyFor({})==='full5'&&A.splitKeyFor({split:'ul4'})==='ul4'&&A.splitKeyFor({split:'nope'})==='full5','split fallback','');
+  // linter warns, never blocks
+  const lint=(()=>{ const w=A.lintRoadmap(); return w.find(x=>/switches from/.test(x.msg)); })();
+  ok(lint&&lint.sev==='warn','consecutive blocks with different splits get a warning',JSON.stringify(lint));
+  console.log('  blocks sized by their own split · rotation restarts per block · earlier blocks unaffected · linter warns');
+}
+
+/* ─── 17. picker muscles, tonnage ─── */
+section('17. picker muscles and tonnage');
+{
+  const A=load([]);
+  Object.keys(A.LANDMARKS).forEach(m=>ok(A.MUSCLE_ORDER.includes(m),'every muscle with landmarks must be browsable in the picker',m));
+  ok(A.MUSCLE_ORDER.length===new Set(A.MUSCLE_ORDER).size,'no duplicate muscles in the picker','');
+  const usable=A.EX.filter(e=>!e.rehab&&!A.primaryMuscle(e));
+  ok(usable.length===0,'every non-rehab exercise needs a primary muscle to be browsable',usable.map(e=>e.id).join(','));
+  // a chip only shows when something trains that muscle directly — every listed muscle must have one
+  A.MUSCLE_ORDER.forEach(m=>ok(A.EX.some(e=>!e.rehab&&(e.vol||{})[m]===1),'picker chip "'+m+'" would be empty',m));
+  const B=load([set('bench','T1',135,8,8,1),set('bench','T1',135,8,8.5,1),{...set('bench','T1',95,5,null,1),set_kind:'warmup'},set('bench','T2',200,3,9,2)]);
+  ok(B.sessionTonnage('T1')===135*8*2,'tonnage counts working sets only, per session',String(B.sessionTonnage('T1')));
+  console.log('  all muscles browsable · every exercise reachable by muscle · tonnage excludes warmups');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

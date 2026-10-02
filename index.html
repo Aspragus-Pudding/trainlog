@@ -18,6 +18,7 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink)}
 body.resting main{padding-bottom:64px}
+body.updating main{padding-bottom:84px}
 body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   font-size:16px;line-height:1.45;font-variant-numeric:tabular-nums;
   padding-bottom:calc(70px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
@@ -108,6 +109,10 @@ section{display:none;padding-top:14px} section.on{display:block}
 .numin::-webkit-outer-spin-button,.numin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .numin:focus{outline:none}
 .suggested .num,.suggested .numin{color:var(--str)}
+.lasttime{font-size:12.5px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
+.lastarrow{color:var(--hyp);font-weight:600}
+.leadbadge{font-size:11.5px;color:var(--str);font-weight:650;white-space:nowrap}
+.warmtog{font-size:12.5px;color:var(--muted);padding:6px 0;text-align:left;width:100%}
 .sugnote{font-size:11.5px;color:var(--str);margin-top:5px}
 .why{margin-top:3px}
 .whyline{font-size:12px;color:var(--muted);text-align:left;padding:2px 0;line-height:1.4}
@@ -118,7 +123,7 @@ section{display:none;padding-top:14px} section.on{display:block}
 .plates{font-size:12.5px;color:var(--muted)}
 .warnline{font-size:12.5px;color:var(--str)}
 
-.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line)}
+.sgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line)}
 .scell{background:var(--card);padding:11px 9px;text-align:center}
 .snum{font-size:17px;font-weight:720;letter-spacing:-.02em}
 .slab{font-size:10.5px;margin-top:2px;font-weight:600}
@@ -224,6 +229,566 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
 </div>
 <div class="toast" id="toast"></div>
 
+<!-- Coaching cues. docs/coaching-cues.json is the editable source; this is a
+     byte-for-byte copy of it, and tests/prescription-invariants.js fails if they
+     ever differ. Edit the JSON, then paste it here unchanged. -->
+<script type="application/json" id="coaching-cues">[
+  {
+    "id": "bench",
+    "name": "Barbell bench press",
+    "setup": "Shoulder blades pulled back and down — 'into your back pockets'. Feet flat, driving into the floor.",
+    "execution": "Elbows roughly under the bar, wrist stacked over elbow. Touch around nipple line. Press slightly back toward the rack.",
+    "faults": "Shoulder blades letting go mid-set. Elbows flaring to 90° at the bottom. Touching too high on the chest.",
+    "shoulder": "Keep the touch point low and elbows tucked to about 45°. Never let elbows drift behind the torso line at the bottom. Floor press is the safest variant.",
+    "sources": [
+      "Baraki",
+      "Nuckols"
+    ]
+  },
+  {
+    "id": "incline_machine",
+    "name": "Incline machine chest press",
+    "setup": "Seat height so handles sit at mid-to-lower chest. Shoulder blades back and down against the pad before the first rep.",
+    "execution": "Press through the full range, controlled lowering to a deep but comfortable stretch. Keep ribs down.",
+    "faults": "Shoulders rolling forward at lockout. Rushing the lowering phase. Seat too low, pushing the handles upward instead of forward.",
+    "shoulder": "Stop the lowering where your elbows reach the plane of your torso — don't let them travel behind it. A neutral or semi-neutral grip is safer than a wide pronated one.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "pin_chest_press",
+    "name": "Pin-loaded machine chest press",
+    "setup": "Handles level with mid-chest. Back flat against the pad, shoulder blades retracted.",
+    "execution": "Push through the handles with elbows at about 45°. Full extension without locking hard. Controlled return.",
+    "faults": "Elbows flaring wide. Shrugging the shoulders toward the ears. Letting the weight stack touch down between reps.",
+    "shoulder": "Keep elbows from passing the torso line on the return. Neutral grip if the machine offers it.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "ln_pl_press",
+    "name": "Lying neutral-grip plate-loaded chest press",
+    "setup": "Lie back, neutral grip, shoulder blades pulled together and down into the pad.",
+    "execution": "Press straight up, elbows staying at about 45°. Lower under control to a comfortable depth.",
+    "faults": "Losing scapular retraction at the top. Letting elbows drift wide.",
+    "shoulder": "This is one of the better pressing options for anterior instability — neutral grip, fixed path. Still stop where elbows reach the torso line.",
+    "sources": [
+      "Israetel",
+      "Cavaliere"
+    ]
+  },
+  {
+    "id": "ohp",
+    "name": "Overhead press",
+    "setup": "Grip just outside shoulder width. Bar on the front delts, elbows slightly ahead of the bar. Glutes and core braced.",
+    "execution": "Press up and slightly back. Head moves back as the bar passes, then through so the bar finishes over the crown.",
+    "faults": "Ribcage flaring and lower back arching. Bar drifting forward. Not finishing with the bar over the head.",
+    "shoulder": "Overhead work is tolerable for most with anterior instability if the elbows stay in front of the body. Never behind-the-neck. If it pinches at the top, use a landmine press instead.",
+    "sources": [
+      "Baraki",
+      "Thrall"
+    ]
+  },
+  {
+    "id": "squat",
+    "name": "Back squat",
+    "setup": "Bar on the upper back, hands as close as shoulders allow. Feet about shoulder width, toes slightly out. Big brace.",
+    "execution": "Break at hips and knees together. Knees track over toes. Depth to at least parallel. Drive up through the mid-foot.",
+    "faults": "Knees caving in. Weight shifting to the toes. Chest dropping and hips shooting up first.",
+    "shoulder": "Low-bar position needs shoulder external rotation that may aggravate instability. Use a high-bar position, a wider grip, or the Transformer/safety bar which removes the issue entirely.",
+    "sources": [
+      "Baraki",
+      "Nuckols",
+      "Thrall"
+    ]
+  },
+  {
+    "id": "ssb_squat",
+    "name": "Transformer bar squat",
+    "setup": "Pads on the traps, hands on the handles — not gripping hard. Feet set as for a back squat.",
+    "execution": "Same squat mechanics. The forward-loading pulls you forward; fight it by keeping the chest up and bracing hard.",
+    "faults": "Letting the bar tip you forward. Using the handles to pull yourself up.",
+    "shoulder": "The reason to use this bar — no shoulder rotation required. Fully safe for anterior instability.",
+    "sources": [
+      "Thrall",
+      "Nuckols"
+    ]
+  },
+  {
+    "id": "front_squat",
+    "name": "Front squat",
+    "setup": "Bar across the front delts, elbows high. Clean grip or cross-arm — whichever keeps elbows up.",
+    "execution": "Stay upright. Knees travel forward and out. Elbows stay high throughout or the bar rolls forward.",
+    "faults": "Elbows dropping. Rounding the upper back. Hips rising faster than the chest.",
+    "shoulder": "Clean grip requires wrist and shoulder mobility that may be uncomfortable. Cross-arm or straps on the bar are fine alternatives.",
+    "sources": [
+      "Baraki",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "pendulum",
+    "name": "Pendulum squat",
+    "setup": "Feet mid-to-high on the platform. Back flat against the pad. Shoulders under the pads.",
+    "execution": "Descend as deep as your hips allow without the lower back rounding. Drive through the whole foot.",
+    "faults": "Lower back lifting off the pad at the bottom. Knees caving. Bouncing out of the hole.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "leg_press",
+    "name": "Leg press",
+    "setup": "Feet shoulder width on the platform, mid-height. Back and hips stay on the pad.",
+    "execution": "Lower until the knees are near 90° or deeper if the hips stay down. Press without locking out hard.",
+    "faults": "Hips rolling up off the seat at the bottom — the lower back is now loaded. Locking knees. Partial reps with excessive weight.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "hack",
+    "name": "Hack squat",
+    "setup": "Feet slightly forward on the platform. Back flat on the pad. Shoulders under the pads.",
+    "execution": "Descend to full depth, knees tracking over toes. Drive through the whole foot.",
+    "faults": "Heels lifting. Knees caving. Cutting depth as it gets heavy.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "deadlift",
+    "name": "Deadlift",
+    "setup": "Bar over mid-foot. Shins touch the bar as you hinge down. Lats set — 'bend the bar around your shins'. Big brace.",
+    "execution": "Push the floor away. Bar stays in contact with the legs. Hips and shoulders rise together. Finish tall, no lean-back.",
+    "faults": "Hips shooting up first. Bar drifting away from the shins. Rounding the lower back off the floor. Hyperextending at the top.",
+    "shoulder": "Fully safe. Arms are straight and at the side. Mixed grip puts one shoulder in external rotation — use double overhand with straps if that bothers you.",
+    "sources": [
+      "Baraki",
+      "Nuckols",
+      "Thrall"
+    ]
+  },
+  {
+    "id": "trap_bar",
+    "name": "Trap bar deadlift",
+    "setup": "Stand centred in the bar. Neutral grip on the handles. Hinge down with a flat back.",
+    "execution": "More upright than a straight-bar pull — that's expected. Push the floor away and stand tall.",
+    "faults": "Turning it into a squat with a rounded back. Jerking off the floor.",
+    "shoulder": "Neutral grip, arms at the sides — nothing here stresses the shoulder.",
+    "sources": [
+      "Nuckols",
+      "Baraki"
+    ]
+  },
+  {
+    "id": "rdl",
+    "name": "Romanian deadlift",
+    "setup": "Start standing. Soft bend in the knees that doesn't change through the rep. Lats set, bar close.",
+    "execution": "Push the hips straight back. Bar slides down the thighs. Stop when the hamstrings stop you — usually just below the knee.",
+    "faults": "Rounding the lower back to chase range. Bending the knees more as the weight gets heavy. Letting the bar drift forward.",
+    "shoulder": "Safe. Keep the shoulders pulled slightly back so the bar doesn't drag them forward.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "belt_rdl",
+    "name": "Belt squat machine RDL",
+    "setup": "Belt snug on the hips. Stand tall with a soft knee bend.",
+    "execution": "Hinge back exactly as a barbell RDL. The load pulls from the hips, not the hands, so the back stays unloaded.",
+    "faults": "Squatting instead of hinging. Letting the knees drift forward.",
+    "shoulder": "No shoulder involvement at all. Ideal hinge variant when the shoulder is flared.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "roman_hinge",
+    "name": "Weighted roman chair hip hinge",
+    "setup": "Pad just below the hip crease so the hips can hinge freely. Feet locked in.",
+    "execution": "Lower by hinging at the hips, flat back throughout. Come up to neutral — not past it into hyperextension.",
+    "faults": "Rounding the back. Hyperextending at the top. Pad too high, blocking the hinge.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "transformer_hinge",
+    "name": "Transformer bar hinge",
+    "setup": "Bar on the back as for a squat. Soft knees.",
+    "execution": "Push the hips back, chest stays up. Same pattern as a good morning — stop when the hamstrings stop you.",
+    "faults": "Letting the chest drop and rounding. Bending the knees into a squat.",
+    "shoulder": "Hands on the handles, no rotation required. Safe.",
+    "sources": [
+      "Nuckols",
+      "Thrall"
+    ]
+  },
+  {
+    "id": "hip_thrust",
+    "name": "Hip thrust",
+    "setup": "Upper back on the bench at the bottom of the shoulder blades. Bar across the hips with a pad. Feet so shins are vertical at the top.",
+    "execution": "Drive through the heels. Chin tucked. Finish with a full hip lockout and a hard glute squeeze — ribs down.",
+    "faults": "Hyperextending the lower back at the top. Looking up. Feet too far forward.",
+    "sources": [
+      "Contreras",
+      "Israetel"
+    ]
+  },
+  {
+    "id": "pullup",
+    "name": "Pull-up",
+    "setup": "Full dead hang. Shoulder blades slightly engaged — not hanging passively on the joint.",
+    "execution": "Pull the elbows down and back toward the hips. Chin clears the bar. Lower all the way under control.",
+    "faults": "Kipping. Not reaching full extension at the bottom. Stopping short of chin over bar.",
+    "shoulder": "Grip width matters — wider than shoulders pushes toward the at-risk position. Shoulder width or narrower. Neutral grip is safest.",
+    "sources": [
+      "Nuckols",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "chinup",
+    "name": "Weighted chin-up",
+    "setup": "Underhand grip at shoulder width. Dead hang with shoulder blades slightly set. Belt snug.",
+    "execution": "Same pull as a pull-up — elbows to the hips. Biceps naturally contribute more. Full range every rep.",
+    "faults": "Half reps at the bottom. Swinging the belt weight. Hunching forward at the top.",
+    "shoulder": "The underhand grip keeps the shoulder in a safer position than a wide pronated pull-up. Well suited to anterior instability — your goal lift is a good choice.",
+    "sources": [
+      "Nuckols",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "pulldown",
+    "name": "Lat pulldown",
+    "setup": "Thighs locked under the pad. Grip just wider than shoulders. Slight lean back, chest up.",
+    "execution": "Pull the elbows down and back — think of driving them into your back pockets. Bar to the upper chest. Controlled return to a full stretch.",
+    "faults": "Leaning back and rowing it. Pulling behind the neck. Cutting the top of the range.",
+    "shoulder": "Never behind the neck. Keep the grip at or slightly wider than shoulders — very wide grips move toward the at-risk position.",
+    "sources": [
+      "Nippard",
+      "Israetel"
+    ]
+  },
+  {
+    "id": "uh_pl_pulldown",
+    "name": "Underhand plate-loaded lat pulldown",
+    "setup": "Underhand grip at shoulder width. Thighs locked in. Chest tall.",
+    "execution": "Pull elbows down and in to the sides. Squeeze at the bottom. Let the arms fully extend at the top for the stretch.",
+    "faults": "Curling the handles with the arms instead of driving the elbows. Rounding forward.",
+    "shoulder": "Supinated grip is the shoulder-friendly option. Safe.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "sa_plate_pulldown",
+    "name": "Single-arm plate lat pulldown",
+    "setup": "Brace the free hand on the machine. Chest up, slight lean toward the working side.",
+    "execution": "Pull the elbow to the hip. Let the shoulder blade rotate up and out at the top for the full stretch.",
+    "faults": "Twisting the torso to cheat the weight. Shrugging at the top.",
+    "shoulder": "Neutral grip, arm travelling in front of the body. Safe.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "cable_row",
+    "name": "Seated cable row",
+    "setup": "Feet braced, slight knee bend. Chest up, upright torso.",
+    "execution": "Pull the handle to the lower chest, squeeze the shoulder blades together. Let them separate fully on the return.",
+    "faults": "Leaning back to move the weight. Shrugging. Rounding forward on the return.",
+    "shoulder": "Neutral grip, elbows close. Safe.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "sa_cable_row",
+    "name": "Seated single-arm cable row",
+    "setup": "Square the hips. Free hand braced. Chest tall.",
+    "execution": "Row the elbow to the hip, letting the shoulder blade pull back fully. Full stretch forward on the return.",
+    "faults": "Rotating the torso. Shrugging the working shoulder.",
+    "shoulder": "Safe — arm travels close to the body.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "face_pull",
+    "name": "Face pull",
+    "setup": "Rope at face height or slightly above. Step back for tension. Stand tall.",
+    "execution": "Pull toward the forehead, elbows high and wide, finishing with the hands rotating back — the external rotation is the point.",
+    "faults": "Pulling to the chest like a row. Skipping the rotation at the end. Using too much weight.",
+    "shoulder": "The end position is external rotation at 90° abduction — the at-risk angle. Lower the pulley to chest height and finish the pull lower. Light loads only.",
+    "sources": [
+      "Cavaliere",
+      "Israetel"
+    ]
+  },
+  {
+    "id": "lat_raise",
+    "name": "Dumbbell lateral raise",
+    "setup": "Slight forward lean. Dumbbells at the sides, slight bend in the elbows.",
+    "execution": "Lead with the elbows, not the hands. Raise to about shoulder height. Think of pouring water out of a jug at the top.",
+    "faults": "Swinging. Shrugging. Going above shoulder height — that's traps now.",
+    "shoulder": "Raise in the scapular plane — about 30° forward of straight sideways. Pure side-plane raising with a thumbs-down position is the position to avoid.",
+    "sources": [
+      "Nippard",
+      "Israetel"
+    ]
+  },
+  {
+    "id": "stand_m_raise",
+    "name": "Standing machine lateral raise",
+    "setup": "Pads against the forearms or hands, depending on machine. Stand tall.",
+    "execution": "Raise with the elbows to shoulder height. Pause briefly. Lower under control.",
+    "faults": "Shrugging. Rushing. Leaning back to cheat the last reps.",
+    "shoulder": "Most machines arc in the scapular plane, which is good. Stop at shoulder height.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "seat_m_raise",
+    "name": "Seated machine lateral raise",
+    "setup": "Seat so the pivot aligns with the shoulder joint. Pads just above the elbows.",
+    "execution": "Drive the elbows up and out to shoulder height. Controlled return.",
+    "faults": "Pivot misaligned, causing the arms to rise unevenly. Shrugging.",
+    "shoulder": "Stop at shoulder height. Fine for instability.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "m_rd_fly",
+    "name": "Machine rear delt fly",
+    "setup": "Chest against the pad. Handles at shoulder height. Arms slightly bent.",
+    "execution": "Drive the elbows back and out, squeezing the rear delts. Don't retract the shoulder blades — that's upper back.",
+    "faults": "Rowing it with the shoulder blades. Using momentum. Over-extending past the body line.",
+    "shoulder": "Stop when the elbows reach the plane of the torso. Don't drive past it.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "sw_rd_fly",
+    "name": "Sideways single-arm machine rear delt fly",
+    "setup": "Sit sideways, working arm on the handle. Brace with the other hand.",
+    "execution": "Sweep the arm back in an arc, elbow slightly bent. Squeeze. Return under control.",
+    "faults": "Rotating the torso. Swinging.",
+    "shoulder": "Stop at the body line — don't pull the arm behind the torso.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "seated_rd_fly",
+    "name": "Seated overhand DB rear delt fly",
+    "setup": "Bent over on a bench, chest near the thighs. Dumbbells hanging, slight elbow bend.",
+    "execution": "Raise out to the sides, leading with the elbows. Pinkies slightly up. Pause at the top.",
+    "faults": "Swinging. Squeezing the shoulder blades instead of the rear delts. Too heavy.",
+    "shoulder": "Light weight only. Stop at the plane of the torso.",
+    "sources": [
+      "Nippard",
+      "Israetel"
+    ]
+  },
+  {
+    "id": "pushdown",
+    "name": "Cable pushdown",
+    "setup": "Elbows pinned at the sides. Slight forward lean. Handle at chest height to start.",
+    "execution": "Extend fully at the bottom without the elbows moving. Control the return until the forearms pass parallel.",
+    "faults": "Elbows drifting forward and back. Leaning over the weight. Shortening the range as it gets heavy.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "rope_pushdown",
+    "name": "Cable rope pushdown",
+    "setup": "Rope at chest height. Elbows tucked, slight lean.",
+    "execution": "Push down and spread the rope apart at the bottom. Full extension. Controlled return.",
+    "faults": "Elbows flaring out. Using the shoulders to push.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "m_oh_tri",
+    "name": "Overhead tricep extension machine",
+    "setup": "Upper arms against the pad, pointing up. Elbows aligned with the pivot.",
+    "execution": "Extend fully. Lower until you feel the triceps stretch — this is where the growth is.",
+    "faults": "Upper arms drifting forward off the pad. Cutting the stretch at the bottom.",
+    "shoulder": "Overhead position is generally tolerable because the arm is in flexion, not abduction. If it pinches, use a pushdown instead.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "pin_tri_dip",
+    "name": "Seated pin-loaded machine triceps dip",
+    "setup": "Handles at chest height. Shoulders down, chest up.",
+    "execution": "Press down through the handles to full extension. Control the return — don't let the shoulders rise.",
+    "faults": "Shrugging the shoulders up. Leaning forward to use the chest. Partial range.",
+    "shoulder": "Far safer than a free dip. Stop the return before the elbows pass the torso line.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "dip",
+    "name": "Weighted dip",
+    "setup": "Arms locked, slight forward lean. Shoulders depressed.",
+    "execution": "Lower until the upper arm is parallel. Press back up. Keep the lean consistent.",
+    "faults": "Going too deep. Shoulders rolling forward at the bottom. Flaring the elbows.",
+    "shoulder": "The bottom of a deep dip loads the front of the shoulder heavily. For anterior instability: shallow depth only, or replace with the machine dip.",
+    "sources": [
+      "Nuckols",
+      "Cavaliere"
+    ]
+  },
+  {
+    "id": "pin_preacher",
+    "name": "Pin-loaded machine preacher curl",
+    "setup": "Armpits over the pad edge. Elbows aligned with the machine pivot.",
+    "execution": "Curl through the full range. Lower slowly — don't drop into the stretched position.",
+    "faults": "Shoulders rising off the pad. Bouncing at the bottom. Cutting the lowering phase short.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "sa_cable_curl",
+    "name": "Single-arm cable biceps curl",
+    "setup": "Elbow pinned at the side. Slight step back for constant tension.",
+    "execution": "Curl with the elbow fixed. Full squeeze at the top. Controlled lowering to full extension.",
+    "faults": "Elbow drifting forward. Swinging the torso. Stopping short of full extension.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "nordic",
+    "name": "Nordic hamstring curl",
+    "setup": "Knees on a pad, ankles anchored. Hips extended — body in one straight line.",
+    "execution": "Lower as slowly as possible by letting the knees extend. Catch with the hands only when the hamstrings give out.",
+    "faults": "Bending at the hips. Dropping instead of resisting. Expecting to do the full range early.",
+    "sources": [
+      "Nuckols",
+      "Israetel"
+    ]
+  },
+  {
+    "id": "leg_curl",
+    "name": "Lying leg curl",
+    "setup": "Pad just above the heels. Hips pressed into the bench. Toes pointed toward the shins.",
+    "execution": "Curl to full contraction. Lower under control — the stretch matters as much as the squeeze.",
+    "faults": "Hips rising off the pad. Pointing the toes, which recruits the calves. Dropping the weight.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "leg_ext",
+    "name": "Leg extension",
+    "setup": "Knees aligned with the machine pivot. Pad on the lower shin. Back against the seat.",
+    "execution": "Extend to a full lockout and pause. Lower under control through the full range.",
+    "faults": "Kicking the weight up. Partial range. Lifting the hips off the seat.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "stand_m_calf",
+    "name": "Standing machine calf raise",
+    "setup": "Balls of the feet on the edge. Heels dropped below for the stretch. Knees straight but not locked.",
+    "execution": "Full stretch at the bottom, pause. Drive to the top, pause. Slow throughout.",
+    "faults": "Bouncing. Bending the knees to bounce out of the stretch. Half reps.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "seat_pl_calf",
+    "name": "Seated plate-loaded machine calf raise",
+    "setup": "Pad on the lower thigh. Balls of the feet on the edge, heels low.",
+    "execution": "Same tempo — stretch, pause, drive, pause. This hits the soleus; expect to go lighter than standing.",
+    "faults": "Bouncing. Rushing the bottom position.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "multihip_abd",
+    "name": "Multi-hip machine hip abduction",
+    "setup": "Pad against the outside of the thigh. Stand tall, hold the rail.",
+    "execution": "Drive the leg out to the side. Pause. Return under control without letting the stack rest.",
+    "faults": "Leaning away to cheat. Swinging. Using the torso.",
+    "sources": [
+      "Contreras"
+    ]
+  },
+  {
+    "id": "seated_add",
+    "name": "Seated machine hip adduction",
+    "setup": "Pads inside the knees. Start wider than comfortable for the stretch.",
+    "execution": "Squeeze together through the full range. Pause. Open slowly.",
+    "faults": "Pulsing short reps. Letting the stack drop open.",
+    "sources": [
+      "Contreras"
+    ]
+  },
+  {
+    "id": "captains_leg",
+    "name": "Captain's chair straight leg raise",
+    "setup": "Forearms on the pads, back against the pad. Shoulders down.",
+    "execution": "Raise the legs by curling the pelvis up, not just lifting the thighs. Lower slowly.",
+    "faults": "Swinging. Lifting with the hip flexors only — no pelvic tilt. Shrugging into the pads.",
+    "sources": [
+      "Nippard"
+    ]
+  },
+  {
+    "id": "tbar",
+    "name": "T-bar row",
+    "setup": "Chest over the bar, hinged to about 45°. Flat back, lats set.",
+    "execution": "Row the handle to the lower chest. Elbows stay fairly close. Squeeze, lower under control.",
+    "faults": "Heaving with the lower back. Torso rising with each rep. Flaring elbows wide.",
+    "shoulder": "Elbows close to the body — flaring wide moves toward horizontal abduction. Safe when done tight.",
+    "sources": [
+      "Baraki",
+      "Nuckols"
+    ]
+  },
+  {
+    "id": "chest_row",
+    "name": "Chest-supported row",
+    "setup": "Chest fully on the pad. Feet braced. Arms hanging straight.",
+    "execution": "Row the elbows back and down. Squeeze the shoulder blades. Let them separate fully on the return.",
+    "faults": "Lifting the chest off the pad. Shrugging. Short range at the bottom.",
+    "shoulder": "The best row for a bad shoulder — the pad removes any need to brace with the torso. Keep elbows close.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  }
+]</script>
 <script>
 /* ══════════════════════════════════════════════════════════
    TRAINLOG v2 — shell rebuilt on Juggernaut-derived patterns
@@ -233,7 +798,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.15.0';
+const APP_VERSION='1.16.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -771,7 +1336,11 @@ function buildDay(tpl, phase){
   const override=(CFG.dayOverrides||{})[id];
   return {id, name:tpl.name, slots:override?JSON.parse(JSON.stringify(override.slots)):slots};
 }
-function activeSplit(){ return SPLITS[CFG.split||'full5']; }
+/* Each roadmap block may carry its own split (b.split); unset follows the
+   program's, CFG.split. The active split is the current block's. */
+const splitKeyFor=b=>(b&&b.split&&SPLITS[b.split])?b.split:(SPLITS[CFG.split]?CFG.split:'full5');
+const splitFor=b=>SPLITS[splitKeyFor(b)];
+function activeSplit(){ return splitFor(ROADMAP.length?ROADMAP[programPosition().idx]:null); }
 function generatedDays(){
   const phase=currentPhase();
   return activeSplit().template.map(t=>buildDay(t,phase));
@@ -1184,10 +1753,26 @@ function recentPace(){
 /* When the program will finish at your recent pace, and how that compares
    with the target date. Never adds work to catch up — missing sessions means
    fewer sessions, and the fix is more sessions, not more per session. */
+/* Where you are, walking the roadmap block by block with each block's own
+   sessions per week (its split's days). Changing one block's split re-sizes
+   only that block. Each block's day rotation starts at its first day:
+   sessionsIn is how many trained sessions into this block you are. */
+function programPosition(roadmap){
+  const rm=roadmap||ROADMAP;
+  let left=programSessions(), weeksBefore=0;
+  for(let i=0;i<rm.length;i++){
+    const dpw=splitFor(rm[i]).days, cap=blockLen(rm[i])*dpw;
+    if(left<cap) return {idx:i, sessionsIn:left, week:Math.floor(left/dpw)+1, dpw, split:splitKeyFor(rm[i]), weeksBefore};
+    left-=cap; weeksBefore+=blockLen(rm[i]);
+  }
+  const i=rm.length-1, b=rm[i], dpw=splitFor(b).days;
+  weeksBefore-=blockLen(b);
+  return {idx:i, sessionsIn:left+blockLen(b)*dpw, week:blockLen(b), dpw, split:splitKeyFor(b), weeksBefore, past:true};
+}
 function programProjection(roadmap){
   const rm=roadmap||ROADMAP;
   if(!rm.length) return null;
-  const dpw=sessionsPerWeek(), total=rm.reduce((a,b)=>a+blockLen(b),0)*dpw;
+  const dpw=sessionsPerWeek(), total=rm.reduce((a,b)=>a+blockLen(b)*splitFor(b).days,0);
   const done=Math.min(total,programSessions()), remaining=total-done, pace=recentPace();
   const days=Math.ceil(remaining/pace.perWeek*7);
   const end=new Date(); end.setHours(12,0,0,0); end.setDate(end.getDate()+days);
@@ -1205,7 +1790,9 @@ function weeksAvailable(startISO, targetISO, splitKey){
   const start=new Date(startISO+'T12:00'), target=new Date(targetISO+'T12:00'), now=new Date();
   if(start>=now) return Math.round((target-start)/864e5/7);
   const dpw=((SPLITS[splitKey]||activeSplit()).days)||5, pace=recentPace();
-  return Math.round(programSessions()/dpw + Math.max(0,(target-now)/864e5/7)*pace.perWeek/dpw);
+  const pos=ROADMAP.length?programPosition():null;
+  const doneWeeks=pos?pos.weeksBefore+pos.sessionsIn/pos.dpw:programSessions()/dpw;
+  return Math.round(doneWeeks + Math.max(0,(target-now)/864e5/7)*pace.perWeek/dpw);
 }
 /* The linter's lower bound per block type. Compression never goes below it. */
 const BLOCK_MIN={hyp:3,str:2,peak:1,deload:1};
@@ -1230,20 +1817,11 @@ function compressRoadmap(roadmap, cutWeeks, cur){
 const EMPTY_PHASE={type:'hyp',label:'No program',weeks:1,week:1,idx:0,vol:[10],int:[70],hyp:[],emphasis:'moderate',empty:true};
 function currentPhase(){
   if(!ROADMAP.length) return {...EMPTY_PHASE};
-  const w=Math.floor(programSessions()/sessionsPerWeek());   // whole program weeks trained
-  let acc=0;
-  for(let i=0;i<ROADMAP.length;i++){
-    const L=blockLen(ROADMAP[i]);
-    if(w<acc+L){
-      const wk=Math.max(1,w-acc+1), b=ROADMAP[i];
-      const onDeload=b.deload&&wk>b.weeks;
-      return {...b, idx:i, week:wk, weeks:L, onDeload,
-              label:onDeload?'Deload':b.label, type:onDeload?'deload':b.type};
-    }
-    acc+=L;
-  }
-  const l=ROADMAP[ROADMAP.length-1];
-  return {...l,idx:ROADMAP.length-1,week:blockLen(l),weeks:blockLen(l)};
+  const pos=programPosition(), b=ROADMAP[pos.idx], L=blockLen(b);
+  if(pos.past) return {...b,idx:pos.idx,week:L,weeks:L};
+  const wk=pos.week, onDeload=b.deload&&wk>b.weeks;
+  return {...b, idx:pos.idx, week:wk, weeks:L, onDeload,
+          label:onDeload?'Deload':b.label, type:onDeload?'deload':b.type};
 }
 /* exposure = how many SESSIONS have contained this exercise, not how many sets */
 const exposureCount=id=>new Set(sets().filter(s=>s.exercise_id===id).map(s=>s.session_id)).size;
@@ -1261,7 +1839,10 @@ const countsAsTrained=e=>{
   return (e.sets_done||0) >= e.sets_planned*0.25;
 };
 const completedCount=()=>LOG.filter(countsAsTrained).length;
-function todayDay(){ const d=generatedDays(); return d[completedCount()%d.length]; }
+/* Next day in the rotation: counted within the current block, so a block
+   with a different split starts at its own day 1 rather than inheriting the
+   last block's position. */
+function todayDay(){ const d=generatedDays(); return d[programPosition().sessionsIn%d.length]; }
 
 /* ─── prescription ─── */
 /* Judgement defaults, not derived from any study — kept as plain constants
@@ -1943,16 +2524,36 @@ function srowEl(o){
     +(o.chev?'<span class="del" aria-hidden="true">›</span>':'');
   return r;
 }
+/* "Last time: 170 × 10 @ 8 · 3 days ago", from your previous session of this
+   exercise, plus an arrow when today's prescription (rx: {lb, reps}) moves
+   from it. Shown on every card, open or collapsed, before you lift. */
+function lastTimeHtml(slot, rx){
+  const lp=lastPerformance(slot.ex);
+  if(!lp) return '<div class="lasttime dim">First time on this lift</div>';
+  const st=lp.set, L=toLb(st.weight), w=fmt(st.weight.value)+(st.weight.unit==='kg'?' kg':'');
+  let arrow='';
+  if(rx&&rx.lb!=null){
+    if(rx.lb>L+0.01) arrow='↑ '+fmt(rx.lb,0)+' × '+rx.reps;
+    else if(rx.lb<L-0.01) arrow='↓ '+fmt(rx.lb,0)+' × '+rx.reps;
+    else if(rx.reps>st.reps) arrow='↑ '+rx.reps+' reps';
+    else if(rx.reps<st.reps) arrow='↓ '+rx.reps+' reps';
+    else arrow='same again';
+  }
+  return '<div class="lasttime">Last time: '+w+' × '+st.reps+(st.rpe!=null?' @ '+st.rpe:'')+' · '+esc(lp.when)
+    +(arrow?' <span class="lastarrow">· today '+arrow+'</span>':'')+'</div>';
+}
 function exCard(slot,o){
   o=o||{};
   const ex=exById[slot.ex], n=slot.sets_target!=null?slot.sets_target:slot.sets;
   const box=el('div','ex'), head=el('div','exhead');
   const nameBtn=el(o.button?'button':'div','grow');
   nameBtn.style.cssText='text-align:left;padding:0';
-  nameBtn.innerHTML='<div class="exname">'+esc(ex.name)+'</div>'
+  nameBtn.innerHTML='<div class="exname">'+esc(ex.name)
+    +(slot.role==='primary'?' <span class="leadbadge">Lead lift</span>':'')+'</div>'
     +'<div class="exmeta">'+n+' sets × '+fmtRange(slot.reps)+' reps · RPE '+slot.rpe+(slot.swapped?' · swapped':'')
     +(slot.prio?' · priority':'')
-    +(slot.joint?' · <span style="color:var(--str)">'+esc(slot.joint.joint)+': '+esc(slot.joint.msg)+'</span>':'')+'</div>';
+    +(slot.joint?' · <span style="color:var(--str)">'+esc(slot.joint.joint)+': '+esc(slot.joint.msg)+'</span>':'')+'</div>'
+    +(o.lastTime===false?'':lastTimeHtml(slot,o.rx));
   const body=el('div','exbody');
   head.appendChild(nameBtn); box.appendChild(head); box.appendChild(body);
   return {box,head,nameBtn,body};
@@ -2129,7 +2730,8 @@ function renderWork(){
 
   session.slots.forEach((slot,i)=>{
     const ex=exById[slot.ex], open=session.openIdx===i;
-    const {box,head,nameBtn,body}=exCard(slot,{button:true});
+    const sug=!slot.sets.length?suggestFor(slot):null;
+    const {box,head,nameBtn,body}=exCard(slot,{button:true, rx:sug&&sug.lb!=null?{lb:sug.lb,reps:sug.pr.reps}:null});
     const order=el('div','row'); order.style.cssText='gap:3px;flex:none';
     const canMove=!slot.sets.length;   // reordering after logging would orphan set history to the wrong slot
     const mv=(lab,aria,fn)=>{ const b=el('button','iconbtn',lab); b.setAttribute('aria-label',aria);
@@ -2306,7 +2908,7 @@ function planFor(day){
   if(PENDING&&PENDING.id===day.id&&PENDING.stamp===planStamp()) return PENDING;
   return weekPlanFor(day);
 }
-const planStamp=()=>{ const p=currentPhase(); return `${p.idx}:${p.week}:${CFG.split}:${completedCount()}`; };
+const planStamp=()=>{ const p=currentPhase(); return `${p.idx}:${p.week}:${splitKeyFor(ROADMAP[p.idx])}:${completedCount()}`; };
 // Off by default: edits apply only to this occurrence (PENDING), same as
 // always. On, the same edit is also written into CFG.dayOverrides so it
 // becomes the new generated baseline going forward — a plain checkbox read
@@ -2336,6 +2938,41 @@ function estSessionLength(day){
     secs+=slot.sets*(SET_TIME_S+(REST_BY_ROLE[slot.role]||120));
   });
   return Math.round(secs/60);
+}
+/* One exercise in a plan, before the session: the same card and set rows as
+   the live session, weight × reps @ RPE on every set, the warmup ramp
+   collapsed, and the explanation line. Both the training-tab preview and the
+   "Preview workout" sheet call this, so they can't drift apart. */
+const WARM_OPEN=new Set();
+function planCard(slot, key, controls){
+  const ex=exById[slot.ex], pr=nextPrescription(slot), lb=pr.lb;
+  const loadTxt=isBW(ex)?(lb?'+'+fmt(lb,0)+' lb':'bodyweight'):(lb!=null?fmt(lb,0)+' lb':'—');
+  const reps=lb!=null&&pr.reps!=null?String(pr.reps):fmtRange(slot.reps);
+  const {box,body}=exCard(slot,{rx:lb!=null?{lb,reps:pr.reps}:null});
+  for(let j=0;j<slot.sets;j++)
+    body.appendChild(srowEl({idx:j+1, load:loadTxt+' × '+reps, badge:'RPE '+slot.rpe}));
+  const ramp=lb!=null?warmupRamp(slot,lb):[];
+  if(ramp.length){
+    const wk=key+':'+slot.ex, wrap=el('div','');
+    const draw=()=>{
+      const open=WARM_OPEN.has(wk);
+      wrap.innerHTML='';
+      const t=el('button','warmtog','Warmup · '+ramp.length+' set'+(ramp.length>1?'s':'')+' '+(open?'▾':'▸'));
+      t.setAttribute('aria-expanded',open?'true':'false');
+      t.onclick=()=>{ if(open) WARM_OPEN.delete(wk); else WARM_OPEN.add(wk); draw(); };
+      wrap.appendChild(t);
+      if(open) ramp.forEach(r=>wrap.appendChild(srowEl({warm:true, empty:true, badge:'warmup',
+        load:(r.bar?'Bar ':'')+fmt(r.lb,0)+' lb × '+r.reps})));
+    };
+    draw(); body.appendChild(wrap);
+  }
+  const f=flagFor(slot.ex);
+  if(f) body.appendChild(el('div','tiny',(f.level==='red'?'▲ ':'● ')+esc(f.why))).style.cssText='color:'+(f.level==='red'?'var(--peak)':'var(--str)')+';margin-top:6px';
+  const pct=pctOfBest(slot,lb);
+  if(pct) body.appendChild(el('div','dim tiny',esc(pct))).style.marginTop='4px';
+  body.appendChild(whyEl(explainRx(slot,pr,{idx:null,fresh:true}),key+':why:'+slot.ex));
+  if(controls) body.appendChild(controls);
+  return box;
 }
 function renderPreview(v){
   const rawDay=todayDay(), day=planFor(rawDay), p=currentPhase();
@@ -2382,20 +3019,7 @@ function renderPreview(v){
     lab.appendChild(rs);
   }
   v.appendChild(lab);
-  day.slots.forEach(slot=>{
-    const ex=exById[slot.ex];
-    const pr=nextPrescription(slot), lb=pr.lb;
-    const loadTxt=isBW(ex)?(lb?'+'+fmt(lb,0)+' lb':'bodyweight'):(lb!=null?fmt(lb,0)+' lb':'—');
-    const {box,body}=exCard(slot);
-    for(let j=0;j<slot.sets;j++)
-      body.appendChild(srowEl({idx:j+1, load:loadTxt+' × '+fmtRange(slot.reps), badge:'RPE '+slot.rpe}));
-    const f=flagFor(slot.ex);
-    if(f) body.appendChild(el('div','tiny',(f.level==='red'?'▲ ':'● ')+esc(f.why))).style.cssText='color:'+(f.level==='red'?'var(--peak)':'var(--str)')+';margin-top:6px';
-    const pct=pctOfBest(slot,lb);
-    if(pct) body.appendChild(el('div','dim tiny',esc(pct))).style.marginTop='4px';
-    body.appendChild(whyEl(explainRx(slot,pr,{idx:null,fresh:true}),'p:'+slot.ex));
-    v.appendChild(box);
-  });
+  day.slots.forEach(slot=>v.appendChild(planCard(slot,'p')));
   v.appendChild(el('div','dim tiny','Loads come from your logged history. The check-in adjusts them if it needs to.'))
    .style.padding='4px 4px 10px';
   if(day.slots.some(sl=>nextPrescription(sl).lb==null)){
@@ -2440,35 +3064,14 @@ function openWorkoutPreview(rawDay){
   $('#savePreset').onchange=e=>{ SAVE_TO_PRESET=e.target.checked; };
   const body=$('#wpbody');
   day.slots.forEach((slot,i)=>{
-    const ex=exById[slot.ex];
-    const pr=nextPrescription(slot), lb=pr.lb;
-    const reps=fmtRange(slot.reps);
-    const loadTxt=isBW(ex)?(lb?'+'+fmt(lb,0)+' lb':'bodyweight'):(lb!=null?fmt(lb,0)+' lb':'—');
-    const setLines=Array.from({length:slot.sets},(_,si)=>
-      `<div class="dim tiny">Set ${si+1}: ${loadTxt} × ${reps} @ RPE ${slot.rpe}</div>`).join('');
-    const ramp=lb!=null?warmupRamp(slot,lb):[];
-    const rampTxt=ramp.length?ramp.map(r=>`${fmt(r.lb,0)}×${r.reps}`).join(' → '):null;
-    const r=el('div',''); r.style.cssText='padding:11px 0'+(i?';border-top:1px solid var(--line)':'');
-    r.innerHTML=`<div class="row between">
-        <span class="grow"><div style="font-weight:620;font-size:15px">${esc(ex.name)}${
-          slot.role==='primary'?' <span class="tiny" style="color:var(--str);font-weight:650">· Lead lift</span>':''}</div>
-          <div class="exmeta">${slot.role?slot.role:''}${slot.prio?' · priority':''}${slot.joint?` · <span style="color:var(--str)">${esc(slot.joint.joint)}: ${esc(slot.joint.msg)}</span>`:''}</div>
-          ${(()=>{const f=flagFor(slot.ex); return f?`<div class="tiny" style="color:${f.level==='red'?'var(--peak)':'var(--str)'};margin-top:3px">${f.level==='red'?'▲':'●'} ${esc(f.why)}</div>`:'';})()}</span>
-        <span style="text-align:right;flex:none">
-          <div class="dim tiny">${esc(pctOfBest(slot,lb)||pr.src||'no estimate yet')}</div></span>
-      </div>
-      <div style="margin-top:6px">${rampTxt?`<div class="dim tiny">Warmup: ${esc(rampTxt)}</div>`:(ex.load!=='bodyweight'&&!isStackLike(ex)?'<div class="dim tiny">Warmup: no estimate yet</div>':'')}
-      ${setLines}</div>`;
-    r.appendChild(whyEl(explainRx(slot,pr,{idx:null,fresh:true}),'w:'+slot.ex));
-    const ctl=el('div','row'); ctl.style.cssText='gap:6px;margin-top:8px';
+    const ctl=el('div','row'); ctl.style.cssText='gap:6px;margin-top:8px;flex-wrap:wrap';
     const mk=(label,aria,fn)=>{ const b=el('button','btn s',label); b.setAttribute('aria-label',aria); b.onclick=fn; return b; };
     ctl.appendChild(mk('−','One set fewer',()=>{ editPlan(rawDay,d=>{ if(d.slots[i].sets>1) d.slots[i].sets--; }); openWorkoutPreview(rawDay); }));
     ctl.appendChild(mk('+','One set more',()=>{ editPlan(rawDay,d=>{ d.slots[i].sets++; }); openWorkoutPreview(rawDay); }));
     ctl.appendChild(mk('Swap','Swap exercise',()=>openPlanSwap(rawDay,i)));
     const rm=mk('✕','Remove exercise',()=>{ editPlan(rawDay,d=>{ d.slots.splice(i,1); }); openWorkoutPreview(rawDay); });
     rm.style.color='var(--skip)'; ctl.appendChild(rm);
-    r.appendChild(ctl);
-    body.appendChild(r);
+    body.appendChild(planCard(slot,'w',ctl));
   });
   $('#wpadd').onclick=()=>openPlanAdd(rawDay);
   $('#wpclose').onclick=()=>{ $('#dlg').close(); render(); };
@@ -2662,12 +3265,12 @@ const MOVEMENT_TYPES=[
       host.lastChild.appendChild(lab);
       host.lastChild.appendChild(el('div','anchor','Shows a plate diagram — plates per side, or per arm if this is ticked. Never a total: empty machines differ.'));
     }
-    mk('Main muscle',Object.keys(LANDMARKS),st.primary,v=>st.primary=v,v=>ML[v]);
+    mk('Main muscle',MUSCLE_ORDER,st.primary,v=>{ st.primary=v; st.secondary=st.secondary.filter(m=>m!==v); },v=>ML[v]);
 
     const sec=el('div','qblock');
     sec.innerHTML='<div class="qlab">Also works <span class="dim tiny" style="font-weight:400">· counts at half a set</span></div>';
     const sc=el('div','chips');
-    Object.keys(LANDMARKS).filter(m=>m!==st.primary).forEach(m=>{
+    MUSCLE_ORDER.filter(m=>m!==st.primary).forEach(m=>{
       const on=st.secondary.includes(m);
       const x=el('button','chip',esc(ML[m])); x.style.cssText='font-size:12.5px;padding:6px 10px';
       x.setAttribute('aria-pressed',on?'true':'false');
@@ -2678,7 +3281,7 @@ const MOVEMENT_TYPES=[
 
     const nums=el('div','qblock');
     nums.innerHTML='<div class="qlab">Smallest jump'+(st.load==='barbell'?' and bar weight':'')+'</div>';
-    const nh=el('div',''); nh.style.cssText='display:grid;grid-template-columns:1fr'+(st.load==='barbell'?' 1fr':'')+';gap:8px';
+    const nh=el('div',''); nh.style.cssText='display:grid;grid-template-columns:minmax(0,1fr)'+(st.load==='barbell'?' minmax(0,1fr)':'')+';gap:8px';
     nh.appendChild(stepper('increment lb',st.inc,2.5,v=>{st.inc=Math.max(1,v);draw();}));
     if(st.load==='barbell') nh.appendChild(stepper('bar lb',st.bar,5,v=>{st.bar=Math.max(0,v);draw();}));
     nums.appendChild(nh); host.appendChild(nums);
@@ -2841,6 +3444,12 @@ function notesReport(){
   return {text:out, count:open.length, ids:open.map(n=>n.id)};
 }
 
+/* Coaching cues by exercise id, from the embedded copy of
+   docs/coaching-cues.json above. Adding an exercise's cues is a JSON-only
+   change (plus re-pasting the copy). Empty if the block can't be read —
+   the info sheet then falls back to the generic tips. */
+const CUES=(()=>{ try{ const a=JSON.parse(document.getElementById('coaching-cues').textContent);
+  return Object.fromEntries(a.map(o=>[o.id,o])); }catch{ return {}; } })();
 function openInfo(exId){
   const ex=exById[exId], b=bestE1RM(exId), last=lastSetFor(exId);
   const mode={percentage:'Percentage — load set from your e1RM',
@@ -2848,10 +3457,21 @@ function openInfo(exId){
               rep:'Rep target — add reps before external load'}[ex.prog];
   const vols=Object.entries(ex.vol).map(([m,w])=>
     `<div class="row between sm"><span class="muted">${esc(ML[m])}</span><span>${w===1?'direct · 1.0':'indirect · 0.5'}</span></div>`).join('');
-  const tips = EXERCISE_TIPS[exId] || PATTERN_TIPS[ex.pattern] || [];
-  const tipsHtml = tips.length ? `<div class="qblock"><div class="qlab">Coaching cues</div>
+  const cue=CUES[exId];
+  const disclaimer='<div class="dim tiny" style="margin-top:8px">Standard technique points, not a substitute for a coach watching you move.</div>';
+  // the shoulder note only matters to someone with the condition — noise for everyone else
+  const shoulderHtml=cue&&cue.shoulder&&(CFG.conditions||[]).includes('shoulder_instability')
+    ? `<div class="qblock" style="border-left:3px solid var(--str)"><div class="qlab" style="color:var(--str)">For your shoulder</div>
+        <div class="sm">${esc(cue.shoulder)}</div></div>` : '';
+  const tips = cue?[]:(EXERCISE_TIPS[exId] || PATTERN_TIPS[ex.pattern] || []);
+  const tipsHtml = cue ? `${shoulderHtml}<div class="qblock"><div class="qlab">Coaching cues</div>
+      ${[['Setup',cue.setup],['Execution',cue.execution],['Common faults',cue.faults]].filter(([,t])=>t)
+        .map(([h,t])=>`<div class="field" style="margin:8px 0 2px">${h}</div><div class="muted sm">${esc(t)}</div>`).join('')}
+      ${cue.sources&&cue.sources.length?`<div class="dim tiny" style="margin-top:9px">Cues drawn from ${esc(cue.sources.join(', '))}.</div>`:''}
+      ${disclaimer}</div>`
+    : tips.length ? `<div class="qblock"><div class="qlab">Coaching cues</div>
       ${tips.map(t=>`<div class="muted sm" style="margin-bottom:7px">• ${esc(t)}</div>`).join('')}
-      <div class="dim tiny" style="margin-top:2px">Standard technique points, not a substitute for a coach watching you move.</div></div>` : '';
+      ${disclaimer}</div>` : '';
   sheet(`<h2 style="font-size:20px;margin-bottom:2px">${esc(ex.name)}</h2>
     <div class="muted tiny" style="margin-bottom:15px">${esc(ex.pattern.replace(/_/g,' '))} · ${esc(loadName(ex.load))}</div>
     ${tipsHtml}
@@ -2926,16 +3546,24 @@ function ratingSnapshot(id){
            en: rs.reduce((a,r)=>a+r.enjoyment,0)/rs.length, n: rs.length };
 }
 
+/* Muscles in the order a lifter thinks about them — the picker's chips, the
+   custom-exercise muscle lists and the block editor all use this one list. */
+const MUSCLE_ORDER=['chest','upper_back','lats','lower_back','traps','front_delts','side_delts','rear_delts',
+  'biceps','triceps','forearms','quads','hamstrings','glutes','calves','abs','abductors','adductors'];
 /* Shared exercise picker: search box + category bar + create-new, used for
    swapping (mid-session and in the preview), adding an accessory, and
    choosing goal lifts — one implementation, so a fix here fixes it everywhere. */
-function exPicker(title, filterFn, onPick, opts){
-  opts = opts||{};
-  const categoryOf = opts.categoryOf || (e=>PATTERN_CATEGORY[e.pattern]||'other');
-  let q='', cat=null;
+function exPicker(title, filterFn, onPick){
+  // muscle is the main way in — a chip lists every exercise that trains it
+  // directly (counts a full set), so a deadlift shows under hamstrings, glutes
+  // and lower back alike. Rehab and Yours cover what a
+  // muscle can't. Rehab movements only appear when asked for — never by default.
+  let q='', mus=null, grp=null;
   const draw=()=>{
-    let list=EX.filter(e=>!e.rehab).filter(filterFn);
-    if(cat) list=list.filter(e=>categoryOf(e)===cat);
+    const base=EX.filter(filterFn);
+    let list=base.filter(e=>grp==='rehab'?e.rehab:!e.rehab);
+    if(grp==='custom') list=list.filter(e=>e.custom);
+    if(mus) list=list.filter(e=>(e.vol||{})[mus]===1);
     if(q) list=list.filter(e=>e.name.toLowerCase().includes(q.toLowerCase())||e.pattern.includes(q.toLowerCase().replace(/ /g,'_')));
     if(q){
       list=list.sort((a,b)=>a.name.localeCompare(b.name));
@@ -2950,26 +3578,24 @@ function exPicker(title, filterFn, onPick, opts){
         return sb-sa || a.name.localeCompare(b.name);
       });
     }
-    const cats=[...new Set(EX.filter(e=>!e.rehab).filter(filterFn).map(categoryOf))]
-      .sort((a,b)=>(CATEGORY_LABEL[a]||a).localeCompare(CATEGORY_LABEL[b]||b));
+    const muscles=MUSCLE_ORDER.filter(m=>base.some(e=>!e.rehab&&(e.vol||{})[m]===1));
 
     sheet(`<h2 style="font-size:20px;margin-bottom:10px">${esc(title)}</h2>
+      <div class="chips" id="exmus" style="margin-bottom:8px"></div>
+      <div class="chips" id="excat" style="margin-bottom:10px"></div>
       <input type="text" id="exq" value="${esc(q)}" placeholder="Search by name or pattern"
        style="width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit;margin-bottom:10px">
-      <div class="chips" id="excat" style="margin-bottom:11px"></div>
       <div class="stack" id="exl" style="max-height:40vh;overflow-y:auto"></div>
       <button class="btn ghost wide" id="exnew" style="margin-top:10px">Create a new exercise</button>
       <button class="btn ghost wide" id="exc" style="margin-top:8px">Cancel</button>`);
     const inp=$('#exq'); inp.oninput=e=>{ q=e.target.value; draw(); setTimeout(()=>{const n=$('#exq'); if(n){n.focus();}},0); };
 
-    const allChip=el('button','chip','All'); allChip.style.cssText='font-size:12.5px;padding:6px 11px';
-    allChip.setAttribute('aria-pressed',cat===null?'true':'false');
-    allChip.onclick=()=>{cat=null;draw();}; $('#excat').appendChild(allChip);
-    cats.forEach(c=>{
-      const b=el('button','chip',CATEGORY_LABEL[c]||c); b.style.cssText='font-size:12.5px;padding:6px 11px';
-      b.setAttribute('aria-pressed',cat===c?'true':'false');
-      b.onclick=()=>{cat=cat===c?null:c;draw();}; $('#excat').appendChild(b);
-    });
+    const chip=(host,label,on,fn)=>{ const b=el('button','chip',esc(label)); b.style.cssText='font-size:12.5px;padding:6px 10px';
+      b.setAttribute('aria-pressed',on?'true':'false'); b.onclick=fn; $(host).appendChild(b); };
+    chip('#exmus','All',!mus&&!grp,()=>{mus=null;grp=null;draw();});
+    muscles.forEach(m=>chip('#exmus',ML[m],mus===m,()=>{mus=mus===m?null:m;if(grp==='rehab')grp=null;draw();}));
+    if(base.some(e=>e.rehab)) chip('#excat','Rehab',grp==='rehab',()=>{grp=grp==='rehab'?null:'rehab';mus=null;draw();});
+    if(base.some(e=>e.custom)) chip('#excat','Yours',grp==='custom',()=>{grp=grp==='custom'?null:'custom';draw();});
 
     list.slice(0,60).forEach(e=>{
       const f=flagFor(e.id), rt=ratingSnapshot(e.id);
@@ -3014,17 +3640,9 @@ function openSwap(slot,idx){
 function entryPanel(slot,idx){
   const ex=exById[slot.ex], p=el('div',''); p.style.marginTop='11px';
   p.appendChild(el('div','hr'));
-  const lp=lastPerformance(slot.ex);
-  if(lp){
-    const est=setE1RM(lp.set);
-    p.appendChild(el('div','row between sm',
-      `<span class="muted">Last time · ${esc(lp.when)}</span>
-       <span style="font-weight:600">${fmt(lp.set.weight.value)} ${lp.set.weight.unit} × ${lp.set.reps}${lp.set.rpe?` @ ${lp.set.rpe}`:''}${est?` · ${fmt(est,0)}`:''}</span>`))
-      .style.marginBottom='9px';
-  }else{
+  if(!lastPerformance(slot.ex))
     p.appendChild(el('div','muted sm','First time on this lift — pick something you can hit for the target reps.'))
       .style.marginBottom='9px';
-  }
   p.appendChild(stepper('Weight',draft.weight,weightStep(draft.unit),
     v=>{draft.weight=v;draft.alt=null;draft.suggested=false;renderWork()},
     draft.unit,{wide:true,typeable:true,min:0,suggested:draft.suggested}));
@@ -3205,9 +3823,10 @@ function openEditEvent(slot,orig,title){
   const host=$('#ed');
   const draw=()=>{
     host.innerHTML='';
-    const g=el('div','');
-    g.style.cssText='display:grid;grid-template-columns:1.35fr 1fr'+(isWarm?'':' 1fr')+';gap:8px;margin-bottom:12px';
-    g.appendChild(stepper('Weight',st.weight,exById[slot.ex].inc,v=>{st.weight=Math.max(0,v);draw();},st.unit));
+    // weight on its own row, reps/RPE beneath — the same layout as the set
+    // panel. Three steppers across a phone-width sheet squeezed the numbers out.
+    host.appendChild(stepper('Weight',st.weight,exById[slot.ex].inc,v=>{st.weight=Math.max(0,v);draw();},st.unit,{wide:true}));
+    const g=el('div',isWarm?'':'stepgrid'); g.style.cssText='margin:8px 0 12px';
     g.appendChild(stepper('Reps',st.reps,1,v=>{st.reps=Math.max(1,v);draw();}));
     if(!isWarm) g.appendChild(stepper('RPE',st.rpe,.5,v=>{st.rpe=Math.min(10,Math.max(5,v));draw();}));
     host.appendChild(g);
@@ -3745,7 +4364,7 @@ function openPost(){
       st.quickRate[exId]={stimulus:null,enjoyment:null};
       const box=el('div',''); box.style.cssText='margin-bottom:14px;padding-top:10px;border-top:1px solid var(--line)';
       box.appendChild(el('div','sm',esc(ex.name))).style.cssText='font-weight:600;margin-bottom:8px';
-      const row=el('div',''); row.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:10px';
+      const row=el('div',''); row.style.cssText='display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px';
       const mk=(label,onPick)=>{
         const seg=el('div',''); seg.innerHTML=`<div class="dim tiny" style="margin-bottom:5px">${label}</div><div class="seg" style="border-width:1px"></div>`;
         const sg=seg.querySelector('.seg');
@@ -3778,11 +4397,13 @@ function openPost(){
         stimulus:r.stimulus, enjoyment:r.enjoyment, rating_phase:'end_of_session',
         exposure_index:exposureCount(exId)});
     });
-    append({type:'session_end',session_id:session.id,day_name:session.dayName,
+    const endEv=append({type:'session_end',session_id:session.id,day_name:session.dayName,
             session_rpe:save?st.rpe:null,joints:save?st.joints:{},joint_scale:3,
             post_soreness:save?st.post_soreness:{},
             duration_s:session.startedAt?Math.round((Date.now()-session.startedAt)/1000):null});
+    const score=session.score;
     session=null; saveSession(); stopRest(); $('#dlg').close(); TAB='dash'; render(); toast('Session saved');
+    if(endEv) openSessionSummary(endEv, score);
     if((CFG.syncUrl||'').trim()) syncNow(true);
     else if(sessionsSinceExport()>=6) setTimeout(()=>{
       if(confirm('It has been '+sessionsSinceExport()+' sessions since your last backup.\n\nSave one now?')) shareBackup();
@@ -3936,6 +4557,8 @@ function lintRoadmap(){
       w.push({sev:'warn',msg:`Block ${i+1}: high emphasis peaks at ${Math.max(...b.vol)} sets/muscle, at or past MRV for most groups.`});
     if((b.hyp||[]).length>3)
       w.push({sev:'warn',msg:`Block ${i+1}: ${b.hyp.length} priority muscles. Total volume is bounded — 3 is the cap.`});
+    if(prev&&splitKeyFor(prev)!==splitKeyFor(b))
+      w.push({sev:'warn',msg:`Block ${i+1}: switches from ${splitFor(prev).name} to ${splitFor(b).name}. The day rotation restarts at day 1, and weekly volume per muscle shifts with the new shape.`});
   });
   let run=0;
   ROADMAP.forEach((b,i)=>{
@@ -4161,12 +4784,60 @@ function renderHist(){
   v.appendChild(cs);
 }
 
+/* Total weight moved on working sets (warmups excluded), as logged —
+   bodyweight lifts count the added load only. */
+function sessionTonnage(sessionId){
+  return sets().filter(x=>x.session_id===sessionId&&x.set_kind!=='warmup')
+    .reduce((a,x)=>a+(toLb(x.weight)||0)*(x.reps||0),0);
+}
+/* Each exercise's best working set in a session, by estimated 1RM. */
+function sessionTopSets(sessionId){
+  const m={};
+  sets().filter(x=>x.session_id===sessionId&&x.set_kind!=='warmup'&&!(x.group&&x.group.pos>0)).forEach(x=>{
+    const v=setE1RM(x)||0; if(!m[x.exercise_id]||v>m[x.exercise_id].v) m[x.exercise_id]={v,s:x}; });
+  return m;
+}
+/* The payoff screen after a finished session: what you did, what moved, and
+   how it compares with the last time you trained this day. One tap to close. */
+function openSessionSummary(endEv, score){
+  const ss=sets().filter(x=>x.session_id===endEv.session_id&&x.set_kind!=='warmup');
+  const ton=sessionTonnage(endEv.session_id);
+  const prs=[...new Set(ss.filter(x=>isPRSet(x.id)).map(x=>(exById[x.exercise_id]||{name:x.exercise_id}).name))];
+  const prev=LOG.filter(e=>e.type==='session_end'&&e.id!==endEv.id&&e.day_name===endEv.day_name
+    &&countsAsTrained(e)&&new Date(e.ts)<new Date(endEv.ts)).pop();
+  const fs=x=>fmt(x.weight.value)+(x.weight.unit==='kg'?' kg':'')+' × '+x.reps;
+  let cmp='<div class="muted sm">First time you\'ve trained '+esc(endEv.day_name||'this day')+' — nothing to compare yet.</div>';
+  if(prev){
+    const pt=sessionTonnage(prev.session_id), d=ton-pt, pct=pt?Math.round(d/pt*100):0;
+    const a=sessionTopSets(endEv.session_id), b=sessionTopSets(prev.session_id);
+    const moved=Object.keys(a).filter(id=>b[id]&&(a[id].s.reps!==b[id].s.reps||Math.abs(toLb(a[id].s.weight)-toLb(b[id].s.weight))>0.01))
+      .map(id=>{ const up=a[id].v>=b[id].v;
+        return `<div class="row between sm" style="padding:3px 0"><span class="grow">${esc((exById[id]||{name:id}).name)}</span>
+          <span style="flex:none;color:${up?'var(--hyp)':'var(--muted)'}">${fs(b[id].s)} → ${fs(a[id].s)} ${up?'↑':'↓'}</span></div>`; }).join('');
+    cmp=`<div class="row between sm"><span class="muted">Tonnage vs ${new Date(prev.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span>
+        <span style="font-weight:600">${d>=0?'+':''}${Math.round(d).toLocaleString()} lb${pt?' ('+(pct>=0?'+':'')+pct+'%)':''}</span></div>
+      ${moved||`<div class="dim tiny" style="margin-top:4px">${Object.keys(a).some(id=>b[id])?'Same top sets as last time.':'No lifts in common with last time.'}</div>`}`;
+  }
+  sheet(`<h2 style="font-size:24px;margin-bottom:2px">${esc(endEv.day_name||'Session')} done</h2>
+    <div class="muted tiny" style="margin-bottom:14px">${new Date(endEv.ts).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</div>
+    <div class="sgrid" style="border-radius:10px;overflow:hidden;margin-bottom:12px">
+      <div class="scell"><div class="snum">${ss.length}</div><div class="slab">${ss.length===1?'set':'sets'}</div></div>
+      <div class="scell"><div class="snum">${ton?Math.round(ton).toLocaleString():'—'}</div><div class="slab">lb moved</div></div>
+      <div class="scell"><div class="snum">${endEv.duration_s!=null?(endEv.duration_s<60?'<1 min':Math.round(endEv.duration_s/60)+' min'):'—'}</div><div class="slab">time</div></div>
+    </div>
+    ${prs.length?`<div class="qblock" style="border-left:3px solid var(--hyp)"><div class="qlab" style="color:var(--hyp)">New best${prs.length>1?'s':''}</div>
+      ${prs.map(n=>`<div class="sm">${esc(n)}</div>`).join('')}</div>`:''}
+    <div class="qblock"><div class="qlab">Compared with last time</div>${cmp}</div>
+    <div class="qblock"><div class="row between sm"><span class="muted">Readiness today</span>
+      <span style="font-weight:600">${score!=null?Math.round(score*100)+' / 100 · '+esc(readinessLabel(score)):'No check-in this session'}</span></div></div>
+    <button class="btn go wide" id="sumok">Done</button>`);
+  $('#sumok').onclick=()=>{ $('#dlg').close(); render(); };
+}
 function openSessionDetail(endEv){
   const ss=sets().filter(s=>s.session_id===endEv.session_id);
   const byEx={};
   ss.forEach(s=>{ (byEx[s.exercise_id]=byEx[s.exercise_id]||[]).push(s); });
-  const tonnage=ss.filter(x=>x.set_kind!=='warmup')
-    .reduce((a,x)=>a+(toLb(x.weight)||0)*(x.reps||0),0);
+  const tonnage=sessionTonnage(endEv.session_id);
   const dur=endEv.duration_s?`${Math.round(endEv.duration_s/60)} min`:null;
   let html=`<h2 style="font-size:21px;margin-bottom:2px">${esc(endEv.day_name||'Session')}</h2>
     <div class="muted tiny" style="margin-bottom:6px">${new Date(endEv.ts).toLocaleString(undefined,{weekday:'long',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'})}</div>
@@ -4256,16 +4927,6 @@ const PATTERN_TIPS={
   prehab_elbow:['Keep the load light and the lowering slow — stop short of anything sharp.'],
   prehab_lowback:['Hold a neutral spine and breathe normally; quality of position matters more than duration.'],
 };
-const PATTERN_CATEGORY={
-  horizontal_press:'push', vertical_press:'push', abduction:'push', elbow_extension:'push',
-  vertical_pull:'pull', horizontal_pull:'pull', elbow_flexion:'pull', shrug:'pull', grip:'pull',
-  squat:'legs', hinge:'legs', knee_extension:'legs', knee_flexion:'legs', calf_raise:'legs',
-  hip_abduction:'legs', hip_adduction:'legs',
-  trunk:'core', wrist:'core',
-  rehab_shoulder:'rehab', prehab_knee:'rehab', prehab_wrist:'rehab', prehab_elbow:'rehab', prehab_lowback:'rehab',
-  other:'other'
-};
-const CATEGORY_LABEL={push:'Push',pull:'Pull',legs:'Legs',core:'Core',rehab:'Rehab',other:'Other'};
 
 /* Specific overrides for the lifts where a generic pattern cue misses
    something that actually matters for that exact movement. Anything not
@@ -4498,7 +5159,7 @@ function openSettings(){
 
     const sp0=el('div','qblock');
     sp0.innerHTML=`<div class="qlab">Split</div>
-      <div class="field">Sessions are built from this shape. Changing it does not touch your logged history.</div>`;
+      <div class="field">Sessions are built from this shape. Changing it does not touch your logged history. A block can use its own split below.</div>`;
     const spc0=el('div','chips');
     Object.entries(SPLITS).forEach(([k,vv])=>{
       const c=el('button','chip',`${esc(vv.name)} · ${vv.days}d`);
@@ -4563,6 +5224,18 @@ function openSettings(){
       else rm.onclick=()=>{S.draft.splice(i,1);draw();};
       ctrl.append(dn,up,rm); wk.appendChild(ctrl); row.appendChild(wk);
 
+      const spl=el('div',''); spl.style.marginTop='10px';
+      spl.appendChild(el('div','field','Split for this block <span class="dim">· each block starts at its own day 1</span>'));
+      const splc=el('div','chips');
+      [[null,'Same as program']].concat(Object.entries(SPLITS).map(([k,v])=>[k,v.name+' · '+v.days+'d'])).forEach(([k,label])=>{
+        const on=(b.split||null)===k;
+        const c=el('button','chip',esc(label)); c.style.cssText='font-size:12.5px;padding:6px 10px';
+        c.setAttribute('aria-pressed',on?'true':'false');
+        c.onclick=()=>{ if(k) b.split=k; else delete b.split; draw(); };
+        splc.appendChild(c);
+      });
+      spl.appendChild(splc); row.appendChild(spl);
+
       if(b.type!=='deload'){
         const ld=el('div',''); ld.style.marginTop='10px';
         ld.appendChild(el('div','field','Lead lift this phase <span class="dim">· rotate it across blocks rather than chasing all three</span>'));
@@ -4602,7 +5275,7 @@ function openSettings(){
         hp.appendChild(el('div','field',
           `Hypertrophy focus · <span style="color:${atCap?'var(--str)':'var(--muted)'}">${b.hyp.length} of 3</span>${atCap?' — cap reached':''}`));
         const chips=el('div','chips');
-        Object.keys(LANDMARKS).forEach(m=>{
+        MUSCLE_ORDER.forEach(m=>{
           const on=b.hyp.includes(m);
           const c=el('button','chip',esc(ML[m]));
           c.setAttribute('aria-pressed',on?'true':'false');
@@ -4859,15 +5532,15 @@ async function restoreFromSheet(){
 let waitingSW=null;
 function showUpdate(reg){
   waitingSW=reg.waiting||reg.installing;
-  $('#upd').classList.add('on');
+  $('#upd').classList.add('on'); document.body.classList.add('updating');
 }
 $('#updgo').onclick=()=>{
   if(session&&!confirm('You have a session in progress. Sets you logged are already saved, but updating will reload the app.\n\nUpdate now?')) return;
-  $('#upd').classList.remove('on');
+  $('#upd').classList.remove('on'); document.body.classList.remove('updating');
   if(waitingSW) waitingSW.postMessage({type:'SKIP_WAITING'});
   else location.reload();
 };
-$('#updno').onclick=()=>$('#upd').classList.remove('on');
+$('#updno').onclick=()=>{ $('#upd').classList.remove('on'); document.body.classList.remove('updating'); };
 
 function initUpdates(){
   if(!('serviceWorker' in navigator)||!location.protocol.startsWith('http')) return;
