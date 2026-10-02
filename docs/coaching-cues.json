@@ -1,0 +1,557 @@
+[
+  {
+    "id": "bench",
+    "name": "Barbell bench press",
+    "setup": "Shoulder blades pulled back and down — 'into your back pockets'. Feet flat, driving into the floor.",
+    "execution": "Elbows roughly under the bar, wrist stacked over elbow. Touch around nipple line. Press slightly back toward the rack.",
+    "faults": "Shoulder blades letting go mid-set. Elbows flaring to 90° at the bottom. Touching too high on the chest.",
+    "shoulder": "Keep the touch point low and elbows tucked to about 45°. Never let elbows drift behind the torso line at the bottom. Floor press is the safest variant.",
+    "sources": [
+      "Baraki",
+      "Nuckols"
+    ]
+  },
+  {
+    "id": "incline_machine",
+    "name": "Incline machine chest press",
+    "setup": "Seat height so handles sit at mid-to-lower chest. Shoulder blades back and down against the pad before the first rep.",
+    "execution": "Press through the full range, controlled lowering to a deep but comfortable stretch. Keep ribs down.",
+    "faults": "Shoulders rolling forward at lockout. Rushing the lowering phase. Seat too low, pushing the handles upward instead of forward.",
+    "shoulder": "Stop the lowering where your elbows reach the plane of your torso — don't let them travel behind it. A neutral or semi-neutral grip is safer than a wide pronated one.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "pin_chest_press",
+    "name": "Pin-loaded machine chest press",
+    "setup": "Handles level with mid-chest. Back flat against the pad, shoulder blades retracted.",
+    "execution": "Push through the handles with elbows at about 45°. Full extension without locking hard. Controlled return.",
+    "faults": "Elbows flaring wide. Shrugging the shoulders toward the ears. Letting the weight stack touch down between reps.",
+    "shoulder": "Keep elbows from passing the torso line on the return. Neutral grip if the machine offers it.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "ln_pl_press",
+    "name": "Lying neutral-grip plate-loaded chest press",
+    "setup": "Lie back, neutral grip, shoulder blades pulled together and down into the pad.",
+    "execution": "Press straight up, elbows staying at about 45°. Lower under control to a comfortable depth.",
+    "faults": "Losing scapular retraction at the top. Letting elbows drift wide.",
+    "shoulder": "This is one of the better pressing options for anterior instability — neutral grip, fixed path. Still stop where elbows reach the torso line.",
+    "sources": [
+      "Israetel",
+      "Cavaliere"
+    ]
+  },
+  {
+    "id": "ohp",
+    "name": "Overhead press",
+    "setup": "Grip just outside shoulder width. Bar on the front delts, elbows slightly ahead of the bar. Glutes and core braced.",
+    "execution": "Press up and slightly back. Head moves back as the bar passes, then through so the bar finishes over the crown.",
+    "faults": "Ribcage flaring and lower back arching. Bar drifting forward. Not finishing with the bar over the head.",
+    "shoulder": "Overhead work is tolerable for most with anterior instability if the elbows stay in front of the body. Never behind-the-neck. If it pinches at the top, use a landmine press instead.",
+    "sources": [
+      "Baraki",
+      "Thrall"
+    ]
+  },
+  {
+    "id": "squat",
+    "name": "Back squat",
+    "setup": "Bar on the upper back, hands as close as shoulders allow. Feet about shoulder width, toes slightly out. Big brace.",
+    "execution": "Break at hips and knees together. Knees track over toes. Depth to at least parallel. Drive up through the mid-foot.",
+    "faults": "Knees caving in. Weight shifting to the toes. Chest dropping and hips shooting up first.",
+    "shoulder": "Low-bar position needs shoulder external rotation that may aggravate instability. Use a high-bar position, a wider grip, or the Transformer/safety bar which removes the issue entirely.",
+    "sources": [
+      "Baraki",
+      "Nuckols",
+      "Thrall"
+    ]
+  },
+  {
+    "id": "ssb_squat",
+    "name": "Transformer bar squat",
+    "setup": "Pads on the traps, hands on the handles — not gripping hard. Feet set as for a back squat.",
+    "execution": "Same squat mechanics. The forward-loading pulls you forward; fight it by keeping the chest up and bracing hard.",
+    "faults": "Letting the bar tip you forward. Using the handles to pull yourself up.",
+    "shoulder": "The reason to use this bar — no shoulder rotation required. Fully safe for anterior instability.",
+    "sources": [
+      "Thrall",
+      "Nuckols"
+    ]
+  },
+  {
+    "id": "front_squat",
+    "name": "Front squat",
+    "setup": "Bar across the front delts, elbows high. Clean grip or cross-arm — whichever keeps elbows up.",
+    "execution": "Stay upright. Knees travel forward and out. Elbows stay high throughout or the bar rolls forward.",
+    "faults": "Elbows dropping. Rounding the upper back. Hips rising faster than the chest.",
+    "shoulder": "Clean grip requires wrist and shoulder mobility that may be uncomfortable. Cross-arm or straps on the bar are fine alternatives.",
+    "sources": [
+      "Baraki",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "pendulum",
+    "name": "Pendulum squat",
+    "setup": "Feet mid-to-high on the platform. Back flat against the pad. Shoulders under the pads.",
+    "execution": "Descend as deep as your hips allow without the lower back rounding. Drive through the whole foot.",
+    "faults": "Lower back lifting off the pad at the bottom. Knees caving. Bouncing out of the hole.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "leg_press",
+    "name": "Leg press",
+    "setup": "Feet shoulder width on the platform, mid-height. Back and hips stay on the pad.",
+    "execution": "Lower until the knees are near 90° or deeper if the hips stay down. Press without locking out hard.",
+    "faults": "Hips rolling up off the seat at the bottom — the lower back is now loaded. Locking knees. Partial reps with excessive weight.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "hack",
+    "name": "Hack squat",
+    "setup": "Feet slightly forward on the platform. Back flat on the pad. Shoulders under the pads.",
+    "execution": "Descend to full depth, knees tracking over toes. Drive through the whole foot.",
+    "faults": "Heels lifting. Knees caving. Cutting depth as it gets heavy.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "deadlift",
+    "name": "Deadlift",
+    "setup": "Bar over mid-foot. Shins touch the bar as you hinge down. Lats set — 'bend the bar around your shins'. Big brace.",
+    "execution": "Push the floor away. Bar stays in contact with the legs. Hips and shoulders rise together. Finish tall, no lean-back.",
+    "faults": "Hips shooting up first. Bar drifting away from the shins. Rounding the lower back off the floor. Hyperextending at the top.",
+    "shoulder": "Fully safe. Arms are straight and at the side. Mixed grip puts one shoulder in external rotation — use double overhand with straps if that bothers you.",
+    "sources": [
+      "Baraki",
+      "Nuckols",
+      "Thrall"
+    ]
+  },
+  {
+    "id": "trap_bar",
+    "name": "Trap bar deadlift",
+    "setup": "Stand centred in the bar. Neutral grip on the handles. Hinge down with a flat back.",
+    "execution": "More upright than a straight-bar pull — that's expected. Push the floor away and stand tall.",
+    "faults": "Turning it into a squat with a rounded back. Jerking off the floor.",
+    "shoulder": "Neutral grip, arms at the sides — nothing here stresses the shoulder.",
+    "sources": [
+      "Nuckols",
+      "Baraki"
+    ]
+  },
+  {
+    "id": "rdl",
+    "name": "Romanian deadlift",
+    "setup": "Start standing. Soft bend in the knees that doesn't change through the rep. Lats set, bar close.",
+    "execution": "Push the hips straight back. Bar slides down the thighs. Stop when the hamstrings stop you — usually just below the knee.",
+    "faults": "Rounding the lower back to chase range. Bending the knees more as the weight gets heavy. Letting the bar drift forward.",
+    "shoulder": "Safe. Keep the shoulders pulled slightly back so the bar doesn't drag them forward.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "belt_rdl",
+    "name": "Belt squat machine RDL",
+    "setup": "Belt snug on the hips. Stand tall with a soft knee bend.",
+    "execution": "Hinge back exactly as a barbell RDL. The load pulls from the hips, not the hands, so the back stays unloaded.",
+    "faults": "Squatting instead of hinging. Letting the knees drift forward.",
+    "shoulder": "No shoulder involvement at all. Ideal hinge variant when the shoulder is flared.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "roman_hinge",
+    "name": "Weighted roman chair hip hinge",
+    "setup": "Pad just below the hip crease so the hips can hinge freely. Feet locked in.",
+    "execution": "Lower by hinging at the hips, flat back throughout. Come up to neutral — not past it into hyperextension.",
+    "faults": "Rounding the back. Hyperextending at the top. Pad too high, blocking the hinge.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "transformer_hinge",
+    "name": "Transformer bar hinge",
+    "setup": "Bar on the back as for a squat. Soft knees.",
+    "execution": "Push the hips back, chest stays up. Same pattern as a good morning — stop when the hamstrings stop you.",
+    "faults": "Letting the chest drop and rounding. Bending the knees into a squat.",
+    "shoulder": "Hands on the handles, no rotation required. Safe.",
+    "sources": [
+      "Nuckols",
+      "Thrall"
+    ]
+  },
+  {
+    "id": "hip_thrust",
+    "name": "Hip thrust",
+    "setup": "Upper back on the bench at the bottom of the shoulder blades. Bar across the hips with a pad. Feet so shins are vertical at the top.",
+    "execution": "Drive through the heels. Chin tucked. Finish with a full hip lockout and a hard glute squeeze — ribs down.",
+    "faults": "Hyperextending the lower back at the top. Looking up. Feet too far forward.",
+    "sources": [
+      "Contreras",
+      "Israetel"
+    ]
+  },
+  {
+    "id": "pullup",
+    "name": "Pull-up",
+    "setup": "Full dead hang. Shoulder blades slightly engaged — not hanging passively on the joint.",
+    "execution": "Pull the elbows down and back toward the hips. Chin clears the bar. Lower all the way under control.",
+    "faults": "Kipping. Not reaching full extension at the bottom. Stopping short of chin over bar.",
+    "shoulder": "Grip width matters — wider than shoulders pushes toward the at-risk position. Shoulder width or narrower. Neutral grip is safest.",
+    "sources": [
+      "Nuckols",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "chinup",
+    "name": "Weighted chin-up",
+    "setup": "Underhand grip at shoulder width. Dead hang with shoulder blades slightly set. Belt snug.",
+    "execution": "Same pull as a pull-up — elbows to the hips. Biceps naturally contribute more. Full range every rep.",
+    "faults": "Half reps at the bottom. Swinging the belt weight. Hunching forward at the top.",
+    "shoulder": "The underhand grip keeps the shoulder in a safer position than a wide pronated pull-up. Well suited to anterior instability — your goal lift is a good choice.",
+    "sources": [
+      "Nuckols",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "pulldown",
+    "name": "Lat pulldown",
+    "setup": "Thighs locked under the pad. Grip just wider than shoulders. Slight lean back, chest up.",
+    "execution": "Pull the elbows down and back — think of driving them into your back pockets. Bar to the upper chest. Controlled return to a full stretch.",
+    "faults": "Leaning back and rowing it. Pulling behind the neck. Cutting the top of the range.",
+    "shoulder": "Never behind the neck. Keep the grip at or slightly wider than shoulders — very wide grips move toward the at-risk position.",
+    "sources": [
+      "Nippard",
+      "Israetel"
+    ]
+  },
+  {
+    "id": "uh_pl_pulldown",
+    "name": "Underhand plate-loaded lat pulldown",
+    "setup": "Underhand grip at shoulder width. Thighs locked in. Chest tall.",
+    "execution": "Pull elbows down and in to the sides. Squeeze at the bottom. Let the arms fully extend at the top for the stretch.",
+    "faults": "Curling the handles with the arms instead of driving the elbows. Rounding forward.",
+    "shoulder": "Supinated grip is the shoulder-friendly option. Safe.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "sa_plate_pulldown",
+    "name": "Single-arm plate lat pulldown",
+    "setup": "Brace the free hand on the machine. Chest up, slight lean toward the working side.",
+    "execution": "Pull the elbow to the hip. Let the shoulder blade rotate up and out at the top for the full stretch.",
+    "faults": "Twisting the torso to cheat the weight. Shrugging at the top.",
+    "shoulder": "Neutral grip, arm travelling in front of the body. Safe.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "cable_row",
+    "name": "Seated cable row",
+    "setup": "Feet braced, slight knee bend. Chest up, upright torso.",
+    "execution": "Pull the handle to the lower chest, squeeze the shoulder blades together. Let them separate fully on the return.",
+    "faults": "Leaning back to move the weight. Shrugging. Rounding forward on the return.",
+    "shoulder": "Neutral grip, elbows close. Safe.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "sa_cable_row",
+    "name": "Seated single-arm cable row",
+    "setup": "Square the hips. Free hand braced. Chest tall.",
+    "execution": "Row the elbow to the hip, letting the shoulder blade pull back fully. Full stretch forward on the return.",
+    "faults": "Rotating the torso. Shrugging the working shoulder.",
+    "shoulder": "Safe — arm travels close to the body.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "face_pull",
+    "name": "Face pull",
+    "setup": "Rope at face height or slightly above. Step back for tension. Stand tall.",
+    "execution": "Pull toward the forehead, elbows high and wide, finishing with the hands rotating back — the external rotation is the point.",
+    "faults": "Pulling to the chest like a row. Skipping the rotation at the end. Using too much weight.",
+    "shoulder": "The end position is external rotation at 90° abduction — the at-risk angle. Lower the pulley to chest height and finish the pull lower. Light loads only.",
+    "sources": [
+      "Cavaliere",
+      "Israetel"
+    ]
+  },
+  {
+    "id": "lat_raise",
+    "name": "Dumbbell lateral raise",
+    "setup": "Slight forward lean. Dumbbells at the sides, slight bend in the elbows.",
+    "execution": "Lead with the elbows, not the hands. Raise to about shoulder height. Think of pouring water out of a jug at the top.",
+    "faults": "Swinging. Shrugging. Going above shoulder height — that's traps now.",
+    "shoulder": "Raise in the scapular plane — about 30° forward of straight sideways. Pure side-plane raising with a thumbs-down position is the position to avoid.",
+    "sources": [
+      "Nippard",
+      "Israetel"
+    ]
+  },
+  {
+    "id": "stand_m_raise",
+    "name": "Standing machine lateral raise",
+    "setup": "Pads against the forearms or hands, depending on machine. Stand tall.",
+    "execution": "Raise with the elbows to shoulder height. Pause briefly. Lower under control.",
+    "faults": "Shrugging. Rushing. Leaning back to cheat the last reps.",
+    "shoulder": "Most machines arc in the scapular plane, which is good. Stop at shoulder height.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "seat_m_raise",
+    "name": "Seated machine lateral raise",
+    "setup": "Seat so the pivot aligns with the shoulder joint. Pads just above the elbows.",
+    "execution": "Drive the elbows up and out to shoulder height. Controlled return.",
+    "faults": "Pivot misaligned, causing the arms to rise unevenly. Shrugging.",
+    "shoulder": "Stop at shoulder height. Fine for instability.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "m_rd_fly",
+    "name": "Machine rear delt fly",
+    "setup": "Chest against the pad. Handles at shoulder height. Arms slightly bent.",
+    "execution": "Drive the elbows back and out, squeezing the rear delts. Don't retract the shoulder blades — that's upper back.",
+    "faults": "Rowing it with the shoulder blades. Using momentum. Over-extending past the body line.",
+    "shoulder": "Stop when the elbows reach the plane of the torso. Don't drive past it.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "sw_rd_fly",
+    "name": "Sideways single-arm machine rear delt fly",
+    "setup": "Sit sideways, working arm on the handle. Brace with the other hand.",
+    "execution": "Sweep the arm back in an arc, elbow slightly bent. Squeeze. Return under control.",
+    "faults": "Rotating the torso. Swinging.",
+    "shoulder": "Stop at the body line — don't pull the arm behind the torso.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "seated_rd_fly",
+    "name": "Seated overhand DB rear delt fly",
+    "setup": "Bent over on a bench, chest near the thighs. Dumbbells hanging, slight elbow bend.",
+    "execution": "Raise out to the sides, leading with the elbows. Pinkies slightly up. Pause at the top.",
+    "faults": "Swinging. Squeezing the shoulder blades instead of the rear delts. Too heavy.",
+    "shoulder": "Light weight only. Stop at the plane of the torso.",
+    "sources": [
+      "Nippard",
+      "Israetel"
+    ]
+  },
+  {
+    "id": "pushdown",
+    "name": "Cable pushdown",
+    "setup": "Elbows pinned at the sides. Slight forward lean. Handle at chest height to start.",
+    "execution": "Extend fully at the bottom without the elbows moving. Control the return until the forearms pass parallel.",
+    "faults": "Elbows drifting forward and back. Leaning over the weight. Shortening the range as it gets heavy.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "rope_pushdown",
+    "name": "Cable rope pushdown",
+    "setup": "Rope at chest height. Elbows tucked, slight lean.",
+    "execution": "Push down and spread the rope apart at the bottom. Full extension. Controlled return.",
+    "faults": "Elbows flaring out. Using the shoulders to push.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "m_oh_tri",
+    "name": "Overhead tricep extension machine",
+    "setup": "Upper arms against the pad, pointing up. Elbows aligned with the pivot.",
+    "execution": "Extend fully. Lower until you feel the triceps stretch — this is where the growth is.",
+    "faults": "Upper arms drifting forward off the pad. Cutting the stretch at the bottom.",
+    "shoulder": "Overhead position is generally tolerable because the arm is in flexion, not abduction. If it pinches, use a pushdown instead.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "pin_tri_dip",
+    "name": "Seated pin-loaded machine triceps dip",
+    "setup": "Handles at chest height. Shoulders down, chest up.",
+    "execution": "Press down through the handles to full extension. Control the return — don't let the shoulders rise.",
+    "faults": "Shrugging the shoulders up. Leaning forward to use the chest. Partial range.",
+    "shoulder": "Far safer than a free dip. Stop the return before the elbows pass the torso line.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "dip",
+    "name": "Weighted dip",
+    "setup": "Arms locked, slight forward lean. Shoulders depressed.",
+    "execution": "Lower until the upper arm is parallel. Press back up. Keep the lean consistent.",
+    "faults": "Going too deep. Shoulders rolling forward at the bottom. Flaring the elbows.",
+    "shoulder": "The bottom of a deep dip loads the front of the shoulder heavily. For anterior instability: shallow depth only, or replace with the machine dip.",
+    "sources": [
+      "Nuckols",
+      "Cavaliere"
+    ]
+  },
+  {
+    "id": "pin_preacher",
+    "name": "Pin-loaded machine preacher curl",
+    "setup": "Armpits over the pad edge. Elbows aligned with the machine pivot.",
+    "execution": "Curl through the full range. Lower slowly — don't drop into the stretched position.",
+    "faults": "Shoulders rising off the pad. Bouncing at the bottom. Cutting the lowering phase short.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "sa_cable_curl",
+    "name": "Single-arm cable biceps curl",
+    "setup": "Elbow pinned at the side. Slight step back for constant tension.",
+    "execution": "Curl with the elbow fixed. Full squeeze at the top. Controlled lowering to full extension.",
+    "faults": "Elbow drifting forward. Swinging the torso. Stopping short of full extension.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "nordic",
+    "name": "Nordic hamstring curl",
+    "setup": "Knees on a pad, ankles anchored. Hips extended — body in one straight line.",
+    "execution": "Lower as slowly as possible by letting the knees extend. Catch with the hands only when the hamstrings give out.",
+    "faults": "Bending at the hips. Dropping instead of resisting. Expecting to do the full range early.",
+    "sources": [
+      "Nuckols",
+      "Israetel"
+    ]
+  },
+  {
+    "id": "leg_curl",
+    "name": "Lying leg curl",
+    "setup": "Pad just above the heels. Hips pressed into the bench. Toes pointed toward the shins.",
+    "execution": "Curl to full contraction. Lower under control — the stretch matters as much as the squeeze.",
+    "faults": "Hips rising off the pad. Pointing the toes, which recruits the calves. Dropping the weight.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "leg_ext",
+    "name": "Leg extension",
+    "setup": "Knees aligned with the machine pivot. Pad on the lower shin. Back against the seat.",
+    "execution": "Extend to a full lockout and pause. Lower under control through the full range.",
+    "faults": "Kicking the weight up. Partial range. Lifting the hips off the seat.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "stand_m_calf",
+    "name": "Standing machine calf raise",
+    "setup": "Balls of the feet on the edge. Heels dropped below for the stretch. Knees straight but not locked.",
+    "execution": "Full stretch at the bottom, pause. Drive to the top, pause. Slow throughout.",
+    "faults": "Bouncing. Bending the knees to bounce out of the stretch. Half reps.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  },
+  {
+    "id": "seat_pl_calf",
+    "name": "Seated plate-loaded machine calf raise",
+    "setup": "Pad on the lower thigh. Balls of the feet on the edge, heels low.",
+    "execution": "Same tempo — stretch, pause, drive, pause. This hits the soleus; expect to go lighter than standing.",
+    "faults": "Bouncing. Rushing the bottom position.",
+    "sources": [
+      "Israetel"
+    ]
+  },
+  {
+    "id": "multihip_abd",
+    "name": "Multi-hip machine hip abduction",
+    "setup": "Pad against the outside of the thigh. Stand tall, hold the rail.",
+    "execution": "Drive the leg out to the side. Pause. Return under control without letting the stack rest.",
+    "faults": "Leaning away to cheat. Swinging. Using the torso.",
+    "sources": [
+      "Contreras"
+    ]
+  },
+  {
+    "id": "seated_add",
+    "name": "Seated machine hip adduction",
+    "setup": "Pads inside the knees. Start wider than comfortable for the stretch.",
+    "execution": "Squeeze together through the full range. Pause. Open slowly.",
+    "faults": "Pulsing short reps. Letting the stack drop open.",
+    "sources": [
+      "Contreras"
+    ]
+  },
+  {
+    "id": "captains_leg",
+    "name": "Captain's chair straight leg raise",
+    "setup": "Forearms on the pads, back against the pad. Shoulders down.",
+    "execution": "Raise the legs by curling the pelvis up, not just lifting the thighs. Lower slowly.",
+    "faults": "Swinging. Lifting with the hip flexors only — no pelvic tilt. Shrugging into the pads.",
+    "sources": [
+      "Nippard"
+    ]
+  },
+  {
+    "id": "tbar",
+    "name": "T-bar row",
+    "setup": "Chest over the bar, hinged to about 45°. Flat back, lats set.",
+    "execution": "Row the handle to the lower chest. Elbows stay fairly close. Squeeze, lower under control.",
+    "faults": "Heaving with the lower back. Torso rising with each rep. Flaring elbows wide.",
+    "shoulder": "Elbows close to the body — flaring wide moves toward horizontal abduction. Safe when done tight.",
+    "sources": [
+      "Baraki",
+      "Nuckols"
+    ]
+  },
+  {
+    "id": "chest_row",
+    "name": "Chest-supported row",
+    "setup": "Chest fully on the pad. Feet braced. Arms hanging straight.",
+    "execution": "Row the elbows back and down. Squeeze the shoulder blades. Let them separate fully on the return.",
+    "faults": "Lifting the chest off the pad. Shrugging. Short range at the bottom.",
+    "shoulder": "The best row for a bad shoulder — the pad removes any need to brace with the torso. Keep elbows close.",
+    "sources": [
+      "Israetel",
+      "Nippard"
+    ]
+  }
+]
