@@ -180,6 +180,8 @@ messages should tell the user their data is safe, because it is.
 
 ## How to work on this
 
+**The current plan is `roadmap/ROADMAP.md`** — read it first; it sets the batch order and the decisions already made.
+
 **Plan before you write.** For anything beyond a one-line change, propose the
 approach first and wait for a yes. Prefer plan mode.
 
