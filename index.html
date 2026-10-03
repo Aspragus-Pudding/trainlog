@@ -810,7 +810,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.18.0';
+const APP_VERSION='1.18.1';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1521,7 +1521,21 @@ function restoreSession(){
 /* Write to disk FIRST. If the write fails the event is not kept in memory
    either, so what you see always matches what is stored. A silent divergence
    here would mean sets that look logged but vanish on the next launch. */
+/* Every stored load is rounded to 0.01 lb here, at the one write point, so no
+   path can store a raw conversion float (a 15 kg suggestion once landed as
+   33.06933932773163). Any number under a key named lb or ending _lb. Typed
+   weights ({value,unit}) are stored as entered and never touched. */
+function roundLoads(o){
+  if(!o||typeof o!=='object') return o;
+  for(const k of Object.keys(o)){
+    const v=o[k];
+    if(typeof v==='number'&&(k==='lb'||k.endsWith('_lb'))){ if(isFinite(v)) o[k]=Math.round(v*100)/100; }
+    else if(v&&typeof v==='object') roundLoads(v);
+  }
+  return o;
+}
 function append(ev){
+  roundLoads(ev);
   ev.v=SCHEMA_V; ev.id=ulid(); ev.ts=new Date().toISOString();
   try{
     const raw=localStorage.getItem(LS_KEY)||'';
@@ -4209,20 +4223,27 @@ function recordedSuggestion(slot, rec){
   if(!rec||rec.pr.lb==null) return undefined;
   const {pr,lb,o}=rec;
   return {
-    lb, reps:pr.reps, target_rpe:slot.rpe, basis:pr.src,
+    lb, shown:shownLoad(slot, lb), reps:pr.reps, target_rpe:slot.rpe, basis:pr.src,
     readiness:o.adj?{score:Math.round(session.score*100),cut_pct:Math.round((1-o.adj.load)*100),applied_pct:o.adjApplied||0}:null,
     joint:slot.joint?{joint:slot.joint.joint,level:slot.joint.level,applied_pct:o.jointApplied||0,held:!!o.jointHeld}:null,
     fatigue:(pr.fatigue&&pr.fatigue.applied)?{rise:pr.fatigue.rise,pairs:pr.fatigue.n,sessions:pr.fatigue.sessions}:null,
     rep_range:slot.repSrc!=='block'?{src:slot.repSrc,muscle:slot.repMuscle||null,capped:!!slot.repCapped}:null
   };
 }
+/* The load as the set card shows it: kg machines in half-kg steps, everything
+   else in lb. seedDraft() and the stored suggestion both use this, so what's
+   recorded is what was shown. */
+function shownLoad(slot, lb){
+  const ex=exById[slot.ex];
+  const fixedUnit=ex&&ex.unitPref&&ex.unitPref!=='both'?ex.unitPref:null;
+  return fixedUnit==='kg'?{value:Math.round(lb/LB*2)/2, unit:'kg'}:{value:lb, unit:'lb'};
+}
 function seedDraft(slot){
   const ex=exById[slot.ex];
   const {pr,lb,why}=suggestFor(slot);
   const fixedUnit=ex.unitPref&&ex.unitPref!=='both'?ex.unitPref:null;
   if(lb!=null){
-    if(fixedUnit==='kg'){ draft.weight=Math.round(lb/LB*2)/2; draft.unit='kg'; }
-    else{ draft.weight=lb; draft.unit='lb'; }
+    const sh=shownLoad(slot, lb); draft.weight=sh.value; draft.unit=sh.unit;
   }else{ draft.weight=isBW(ex)?0:(ex.bar||50); draft.unit=fixedUnit||CFG.units||'lb'; }
   draft.reps=pr.reps??slot.reps[0]; draft.rpe=slot.rpe; draft.group=null; draft.alt=null;
   draft.suggestedLb=lb; draft.suggestedReps=draft.reps; draft.suggested=lb!=null; draft.why=why;

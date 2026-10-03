@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -616,6 +616,23 @@ section('17. picker muscles and tonnage');
   const B=load([set('bench','T1',135,8,8,1),set('bench','T1',135,8,8.5,1),{...set('bench','T1',95,5,null,1),set_kind:'warmup'},set('bench','T2',200,3,9,2)]);
   ok(B.sessionTonnage('T1')===135*8*2,'tonnage counts working sets only, per session',String(B.sessionTonnage('T1')));
   console.log('  all muscles browsable · every exercise reachable by muscle · tonnage excludes warmups');
+}
+
+/* ─── 18. stored loads are rounded ─── */
+section('18. stored loads are rounded');
+{
+  const A=load([]);
+  const ev=A.append({type:'set',exercise_id:'bench',weight:{value:15,unit:'kg'},reps:20,suggested_lb:15*A.LB,
+    suggestion:{lb:15*A.LB,shown:{value:15,unit:'kg'},basis:'last session',reps:20}});
+  ok(ev.suggested_lb===33.07&&ev.suggestion.lb===33.07,'a kg→lb conversion is stored to 0.01 lb',ev.suggested_lb+' '+ev.suggestion.lb);
+  ok(ev.weight.value===15&&ev.weight.unit==='kg','a typed weight is stored exactly as entered',JSON.stringify(ev.weight));
+  ok(ev.suggestion.basis==='last session'&&ev.suggestion.shown.value===15,'rounding leaves every other field alone',JSON.stringify(ev.suggestion));
+  A.exById.__kg_machine={id:'__kg_machine',unitPref:'kg'};   // like a custom kg-only machine (m_rd_fly)
+  const sh=A.shownLoad({ex:'__kg_machine'},15*A.LB);
+  ok(sh.unit==='kg'&&sh.value===15,'a kg machine\'s suggestion is recorded as shown, in kg',JSON.stringify(sh));
+  const lbEx=A.EX.find(e=>!e.unitPref);
+  ok(A.shownLoad({ex:lbEx.id},185).value===185,'an lb suggestion is recorded as shown','');
+  console.log('  loads to 0.01 lb at the one write point · typed weights untouched · suggestion recorded as shown');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
