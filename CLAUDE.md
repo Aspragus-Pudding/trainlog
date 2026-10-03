@@ -21,6 +21,8 @@ sw.js                   service worker, self-updating
 manifest.webmanifest    PWA manifest
 icon-192.png/512.png    icons
 AppsScript.gs           Google Sheets backup receiver (lives in Apps Script, not deployed here)
+FeedbackScript.gs       append-only receiver for testers' notes (CFG.feedbackUrl), never readable back
+ALPHA.md                tester plan, incl. what a tester's data touches — keep it true when changing network/storage code
 shoulder-protocol.md    reference doc, not used by the app
 tests/prescription-invariants.js   prescription direction/pairing tests, run with node
 tests/backtest.js       replays the engine against a real exported log to measure suggestion accuracy

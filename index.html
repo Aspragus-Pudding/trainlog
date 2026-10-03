@@ -798,7 +798,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.16.0';
+const APP_VERSION='1.17.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1357,19 +1357,28 @@ const DAYS=[
 
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
-  goals:[],units:'lb',onboarded:false,dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{}};
-/* A setup link like  ...?sync=<encoded apps script url>  configures a
-   tester's backup for them, then strips itself from the address bar so it
-   isn't left sitting in history. Only ever accepts a script.google.com URL. */
+  goals:[],units:'lb',onboarded:false,dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
+  feedbackUrl:'',testerName:'',introSeen:false};
+/* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
+   backup sheet and the shared feedback sheet for them, then strips itself
+   from the address bar so it isn't left sitting in history. Each writes
+   only its own CFG field. Only script.google.com Apps Script URLs are
+   accepted — but any Google account can host one, so that check is not
+   proof the link came from you: a link never silently REPLACES a URL that's
+   already set, it asks first. */
+const SCRIPT_URL_RE=/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 function applySetupLink(){
   try{
     const q=new URLSearchParams(location.search);
-    const raw=q.get('sync'); if(!raw) return;
-    const url=decodeURIComponent(raw);
-    if(!/^https:\/\/script\.google\.com\/macros\/s\//.test(url)) return;
-    CFG.syncUrl=url; saveCfg();
-    history.replaceState({},'',location.pathname);
-    setTimeout(()=>toast('Backup configured'),600);
+    const set=(param,key,what)=>{
+      const url=(q.get(param)||'').trim();
+      if(!url||!SCRIPT_URL_RE.test(url)||CFG[key]===url) return false;
+      if(CFG[key]&&!confirm('This link wants to change where '+what+' go.\n\nOnly accept if you got this link from the person who set up the app for you.')) return false;
+      CFG[key]=url; return true;
+    };
+    const a=set('sync','syncUrl','your backups'), b=set('feedback','feedbackUrl','your notes');
+    if(q.has('sync')||q.has('feedback')) history.replaceState({},'',location.pathname);
+    if(a||b){ saveCfg(); setTimeout(()=>toast(a&&b?'Backup and notes configured':a?'Backup configured':'Notes configured'),600); }
   }catch{}
 }
 
@@ -2476,6 +2485,7 @@ function renderDash(){
   }
 
   const s=el('button','btn ghost wide','Edit program'); s.onclick=openSettings; v.appendChild(s);
+  v.appendChild(el('div','dim tiny','Trainlog v'+APP_VERSION+' — include this in any bug report')).style.cssText='text-align:center;margin:14px 0 4px';
 }
 
 /* volume as bars coloured by block type, intensity as an overlaid line */
@@ -3372,8 +3382,11 @@ function openNote(prefillTag){
     context: session?[session.dayName, exOpen?exOpen.name:null].filter(Boolean).join(' · '):null
   };
   let attach=true;
+  const fb=!!(CFG.feedbackUrl||'').trim();
   sheet(`<h2 style="font-size:21px;margin-bottom:3px">Quick note</h2>
-    <div class="muted tiny" style="margin-bottom:14px">Saved to your log and your backup sheet.</div>
+    <div class="muted tiny" style="margin-bottom:14px">Saved to your log${(CFG.syncUrl||'').trim()?' and your backup sheet':''}.${fb
+      ?' Also sent to the person who gave you this app — just the note, its kind, the app version and the time'+(CFG.testerName?', signed '+esc(CFG.testerName):'')+'. Nothing from your training log.':''}</div>
+    ${fb&&!CFG.testerName?'<div class="qblock"><div class="qlab">What should they call you?</div><input type="text" id="nname" placeholder="First name is fine" style="width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit"></div>':''}
     <div class="qblock"><div class="qlab">What kind?</div><div class="chips" id="ntag"></div></div>
     <div class="qblock">
       <textarea id="ntext" rows="4" placeholder="What happened? Be specific — what you tapped and what it did."
@@ -3412,13 +3425,28 @@ function openNote(prefillTag){
   $('#nsave').onclick=()=>{
     const v=(ta.value||'').trim();
     if(v.length<2){ toast('Write something first'); return; }
-    append({type:'note', tag, text:v, app_version:APP_VERSION,
+    const nm=$('#nname'); if(nm&&nm.value.trim()){ CFG.testerName=nm.value.trim().slice(0,40); saveCfg(); }
+    const ev=append({type:'note', tag, text:v, app_version:APP_VERSION,
       context: attach?auto.context:null, screen: attach?auto.screen:null, resolved:false});
-    $('#dlg').close(); render(); toast('Note saved');
+    $('#dlg').close(); render(); toast(ev&&fb?'Note saved and sent':'Note saved');
     if((CFG.syncUrl||'').trim()) syncNow(true);
+    if(ev&&fb) sendFeedback(ev);
   };
 }
 
+/* Sends one note to the shared feedback sheet (CFG.feedbackUrl). Exactly
+   these fields and nothing else — never context, never anything from the
+   log. no-cors, so delivery can't be confirmed; the note is in the local
+   log either way. */
+function feedbackPayload(note){
+  return {kind:'trainlog_feedback', name:CFG.testerName||'', tag:note.tag,
+    text:note.text, app_version:note.app_version, ts:note.ts};
+}
+function sendFeedback(note){
+  const url=(CFG.feedbackUrl||'').trim(); if(!url) return;
+  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(feedbackPayload(note))}).catch(()=>{});
+}
 /* Everything still open, formatted for pasting straight into Claude Code. */
 function notesReport(){
   const notes=LOG.filter(e=>e.type==='note'&&!e.resolved);
@@ -4476,6 +4504,7 @@ function renderLifts(){
   const stat=el('div','row between sm',`<span class="muted">Storage</span><span class="dim" id="stg">checking…</span>`);
   lg.appendChild(stat);
   lg.appendChild(el('div','row between sm',`<span class="muted">Version</span><span class="dim">${APP_VERSION}</span>`));
+  const hw=el('button','btn ghost wide','How this works'); hw.style.marginTop='10px'; hw.onclick=openIntro; lg.appendChild(hw);
 
   const since=sessionsSinceExport();
   if(since>=6){
@@ -4992,12 +5021,38 @@ let ONB=null;
 function needsOnboarding(){ return !CFG.onboarded && !LOG.some(e=>e.type==='set'); }
 function openOnboarding(step){
   if(!ONB) ONB={units:CFG.units||'lb', split:CFG.split||'full5',
-    goals:[...(CFG.goals||[])], weeks:16, conds:[...(CFG.conditions||[])]};
-  const O=ONB, N=5;
+    goals:[...(CFG.goals||[])], weeks:16, conds:[...(CFG.conditions||[])], est:{}, name:CFG.testerName||''};
+  const O=ONB;
   step=step==null?0:step;
+  // steps: 0 welcome, 1 units, 2 split, 3 goal lifts, 4 starting estimates
+  // (only with goal lifts), 5 conditions, 6 name (only when notes go to the
+  // person who set this up). Counted from the steps that apply.
+  const ask=k=>k===4?O.goals.length>0:k===6?!!(CFG.feedbackUrl||'').trim():true;
+  const STEPS=[0,1,2,3,4,5,6].filter(ask);
+  // the counter treats estimates as part of the goal-lift step, so the total
+  // doesn't change when goal lifts are picked or cleared
+  const SHOWN=STEPS.filter(k=>k!==4), N=SHOWN.length, stepNo=k=>SHOWN.indexOf(k===4?3:k)+1;
+  const next=k=>{ const i=STEPS.indexOf(k); return i<0?null:STEPS[i+1]; };
+  const prev=k=>{ const i=STEPS.indexOf(k); return i>0?STEPS[i-1]:null; };
+  const finish=()=>{
+    const t=new Date(); t.setDate(t.getDate()+O.weeks*7);
+    CFG.units=O.units; CFG.split=O.split; CFG.goals=O.goals; CFG.conditions=O.conds;
+    if(O.name.trim()) CFG.testerName=O.name.trim().slice(0,40);
+    CFG.start=new Date().toISOString().slice(0,10);
+    CFG.target=t.toISOString().slice(0,10);
+    ROADMAP=[applyShape({type:'hyp',label:'Hypertrophy',weeks:5,hyp:[],deload:true,
+      lead:O.goals[0]||null,emphasis:'moderate'})];
+    fillToTarget(ROADMAP,CFG.start,CFG.target);
+    CFG.roadmap=ROADMAP; CFG.onboarded=true; saveCfg();
+    // starting estimates: only the goal lifts you gave a number for
+    Object.entries(O.est).forEach(([id,v])=>{ if(v>0&&O.goals.includes(id))
+      append({type:'e1rm_estimate',exercise_id:id,lb:O.units==='kg'?Math.round(v*LB*10)/10:v}); });
+    ONB=null; $('#dlg').close(); TAB='dash'; render();
+    if(!CFG.introSeen) setTimeout(()=>openIntro(),250);
+  };
 
   const shell=(title,sub,bodyId,backStep,nextLabel,onNext,skipStep)=>{
-    sheet(`<div class="dim tiny" style="margin-bottom:8px">Step ${step+1} of ${N}</div>
+    sheet(`<div class="dim tiny" style="margin-bottom:8px">Step ${stepNo(step)} of ${N}</div>
       <h2 style="font-size:22px;margin-bottom:3px">${esc(title)}</h2>
       <div class="muted tiny" style="margin-bottom:15px">${esc(sub)}</div>
       <div id="${bodyId}"></div>
@@ -5021,7 +5076,7 @@ function openOnboarding(step){
 
   if(step===0){
     shell('Welcome','This builds and adapts a training program from what you actually log. About a minute to set up.',
-      'ob0',null,'Get started',()=>openOnboarding(1));
+      'ob0',null,'Get started',()=>openOnboarding(next(0)));
     $('#ob0').innerHTML=`<div class="qblock">
       <div class="muted sm" style="line-height:1.55">
         Your data stays on this device. Nothing is sent anywhere unless you set up a backup.<br><br>
@@ -5032,7 +5087,7 @@ function openOnboarding(step){
 
   if(step===1){
     shell('Units','Which do you think in? You can switch per-set later too.',
-      'ob1',0,'Next',()=>openOnboarding(2));
+      'ob1',prev(1),'Next',()=>openOnboarding(next(1)));
     chips($('#ob1'),[{label:'Pounds (lb)',v:'lb'},{label:'Kilograms (kg)',v:'kg'}],
       o=>O.units===o.v,o=>{O.units=o.v;openOnboarding(1);});
     return;
@@ -5040,7 +5095,7 @@ function openOnboarding(step){
 
   if(step===2){
     shell('How do you train?','Sessions are generated from this shape.',
-      'ob2',1,'Next',()=>openOnboarding(3));
+      'ob2',prev(2),'Next',()=>openOnboarding(next(2)));
     chips($('#ob2'),Object.entries(SPLITS).map(([k,v])=>({label:`${v.name} · ${v.days} days`,v:k})),
       o=>O.split===o.v,o=>{O.split=o.v;openOnboarding(2);});
     return;
@@ -5049,7 +5104,7 @@ function openOnboarding(step){
   if(step===3){
     shell('Pick up to three lifts to build around',
       'These get priority in every session. Skip if you just want general training.',
-      'ob3',2,'Next',()=>openOnboarding(4),4);
+      'ob3',prev(3),'Next',()=>openOnboarding(next(3)),5);
     const host=$('#ob3');
     O.goals.forEach((g,i)=>{
       const ex=exById[g]; const r=el('div','row between sm');
@@ -5070,34 +5125,69 @@ function openOnboarding(step){
   }
 
   if(step===4){
+    shell('Roughly what could you do for one all-out rep?',
+      'Only for the lifts you picked, so your first session has loads instead of dashes. A rough guess is fine — your logged sets take over from the first session.',
+      'ob4',prev(4),'Next',()=>openOnboarding(next(4)),next(4));
+    $('#obSkip').onclick=()=>{ O.est={}; openOnboarding(next(4)); };   // skipping saves none of them
+    const host=$('#ob4');
+    O.goals.forEach(id=>{
+      const ex=exById[id]; if(!ex) return;
+      const blk=el('div','qblock'); blk.appendChild(el('div','qlab',esc(ex.name)));
+      const h=el('div','');
+      const draw=()=>{ h.innerHTML=''; const v=O.est[id];
+        h.appendChild(stepper(isBW(ex)?'added '+O.units:O.units, v==null?(isBW(ex)?0:(O.units==='kg'?60:135)):v, O.units==='kg'?2.5:5,
+          nv=>{ O.est[id]=Math.max(0,nv); draw(); }, null, {typeable:true,min:0}));
+        h.appendChild(el('div','dim tiny',v==null?'Not set yet — the number above is only a starting point for the buttons. Leave it untouched and this lift starts blank.':'Saved as your starting estimate.')).style.marginTop='4px'; };
+      draw(); blk.appendChild(h); host.appendChild(blk);
+    });
+    return;
+  }
+
+  if(step===5){
+    const last=next(5)==null;
     shell('Anything you\u2019re working around?',
       'Flags exercises that load an at-risk position. It only ever warns, never blocks.',
-      'ob4',3,'Build my program',()=>{
-        const t=new Date(); t.setDate(t.getDate()+O.weeks*7);
-        CFG.units=O.units; CFG.split=O.split; CFG.goals=O.goals; CFG.conditions=O.conds;
-        CFG.start=new Date().toISOString().slice(0,10);
-        CFG.target=t.toISOString().slice(0,10);
-        ROADMAP=[applyShape({type:'hyp',label:'Hypertrophy',weeks:5,hyp:[],deload:true,
-          lead:O.goals[0]||null,emphasis:'moderate'})];
-        fillToTarget(ROADMAP,CFG.start,CFG.target);
-        CFG.roadmap=ROADMAP; CFG.onboarded=true; saveCfg();
-        ONB=null; $('#dlg').close(); TAB='dash'; render();
-        setTimeout(()=>toast('Program ready'),400);
-      });
-    const host=$('#ob4');
+      'ob5',prev(5),last?'Build my program':'Next',last?finish:()=>openOnboarding(next(5)));
+    const host=$('#ob5');
     chips(host,Object.entries(CONDITIONS).map(([k,v])=>({label:v.name,v:k})),
       o=>O.conds.includes(o.v),
-      o=>{ O.conds=O.conds.includes(o.v)?O.conds.filter(x=>x!==o.v):O.conds.concat(o.v); openOnboarding(4); });
+      o=>{ O.conds=O.conds.includes(o.v)?O.conds.filter(x=>x!==o.v):O.conds.concat(o.v); openOnboarding(5); });
     host.appendChild(el('div','anchor','Leave blank if nothing applies.'));
+    return;
+  }
+
+  if(step===6){
+    shell('What should we call you?',
+      'Notes you write in the app go to the person who set it up for you, signed with this name. Nothing else is sent.',
+      'ob6',prev(6),'Build my program',finish);
+    $('#ob6').innerHTML='<input type="text" id="obname" placeholder="First name is fine" style="width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit;margin-bottom:12px">';
+    const inp=$('#obname'); inp.value=O.name; inp.oninput=e=>{ O.name=e.target.value; };
     return;
   }
 }
 
+/* One screen, not a tour: the five things a new user needs that the app
+   doesn't otherwise say. Shown once after setup; reachable from the Lifts tab. */
+function openIntro(){
+  const fb=!!(CFG.feedbackUrl||'').trim(), sync=!!(CFG.syncUrl||'').trim();
+  const item=(t,b)=>`<div class="qblock"><div class="qlab">${t}</div><div class="muted sm" style="line-height:1.5">${b}</div></div>`;
+  sheet(`<h2 style="font-size:22px;margin-bottom:12px">How this works</h2>
+    ${item('The check-in shapes the session','Before each workout it asks how you slept and how you feel. Answer honestly — 3 is a normal day. It can lighten a session; it never adds to one.')}
+    ${item('Suggested weights are suggestions','Change any number before you log the set. What you log is what counts, and the suggestions learn from it.')}
+    ${item('RPE','How hard a set was: 10 means nothing left, 8 means about two more reps were possible.')}
+    ${item('Notes','The ✎ at the top right writes a note — something broke, something confusing, an idea. '+(fb?'Notes go to the person who gave you this app.':'Notes are saved in your log.'))}
+    ${item('Your data','It lives only on this phone. '+(sync?'It\'s also backed up to a sheet after each session.':'If you care about keeping it, save a backup from the Lifts tab now and then.'))}
+    <button class="btn go wide" id="introok">Got it</button>`);
+  $('#introok').onclick=()=>{ CFG.introSeen=true; saveCfg(); $('#dlg').close(); render(); };
+}
 /* Wipe everything back to a true first-run state. For testing the new-user
    flow, and for handing the app to someone else on a shared device. */
 function resetToFresh(){
-  [LS_KEY,LS_CFG,LS_SESS,LS_PEND,LS_REST,LS_WEEK,'trainlog.lastExport','trainlog.lastSync']
-    .forEach(k=>{ try{ localStorage.removeItem(k); }catch{} });
+  // the named keys, plus anything else under the trainlog. prefix — so a key
+  // added later can't survive a reset just because nobody updated this list
+  const keys=new Set([LS_KEY,LS_CFG,LS_SESS,LS_PEND,LS_REST,LS_WEEK,'trainlog.lastExport','trainlog.lastSync']);
+  try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.startsWith('trainlog.')) keys.add(k); } }catch{}
+  keys.forEach(k=>{ try{ localStorage.removeItem(k); }catch{} });
   location.reload();
 }
 
@@ -5107,7 +5197,7 @@ function openSettings(){
       draft: ROADMAP.map(b=>({...b,hyp:[...(b.hyp||[])]})),
       goals: [...(CFG.goals||[])],
       tgt: CFG.target, srt: CFG.start, fixed: !!CFG.targetFixed,
-      split: CFG.split||'full5', syncUrl: CFG.syncUrl||'',
+      split: CFG.split||'full5', syncUrl: CFG.syncUrl||'', feedbackUrl: CFG.feedbackUrl||'', testerName: CFG.testerName||'',
       energy: CFG.energy||'maintenance', conds: [...(CFG.conditions||[])]
     };
   }
@@ -5333,6 +5423,17 @@ function openSettings(){
       <div class="anchor">Leave blank to back up manually instead.</div>`;
     host.appendChild(sy);
     $('#syncu').onchange=e=>{S.syncUrl=e.target.value.trim();};
+    if(S.feedbackUrl){
+      const fbk=el('div','qblock');
+      fbk.innerHTML=`<div class="qlab">Notes</div>
+        <div class="field">Notes you write are also sent to the person who set this app up — the note, its kind, the app version and the time, signed with your name. Nothing from your training log.</div>
+        <div class="field" style="margin-top:8px">Your name on notes</div>
+        <input type="text" id="tname" value="${esc(S.testerName)}" style="width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit">`;
+      const stop=el('button','btn s','Stop sending notes'); stop.style.marginTop='9px';
+      stop.onclick=()=>{ S.feedbackUrl=''; draw(); };
+      fbk.appendChild(stop); host.appendChild(fbk);
+      $('#tname').onchange=e=>{ S.testerName=e.target.value.trim().slice(0,40); };
+    }
     if(S.syncUrl){
       const tb=el('button','btn s','Test it now'); tb.style.marginTop='9px';
       tb.onclick=()=>{ CFG.syncUrl=$('#syncu').value.trim(); saveCfg();
@@ -5375,6 +5476,7 @@ function openSettings(){
     S.draft.forEach(b=>b.label=TYPE_NAME[b.type]);
     CFG.roadmap=S.draft; CFG.goals=S.goals; CFG.target=S.tgt; CFG.start=S.srt; CFG.targetFixed=!!S.fixed;
     CFG.split=S.split; CFG.syncUrl=S.syncUrl; CFG.energy=S.energy; CFG.conditions=S.conds;
+    CFG.feedbackUrl=S.feedbackUrl; CFG.testerName=S.testerName;
     ROADMAP=S.draft; saveCfg(); SETTINGS_DRAFT=null;
     $('#dlg').close(); render(); toast('Program saved');
   };
