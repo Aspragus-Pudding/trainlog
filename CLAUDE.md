@@ -124,6 +124,11 @@ never swapped out mid-workout.
 - **Generation flow:** `currentPhase()` → `generatedDays()` → `buildDay()` →
   `resolveEx()` + `schemeFor()`. Roadmap blocks are ordered intents; dates are
   derived from anchor + order + durations, never stored per block.
+- **A week is a list of day types** (`CFG.week`, or `b.week` per block; 2–6
+  of full/upper/lower/push/pull/legs). `splitOf()` turns any spec — a week,
+  or an old preset name in `CFG.split`/`b.split` — into one shape. Presets
+  must keep producing exactly the days they always did. Day names are stable
+  (Upper A, Push B) because saved day edits are keyed by name.
 - **Program position counts sessions, not calendar days.** `currentPhase()`
   uses `programSessions()` (trained sessions since `CFG.start`); the calendar
   only enters through `programProjection()`. Don't reintroduce date-based

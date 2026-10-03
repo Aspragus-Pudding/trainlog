@@ -15,7 +15,8 @@ Nobody can see anyone else's data, including you. There's no server holding it.
 on next launch and offers the update banner. One deploy, five updated apps.
 
 **A fresh install is genuinely fresh.** Defaults carry no goal lifts, no
-program, no gym assumptions. First run is a short setup: units, split, up to
+program, no gym assumptions. First run is a short setup: units, days per week and
+the kind of days (full body, upper/lower, push/pull/legs, or any mix), up to
 three lifts to build around, a rough one-rep guess for those lifts (optional,
 so the first session has loads instead of dashes), anything they're working
 around, and — only if you've set up notes — what to call them. Every step

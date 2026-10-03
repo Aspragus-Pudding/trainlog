@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -709,6 +709,57 @@ section('20. joint ladder — baseline, not absolute level');
   A.setSession({id:'SJ2',slots:[slot2],adj:null,score:null}); w=A.suggestFor(slot2).why;
   ok(/shoulder: load held — rated bad recently/.test(w.line),'line says load held because of a bad rating',w.line);
   console.log('  chronic usual → warmup only · bad always counts · flare climbs and recovers · drift notes · line says what and why');
+}
+
+/* ─── 21. weeks: days per week and day types per block ─── */
+section('21. weeks — chosen days and day types');
+{
+  const A=load([]);
+  // presets are exactly their week equivalents (existing programs unchanged)
+  ['full5','ul4','ppl3'].forEach(k=>{
+    const p=A.SPLITS[k], w=A.splitOf(p.week);
+    ok(JSON.stringify(p.template.map(d=>[d.name,d.slots]))===JSON.stringify(w.template.map(d=>[d.name,d.slots])),k+' preset = the same week built as a list','');
+  });
+  ok(JSON.stringify(A.SPLITS.ul4.template.map(d=>d.name))==='["Upper A","Lower A","Upper B","Lower B"]','preset day names are unchanged','');
+  // naming: lettered types always, push/pull/legs from the second occurrence
+  const t=A.weekTemplate(['upper','push','upper','push','legs','upper']).map(d=>d.name);
+  ok(JSON.stringify(t)==='["Upper A","Push","Upper B","Push B","Legs","Upper C"]','day names are stable and unique',JSON.stringify(t));
+  ok(new Set(A.weekTemplate(['push','push','push']).map(d=>d.name)).size===3,'three push days get three names','');
+  // a repeated type uses a different variant
+  const up=A.weekTemplate(['upper','upper','upper']);
+  ok(JSON.stringify(up[0].slots)!==JSON.stringify(up[1].slots)&&JSON.stringify(up[1].slots)!==JSON.stringify(up[2].slots),'repeated upper days are different workouts','');
+  ['push','pull','legs'].forEach(k=>{ const d=A.weekTemplate([k,k]); ok(JSON.stringify(d[0].slots)!==JSON.stringify(d[1].slots),'a second '+k+' day is a different workout',''); });
+  // every variant uses only patterns the library can fill
+  const pats=new Set(A.EX.filter(e=>!e.rehab).map(e=>e.pattern));
+  Object.entries(A.DAY_TYPES).forEach(([k,T])=>T.variants.forEach((v,i)=>v.forEach(([p])=>ok(pats.has(p),k+' variant '+i+' uses a pattern with no exercise: '+p,''))));
+  // bounds: 2 to 6 days
+  ok(!A.validWeek(['full'])&&!A.validWeek(Array(7).fill('full'))&&A.validWeek(['full','full'])&&A.validWeek(Array(6).fill('full')),'weeks are 2–6 days','');
+  ok(!A.validWeek(['full','nope']),'unknown day types are rejected','');
+  // every suggested style is a valid week of the asked length
+  A.WEEK_STYLES.forEach(st=>{ for(let n=st.min||2;n<=6;n++){ const w=st.make(n); ok(A.validWeek(w)&&w.length===n,st.k+' at '+n+' days is a valid week',JSON.stringify(w)); } });
+  ok(A.styleOfWeek(['push','pull','legs','upper','lower'])==='ulppl'&&A.styleOfWeek(['legs','push'])==='custom','styles are recognised, edits become custom','');
+  // resolution: block week > block preset > program week > program preset
+  const C=A.getCFG(); C.split='full5'; C.week=null;
+  ok(A.splitKeyFor({})==='full5','nothing set: the program preset','');
+  C.week=['upper','lower','full'];
+  ok(A.splitKeyFor({})==='w:upper,lower,full'&&A.splitFor({}).days===3,'a program week replaces the preset',A.splitKeyFor({}));
+  ok(A.splitKeyFor({split:'ppl3'})==='ppl3','a block preset beats the program week','');
+  ok(A.splitFor({week:['push','pull','legs','push','pull']}).days===5,'a block week sets that block\'s days','');
+  ok(A.splitKeyFor({week:['bogus']})==='w:upper,lower,full','an invalid block week falls back to the program','');
+  C.week=null;
+  // coverage notes warn, never block
+  ok(A.weekCoverage(['push','pull','legs','push','pull']).some(m=>/^Legs get direct work once a week/.test(m)),'legs once a week is noted','');
+  ok(A.weekCoverage(['upper','lower','upper','lower']).length===0,'upper/lower x2 needs no note','');
+  ok(A.weekCoverage(['full','full']).length===0,'a 2-day week is not nagged','');
+  // position: a 3-day block advances a week every 3 sessions
+  const endEv=n=>({type:'session_end',id:'w'+(uid++),ts:day(n),session_id:'w'+uid,joints:{}});
+  const ev=[]; for(let i=0;i<4;i++) ev.push(endEv(100-i));
+  const B=load(ev), BC=B.getCFG(); BC.start=new Date(Date.now()-101*864e5).toISOString().slice(0,10);
+  B.setRoadmap([Object.assign(B.applyShape({type:'hyp',label:'H',weeks:4,deload:false,hyp:[]}),{week:['upper','lower','full']})]);
+  const pos=B.programPosition();
+  ok(pos.week===2&&pos.sessionsIn===4&&pos.dpw===3,'4 sessions into a 3-day week: week 2',JSON.stringify(pos));
+  ok(B.todayDay().name==='Lower A','session 5 of an upper/lower/full week is its day 2 again',B.todayDay().name);
+  console.log('  presets unchanged · stable names · repeated days vary · 2–6 days · styles valid · block > program · coverage notes · position by days');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

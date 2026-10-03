@@ -181,6 +181,7 @@ dialog::backdrop{background:var(--backdrop,rgba(6,8,12,.78))}
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9px;
   color:var(--ink);padding:11px;font:inherit}
+.wsel{flex:1;min-width:0;background:var(--card-2);color:var(--ink);border:none;border-radius:9px;padding:9px 10px;font:inherit;font-size:15px}
 .thsw{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);width:100%;text-align:left}
 .thsw .dots{display:flex;gap:3px;padding:4px;border-radius:7px;flex:none}
 .thsw .dots i{width:12px;height:12px;border-radius:50%;display:block}
@@ -810,7 +811,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.19.0';
+const APP_VERSION='1.20.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1205,26 +1206,97 @@ let ROADMAP=[];
 
 /* Splits are shapes, not exercise lists. Each slot names a movement pattern
    and a role; exercises get resolved from your library at session time, so a
-   split stays valid as the library grows or your goal lifts change. */
-const SPLITS={
-  full5:{name:'Full body', days:5, template:[
-    {name:'Full body A', slots:[['squat','primary'],['horizontal_press','secondary'],['horizontal_pull','secondary'],['elbow_flexion','accessory'],['calf_raise','accessory']]},
-    {name:'Full body B', slots:[['hinge','primary'],['vertical_press','secondary'],['vertical_pull','secondary'],['elbow_extension','accessory'],['abduction','accessory']]},
-    {name:'Full body C', slots:[['horizontal_press','primary'],['squat','secondary'],['horizontal_pull','secondary'],['abduction','accessory'],['elbow_flexion','accessory']]},
-    {name:'Full body D', slots:[['vertical_pull','primary'],['hinge','secondary'],['vertical_press','secondary'],['elbow_extension','accessory'],['calf_raise','accessory']]},
-    {name:'Full body E', slots:[['squat','primary'],['horizontal_press','secondary'],['horizontal_pull','secondary'],['knee_flexion','accessory'],['abduction','accessory']]}]},
-  ul4:{name:'Upper / Lower', days:4, template:[
-    {name:'Upper A', slots:[['horizontal_press','primary'],['vertical_pull','secondary'],['vertical_press','secondary'],['horizontal_pull','accessory'],['elbow_flexion','accessory'],['elbow_extension','accessory']]},
-    {name:'Lower A', slots:[['squat','primary'],['hinge','secondary'],['knee_flexion','accessory'],['knee_extension','accessory'],['calf_raise','accessory']]},
-    {name:'Upper B', slots:[['vertical_pull','primary'],['vertical_press','secondary'],['horizontal_press','secondary'],['horizontal_pull','accessory'],['abduction','accessory'],['elbow_flexion','accessory']]},
-    {name:'Lower B', slots:[['hinge','primary'],['squat','secondary'],['knee_extension','accessory'],['knee_flexion','accessory'],['calf_raise','accessory']]}]},
-  ppl3:{name:'Push / Pull / Legs', days:3, template:[
-    {name:'Push', slots:[['horizontal_press','primary'],['vertical_press','secondary'],['abduction','accessory'],['elbow_extension','accessory']]},
-    {name:'Pull', slots:[['vertical_pull','primary'],['horizontal_pull','secondary'],['horizontal_pull','accessory'],['elbow_flexion','accessory']]},
-    {name:'Legs', slots:[['squat','primary'],['hinge','secondary'],['knee_extension','accessory'],['knee_flexion','accessory'],['calf_raise','accessory']]}]},
-  ppl6:{name:'Push / Pull / Legs ×2', days:6, template:null}
+   split stays valid as the library grows or your goal lifts change.
+
+   A week is an ordered list of day types, 2-6 long — ['upper','lower','push',
+   'pull','legs'] — chosen per program or per block. The nth time a type
+   appears in the week it uses that type's nth variant, so a repeated day
+   isn't the same workout twice. Names are stable (Upper A, Upper B, Push,
+   Push B): saved edits to a day (CFG.dayOverrides) are keyed by name, so they
+   survive reordering. Variants past the original templates are judgement
+   defaults: same patterns, different emphasis. */
+const DAY_TYPES={
+  full:{label:'Full body', lettered:true, variants:[
+    [['squat','primary'],['horizontal_press','secondary'],['horizontal_pull','secondary'],['elbow_flexion','accessory'],['calf_raise','accessory']],
+    [['hinge','primary'],['vertical_press','secondary'],['vertical_pull','secondary'],['elbow_extension','accessory'],['abduction','accessory']],
+    [['horizontal_press','primary'],['squat','secondary'],['horizontal_pull','secondary'],['abduction','accessory'],['elbow_flexion','accessory']],
+    [['vertical_pull','primary'],['hinge','secondary'],['vertical_press','secondary'],['elbow_extension','accessory'],['calf_raise','accessory']],
+    [['squat','primary'],['horizontal_press','secondary'],['horizontal_pull','secondary'],['knee_flexion','accessory'],['abduction','accessory']],
+    [['hinge','primary'],['horizontal_pull','secondary'],['horizontal_press','secondary'],['knee_extension','accessory'],['elbow_extension','accessory']]]},
+  upper:{label:'Upper', lettered:true, variants:[
+    [['horizontal_press','primary'],['vertical_pull','secondary'],['vertical_press','secondary'],['horizontal_pull','accessory'],['elbow_flexion','accessory'],['elbow_extension','accessory']],
+    [['vertical_pull','primary'],['vertical_press','secondary'],['horizontal_press','secondary'],['horizontal_pull','accessory'],['abduction','accessory'],['elbow_flexion','accessory']],
+    [['horizontal_pull','primary'],['horizontal_press','secondary'],['vertical_pull','secondary'],['abduction','accessory'],['elbow_extension','accessory'],['elbow_flexion','accessory']]]},
+  lower:{label:'Lower', lettered:true, variants:[
+    [['squat','primary'],['hinge','secondary'],['knee_flexion','accessory'],['knee_extension','accessory'],['calf_raise','accessory']],
+    [['hinge','primary'],['squat','secondary'],['knee_extension','accessory'],['knee_flexion','accessory'],['calf_raise','accessory']],
+    [['squat','primary'],['knee_flexion','secondary'],['hinge','accessory'],['calf_raise','accessory'],['trunk','accessory']]]},
+  push:{label:'Push', lettered:false, variants:[
+    [['horizontal_press','primary'],['vertical_press','secondary'],['abduction','accessory'],['elbow_extension','accessory']],
+    [['vertical_press','primary'],['horizontal_press','secondary'],['elbow_extension','accessory'],['abduction','accessory']]]},
+  pull:{label:'Pull', lettered:false, variants:[
+    [['vertical_pull','primary'],['horizontal_pull','secondary'],['horizontal_pull','accessory'],['elbow_flexion','accessory']],
+    [['horizontal_pull','primary'],['vertical_pull','secondary'],['shrug','accessory'],['elbow_flexion','accessory']]]},
+  legs:{label:'Legs', lettered:false, variants:[
+    [['squat','primary'],['hinge','secondary'],['knee_extension','accessory'],['knee_flexion','accessory'],['calf_raise','accessory']],
+    [['hinge','primary'],['squat','secondary'],['knee_flexion','accessory'],['knee_extension','accessory'],['calf_raise','accessory']]]}
 };
-SPLITS.ppl6.template=SPLITS.ppl3.template.concat(SPLITS.ppl3.template.map(d=>({...d,name:d.name+' B'})));
+const DAY_TYPE_ORDER=['full','upper','lower','push','pull','legs'];
+const WEEK_MIN=2, WEEK_MAX=6;
+const validWeek=w=>Array.isArray(w)&&w.length>=WEEK_MIN&&w.length<=WEEK_MAX&&w.every(t=>DAY_TYPES[t]);
+function weekTemplate(week){
+  const seen={};
+  return week.map(t=>{
+    const T=DAY_TYPES[t], k=seen[t]=(seen[t]==null?0:seen[t]+1), L=String.fromCharCode(65+k);
+    return {name:T.lettered?T.label+' '+L:(k?T.label+' '+L:T.label), type:t, slots:T.variants[k%T.variants.length]};
+  });
+}
+function weekName(week){
+  const has=t=>week.includes(t), parts=[];
+  if(has('full')) parts.push('Full body');
+  if(has('upper')&&has('lower')) parts.push('Upper / Lower'); else ['upper','lower'].forEach(t=>{ if(has(t)) parts.push(DAY_TYPES[t].label); });
+  if(has('push')&&has('pull')&&has('legs')) parts.push('Push / Pull / Legs'); else ['push','pull','legs'].forEach(t=>{ if(has(t)) parts.push(DAY_TYPES[t].label); });
+  return parts.join(' + ');
+}
+/* The original fixed splits, kept as presets: logs, backups and blocks that
+   name one keep working unchanged. */
+const SPLITS={
+  full5:{name:'Full body', week:['full','full','full','full','full']},
+  ul4:{name:'Upper / Lower', week:['upper','lower','upper','lower']},
+  ppl3:{name:'Push / Pull / Legs', week:['push','pull','legs']},
+  ppl6:{name:'Push / Pull / Legs ×2', week:['push','pull','legs','push','pull','legs']}
+};
+Object.values(SPLITS).forEach(sp=>{ sp.days=sp.week.length; sp.template=weekTemplate(sp.week); });
+/* Any split spec — a week array, a 'w:…' key, or a preset name — as one shape. */
+function splitOf(spec){
+  if(validWeek(spec)) return {key:'w:'+spec.join(','), name:weekName(spec), days:spec.length, week:[...spec], template:weekTemplate(spec)};
+  if(typeof spec==='string'&&spec.startsWith('w:')){ const w=spec.slice(2).split(','); if(validWeek(w)) return splitOf(w); }
+  const k=SPLITS[spec]?spec:'full5';
+  return {key:k, name:SPLITS[k].name, days:SPLITS[k].days, week:[...SPLITS[k].week], template:SPLITS[k].template};
+}
+/* Suggested weeks by style and day count — a starting point, every day is
+   editable. Judgement defaults. */
+const WEEK_STYLES=[
+  {k:'full', label:'Full body', make:n=>Array(n).fill('full')},
+  {k:'ul', label:'Upper / Lower', make:n=>Array.from({length:n},(_,i)=>i%2?'lower':'upper')},
+  {k:'ppl', label:'Push / Pull / Legs', min:3, make:n=>Array.from({length:n},(_,i)=>['push','pull','legs'][i%3])},
+  {k:'ulppl', label:'Upper / Lower + PPL', min:4, make:n=>({4:['upper','lower','push','pull'],5:['push','pull','legs','upper','lower'],6:['push','pull','legs','upper','lower','legs']})[n]},
+  {k:'ful', label:'Full body + Upper / Lower', min:3, make:n=>({3:['upper','lower','full'],4:['upper','lower','full','full'],5:['upper','lower','full','upper','lower'],6:['upper','lower','full','upper','lower','full']})[n]},
+  {k:'fppl', label:'Full body + PPL', min:4, make:n=>({4:['push','pull','legs','full'],5:['push','pull','legs','full','full'],6:['push','pull','legs','full','push','pull']})[n]}
+];
+const styleOfWeek=w=>{ const st=WEEK_STYLES.find(x=>(x.min||WEEK_MIN)<=w.length&&JSON.stringify(x.make(w.length))===JSON.stringify(w)); return st?st.k:'custom'; };
+/* How many days a week each region gets direct work. Twice a week per muscle
+   is the common programming default; with weekly sets matched the evidence
+   for frequency itself is weak, so this is a note, never a block. */
+const WEEK_REGIONS=[
+  {k:'legs', label:'Legs', by:['full','lower','legs']},
+  {k:'push', label:'Chest, shoulders and triceps', by:['full','upper','push']},
+  {k:'pull', label:'Back and biceps', by:['full','upper','pull']}];
+function weekCoverage(week){
+  if(!validWeek(week)||week.length<3) return [];
+  return WEEK_REGIONS.map(r=>({...r,n:week.filter(t=>r.by.includes(t)).length})).filter(r=>r.n<2)
+    .map(r=>r.label+(r.n?' get direct work once a week':' get no direct work')+' in this week. Fine if that is deliberate; most programs hit each muscle at least twice.');
+}
 
 /* set/rep/RPE scheme by slot role and block type */
 /* Default rep ranges for non-primary work, by the exercise's primary muscle.
@@ -1348,10 +1420,13 @@ function buildDay(tpl, phase){
   const override=(CFG.dayOverrides||{})[id];
   return {id, name:tpl.name, slots:override?JSON.parse(JSON.stringify(override.slots)):slots};
 }
-/* Each roadmap block may carry its own split (b.split); unset follows the
-   program's, CFG.split. The active split is the current block's. */
-const splitKeyFor=b=>(b&&b.split&&SPLITS[b.split])?b.split:(SPLITS[CFG.split]?CFG.split:'full5');
-const splitFor=b=>SPLITS[splitKeyFor(b)];
+/* Each roadmap block may carry its own week (b.week) or a preset (b.split,
+   older); unset follows the program's (CFG.week, else the CFG.split preset).
+   The active split is the current block's. */
+const programSplitSpec=()=>validWeek(CFG.week)?CFG.week:(SPLITS[CFG.split]?CFG.split:'full5');
+const blockSplitSpec=b=>b&&validWeek(b.week)?b.week:(b&&b.split&&SPLITS[b.split])?b.split:programSplitSpec();
+const splitKeyFor=b=>splitOf(blockSplitSpec(b)).key;
+const splitFor=b=>splitOf(blockSplitSpec(b));
 function activeSplit(){ return splitFor(ROADMAP.length?ROADMAP[programPosition().idx]:null); }
 function generatedDays(){
   const phase=currentPhase();
@@ -1369,7 +1444,7 @@ const DAYS=[
 
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
-  goals:[],units:'lb',onboarded:false,dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
+  goals:[],units:'lb',onboarded:false,week:null,dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
   feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{}};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
@@ -1970,7 +2045,7 @@ function weeksAvailable(startISO, targetISO, splitKey){
   if(!startISO||!targetISO) return null;
   const start=new Date(startISO+'T12:00'), target=new Date(targetISO+'T12:00'), now=new Date();
   if(start>=now) return Math.round((target-start)/864e5/7);
-  const dpw=((SPLITS[splitKey]||activeSplit()).days)||5, pace=recentPace();
+  const dpw=(splitKey!=null?splitOf(splitKey):activeSplit()).days||5, pace=recentPace();
   const pos=ROADMAP.length?programPosition():null;
   const doneWeeks=pos?pos.weeksBefore+pos.sessionsIn/pos.dpw:programSessions()/dpw;
   return Math.round(doneWeeks + Math.max(0,(target-now)/864e5/7)*pace.perWeek/dpw);
@@ -4809,7 +4884,9 @@ function lintRoadmap(){
       w.push({sev:'warn',msg:`Block ${i+1}: high emphasis peaks at ${Math.max(...b.vol)} sets/muscle, at or past MRV for most groups.`});
     if((b.hyp||[]).length>3)
       w.push({sev:'warn',msg:`Block ${i+1}: ${b.hyp.length} priority muscles. Total volume is bounded — 3 is the cap.`});
-    if(prev&&splitKeyFor(prev)!==splitKeyFor(b))
+    weekCoverage(splitFor(b).week).forEach(m=>w.push({sev:'info',msg:'Block '+(i+1)+': '+m}));
+    // compare the days themselves: a preset and the same week as a list are one shape
+    if(prev&&splitFor(prev).week.join()!==splitFor(b).week.join())
       w.push({sev:'warn',msg:`Block ${i+1}: switches from ${splitFor(prev).name} to ${splitFor(b).name}. The day rotation restarts at day 1, and weekly volume per muscle shifts with the new shape.`});
   });
   let run=0;
@@ -4818,7 +4895,7 @@ function lintRoadmap(){
     if(run>9){ w.push({sev:'warn',fixAt:i,msg:`${run} weeks without a deload by block ${i+1}.`}); run=0; }
   });
   if(CFG.target&&CFG.start){
-    const avail=weeksAvailable(CFG.start,CFG.target,CFG.split);
+    const avail=weeksAvailable(CFG.start,CFG.target,programSplitSpec());
     const diff=avail-roadmapWeeks();
     if(Math.abs(diff)>1) w.push({sev:'info',
       msg:`Blocks total ${roadmapWeeks()} weeks but at your recent pace there are ${avail} to your target — ${diff>0?diff+' spare':Math.abs(diff)+' over'}.`});
@@ -4830,7 +4907,7 @@ function lintRoadmap(){
    deletes blocks you configured, so that stays a deliberate tap. */
 function fillToTarget(draft, startDate, targetDate, splitKey){
   if(!startDate||!targetDate) return 0;
-  const avail=weeksAvailable(startDate,targetDate,splitKey||CFG.split);
+  const avail=weeksAvailable(startDate,targetDate,splitKey||programSplitSpec());
   let have=draft.reduce((a,b)=>a+blockLen(b),0), added=0, guard=0;
   while(avail-have>=4 && guard++<40){
     const last=draft[draft.length-1];
@@ -5245,7 +5322,7 @@ let SETTINGS_DRAFT=null;
 let ONB=null;
 function needsOnboarding(){ return !CFG.onboarded && !LOG.some(e=>e.type==='set'); }
 function openOnboarding(step){
-  if(!ONB) ONB={units:CFG.units||'lb', split:CFG.split||'full5',
+  if(!ONB) ONB={units:CFG.units||'lb', week:splitOf(programSplitSpec()).week,
     goals:[...(CFG.goals||[])], weeks:16, conds:[...(CFG.conditions||[])], est:{}, name:CFG.testerName||''};
   const O=ONB;
   step=step==null?0:step;
@@ -5261,7 +5338,7 @@ function openOnboarding(step){
   const prev=k=>{ const i=STEPS.indexOf(k); return i>0?STEPS[i-1]:null; };
   const finish=()=>{
     const t=new Date(); t.setDate(t.getDate()+O.weeks*7);
-    CFG.units=O.units; CFG.split=O.split; CFG.goals=O.goals; CFG.conditions=O.conds;
+    CFG.units=O.units; CFG.week=O.week; CFG.goals=O.goals; CFG.conditions=O.conds;
     if(O.name.trim()) CFG.testerName=O.name.trim().slice(0,40);
     CFG.start=new Date().toISOString().slice(0,10);
     CFG.target=t.toISOString().slice(0,10);
@@ -5319,10 +5396,9 @@ function openOnboarding(step){
   }
 
   if(step===2){
-    shell('How do you train?','Sessions are generated from this shape.',
+    shell('How do you train?','Pick how many days a week, then the kind of days. Sessions are generated from this.',
       'ob2',prev(2),'Next',()=>openOnboarding(next(2)));
-    chips($('#ob2'),Object.entries(SPLITS).map(([k,v])=>({label:`${v.name} · ${v.days} days`,v:k})),
-      o=>O.split===o.v,o=>{O.split=o.v;openOnboarding(2);});
+    $('#ob2').appendChild(weekPicker(O.week, w=>{ O.week=w; openOnboarding(2); }));
     return;
   }
 
@@ -5422,7 +5498,7 @@ function openSettings(){
       draft: ROADMAP.map(b=>({...b,hyp:[...(b.hyp||[])]})),
       goals: [...(CFG.goals||[])],
       tgt: CFG.target, srt: CFG.start, fixed: !!CFG.targetFixed,
-      split: CFG.split||'full5', syncUrl: CFG.syncUrl||'', feedbackUrl: CFG.feedbackUrl||'', testerName: CFG.testerName||'',
+      split: (s=>Array.isArray(s)?[...s]:s)(programSplitSpec()), syncUrl: CFG.syncUrl||'', feedbackUrl: CFG.feedbackUrl||'', testerName: CFG.testerName||'',
       energy: CFG.energy||'maintenance', conds: [...(CFG.conditions||[])],
       jointUsual: {...(CFG.jointUsual||{})}
     };
@@ -5474,16 +5550,10 @@ function openSettings(){
     }
 
     const sp0=el('div','qblock');
-    sp0.innerHTML=`<div class="qlab">Split</div>
-      <div class="field">Sessions are built from this shape. Changing it does not touch your logged history. A block can use its own split below.</div>`;
-    const spc0=el('div','chips');
-    Object.entries(SPLITS).forEach(([k,vv])=>{
-      const c=el('button','chip',`${esc(vv.name)} · ${vv.days}d`);
-      c.setAttribute('aria-pressed',S.split===k?'true':'false');
-      c.onclick=()=>{S.split=k;draw();};
-      spc0.appendChild(c);
-    });
-    sp0.appendChild(spc0); host.appendChild(sp0);
+    sp0.innerHTML=`<div class="qlab">Your week · ${esc(splitOf(S.split).name)}</div>
+      <div class="field">Sessions are built from this. Changing it does not touch your logged history. A block can have its own week below.</div>`;
+    sp0.appendChild(weekPicker(S.split, w=>{ S.split=w; draw(); }));
+    host.appendChild(sp0);
 
     const gl=el('div','qblock');
     gl.innerHTML=`<div class="qlab">Goal lifts, ranked</div>
@@ -5541,16 +5611,21 @@ function openSettings(){
       ctrl.append(dn,up,rm); wk.appendChild(ctrl); row.appendChild(wk);
 
       const spl=el('div',''); spl.style.marginTop='10px';
-      spl.appendChild(el('div','field','Split for this block <span class="dim">· each block starts at its own day 1</span>'));
+      const own=validWeek(b.week)||!!(b.split&&SPLITS[b.split]);
+      spl.appendChild(el('div','field','Week for this block <span class="dim">· each block starts at its own day 1</span>'));
       const splc=el('div','chips');
-      [[null,'Same as program']].concat(Object.entries(SPLITS).map(([k,v])=>[k,v.name+' · '+v.days+'d'])).forEach(([k,label])=>{
-        const on=(b.split||null)===k;
-        const c=el('button','chip',esc(label)); c.style.cssText='font-size:12.5px;padding:6px 10px';
-        c.setAttribute('aria-pressed',on?'true':'false');
-        c.onclick=()=>{ if(k) b.split=k; else delete b.split; draw(); };
+      [[false,'Same as program'],[true,'Its own week']].forEach(([v,label])=>{
+        const c=el('button','chip',label); c.style.cssText='font-size:12.5px;padding:6px 10px';
+        c.setAttribute('aria-pressed',own===v?'true':'false');
+        c.onclick=()=>{ if(v===own) return; if(v) b.week=splitOf(S.split).week; else delete b.week; delete b.split; draw(); };
         splc.appendChild(c);
       });
-      spl.appendChild(splc); row.appendChild(spl);
+      spl.appendChild(splc);
+      if(own){
+        spl.appendChild(el('div','dim tiny',esc(splitOf(validWeek(b.week)?b.week:b.split).name))).style.margin='8px 0 6px';
+        spl.appendChild(weekPicker(validWeek(b.week)?b.week:b.split, w=>{ b.week=w; delete b.split; draw(); }));
+      }
+      row.appendChild(spl);
 
       if(b.type!=='deload'){
         const ld=el('div',''); ld.style.marginTop='10px';
@@ -5726,11 +5801,61 @@ function openSettings(){
   $('#rmsave').onclick=()=>{
     S.draft.forEach(b=>b.label=TYPE_NAME[b.type]);
     CFG.roadmap=S.draft; CFG.goals=S.goals; CFG.target=S.tgt; CFG.start=S.srt; CFG.targetFixed=!!S.fixed;
-    CFG.split=S.split; CFG.syncUrl=S.syncUrl; CFG.energy=S.energy; CFG.conditions=S.conds; CFG.jointUsual=S.jointUsual;
+    // only write the program week when it actually changed, so an untouched
+    // preset (CFG.split) stays exactly as it was
+    if(splitOf(S.split).key!==splitOf(programSplitSpec()).key){
+      if(Array.isArray(S.split)) CFG.week=[...S.split]; else { CFG.split=S.split; CFG.week=null; }
+    }
+    CFG.syncUrl=S.syncUrl; CFG.energy=S.energy; CFG.conditions=S.conds; CFG.jointUsual=S.jointUsual;
     CFG.feedbackUrl=S.feedbackUrl; CFG.testerName=S.testerName;
     ROADMAP=S.draft; saveCfg(); SETTINGS_DRAFT=null;
     $('#dlg').close(); render(); toast('Program saved');
   };
+}
+
+/* The one week picker: setup, the program's week, and a block's own week all
+   use it. Days per week, a suggested style, then every day editable and
+   reorderable. Calls onChange(newWeek); the caller redraws. */
+function weekPicker(week, onChange){
+  const w=validWeek(week)?[...week]:splitOf(week).week, style=styleOfWeek(w);
+  const box=el('div','');
+  box.appendChild(el('div','field','Days per week'));
+  const dc=el('div','chips');
+  for(let n=WEEK_MIN;n<=WEEK_MAX;n++){
+    const c=el('button','chip',String(n)); c.setAttribute('aria-pressed',w.length===n?'true':'false');
+    c.onclick=()=>{ if(n===w.length) return;
+      const st=WEEK_STYLES.find(x=>x.k===style&&(x.min||WEEK_MIN)<=n)||WEEK_STYLES[0];
+      onChange(st.make(n)); };
+    dc.appendChild(c);
+  }
+  box.appendChild(dc);
+  box.appendChild(el('div','field','Style · a starting point, change any day below')).style.marginTop='12px';
+  const sc=el('div','chips');
+  WEEK_STYLES.filter(x=>(x.min||WEEK_MIN)<=w.length).forEach(x=>{
+    const c=el('button','chip',esc(x.label)); c.setAttribute('aria-pressed',style===x.k?'true':'false');
+    c.onclick=()=>onChange(x.make(w.length)); sc.appendChild(c);
+  });
+  if(style==='custom'){ const c=el('button','chip','Custom'); c.setAttribute('aria-pressed','true'); sc.appendChild(c); }
+  box.appendChild(sc);
+  box.appendChild(el('div','field','Your week, in order')).style.marginTop='12px';
+  const names=weekTemplate(w);
+  w.forEach((t,i)=>{
+    const r=el('div','row'); r.style.cssText='gap:6px;margin-bottom:6px';
+    r.appendChild(el('span','dim tiny','Day '+(i+1))).style.cssText='width:40px;flex:none';
+    const sel=el('select','wsel'); sel.setAttribute('aria-label','Day '+(i+1)+' type');
+    sel.innerHTML=DAY_TYPE_ORDER.map(k=>`<option value="${k}"${k===t?' selected':''}>${esc(DAY_TYPES[k].label)}</option>`).join('');
+    sel.onchange=()=>{ const nw=[...w]; nw[i]=sel.value; onChange(nw); };
+    r.appendChild(sel);
+    r.appendChild(el('span','dim tiny',esc(names[i].name))).style.cssText='width:64px;flex:none;text-align:right';
+    const up=el('button','iconbtn','↑'); up.setAttribute('aria-label','Move day '+(i+1)+' earlier');
+    if(i===0) up.style.opacity='.25'; else up.onclick=()=>{ const nw=[...w]; [nw[i-1],nw[i]]=[nw[i],nw[i-1]]; onChange(nw); };
+    const dn=el('button','iconbtn','↓'); dn.setAttribute('aria-label','Move day '+(i+1)+' later');
+    if(i===w.length-1) dn.style.opacity='.25'; else dn.onclick=()=>{ const nw=[...w]; [nw[i+1],nw[i]]=[nw[i],nw[i+1]]; onChange(nw); };
+    r.append(up,dn); box.appendChild(r);
+  });
+  box.appendChild(el('div','anchor','Days run in this order, then repeat. A missed day just waits — the program counts sessions, not dates.'));
+  weekCoverage(w).forEach(m=>box.appendChild(el('div','tiny',esc(m))).style.cssText='color:var(--warn);margin-top:6px');
+  return box;
 }
 
 /* "Have a code?" — applies straight away and is stored in CFG.theme, so it
