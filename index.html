@@ -810,7 +810,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.18.1';
+const APP_VERSION='1.18.2';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -903,7 +903,7 @@ function buildPrep(day, rd){
   const groups=soreGroupsFor(day);
   const sore=new Set(), joints=new Set();
   if(rd){
-    Object.entries(rd.sore||{}).forEach(([g,v])=>{ if(v<=2) sore.add(g); });
+    Object.entries(rd.sore||{}).forEach(([g,v])=>{ if(fromNeutral(v,'soreness')<=-0.5) sore.add(g); });
     Object.keys(rd.joints||{}).forEach(j=>joints.add(j));
   }
   // joints already trending badly get prep even without a tap today
@@ -2336,6 +2336,35 @@ function soreGroupsFor(day){
   return [...g];
 }
 
+/* ---------- Anchored rating scales: the one place neutral is defined ----------
+   Three times a 1–N scale produced a wrong-sized effect because a formula did
+   its own arithmetic and put zero in the wrong place (readiness cut load on an
+   all-average check-in; the joint ladder cut load on a usual-for-you shoulder).
+   Every rating that adjusts anything goes through fromNeutral(): it returns 0
+   at the scale's neutral point, -1 at its floor and +1 at its ceiling (each
+   side scaled separately, so an off-centre neutral still works). Neutral can
+   be overridden per call — the joint ladder passes your personal baseline.
+   raw:true returns the plain distance from neutral in the scale's own units.
+   Never centre a rating by hand (subtract 3, halve) or compare it to a raw
+   threshold (v<=2) anywhere else.
+   tests/prescription-invariants.js §19 checks neutral → 0 on every scale. */
+const SCALE_SPEC={
+  sleep:{min:1,max:5,neutral:3}, motivation:{min:1,max:5,neutral:3},
+  soreness:{min:1,max:5,neutral:3}, recovery:{min:1,max:5,neutral:3},
+  // joint severity as weighted per session: 0 none, .5 mild, 1 moderate, 2 bad.
+  // No fixed neutral — it's your baseline (jointBaseline()).
+  joint:{min:0,max:2,neutral:0}
+};
+function fromNeutral(v, spec, neutral, opt){
+  if(typeof spec==='string') spec=SCALE_SPEC[spec];
+  if(v==null||typeof v!=='number'||!isFinite(v)) return 0;     // unanswered = neutral
+  const n=neutral==null?spec.neutral:neutral, x=Math.max(spec.min,Math.min(spec.max,v));
+  if(x===n) return 0;
+  if(opt&&opt.raw) return x-n;
+  return x<n?(x-n)/((n-spec.min)||1):(x-n)/((spec.max-n)||1);
+}
+const meanAdj=(key,vals)=>{ const a=vals.filter(v=>v!=null); return a.length?a.reduce((t,v)=>t+fromNeutral(v,key),0)/a.length:0; };
+
 /* Re-centered so a rating of 3 — "about average" on every anchored scale —
    contributes nothing, matching what the descriptors actually say (sleep 3 is
    "6-8 hours of decent sleep", motivation 3 is "neutral, will get it done",
@@ -2347,12 +2376,11 @@ function soreGroupsFor(day){
    and set cuts are decided separately, by physicalCut(), which sleep and
    motivation never touch. Judgement default, Grade D. */
 function readinessScore(st, groups){
-  const neutral=v=>(v-3)/2;                    // 1→-1, 2→-.5, 3→0, 4→.5, 5→1
-  const vals=(groups||[]).map(g=>st.sore[g]).filter(v=>v!=null);
-  const sore=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:3;
+  // fromNeutral: 1→-1, 2→-.5, 3→0, 4→.5, 5→1
+  const sore=meanAdj('soreness',(groups||[]).map(g=>st.sore[g]));
   // recovery ("rest of life") pulls down with soreness's weight; 4-5 add nothing
-  const raw=neutral(st.sleep)*0.30 + neutral(st.motivation)*0.20 + neutral(sore)*0.50
-    + Math.min(0,neutral(st.recovery??3))*0.50 + energyCfg().ready;
+  const raw=fromNeutral(st.sleep,'sleep')*0.30 + fromNeutral(st.motivation,'motivation')*0.20 + sore*0.50
+    + Math.min(0,fromNeutral(st.recovery,'recovery'))*0.50 + energyCfg().ready;
   return Math.max(0,Math.min(1, 0.7+raw*0.3));  // all-3s -> 0.70, squarely "Normal"
 }
 /* Same formula, replayed straight from a logged 'readiness' event instead
@@ -2362,11 +2390,9 @@ function readinessScore(st, groups){
    (it doesn't record which ones applied that day), which is an
    approximation for old data but exact for the live in-session score. */
 function readinessScoreFromEvent(ev){
-  const neutral=v=>(v-3)/2;
-  const vals=Object.values(ev.soreness||{}).filter(v=>v!=null);
-  const sore=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:3;
-  const raw=neutral(ev.sleep_quality)*0.30 + neutral(ev.motivation)*0.20 + neutral(sore)*0.50
-    + Math.min(0,neutral(ev.recovery??3))*0.50 + energyCfg().ready;
+  const sore=meanAdj('soreness',Object.values(ev.soreness||{}));
+  const raw=fromNeutral(ev.sleep_quality,'sleep')*0.30 + fromNeutral(ev.motivation,'motivation')*0.20 + sore*0.50
+    + Math.min(0,fromNeutral(ev.recovery,'recovery'))*0.50 + energyCfg().ready;
   return Math.max(0,Math.min(1, 0.7+raw*0.3));
 }
 /* Plain-language label for the display score only. This no longer implies a
@@ -2394,8 +2420,9 @@ function physicalCut(st, groups){
   // physical signal in the same weight class as soreness. 3 is neutral; 4-5
   // never add load. Judgement default, Grade D.
   const rec=st.recovery??3;
-  const tier=v=>v<=1?2:v<=2?1:0;
-  const ts=tier(worstSore), tr=tier(rec), t=Math.max(ts,tr);
+  // floor of the scale: 2; halfway to the floor: 1; neutral or better: 0
+  const tier=(v,key)=>{ const a=fromNeutral(v,key); return a<=-1?2:a<=-0.5?1:0; };
+  const ts=tier(worstSore,'soreness'), tr=tier(rec,'recovery'), t=Math.max(ts,tr);
   if(!t) return null;
   const sig=[];
   if(ts===t) sig.push('sore '+(soreLabel||'muscles'));

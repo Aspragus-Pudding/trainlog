@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -633,6 +633,30 @@ section('18. stored loads are rounded');
   const lbEx=A.EX.find(e=>!e.unitPref);
   ok(A.shownLoad({ex:lbEx.id},185).value===185,'an lb suggestion is recorded as shown','');
   console.log('  loads to 0.01 lb at the one write point · typed weights untouched · suggestion recorded as shown');
+}
+
+/* ─── 19. anchored scales: neutral → zero ─── */
+section('19. anchored scales — neutral rating, zero adjustment');
+{
+  const A=load([]);
+  Object.entries(A.SCALE_SPEC).forEach(([k,sp])=>{
+    ok(A.fromNeutral(sp.neutral,k)===0,'neutral on '+k+' must adjust nothing',String(A.fromNeutral(sp.neutral,k)));
+    ok(A.fromNeutral(sp.min,k)===(sp.neutral===sp.min?0:-1)&&A.fromNeutral(sp.max,k)===(sp.neutral===sp.max?0:1),k+': floor -1, ceiling +1','');
+    for(let v=sp.min;v<sp.max;v+=0.5) ok(A.fromNeutral(v+0.5,k)>=A.fromNeutral(v,k),k+' must be monotonic',v+'');
+    ok(A.fromNeutral(null,k)===0&&A.fromNeutral(undefined,k)===0,k+': unanswered counts as neutral','');
+  });
+  // a personal neutral (the joint baseline) is zero wherever it sits
+  [0,0.5,1,2].forEach(b=>ok(A.fromNeutral(b,'joint',b)===0&&A.fromNeutral(b,'joint',b,{raw:true})===0,'joint rating at your baseline ('+b+') must adjust nothing',''));
+  // the formulas built on it: an all-neutral check-in changes nothing
+  const neutralSt={sleep:3,motivation:3,recovery:3,sore:{push:3,pull:3}};
+  ok(Math.abs(A.readinessScore(neutralSt,['push','pull'])-0.7)<1e-9,'all-neutral check-in scores exactly the normal midpoint','');
+  ok(A.physicalCut(neutralSt,['push','pull'])===null,'all-neutral check-in: no load or set cut','');
+  ok(Math.abs(A.readinessScoreFromEvent({sleep_quality:3,motivation:3,recovery:3,soreness:{push:3}})-0.7)<1e-9,'replayed neutral event = same midpoint','');
+  ok(Math.abs(A.readinessScoreFromEvent({soreness:{}})-0.7)<1e-9,'an event with nothing answered = neutral, not NaN','');
+  // no formula does its own centring any more
+  const body=src.replace(/function fromNeutral[\s\S]*?\n}\n/,'');
+  ok(!/\(\s*\w+\s*-\s*3\s*\)\s*\/\s*2/.test(body),'no hand-rolled (v-3)/2 outside fromNeutral','');
+  console.log('  every scale: neutral → 0, floor −1, ceiling +1, monotonic · joint baseline → 0 · formulas inherit it');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
