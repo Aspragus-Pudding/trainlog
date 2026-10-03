@@ -134,6 +134,12 @@ never swapped out mid-workout.
 - **`PENDING`** holds pre-workout plan edits until the session starts.
 - **Readiness** drives load adjustment (discrete tiers) and warmup length
   (continuous score). Adjustments are downward-only by design.
+- **Colours are tokens, and themes override them.** `THEMES` (theme codes,
+  `CFG.theme`) swaps the `:root` custom properties; a new theme is one object.
+  Never hardcode a colour. Use `--accent` for interface (buttons, selection,
+  charts), `--hyp/--str/--peak/--deload` only where the colour means a block
+  type, `--warn/--danger` for flags and warnings. Theme toast rewordings
+  match exact messages; never add error or data-safety messages to them.
 
 ## Testing
 

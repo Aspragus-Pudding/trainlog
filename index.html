@@ -12,21 +12,30 @@
   --bg:#0B0D12; --card:#16191F; --card-2:#1F232B; --line:#2A2F39;
   --ink:#F2F4F8; --muted:#8E95A3; --dim:#5B6370;
   /* semantic: block type. these carry meaning, not decoration */
-  --hyp:#4C8DFF; --str:#E8A33D; --peak:#E8546B; --deload:#6B7280;
-  --go:#2FA84F; --skip:#FF453A; --steel:#6E7787; --r:12px;
+  --hyp:#4C8DFF; --str:#E8A33D; --peak:#E8546B; --deload:#6B7280; --on-block:#fff;
+  /* interface accent (buttons, selection, charts) — separate from the block
+     colours so a theme can change one without the other */
+  --accent:#4C8DFF; --on-accent:#fff; --accent-soft:rgba(76,141,255,.16);
+  /* warnings and danger: joint flags, ease-off, backup nags. must always read
+     as warnings, whatever the theme */
+  --warn:#E8A33D; --warn-soft:rgba(232,163,61,.1); --danger:#E8546B; --sug:var(--warn);
+  --go:#2FA84F; --skip:#FF453A; --ok:#4ADE80; --steel:#6E7787;
+  --pr:#E8A33D; --on-pr:#111;
+  --bar:rgba(11,13,18,.95); --backdrop:rgba(6,8,12,.78); --r:12px;
+  --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink)}
 body.resting main{padding-bottom:64px}
 body.updating main{padding-bottom:84px}
-body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+body{font-family:var(--font);
   font-size:16px;line-height:1.45;font-variant-numeric:tabular-nums;
   padding-bottom:calc(70px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;font-variant-numeric:tabular-nums}
 h1,h2,h3{margin:0;font-weight:750;letter-spacing:-0.022em}
 .wrap{max-width:600px;margin:0 auto;padding:0 14px}
 
-header{position:sticky;top:0;z-index:20;background:rgba(11,13,18,.95);
+header{position:sticky;top:0;z-index:20;background:var(--bar);
   backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
 .ctx{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 0 11px}
 .phase{font-size:13px;font-weight:650}
@@ -38,14 +47,14 @@ header{position:sticky;top:0;z-index:20;background:rgba(11,13,18,.95);
 .ctxbtns{display:flex;align-items:center;gap:14px;flex:none}
 .notebtn{color:var(--dim);font-size:19px;align-self:center;line-height:1}
 
-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(11,13,18,.97);
+nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--bar);
   backdrop-filter:blur(14px);border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom);display:flex}
 nav button{flex:1;padding:10px 0 11px;font-size:11.5px;color:var(--dim);
   display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:550}
 nav button .ic{width:21px;height:21px}
-nav button[aria-current="page"]{color:var(--hyp)}
-nav button:focus-visible{outline:2px solid var(--hyp);outline-offset:-3px}
+nav button[aria-current="page"]{color:var(--accent)}
+nav button:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
 
 section{display:none;padding-top:14px} section.on{display:block}
 .card{background:var(--card);border-radius:var(--r);margin-bottom:11px;overflow:hidden}
@@ -57,15 +66,15 @@ section{display:none;padding-top:14px} section.on{display:block}
 
 .btn{background:var(--card-2);border-radius:10px;padding:12px 15px;font-size:15px;font-weight:600}
 .btn:active{background:var(--line)}
-.btn.go{background:var(--go);color:#fff} .btn.pri{background:var(--hyp);color:#fff}
+.btn.go{background:var(--go);color:var(--on-accent)} .btn.pri{background:var(--accent);color:var(--on-accent)}
 .btn.wide{width:100%;text-align:center} .btn.s{padding:8px 12px;font-size:13.5px}
 .btn.ghost{background:transparent;border:1px solid var(--line)}
-.btn:focus-visible{outline:2px solid var(--hyp);outline-offset:2px}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-.seg{display:flex;border:1.5px solid var(--hyp);border-radius:9px;overflow:hidden}
-.seg button{flex:1;padding:10px 0;font-size:15px;font-weight:600;color:var(--hyp);border-right:1.5px solid var(--hyp)}
+.seg{display:flex;border:1.5px solid var(--accent);border-radius:9px;overflow:hidden}
+.seg button{flex:1;padding:10px 0;font-size:15px;font-weight:600;color:var(--accent);border-right:1.5px solid var(--accent)}
 .seg button:last-child{border-right:none}
-.seg button[aria-pressed="true"]{background:var(--hyp);color:#fff}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
 .anchor{font-size:12.5px;color:var(--muted);margin-top:7px;min-height:17px}
 .qblock{background:var(--card);border-radius:var(--r);padding:14px;margin-bottom:11px}
 .qlab{font-size:15px;font-weight:600;margin-bottom:10px;line-height:1.35}
@@ -87,12 +96,12 @@ section{display:none;padding-top:14px} section.on{display:block}
 .srow{display:flex;align-items:center;gap:11px;padding:7px 0}
 .sidx{width:26px;height:26px;border-radius:50%;background:var(--card-2);color:var(--muted);
   display:grid;place-items:center;font-size:12.5px;font-weight:600;flex:none}
-.sidx.done{background:var(--hyp);color:#fff}
-.sload{font-size:14.5px;font-weight:600;color:var(--hyp)}
+.sidx.done{background:var(--accent);color:var(--on-accent)}
+.sload{font-size:14.5px;font-weight:600;color:var(--accent)}
 .sload.empty{color:var(--dim);font-weight:500}
 .sbadge{margin-left:auto;background:var(--card-2);color:var(--muted);border-radius:7px;
   padding:5px 10px;font-size:12px;font-weight:600;flex:none}
-.sbadge.on{background:rgba(76,141,255,.16);color:var(--hyp)}
+.sbadge.on{background:var(--accent-soft);color:var(--accent)}
 .del{color:var(--dim);padding:3px 5px;font-size:17px;flex:none}
 
 .step{display:flex;align-items:stretch;background:var(--card-2);border-radius:10px;overflow:hidden}
@@ -108,12 +117,12 @@ section{display:none;padding-top:14px} section.on{display:block}
   -moz-appearance:textfield}
 .numin::-webkit-outer-spin-button,.numin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .numin:focus{outline:none}
-.suggested .num,.suggested .numin{color:var(--str)}
+.suggested .num,.suggested .numin{color:var(--sug)}
 .lasttime{font-size:12.5px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
-.lastarrow{color:var(--hyp);font-weight:600}
-.leadbadge{font-size:11.5px;color:var(--str);font-weight:650;white-space:nowrap}
+.lastarrow{color:var(--accent);font-weight:600}
+.leadbadge{font-size:11.5px;color:var(--sug);font-weight:650;white-space:nowrap}
 .warmtog{font-size:12.5px;color:var(--muted);padding:6px 0;text-align:left;width:100%}
-.sugnote{font-size:11.5px;color:var(--str);margin-top:5px}
+.sugnote{font-size:11.5px;color:var(--sug);margin-top:5px}
 .why{margin-top:3px}
 .whyline{font-size:12px;color:var(--muted);text-align:left;padding:2px 0;line-height:1.4}
 .whydetail{font-size:12px;color:var(--dim);margin:3px 0 2px;padding-left:9px;border-left:2px solid var(--line);line-height:1.45}
@@ -121,7 +130,7 @@ section{display:none;padding-top:14px} section.on{display:block}
 .step .lab{font-size:11px;color:var(--dim)}
 .bar{width:100%;height:70px;display:block;margin:4px 0 3px}
 .plates{font-size:12.5px;color:var(--muted)}
-.warnline{font-size:12.5px;color:var(--str)}
+.warnline{font-size:12.5px;color:var(--warn)}
 
 .sgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line)}
 .scell{background:var(--card);padding:11px 9px;text-align:center}
@@ -134,12 +143,12 @@ section{display:none;padding-top:14px} section.on{display:block}
 .volname{width:88px;font-size:13px;flex:none}
 .track{flex:1;height:20px;background:var(--card-2);border-radius:4px;position:relative;overflow:hidden}
 .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px 0 0 4px;background:var(--steel)}
-.fill.under{background:var(--dim)} .fill.good{background:var(--hyp)} .fill.over{background:var(--peak)}
+.fill.under{background:var(--dim)} .fill.good{background:var(--accent)} .fill.over{background:var(--danger)}
 .mark{position:absolute;top:0;bottom:0;width:1px;background:var(--ink);opacity:.4}
 .volnum{width:52px;text-align:right;font-size:12.5px;color:var(--muted);flex:none}
 
 dialog{border:none;padding:0;background:transparent;max-width:540px;width:calc(100% - 20px);color:var(--ink)}
-dialog::backdrop{background:rgba(6,8,12,.78)}
+dialog::backdrop{background:var(--backdrop,rgba(6,8,12,.78))}
 .sheet{background:var(--card);border-radius:16px;padding:17px;max-height:84vh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .hdrnote{color:var(--muted);font-size:17px;padding:4px 8px;align-self:center}
 .hdrnote:active{color:var(--ink)}
@@ -149,11 +158,11 @@ dialog::backdrop{background:rgba(6,8,12,.78)}
 .rest.on{display:flex}
 .rest .t{font-size:26px;font-weight:760;letter-spacing:-.03em;min-width:76px}
 .rest .lbl{font-size:12.5px;color:var(--muted);flex:1}
-.rest .pbar{position:absolute;left:0;top:0;height:2px;background:var(--hyp);transition:width 1s linear}
-.pr{background:var(--str);color:#111;border-radius:6px;padding:2px 7px;font-size:10.5px;
+.rest .pbar{position:absolute;left:0;top:0;height:2px;background:var(--accent);transition:width 1s linear}
+.pr{background:var(--pr);color:var(--on-pr);border-radius:6px;padding:2px 7px;font-size:10.5px;
   font-weight:700;letter-spacing:.02em;margin-left:7px}
 .upd{position:fixed;left:12px;right:12px;bottom:calc(78px + env(safe-area-inset-bottom));
-  z-index:55;background:var(--hyp);color:#fff;border-radius:12px;padding:12px 14px;
+  z-index:55;background:var(--accent);color:var(--on-accent);border-radius:12px;padding:12px 14px;
   display:none;align-items:center;gap:12px;box-shadow:0 6px 22px rgba(0,0,0,.4)}
 .upd.on{display:flex}
 .upd .t{flex:1;font-size:14px;font-weight:600;line-height:1.3}
@@ -167,12 +176,15 @@ dialog::backdrop{background:rgba(6,8,12,.78)}
 .field{font-size:12.5px;color:var(--dim);margin-bottom:7px}
 .chip{border:1px solid var(--line);background:var(--card-2);border-radius:999px;
   padding:7px 13px;font-size:14px;color:var(--muted)}
-.chip[aria-pressed="true"]{background:var(--hyp);color:#fff;border-color:var(--hyp);font-weight:600}
-.chip.warn[aria-pressed="true"]{background:var(--peak);border-color:var(--peak)}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:600}
+.chip.warn[aria-pressed="true"]{background:var(--danger);border-color:var(--danger)}
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9px;
   color:var(--ink);padding:11px;font:inherit}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.thsw{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);width:100%;text-align:left}
+.thsw .dots{display:flex;gap:3px;padding:4px;border-radius:7px;flex:none}
+.thsw .dots i{width:12px;height:12px;border-radius:50%;display:block}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
@@ -798,7 +810,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.17.0';
+const APP_VERSION='1.18.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1358,7 +1370,7 @@ const DAYS=[
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
-  feedbackUrl:'',testerName:'',introSeen:false};
+  feedbackUrl:'',testerName:'',introSeen:false,theme:null};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
    from the address bar so it isn't left sitting in history. Each writes
@@ -1398,6 +1410,98 @@ function loadAll(){
   }
 }
 const saveCfg=()=>{try{localStorage.setItem(LS_CFG,JSON.stringify(CFG))}catch{}};
+
+/* ---------- Theme codes ----------
+   Purely visual: nothing here reaches the log or the engine. A theme is one
+   object — a full token set (every key in THEME_TOKENS) plus optional extra
+   CSS and toast rewordings. Adding a sixth theme is adding one object here.
+   Toast rewordings match exact messages (or a RegExp); anything not listed —
+   every error and data-safety message — stays in plain wording. */
+const THEME_TOKENS=['bg','card','card-2','line','ink','muted','dim','hyp','str','peak','deload','on-block',
+  'accent','on-accent','accent-soft','warn','warn-soft','danger','go','skip','ok','steel','pr','on-pr','bar','backdrop','r','font'];
+const BOW_MASK="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20'%3E%3Cpath d='M12 8C9 3 2 1 2 6s7 6 10 2zM12 8c3-5 10-7 10-2s-7 6-10 2zM11 9l-4 9 3-1 2 2 1-9zM13 9l4 9-3-1-2 2-1-9z'/%3E%3Ccircle cx='12' cy='8' r='2.2'/%3E%3C/svg%3E\") center/contain no-repeat";
+const THEMES=[
+  {code:'GIRLYPOP', name:'Girlypop', blurb:'Soft pink, hot-pink accent, bows.',
+   tokens:{bg:'#FFF0F5','card':'#FFFFFF','card-2':'#FFE3EE',line:'#F5C6D8',ink:'#3A1F2D',muted:'#80526A',dim:'#A87990',
+     hyp:'#7C62D9',str:'#C8661F',peak:'#23887E',deload:'#9C8792','on-block':'#FFFFFF',
+     accent:'#D6307A','on-accent':'#FFFFFF','accent-soft':'rgba(214,48,122,.12)',
+     warn:'#B86200','warn-soft':'rgba(184,98,0,.1)',danger:'#D21F3C',go:'#23874F',skip:'#D21F3C',ok:'#23874F',
+     steel:'#C9A3B5',pr:'#D6307A','on-pr':'#FFFFFF',bar:'rgba(255,240,245,.94)',backdrop:'rgba(90,30,60,.38)',r:'18px',
+     font:'ui-rounded,"SF Pro Rounded",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'},
+   // light background under a white status bar: a pink band behind the clock keeps it readable
+   css:`header{background:linear-gradient(to bottom,var(--accent) env(safe-area-inset-top),var(--bar) env(safe-area-inset-top))}
+     .btn,.step,.seg,input[type=date]{border-radius:16px}.sheet{border-radius:26px}.sidx{border-radius:50%}
+     .chip{border-color:#F5C6D8}.upd,.toast{box-shadow:0 6px 20px rgba(214,48,122,.25)}
+     .day::after{content:'';display:inline-block;width:24px;height:20px;margin-left:8px;vertical-align:-2px;background:var(--accent);-webkit-mask:${BOW_MASK};mask:${BOW_MASK}}
+     .pr::before{content:'';display:inline-block;width:11px;height:9px;margin-right:4px;vertical-align:-1px;background:currentColor;-webkit-mask:${BOW_MASK};mask:${BOW_MASK}}`},
+  {code:'GOBLIN', name:'Goblin', blurb:'Moss, dirt and candlelight. For basement gyms.',
+   tokens:{bg:'#11130C','card':'#1B1F13','card-2':'#252A1A',line:'#353B25',ink:'#ECE6CE',muted:'#A9A386',dim:'#858066',
+     hyp:'#86B84C',str:'#C98A44',peak:'#C2533F',deload:'#6F6A58','on-block':'#14170E',
+     accent:'#F0A830','on-accent':'#1A1408','accent-soft':'rgba(240,168,48,.15)',
+     warn:'#F2C14E','warn-soft':'rgba(242,193,78,.1)',danger:'#F05A45',go:'#6FA83F',skip:'#F05A45',ok:'#9BCB5A',
+     steel:'#5F6648',pr:'#F0A830','on-pr':'#1A1408',bar:'rgba(17,19,12,.95)',backdrop:'rgba(5,6,3,.82)',r:'8px',
+     font:'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'},
+   css:`body{font-weight:500}h1,h2,h3,.day,.exname,.count,.snum{font-weight:850}.btn,.qlab{font-weight:700}
+     .card,.ex,.qblock,.sheet{box-shadow:inset 0 0 0 1px rgba(240,168,48,.06)}`,
+   toasts:[[/^Set (\d+) logged$/,'Set $1 hoarded'],['Warmup logged','Warmup gnawed'],['Top set logged','Top set hoarded'],
+     ['Rest done','Rest over. Back to the pit'],['Session saved','Loot stashed'],['Session ended','Back to the burrow'],
+     [/^New best on (.+) · (.+)$/,'New hoard record on $1 · $2'],['Set deleted','Set flung into the dark'],
+     ['Set updated','Set re-scratched'],['Program saved','Scheme scrawled'],['Workout cancelled','Fled the dungeon'],
+     ['Note saved','Scribbled on the wall'],['Note saved and sent','Scribbled on the wall and sent by crow'],
+     ['Backup downloaded','Hoard copied'],['Marked done','Done. Grr'],[/^Added (.+)$/,'Dragged in $1'],
+     [/^Swapped to (.+)$/,'Swapped for $1. Mine now'],['Rated','Grunted']]},
+  {code:'TERMINAL', name:'Terminal', blurb:'Phosphor green on black. 1983 called.',
+   tokens:{bg:'#000000','card':'#030903','card-2':'#0A170B',line:'#174A1F',ink:'#3DFF6E',muted:'#27C24E',dim:'#1A8A37',
+     hyp:'#C2FFD0',str:'#3DDC63',peak:'#1E9E40',deload:'#6E8A74','on-block':'#000000',
+     accent:'#3DFF6E','on-accent':'#000000','accent-soft':'rgba(61,255,110,.14)',
+     warn:'#FFC233','warn-soft':'rgba(255,194,51,.1)',danger:'#FF4A3D',go:'#3DFF6E',skip:'#FF4A3D',ok:'#3DFF6E',
+     steel:'#1F6B33',pr:'#3DFF6E','on-pr':'#000000',bar:'rgba(0,0,0,.96)',backdrop:'rgba(0,0,0,.86)',r:'0px',
+     font:'ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace'},
+   css:`*{border-radius:0!important}h1,h2,h3,.day,.count{letter-spacing:0}
+     .card,.ex,.qblock,.sheet{border:1px solid var(--line)}
+     .rscore::after{content:'\\2588';margin-left:3px;font-size:.8em;animation:tlblink 1.05s steps(1) infinite}
+     @keyframes tlblink{50%{opacity:0}}`},
+  {code:'SUNSET', name:'Sunset', blurb:'Plum to burnt orange. Easy in a dim room.',
+   tokens:{bg:'#1D1027','card':'#2A1631','card-2':'#3A1F39',line:'#4C2A44',ink:'#FBEDE4',muted:'#CDAAA6',dim:'#987580',
+     hyp:'#F6C177',str:'#F0874B',peak:'#E25C8C',deload:'#8A6C79','on-block':'#2A0F14',
+     accent:'#FF7A59','on-accent':'#2A0F14','accent-soft':'rgba(255,122,89,.16)',
+     warn:'#FFD166','warn-soft':'rgba(255,209,102,.1)',danger:'#FF5A5F',go:'#6BCB77',skip:'#FF5A5F',ok:'#8CD790',
+     steel:'#7A5068',pr:'#FF7A59','on-pr':'#2A0F14',bar:'rgba(29,16,39,.94)',backdrop:'rgba(15,5,20,.8)',r:'14px',
+     font:'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'},
+   css:`html{background:#3B1A22}body{background:linear-gradient(180deg,#1D1027 0%,#2B1230 45%,#3B1A22 100%);min-height:100vh}
+     .card,.ex,.qblock{background:linear-gradient(165deg,#2A1631 0%,#35182C 60%,#3E1E26 100%)}
+     .sheet{background:linear-gradient(170deg,#2A1631 0%,#3A1A2A 100%)}`},
+  {code:'HIGHVIS', name:'High visibility', blurb:'Maximum contrast, larger text. The accessibility option.',
+   tokens:{bg:'#000000','card':'#0D0D0D','card-2':'#262626',line:'#8C8C8C',ink:'#FFFFFF',muted:'#E6E6E6',dim:'#C4C4C4',
+     hyp:'#70C8FF',str:'#FFA94D',peak:'#FF7AA8',deload:'#B0B0B0','on-block':'#000000',
+     accent:'#FFE600','on-accent':'#000000','accent-soft':'rgba(255,230,0,.2)',
+     warn:'#FFE600','warn-soft':'rgba(255,230,0,.14)',danger:'#FF5A5A',go:'#4CFF7A',skip:'#FF5A5A',ok:'#4CFF7A',
+     steel:'#A0A0A0',pr:'#FFE600','on-pr':'#000000',bar:'#000000',backdrop:'rgba(0,0,0,.9)',r:'10px',
+     font:'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'},
+   css:`html{zoom:1.1}body{font-weight:500}.muted,.dim,.tiny,.sm{font-weight:500}
+     h1,h2,h3,.day,.exname,.qlab,.btn,.chip,nav button{font-weight:750}
+     .card,.ex,.qblock,.sheet{border:1.5px solid #5A5A5A}.btn.ghost,.chip{border-color:#BDBDBD}
+     :focus-visible{outline:3px solid var(--accent)!important;outline-offset:2px}`}
+];
+const themeByCode=c=>{ c=String(c||'').trim().toUpperCase(); return c?THEMES.find(t=>t.code===c)||null:null; };
+let THEME=null, THEME_ON;
+function applyTheme(){
+  try{
+    const t=themeByCode(CFG.theme), code=t?t.code:'';
+    if(THEME_ON===code) return;
+    THEME=t; THEME_ON=code;
+    let st=document.getElementById('themecss');
+    if(!st){ st=document.createElement('style'); st.id='themecss'; document.head.appendChild(st); }
+    st.textContent=t?':root{'+THEME_TOKENS.map(k=>'--'+k+':'+t.tokens[k]).join(';')+'}\n'+(t.css||''):'';
+    const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content',t?t.tokens.bg:'#0B0D12');
+  }catch(err){ console.error('theme failed', err); }
+}
+function themeToast(m){
+  const list=THEME&&THEME.toasts; if(!list) return m;
+  for(const [k,v] of list){ if(typeof k==='string'?k===m:k.test(m)) return typeof k==='string'?v:m.replace(k,v); }
+  return m;
+}
+
 /* An in-progress session survives a reload. Without this, backgrounding the
    app mid-workout loses the UI state while the set events stay in storage —
    you'd restart, see empty rows, and log everything twice. */
@@ -2292,6 +2396,7 @@ const el=(t,c,h)=>{const n=document.createElement(t);if(c)n.className=c;if(h!=nu
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 function render(){
+  applyTheme();
   try{ renderInner(); }
   catch(err){
     console.error('render failed', err);
@@ -2325,7 +2430,7 @@ function renderInner(){
 function driftCard(proj,p){
   const wk=Math.round(proj.behindDays/7);
   const c=el('div','card pad');
-  c.style.cssText='border-left:3px solid var(--str)';
+  c.style.cssText='border-left:3px solid var(--warn)';
   c.innerHTML=`<div style="font-weight:650;font-size:14.5px">About ${wk>=1?wk+' week'+(wk>1?'s':''):proj.behindDays+' days'} behind your target date</div>
     <div class="muted tiny" style="margin-top:3px">Program progress counts sessions trained, not calendar days.
       ${proj.done} of ${proj.total} sessions done; at your recent pace of ${fmt(proj.pace.perWeek,1)} a week${proj.pace.planned?' (your planned pace — not enough history yet)':''}, you'd finish ${new Date(proj.endISO+'T12:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})}.
@@ -2346,7 +2451,7 @@ function openCompress(proj,p){
     const a=r.draft[i], changed=a.weeks!==b.weeks;
     return `<div class="row between sm" style="padding:5px 0;border-top:1px solid var(--line)">
       <span>${i+1}. ${esc(TYPE_NAME[b.type])}${b.deload&&b.type!=='deload'?' + deload':''}</span>
-      <span${changed?' style="color:var(--str);font-weight:600"':' class="muted"'}>${b.weeks} → ${a.weeks} wk</span></div>`;
+      <span${changed?' style="color:var(--warn);font-weight:600"':' class="muted"'}>${b.weeks} → ${a.weeks} wk</span></div>`;
   }).join('');
   sheet(`<h2 style="font-size:20px;margin-bottom:3px">Compress to hit your date</h2>
     <div class="muted tiny" style="margin-bottom:12px">Shortened from the end backward. Never below a block type's minimum (hypertrophy 3, strength 2, peaking 1), never into weeks you've trained, and no deload is removed.</div>
@@ -2410,7 +2515,7 @@ function renderDash(){
       <span class="muted sm">${doneWk} of ${planned} sessions</span></div>
     <div class="row" style="gap:5px">${
       Array.from({length:planned},(_,i)=>
-        `<span style="flex:1;height:7px;border-radius:4px;background:${i<doneWk?'var(--hyp)':'var(--card-2)'}"></span>`).join('')
+        `<span style="flex:1;height:7px;border-radius:4px;background:${i<doneWk?'var(--accent)':'var(--card-2)'}"></span>`).join('')
     }</div>`;
   v.appendChild(cw);
 
@@ -2423,7 +2528,7 @@ function renderDash(){
       const score=readinessScoreFromEvent(lastReadiness);
       cols.push(`<span class="grow"><div class="row between"><span style="font-weight:650">Readiness</span>
           <span class="dim tiny">${new Date(lastReadiness.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></div>
-        <div style="margin-top:6px"><span style="font-size:27px;font-weight:790;letter-spacing:-.03em">${Math.round(score*100)}</span>
+        <div style="margin-top:6px"><span class="rscore" style="font-size:27px;font-weight:790;letter-spacing:-.03em">${Math.round(score*100)}</span>
           <span class="muted sm"> / 100 · ${esc(readinessLabel(score))}</span></div></span>`);
     }
     if(jointScore!=null){
@@ -2502,7 +2607,7 @@ function phaseChart(cur){
   let bars='',labels='',pts=[];
   weeks.forEach((w,i)=>{
     const h=(w.vol/maxV)*plotH*.82, x=padL+i*bw, y=top+plotH-h, on=i===curIdx;
-    if(on) bars+=`<rect x="${x+1}" y="${top}" width="${bw-2}" height="${plotH}" rx="2" fill="#fff" opacity=".055"/>`;
+    if(on) bars+=`<rect x="${x+1}" y="${top}" width="${bw-2}" height="${plotH}" rx="2" fill="var(--ink)" opacity=".055"/>`;
     bars+=`<rect x="${x+1}" y="${y}" width="${bw-2}" height="${h}" rx="1.5" fill="${TYPE_COLOR[w.type]}" opacity="${on?1:.52}"/>`;
     pts.push([x+bw/2, top+plotH-(w.int/100)*plotH*.94]);
   });
@@ -2562,7 +2667,7 @@ function exCard(slot,o){
     +(slot.role==='primary'?' <span class="leadbadge">Lead lift</span>':'')+'</div>'
     +'<div class="exmeta">'+n+' sets × '+fmtRange(slot.reps)+' reps · RPE '+slot.rpe+(slot.swapped?' · swapped':'')
     +(slot.prio?' · priority':'')
-    +(slot.joint?' · <span style="color:var(--str)">'+esc(slot.joint.joint)+': '+esc(slot.joint.msg)+'</span>':'')+'</div>'
+    +(slot.joint?' · <span style="color:var(--warn)">'+esc(slot.joint.joint)+': '+esc(slot.joint.msg)+'</span>':'')+'</div>'
     +(o.lastTime===false?'':lastTimeHtml(slot,o.rx));
   const body=el('div','exbody');
   head.appendChild(nameBtn); box.appendChild(head); box.appendChild(body);
@@ -2693,8 +2798,8 @@ function renderWork(){
 
   if(session.adj){
     const a=el('div','card pad');
-    a.style.cssText='background:rgba(232,163,61,.1);border-left:3px solid var(--str)';
-    a.innerHTML=`<div style="font-weight:650;color:var(--str);font-size:14.5px">${esc(session.adj.label)} for today</div>
+    a.style.cssText='background:var(--warn-soft);border-left:3px solid var(--warn)';
+    a.innerHTML=`<div style="font-weight:650;color:var(--warn);font-size:14.5px">${esc(session.adj.label)} for today</div>
       <div class="muted tiny" style="margin-top:3px">
         Top loads at ${Math.round(session.adj.load*100)}%, ${Math.abs(session.adj.sets)} fewer set${Math.abs(session.adj.sets)>1?'s':''} on the main work,
         longer warmup ramp. Driven by ${esc(session.adjReason)} — readiness ${session.score.toFixed(2)}.</div>`;
@@ -2735,7 +2840,7 @@ function renderWork(){
       <span class="muted">${doneEx} of ${session.slots.length} exercises</span>
       <span style="font-weight:600">${doneSets} / ${allSets} sets</span></div>
     <div style="height:5px;background:var(--card-2);border-radius:3px;overflow:hidden">
-      <div style="height:100%;width:${allSets?Math.round(doneSets/allSets*100):0}%;background:var(--hyp);border-radius:3px"></div></div>`;
+      <div style="height:100%;width:${allSets?Math.round(doneSets/allSets*100):0}%;background:var(--accent);border-radius:3px"></div></div>`;
   v.appendChild(prog);
 
   session.slots.forEach((slot,i)=>{
@@ -2752,7 +2857,7 @@ function renderWork(){
     nameBtn.onclick=()=>{session.openIdx=open?-1:i; if(!open) seedDraft(slot); renderWork();};
     const icons=el('div','exicons');
     if(needsRate){
-      const rateBtn=el('button','iconbtn','<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--str)" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6.1.6-4.6 4.1 1.3 6L12 16.5 6.6 19.3l1.3-6-4.6-4.1 6.1-.6z"/></svg>');
+      const rateBtn=el('button','iconbtn','<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6.1.6-4.6 4.1 1.3 6L12 16.5 6.6 19.3l1.3-6-4.6-4.1 6.1-.6z"/></svg>');
       rateBtn.setAttribute('aria-label','Rate '+ex.name);
       rateBtn.onclick=(e)=>{ e.stopPropagation(); openRating(slot.ex); };
       icons.appendChild(rateBtn);
@@ -2850,7 +2955,7 @@ function openWeekPreview(openDayId){
     const row=el('div',''); row.style.cssText='padding:10px 0;border-top:1px solid var(--line)';
     row.innerHTML=`<div class="row between">
         <span class="grow"><div style="font-weight:600;font-size:14.5px">${esc(ex?ex.name:sl.ex)}${
-          f?`<span style="color:${f.level==='red'?'var(--peak)':'var(--str)'}"> ${f.level==='red'?'▲':'●'}</span>`:''}</div>
+          f?`<span style="color:${f.level==='red'?'var(--danger)':'var(--warn)'}"> ${f.level==='red'?'▲':'●'}</span>`:''}</div>
           <div class="dim tiny">${sl.sets} × ${sl.reps[0]===sl.reps[1]?sl.reps[0]:sl.reps[0]+'–'+sl.reps[1]} @ RPE ${sl.rpe}${sl.role?' · '+sl.role:''}</div></span>
       </div>`;
     const ctl=el('div','row'); ctl.style.cssText='gap:6px;margin-top:8px';
@@ -2884,7 +2989,7 @@ function openWeekPreview(openDayId){
   vh.innerHTML='<div class="qlab">Weekly volume against your landmarks</div>';
   Object.keys(vol).sort((a,b)=>vol[b]-vol[a]).forEach(m=>{
     const L=LANDMARKS[m]; if(!L) return;
-    const v=vol[m], col=v<L.MEV?'var(--dim)':v>L.MRV?'var(--peak)':'var(--ok,#4ADE80)';
+    const v=vol[m], col=v<L.MEV?'var(--dim)':v>L.MRV?'var(--danger)':'var(--ok)';
     vh.appendChild(el('div','row between sm',
       `<span class="muted">${esc(ML[m])}</span>
        <span style="color:${col}">${fmt(v)} <span class="dim">/ ${L.MEV}–${L.MRV}</span></span>`))
@@ -2977,7 +3082,7 @@ function planCard(slot, key, controls){
     draw(); body.appendChild(wrap);
   }
   const f=flagFor(slot.ex);
-  if(f) body.appendChild(el('div','tiny',(f.level==='red'?'▲ ':'● ')+esc(f.why))).style.cssText='color:'+(f.level==='red'?'var(--peak)':'var(--str)')+';margin-top:6px';
+  if(f) body.appendChild(el('div','tiny',(f.level==='red'?'▲ ':'● ')+esc(f.why))).style.cssText='color:'+(f.level==='red'?'var(--danger)':'var(--warn)')+';margin-top:6px';
   const pct=pctOfBest(slot,lb);
   if(pct) body.appendChild(el('div','dim tiny',esc(pct))).style.marginTop='4px';
   body.appendChild(whyEl(explainRx(slot,pr,{idx:null,fresh:true}),key+':why:'+slot.ex));
@@ -2990,8 +3095,8 @@ function renderPreview(v){
   const ep=lastEarlyPain();
   if(ep){
     const b=el('div','card pad');
-    b.style.cssText='background:rgba(232,163,61,.1);border-left:3px solid var(--str)';
-    b.innerHTML=`<div style="font-weight:650;color:var(--str);font-size:14.5px">Easing off today</div>
+    b.style.cssText='background:var(--warn-soft);border-left:3px solid var(--warn)';
+    b.innerHTML=`<div style="font-weight:650;color:var(--warn);font-size:14.5px">Easing off today</div>
       <div class="muted tiny" style="margin-top:3px">Your last session ended early with ${esc(Object.keys(ep.joints||{}).join(' and ')||'joint pain')}. One less set across the board, and affected patterns held. The check-in will ask how it feels now.</div>`;
     v.appendChild(b);
   }
@@ -3151,7 +3256,7 @@ function openLibrary(){
       const f=flagFor(e.id), b=el('button','row between sm');
       b.style.cssText='width:100%;text-align:left;padding:9px 2px;border-top:1px solid var(--line)';
       b.innerHTML=`<span class="grow"><div style="font-weight:600">${esc(e.name)}${
-          f?`<span style="color:${f.level==='red'?'var(--peak)':'var(--str)'}"> ${f.level==='red'?'▲':'●'}</span>`:''}</div>
+          f?`<span style="color:${f.level==='red'?'var(--danger)':'var(--warn)'}"> ${f.level==='red'?'▲':'●'}</span>`:''}</div>
         <div class="dim tiny">${esc(loadName(e.load))}${e.custom?' · yours':''}${e.rehab?' · rehab':''} · ${
           Object.entries(e.vol).filter(([,w])=>w>=1).map(([m])=>ML[m]||m).join(', ')||'support'}</div></span>
         <span class="dim">›</span>`;
@@ -3234,7 +3339,7 @@ const MOVEMENT_TYPES=[
     nm.innerHTML=`<div class="qlab">Name</div>
       <input type="text" id="cxn" value="${esc(st.name)}" placeholder="e.g. Hammer Strength incline press"
        style="width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit">
-      <div class="tiny" id="cxdupe" style="color:var(--str);margin-top:5px"></div>`;
+      <div class="tiny" id="cxdupe" style="color:var(--warn);margin-top:5px"></div>`;
     host.appendChild(nm);
     const dupe=()=>{ $('#cxdupe').textContent=
       (st.name.trim()&&exerciseNameTaken(st.name,editingEx?editingEx.id:null))
@@ -3335,7 +3440,7 @@ function openRenameEx(ex){
     <div class="qblock">
       <input type="text" id="rnn" value="${esc(ex.name)}"
        style="width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit">
-      <div class="tiny" id="rndupe" style="color:var(--str);margin-top:5px"></div>
+      <div class="tiny" id="rndupe" style="color:var(--warn);margin-top:5px"></div>
     </div>
     <div class="row" style="gap:8px">
       <button class="btn ghost grow" id="rncancel">Cancel</button>
@@ -3489,7 +3594,7 @@ function openInfo(exId){
   const disclaimer='<div class="dim tiny" style="margin-top:8px">Standard technique points, not a substitute for a coach watching you move.</div>';
   // the shoulder note only matters to someone with the condition — noise for everyone else
   const shoulderHtml=cue&&cue.shoulder&&(CFG.conditions||[]).includes('shoulder_instability')
-    ? `<div class="qblock" style="border-left:3px solid var(--str)"><div class="qlab" style="color:var(--str)">For your shoulder</div>
+    ? `<div class="qblock" style="border-left:3px solid var(--warn)"><div class="qlab" style="color:var(--warn)">For your shoulder</div>
         <div class="sm">${esc(cue.shoulder)}</div></div>` : '';
   const tips = cue?[]:(EXERCISE_TIPS[exId] || PATTERN_TIPS[ex.pattern] || []);
   const tipsHtml = cue ? `${shoulderHtml}<div class="qblock"><div class="qlab">Coaching cues</div>
@@ -3504,7 +3609,7 @@ function openInfo(exId){
     <div class="muted tiny" style="margin-bottom:15px">${esc(ex.pattern.replace(/_/g,' '))} · ${esc(loadName(ex.load))}</div>
     ${tipsHtml}
     ${(()=>{const f=flagFor(exId); if(!f) return '';
-      const col=f.level==='red'?'var(--peak)':'var(--str)';
+      const col=f.level==='red'?'var(--danger)':'var(--warn)';
       return `<div class="qblock" style="border-left:3px solid ${col}">
         <div class="qlab" style="color:${col}">${f.level==='red'?'Flagged':'Worth attention'}</div>
         <div class="muted sm">${esc(f.why)}</div>
@@ -3629,7 +3734,7 @@ function exPicker(title, filterFn, onPick){
       const f=flagFor(e.id), rt=ratingSnapshot(e.id);
       const b=el('button','btn wide'); b.style.cssText='text-align:left';
       b.innerHTML=`<div>${esc(e.name)}${e.custom?' <span class="dim tiny">· custom</span>':''}${
-        f?`<span style="color:${f.level==='red'?'var(--peak)':'var(--str)'};font-size:12px"> ${f.level==='red'?'▲':'●'}</span>`:''}</div>
+        f?`<span style="color:${f.level==='red'?'var(--danger)':'var(--warn)'};font-size:12px"> ${f.level==='red'?'▲':'●'}</span>`:''}</div>
         <div class="dim tiny" style="font-weight:400">${esc(e.pattern.replace(/_/g,' '))} · ${esc(loadName(e.load))}${
           rt?` · stimulus ${rt.st.toFixed(1)}/5 across ${rt.n}`:''}${
           f?` · ${esc(f.why)}`:''}</div>`;
@@ -4324,8 +4429,9 @@ function openEndEarly(){
   function draw(){
     $('#ee').querySelectorAll('.btn').forEach((b,i)=>{
       const on=opts[i][0]===st.reason;
-      b.style.background=on?'var(--hyp)':'var(--card-2)';
-      b.style.color=on?'#fff':'';
+      b.style.background=on?'var(--accent)':'var(--card-2)';
+      b.style.color=on?'var(--on-accent)':'';
+      const d=b.querySelector('.tiny'); if(d){ d.style.color=on?'inherit':''; d.style.opacity=on?'.85':''; }
     });
     const host=$('#eex'); host.innerHTML='';
     if(st.reason==='pain'){
@@ -4509,8 +4615,8 @@ function renderLifts(){
   const since=sessionsSinceExport();
   if(since>=6){
     const warn=el('div','');
-    warn.style.cssText='margin-top:11px;padding:11px;border-radius:9px;background:rgba(232,163,61,.1);border-left:3px solid var(--str)';
-    warn.innerHTML=`<div style="color:var(--str);font-weight:640;font-size:14px">Back up your log</div>
+    warn.style.cssText='margin-top:11px;padding:11px;border-radius:9px;background:var(--warn-soft);border-left:3px solid var(--warn)';
+    warn.innerHTML=`<div style="color:var(--warn);font-weight:640;font-size:14px">Back up your log</div>
       <div class="muted tiny" style="margin-top:3px">${since} sessions since your last backup. Browser storage can be cleared without warning — a downloaded file cannot.</div>`;
     lg.appendChild(warn);
   }
@@ -4540,7 +4646,7 @@ function renderLifts(){
     const node=$('#stg'); if(!node) return;
     const kb=(i.logBytes/1024).toFixed(0);
     node.textContent=`${kb} KB${i.persisted===true?' · persistent':i.persisted===false?' · not persistent':''}`;
-    if(i.persisted===false) node.style.color='var(--str)';
+    if(i.persisted===false) node.style.color='var(--warn)';
   });
 
   const ob=el('button','btn ghost wide','Run first-time setup again');
@@ -4661,7 +4767,7 @@ function renderHist(){
         <div class="dim tiny">${ser.length} session${ser.length===1?'':'s'} with a usable estimate</div></span>
       <span style="text-align:right;flex:none">
         <div class="big" style="font-size:26px">${last?fmt(last.v,0):'—'}</div>
-        <div class="tiny" style="color:${delta==null?'var(--dim)':delta>=0?'var(--ok,#4ADE80)':'var(--peak)'}">${
+        <div class="tiny" style="color:${delta==null?'var(--dim)':delta>=0?'var(--ok)':'var(--danger)'}">${
           delta==null?'lb':(delta>=0?'+':'')+fmt(delta,0)+' lb'}</div></span>`));
     if(last&&!isBW(ex)){
       const rm=el('div','row'); rm.style.cssText='gap:14px;margin:8px 0 2px;flex-wrap:wrap';
@@ -4676,11 +4782,11 @@ function renderHist(){
     const prof=repProfile(id);
     if(prof&&Math.abs(prof.gapPct)>=4){
       c.appendChild(el('div','tiny',
-        `<span style="color:var(--str)">Your high-rep sets estimate ${prof.gapPct>0?'higher':'lower'} than your heavy ones</span>
+        `<span style="color:var(--warn)">Your high-rep sets estimate ${prof.gapPct>0?'higher':'lower'} than your heavy ones</span>
          <span class="dim">· ${Math.abs(prof.gapPct).toFixed(0)}% gap across ${prof.loN}+${prof.hiN} sets. Trust the heavy-set number for loading.</span>`))
         .style.marginTop='6px';
     }
-    const sp=sparkline(ser, ex.comparable===false?'var(--str)':'var(--hyp)');
+    const sp=sparkline(ser, ex.comparable===false?'var(--warn)':'var(--accent)');
     if(sp) c.appendChild(sp);
     else c.appendChild(el('div','empty','Log a few working sets and the trend appears here.'));
     if(ex.comparable===false)
@@ -4700,7 +4806,7 @@ function renderHist(){
     let bars='';
     wk.forEach((w,i)=>{
       const bw=(W-4)/wk.length, h=(w.sets/max)*(H-18);
-      bars+=`<rect x="${2+i*bw+1}" y="${H-18-h}" width="${bw-2}" height="${h}" rx="2" fill="var(--hyp)" opacity="${i===wk.length-1?1:.55}"/>`;
+      bars+=`<rect x="${2+i*bw+1}" y="${H-18-h}" width="${bw-2}" height="${h}" rx="2" fill="var(--accent)" opacity="${i===wk.length-1?1:.55}"/>`;
       if(i%2===0||i===wk.length-1) bars+=`<text x="${2+i*bw+bw/2}" y="${H-5}" fill="var(--dim)" font-size="9" text-anchor="middle">${w.week}</text>`;
     });
     const box=el('div','');
@@ -4719,7 +4825,7 @@ function renderHist(){
     cr.appendChild(el('div','row between',
       `<span style="font-weight:650">Readiness</span>
        <span class="dim tiny">${last.v}/100 · ${esc(readinessLabel(last.v/100))}</span>`));
-    const spark=sparkline(rSer,'var(--hyp)');
+    const spark=sparkline(rSer,'var(--accent)');
     if(spark){ spark.style.marginTop='6px'; cr.appendChild(spark); }
     v.appendChild(cr);
   }
@@ -4733,7 +4839,7 @@ function renderHist(){
   }else{
     flagged.sort((a,b)=>b.t.score-a.t.score).forEach(({j,t})=>{
       const lv=jointLevel(t);
-      const col=lv>=4?'var(--peak)':lv>=3?'var(--str)':'var(--muted)';
+      const col=lv>=4?'var(--danger)':lv>=3?'var(--warn)':'var(--muted)';
       const r=el('div',''); r.style.cssText='padding:9px 0;border-top:1px solid var(--line)';
       r.innerHTML=`<div class="row between">
           <span style="font-weight:600;text-transform:capitalize">${esc(j)}</span>
@@ -4805,7 +4911,7 @@ function renderHist(){
     b.innerHTML=`<div class="row between">
       <span class="grow"><div style="font-weight:600">${esc(e.day_name||'Session')}</div>
         <div class="dim tiny">${new Date(e.ts).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})} · ${n} sets${e.session_rpe?' · RPE '+e.session_rpe:''}${e.duration_s?' · '+Math.round(e.duration_s/60)+' min':''}</div>
-        ${e.ended_early?`<div class="tiny" style="color:var(--str)">ended early · ${esc(e.reason)}</div>`:''}</span>
+        ${e.ended_early?`<div class="tiny" style="color:var(--warn)">ended early · ${esc(e.reason)}</div>`:''}</span>
       <span class="dim">›</span></div>`;
     b.onclick=()=>openSessionDetail(e);
     cs.appendChild(b);
@@ -4842,7 +4948,7 @@ function openSessionSummary(endEv, score){
     const moved=Object.keys(a).filter(id=>b[id]&&(a[id].s.reps!==b[id].s.reps||Math.abs(toLb(a[id].s.weight)-toLb(b[id].s.weight))>0.01))
       .map(id=>{ const up=a[id].v>=b[id].v;
         return `<div class="row between sm" style="padding:3px 0"><span class="grow">${esc((exById[id]||{name:id}).name)}</span>
-          <span style="flex:none;color:${up?'var(--hyp)':'var(--muted)'}">${fs(b[id].s)} → ${fs(a[id].s)} ${up?'↑':'↓'}</span></div>`; }).join('');
+          <span style="flex:none;color:${up?'var(--accent)':'var(--muted)'}">${fs(b[id].s)} → ${fs(a[id].s)} ${up?'↑':'↓'}</span></div>`; }).join('');
     cmp=`<div class="row between sm"><span class="muted">Tonnage vs ${new Date(prev.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span>
         <span style="font-weight:600">${d>=0?'+':''}${Math.round(d).toLocaleString()} lb${pt?' ('+(pct>=0?'+':'')+pct+'%)':''}</span></div>
       ${moved||`<div class="dim tiny" style="margin-top:4px">${Object.keys(a).some(id=>b[id])?'Same top sets as last time.':'No lifts in common with last time.'}</div>`}`;
@@ -4854,7 +4960,7 @@ function openSessionSummary(endEv, score){
       <div class="scell"><div class="snum">${ton?Math.round(ton).toLocaleString():'—'}</div><div class="slab">lb moved</div></div>
       <div class="scell"><div class="snum">${endEv.duration_s!=null?(endEv.duration_s<60?'<1 min':Math.round(endEv.duration_s/60)+' min'):'—'}</div><div class="slab">time</div></div>
     </div>
-    ${prs.length?`<div class="qblock" style="border-left:3px solid var(--hyp)"><div class="qlab" style="color:var(--hyp)">New best${prs.length>1?'s':''}</div>
+    ${prs.length?`<div class="qblock" style="border-left:3px solid var(--accent)"><div class="qlab" style="color:var(--accent)">New best${prs.length>1?'s':''}</div>
       ${prs.map(n=>`<div class="sm">${esc(n)}</div>`).join('')}</div>`:''}
     <div class="qblock"><div class="qlab">Compared with last time</div>${cmp}</div>
     <div class="qblock"><div class="row between sm"><span class="muted">Readiness today</span>
@@ -4874,7 +4980,7 @@ function openSessionDetail(endEv){
       ${endEv.session_rpe?`<span class="sm"><span class="dim">RPE</span> <b>${endEv.session_rpe}</b></span>`:''}
       ${dur?`<span class="sm"><span class="dim">Time</span> <b>${dur}</b></span>`:''}
       ${tonnage?`<span class="sm"><span class="dim">Tonnage</span> <b>${Math.round(tonnage).toLocaleString()} lb</b></span>`:''}
-      ${endEv.ended_early?`<span class="sm" style="color:var(--str)">ended early · ${esc(endEv.reason)}</span>`:''}
+      ${endEv.ended_early?`<span class="sm" style="color:var(--warn)">ended early · ${esc(endEv.reason)}</span>`:''}
     </div>`;
   Object.entries(byEx).forEach(([id,list])=>{
     const ex=exById[id];
@@ -5283,17 +5389,17 @@ function openSettings(){
       const row=el('div',''); row.style.cssText='padding:12px 0;border-top:1px solid var(--line)';
 
       const top=el('div','row between'); top.style.marginBottom='9px';
-      const types=el('div','row'); types.style.gap='5px';
+      const types=el('div','row'); types.style.cssText='gap:5px;flex-wrap:wrap;min-width:0';
       (b.type==='deload'?['deload']:['hyp','str','peak']).forEach(t=>{
         const on=b.type===t;
         const c=el('button','chip',TYPE_NAME[t]);
         c.style.cssText='font-size:12.5px;padding:6px 10px';
         c.setAttribute('aria-pressed',on?'true':'false');
-        if(on) c.style.cssText+=`;background:${TYPE_COLOR[t]};border-color:${TYPE_COLOR[t]};color:#fff;font-weight:600`;
+        if(on) c.style.cssText+=`;background:${TYPE_COLOR[t]};border-color:${TYPE_COLOR[t]};color:var(--on-block);font-weight:600`;
         c.onclick=()=>{ if(b.type===t) return; b.type=t; applyShape(b); draw(); };
         types.appendChild(c);
       });
-      const move=el('div','row'); move.style.gap='4px';
+      const move=el('div','row'); move.style.cssText='gap:4px;flex:none';
       const mu=el('button','iconbtn','↑'); mu.setAttribute('aria-label','Move block earlier');
       if(i===0) mu.style.opacity='.25'; else mu.onclick=()=>{[S.draft[i-1],S.draft[i]]=[S.draft[i],S.draft[i-1]];draw();};
       const md=el('button','iconbtn','↓'); md.setAttribute('aria-label','Move block later');
@@ -5356,14 +5462,14 @@ function openSettings(){
         const dl=el('button','chip','Deload week at the end');
         dl.style.cssText='margin-top:9px;font-size:12.5px';
         dl.setAttribute('aria-pressed',b.deload?'true':'false');
-        if(b.deload) dl.style.cssText+=`;background:${TYPE_COLOR.deload};border-color:${TYPE_COLOR.deload};color:#fff;font-weight:600`;
+        if(b.deload) dl.style.cssText+=`;background:${TYPE_COLOR.deload};border-color:${TYPE_COLOR.deload};color:var(--on-block);font-weight:600`;
         dl.onclick=()=>{ b.deload=!b.deload; applyShape(b); draw(); };
         row.appendChild(dl);
 
         const hp=el('div',''); hp.style.marginTop='10px';
         const atCap=b.hyp.length>=3;
         hp.appendChild(el('div','field',
-          `Hypertrophy focus · <span style="color:${atCap?'var(--str)':'var(--muted)'}">${b.hyp.length} of 3</span>${atCap?' — cap reached':''}`));
+          `Hypertrophy focus · <span style="color:${atCap?'var(--warn)':'var(--muted)'}">${b.hyp.length} of 3</span>${atCap?' — cap reached':''}`));
         const chips=el('div','chips');
         MUSCLE_ORDER.forEach(m=>{
           const on=b.hyp.includes(m);
@@ -5434,6 +5540,7 @@ function openSettings(){
       fbk.appendChild(stop); host.appendChild(fbk);
       $('#tname').onchange=e=>{ S.testerName=e.target.value.trim().slice(0,40); };
     }
+    host.appendChild(themeBlock());
     if(S.syncUrl){
       const tb=el('button','btn s','Test it now'); tb.style.marginTop='9px';
       tb.onclick=()=>{ CFG.syncUrl=$('#syncu').value.trim(); saveCfg();
@@ -5451,8 +5558,8 @@ function openSettings(){
     }catch(err){ console.error('lint failed', err); issues=[]; }
     if(issues.length){
       const lc=el('div','qblock');
-      lc.style.cssText='background:rgba(232,163,61,.08);border-left:3px solid var(--str)';
-      lc.innerHTML='<div class="qlab" style="color:var(--str)">Worth a look</div>';
+      lc.style.cssText='background:var(--warn-soft);border-left:3px solid var(--warn)';
+      lc.innerHTML='<div class="qlab" style="color:var(--warn)">Worth a look</div>';
       issues.forEach(x=>{
         const line=el('div','muted tiny'); line.style.marginBottom='6px';
         line.textContent=(x.sev==='warn'?'• ':'· ')+x.msg;
@@ -5480,6 +5587,42 @@ function openSettings(){
     ROADMAP=S.draft; saveCfg(); SETTINGS_DRAFT=null;
     $('#dlg').close(); render(); toast('Program saved');
   };
+}
+
+/* "Have a code?" — applies straight away and is stored in CFG.theme, so it
+   rides along in backups. Not part of the settings draft: Cancel doesn't
+   undo it, Reset does. */
+function themeBlock(){
+  const b=el('div','qblock');
+  b.innerHTML=`<div class="qlab">Have a code?</div>
+    <div class="field">Theme codes change how the app looks. Nothing else.</div>
+    <div class="row" style="gap:8px">
+      <input type="text" id="thcode" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Enter a code"
+        style="flex:1;min-width:0;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit">
+      <button class="btn pri s" id="thgo">Apply</button></div>
+    <div class="anchor" id="thmsg">${THEME?'On: '+esc(THEME.name)+'.':''}</div>
+    <div class="stack" id="thlist" style="margin-top:8px;gap:6px"></div>`;
+  const list=b.querySelector('#thlist');
+  THEMES.forEach(t=>{
+    const k=t.tokens, sw=el('button','thsw');
+    sw.innerHTML=`<span class="dots" style="background:${k.bg};box-shadow:inset 0 0 0 1px ${k.line}">${[k.card,k.accent,k.hyp,k.str,k.peak].map(c=>'<i style="background:'+c+'"></i>').join('')}</span>
+      <span class="grow"><span style="font-weight:650;font-size:14px">${esc(t.code)}</span><span class="dim tiny"> · ${esc(t.blurb)}</span></span>`;
+    if(THEME&&THEME.code===t.code) sw.style.borderColor='var(--accent)';
+    sw.onclick=()=>{ b.querySelector('#thcode').value=t.code; };
+    list.appendChild(sw);
+  });
+  const msg=b.querySelector('#thmsg');
+  b.querySelector('#thgo').onclick=()=>{
+    const t=themeByCode(b.querySelector('#thcode').value);
+    if(!t){ msg.textContent='No theme by that name.'; return; }
+    CFG.theme=t.code; saveCfg(); applyTheme(); b.replaceWith(themeBlock());
+  };
+  if(THEME){
+    const r=el('button','btn s','Reset to the default look'); r.style.marginTop='9px';
+    r.onclick=()=>{ CFG.theme=null; saveCfg(); applyTheme(); b.replaceWith(themeBlock()); };
+    b.appendChild(r);
+  }
+  return b;
 }
 
 /* iOS and other browsers may evict script-writable storage. Asking for
@@ -5747,7 +5890,7 @@ document.addEventListener('visibilitychange',()=>{
   try{ render(); }catch(err){ console.error('resync render failed',err); }
 });
 
-let tT; function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on');
+let tT; function toast(m){ const t=$('#toast'); t.textContent=themeToast(m); t.classList.add('on');
   clearTimeout(tT); tT=setTimeout(()=>t.classList.remove('on'),1500); }
 
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();});
@@ -5797,7 +5940,7 @@ $('#fileIn').onchange=e=>{
   r.readAsText(f); e.target.value='';
 };
 
-loadAll(); loadPending(); loadWeekEdits(); restoreSession();
+loadAll(); applyTheme(); loadPending(); loadWeekEdits(); restoreSession();
 if(session&&session.slots&&session.slots[session.openIdx]) seedDraft(session.slots[session.openIdx]);
 restoreRest(); render(); initUpdates();
 if(needsOnboarding()) setTimeout(()=>openOnboarding(0),250);

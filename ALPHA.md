@@ -118,6 +118,22 @@ be changed in Settings, and Settings also has *Stop sending notes*.
 The notes still land in the tester's own log too, so nothing is lost if the
 feedback sheet is down.
 
+## Theme codes
+
+Edit program → *Have a code?* Type one, tap Apply. It only changes the look;
+*Reset to the default look* undoes it. Codes aren't case-sensitive.
+
+| Code | What it looks like |
+|---|---|
+| `GIRLYPOP` | Soft pink, hot-pink accent, bows on the header and on new-best badges. |
+| `GOBLIN` | Moss, dirt brown, candlelight amber. Heavier type, and the pop-up messages get feral ("Set 2 hoarded"). |
+| `TERMINAL` | Phosphor green on black, monospace, square corners, a blinking cursor after the readiness score. |
+| `SUNSET` | Deep plum shading to burnt orange, coral accent. The soft one for a dim room. |
+| `HIGHVIS` | Black and white with a safety-yellow accent, bigger and heavier text. The accessibility option. |
+
+Warnings stay warning-coloured in every theme, and the three block colours stay
+distinct. Error and backup messages are never reworded.
+
 ## Still worth doing before you hand it out
 
 1. **Use it yourself for two more weeks first.** Five people hitting a version
