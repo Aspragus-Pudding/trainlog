@@ -810,7 +810,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.18.2';
+const APP_VERSION='1.19.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1370,7 +1370,7 @@ const DAYS=[
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
-  feedbackUrl:'',testerName:'',introSeen:false,theme:null};
+  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{}};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
    from the address bar so it isn't left sitting in history. Each writes
@@ -1709,22 +1709,49 @@ function jointSessions(){
   }
   return out;
 }
-let _jointCache={}, _jointLen=-1;
+/* Your baseline for a joint — what "normal for you" is, so the ladder answers
+   CHANGE, not a chronic rating that isn't changing. A usual you set in Edit
+   program wins (none / mild / moderate — never bad: a bad rating always
+   counts). Otherwise the median session rating over the 10 sessions before
+   the latest 3, once there are at least 5 of them; with less history the
+   baseline is none, which is the cautious choice.
+   JUDGEMENT DEFAULTS, GRADE D: the 3 / 10 / 5 session counts. */
+const JOINT_USUAL={none:0, mild:0.5, moderate:1};
+const JOINT_BASE_SKIP=3, JOINT_BASE_N=10, JOINT_BASE_MIN=5;
+const sessJointWeight=(x,joint)=>Math.max(...x.events.map(e=>jointWeight(e,joint)));
+const medianOf=a=>{ const s=[...a].sort((x,y)=>x-y), m=s.length>>1; return s.length%2?s[m]:(s[m-1]+s[m])/2; };
+function jointBaseline(joint){
+  const u=(CFG.jointUsual||{})[joint];
+  if(u&&Object.prototype.hasOwnProperty.call(JOINT_USUAL,u)) return {w:JOINT_USUAL[u], src:'set'};
+  const prior=jointSessions().slice(JOINT_BASE_SKIP, JOINT_BASE_SKIP+JOINT_BASE_N).map(x=>sessJointWeight(x,joint));
+  if(prior.length<JOINT_BASE_MIN) return {w:0, src:'none'};
+  return {w:medianOf(prior), src:'median'};
+}
+const jointSevLabel=w=>w>=2?'bad':w>=1?'moderate':w>0?'mild':'none';
+let _jointCache={}, _jointLen=-1, _jointCfg='';
 function jointTrend(joint, n){
-  if(_jointLen!==LOG.length){ _jointCache={}; _jointLen=LOG.length; }
+  const cfgKey=JSON.stringify(CFG.jointUsual||{});
+  if(_jointLen!==LOG.length||_jointCfg!==cfgKey){ _jointCache={}; _jointLen=LOG.length; _jointCfg=cfgKey; }
   const key=joint+':'+n;
   if(_jointCache[key]) return _jointCache[key];
   const sess=jointSessions().slice(0,n);
-  const weights=sess.map(x=>Math.max(...x.events.map(e=>jointWeight(e,joint))));
+  const weights=sess.map(x=>sessJointWeight(x,joint));
   const score=weights.reduce((a,b)=>a+b,0);
+  const base=jointBaseline(joint);
+  // how far each session sat ABOVE your baseline — at or below it counts nothing
+  const excess=weights.map(w=>Math.max(0,fromNeutral(w,'joint',base.w,{raw:true})));
+  const recent=weights.slice(0,3);
   return (_jointCache[key]={score, mean:weights.length?score/weights.length:0,
-    n:weights.length, flagged:weights.filter(w=>w>0).length, weights});
+    n:weights.length, flagged:weights.filter(w=>w>0).length, weights,
+    base:base.w, baseSrc:base.src, excess, xscore:excess.reduce((a,b)=>a+b,0),
+    above:excess.filter(x=>x>0).length, recentBad:recent.some(w=>w>=2),
+    recentAbove:excess.slice(0,3).some(x=>x>0), last:weights.length?weights[0]:null});
 }
 /* Chronological, for the Progress-tab sparkline — same source events and
    window as jointTrend() above, but the per-point values rather than the
    aggregate mean. Displayed as "comfort" (inverted, 0-100, higher = better)
    so it reads the same direction as the readiness chart; the underlying
-   1-5 severity scale (higher = worse) is unchanged everywhere else. */
+   severity weights (0 none … 2 bad, higher = worse) are unchanged elsewhere. */
 function jointComfortSeries(joint, n){
   // per session: untouched 100, mild 75, moderate 50, bad 0
   return jointSessions().slice(0,n).map(x=>{
@@ -1740,16 +1767,39 @@ const JOINT_PATTERNS={
   'low back':['hinge','squat','shrug'], hip:['squat','hinge'],
   knee:['squat','knee_extension','knee_flexion'], ankle:['squat','calf_raise']
 };
-/* Level from the weighted score over the last 6 sessions, where a moderate
-   flag counts 1. Any flag: longer warmup. 2: load held. 4: load −10% and one
-   set fewer. 5+: no progression at all. JUDGEMENT DEFAULTS, GRADE D. */
+/* Level from how far the last 6 sessions sat above your baseline (xscore, in
+   moderate-flag units). Ratings at your usual only ever lengthen the warmup.
+   Above it: 2+ holds load. A bad rating in the last 3 sessions holds load
+   whatever your usual. Cuts need the rise to be recent: 4+ is load −10% and a
+   set fewer, 5+ stops progression. JUDGEMENT DEFAULTS, GRADE D. */
 function jointLevel(t){
-  const s=t.score||0;
-  if(s<=0) return 1;
-  if(s<2) return 2;
-  if(s<4) return 3;
-  if(s<5) return 4;
-  return 5;
+  const s=t.xscore!=null?t.xscore:(t.score||0);
+  let L=(s>0||(t.base||0)>0)?2:1;
+  if(s>=2||t.recentBad) L=3;
+  if(s>=4&&t.recentAbove) L=4;
+  if(s>=5&&t.recentAbove) L=5;
+  return L;
+}
+/* Your set usual versus what your recent sessions actually say (median of the
+   last 10, once there are 5) — so a usual can't quietly go stale. */
+function jointDrift(joint){
+  const t=jointTrend(joint,6);
+  const recent=jointSessions().slice(0,JOINT_BASE_N).map(x=>sessJointWeight(x,joint));
+  if(recent.length<JOINT_BASE_MIN) return null;
+  const m=medianOf(recent);
+  if(t.baseSrc==='set'){
+    if(m>t.base) return {dir:'above', recent:m, usual:t.base};
+    if(m<t.base) return {dir:'below', recent:m, usual:t.base};
+    return null;
+  }
+  return t.baseSrc==='median'&&t.base>0?{dir:'inferred', recent:m, usual:t.base}:null;
+}
+function jointDriftNote(joint){
+  const d=jointDrift(joint); if(!d) return '';
+  const J=joint.charAt(0).toUpperCase()+joint.slice(1);
+  if(d.dir==='above') return J+' has been running '+jointSevLabel(d.recent)+' lately, above the usual you set ('+jointSevLabel(d.usual)+'). If it has changed, update your usual in Edit program — or get it looked at.';
+  if(d.dir==='below') return J+' has been running '+jointSevLabel(d.recent)+' lately, better than the usual you set ('+jointSevLabel(d.usual)+'). Worth lowering your usual in Edit program.';
+  return J+"'s usual looks like "+jointSevLabel(d.usual)+', from your recent sessions. You can set it yourself in Edit program.';
 }
 /* Lateral raises are abduction without external rotation, so they don't load
    the anterior capsule the way pressing does: they count at half weight and
@@ -1761,21 +1811,25 @@ const JOINT_PATTERN_SCALE={shoulder:{abduction:{weight:0.5,cap:3}}};
    the check-in, and tests/backtest.js so they can't drift apart. */
 function jointNoteFor(pattern){
   let jl=1, jname=null;
+  let jt=null, painStop=false;
   JOINTS.forEach(j=>{
     if(!(JOINT_PATTERNS[j]||[]).includes(pattern)) return;
     const sc=(JOINT_PATTERN_SCALE[j]||{})[pattern];
     const t=jointTrend(j,6);
-    let L=jointLevel(sc?{...t,score:t.score*sc.weight}:t);
+    let L=jointLevel(sc?{...t,xscore:t.xscore*sc.weight}:t);
     if(sc) L=Math.min(L,sc.cap);
-    if(L>jl){ jl=L; jname=j; }
+    if(L>jl){ jl=L; jname=j; jt=t; }
   });
   const ep=lastEarlyPain();
   if(ep){
     const j=Object.keys(ep.joints||{}).find(j=>(JOINT_PATTERNS[j]||[]).includes(pattern));
-    if(j&&jl<3){ jl=3; jname=j; }
+    if(j&&jl<3){ jl=3; jname=j; jt=jointTrend(j,6); painStop=true; }
   }
   if(jl<2) return null;
-  return {level:jl, joint:jname, msg:JOINT_MSG[jl]};
+  // why, for the explanation line — derived on read, never stored
+  const info=jt?{base:jt.base, baseSrc:jt.baseSrc, last:jt.last, above:jt.above, n:jt.n,
+    xscore:jt.xscore, recentBad:jt.recentBad, painStop}:{painStop};
+  return {level:jl, joint:jname, msg:JOINT_MSG[jl], info};
 }
 const JOINT_MSG={2:'longer warmup',3:'load held',4:'load reduced, one set fewer',5:'no progression'};
 /* One cumulative number for the Dashboard — averages every tracked joint's
@@ -4177,17 +4231,32 @@ function explainRx(slot, pr, o){
   if(o.fresh===false) detail.push("Based on the set you just logged, which already reflects today's readiness adjustment.");
   // 4. joint — named on every set of an affected exercise, not just the first
   if(slot.joint){
-    const jn=slot.joint.joint, lv=slot.joint.level, t=jointTrend(jn,6);
-    const why=jn+' flagged in '+t.flagged+' of your last '+t.n+' sessions (level '+lv+')';
+    const jn=slot.joint.joint, lv=slot.joint.level, t=jointTrend(jn,6), ji=slot.joint.info||{};
+    const pick=(k)=>ji[k]!=null?ji[k]:t[k];
+    const base=pick('base'), src=ji.baseSrc||t.baseSrc, last=pick('last');
+    const usual=src==='set'?'your usual is '+jointSevLabel(base)+' (you set it)'
+      :src==='median'?'your usual is '+jointSevLabel(base)+' (from your recent sessions)'
+      :'no usual yet (too few rated sessions), so any rating counts';
+    // short reason for the line, full one for the detail
+    const short=ji.painStop?'last session ended with pain'
+      :pick('recentBad')?'rated bad recently'
+      :pick('xscore')>0?'above your usual in '+pick('above')+' of '+t.n
+      :'at your usual';
+    const why=jn.charAt(0).toUpperCase()+jn.slice(1)+' was '+jointSevLabel(last||0)+' last session; '+usual+'. '
+      +(short==='at your usual'?'Ratings at your usual never change load.'
+        :ji.painStop?'Your last session ended early with pain here.'
+        :short==='rated bad recently'?'A bad rating in the last 3 sessions counts whatever your usual.'
+        :'Above your usual in '+pick('above')+' of your last '+t.n+' sessions.')
+      +' (Ladder level '+lv+'; its thresholds are judgement defaults.)';
     if(o.jointCut){
       const gj=o.jointApplied||0;
-      parts.push(jn+': '+(gj>0?'load −'+gj+'%':'load reduced'));
-      detail.push(why+', so the starting load on this pattern is cut 10%'
+      parts.push(jn+': '+(gj>0?'load −'+gj+'%':'load reduced')+' — '+short);
+      detail.push(why+' So the starting load on this pattern is cut 10%'
         +(gj===10?'':gj>0?' — rounded to this exercise\'s steps the actual change is −'+gj+'%':', which rounds back to the same load on this exercise\'s '+exById[slot.ex].inc+' lb steps')
         +', and there is one set fewer.');
     }else{
-      parts.push(jn+': '+(lv>=3?(lv>=5?'no progression':'load held'):'longer warmup'));
-      detail.push(why+'. '+(lv>=5?'No load or rep increases on this pattern.'
+      parts.push(jn+': '+(lv>=3?(lv>=5?'no progression':'load held'):'longer warmup')+' — '+short);
+      detail.push(why+' '+(lv>=5?'No load or rep increases on this pattern.'
         :lv>=3?(o.jointHeld?'The engine wanted more load here; it is held at your last weight instead.':'Load will not go up on this pattern until it settles.')
         :'Warmup ramp is longer; load is not changed.'));
     }
@@ -4891,9 +4960,11 @@ function renderHist(){
       const r=el('div',''); r.style.cssText='padding:9px 0;border-top:1px solid var(--line)';
       r.innerHTML=`<div class="row between">
           <span style="font-weight:600;text-transform:capitalize">${esc(j)}</span>
-          <span class="tiny" style="color:${col}">Level ${lv} · flagged in ${t.flagged} of the last ${t.n} sessions</span>
+          <span class="tiny" style="color:${col}">Level ${lv} · above your usual in ${t.above} of the last ${t.n}</span>
         </div>
         <div class="muted tiny" style="margin-top:2px">${esc(JOINT_ACTION[lv])}</div>
+        <div class="dim tiny" style="margin-top:2px">Your usual: ${esc(jointSevLabel(t.base))} · ${t.baseSrc==='set'?'set by you':t.baseSrc==='median'?'from your recent sessions':'not enough history yet'}. Ratings at your usual never change load.</div>
+        ${jointDriftNote(j)?`<div class="tiny" style="margin-top:4px;color:var(--warn)">${esc(jointDriftNote(j))}</div>`:''}
         ${lv>=2?`<div class="dim tiny" style="margin-top:2px">Affects: ${(JOINT_PATTERNS[j]||[]).map(x=>x.replace(/_/g,' ')+(((JOINT_PATTERN_SCALE[j]||{})[x])?' (held only, half weight)':'')).join(', ')}</div>`:''}`;
       const comfort=jointComfortSeries(j,12);
       if(comfort.length>=2){
@@ -5352,7 +5423,8 @@ function openSettings(){
       goals: [...(CFG.goals||[])],
       tgt: CFG.target, srt: CFG.start, fixed: !!CFG.targetFixed,
       split: CFG.split||'full5', syncUrl: CFG.syncUrl||'', feedbackUrl: CFG.feedbackUrl||'', testerName: CFG.testerName||'',
-      energy: CFG.energy||'maintenance', conds: [...(CFG.conditions||[])]
+      energy: CFG.energy||'maintenance', conds: [...(CFG.conditions||[])],
+      jointUsual: {...(CFG.jointUsual||{})}
     };
   }
   const S=SETTINGS_DRAFT;
@@ -5569,6 +5641,30 @@ function openSettings(){
     S.conds.forEach(k=>cd.appendChild(el('div','anchor',CONDITIONS[k].note)));
     host.appendChild(cd);
 
+    // your usual, for joints you've declared or ever flagged
+    const ujs=JOINTS.filter(j=>S.conds.some(k=>(CONDITIONS[k]||{}).joint===j)||S.jointUsual[j]
+      ||jointSessions().some(x=>sessJointWeight(x,j)>0));
+    if(ujs.length){
+      const ub=el('div','qblock');
+      ub.innerHTML=`<div class="qlab">Your usual</div>
+        <div class="field">How a joint normally feels for you. The joint ladder reacts to ratings above this, so a long-standing niggle doesn't hold your lifts back for good. A bad rating always counts. Not set: worked out from your recent sessions.</div>`;
+      ujs.forEach(j=>{
+        const r=el('div',''); r.style.cssText='margin-top:9px';
+        r.appendChild(el('div','sm',esc(j.charAt(0).toUpperCase()+j.slice(1)))).style.marginBottom='5px';
+        const seg=el('div','chips');
+        [['','Not set'],['none','None'],['mild','Mild'],['moderate','Moderate']].forEach(([v,lab])=>{
+          const c=el('button','chip',lab); const cur=S.jointUsual[j]||'';
+          c.setAttribute('aria-pressed',cur===v?'true':'false');
+          c.onclick=()=>{ if(v) S.jointUsual[j]=v; else delete S.jointUsual[j]; draw(); };
+          seg.appendChild(c);
+        });
+        r.appendChild(seg);
+        const dn=jointDriftNote(j); if(dn) r.appendChild(el('div','anchor',esc(dn)));
+        ub.appendChild(r);
+      });
+      host.appendChild(ub);
+    }
+
     const sy=el('div','qblock');
     sy.innerHTML=`<div class="qlab">Automatic backup</div>
       <div class="field">Paste the Google Apps Script URL from the setup guide. Every finished session then writes your whole log to that sheet.</div>
@@ -5630,7 +5726,7 @@ function openSettings(){
   $('#rmsave').onclick=()=>{
     S.draft.forEach(b=>b.label=TYPE_NAME[b.type]);
     CFG.roadmap=S.draft; CFG.goals=S.goals; CFG.target=S.tgt; CFG.start=S.srt; CFG.targetFixed=!!S.fixed;
-    CFG.split=S.split; CFG.syncUrl=S.syncUrl; CFG.energy=S.energy; CFG.conditions=S.conds;
+    CFG.split=S.split; CFG.syncUrl=S.syncUrl; CFG.energy=S.energy; CFG.conditions=S.conds; CFG.jointUsual=S.jointUsual;
     CFG.feedbackUrl=S.feedbackUrl; CFG.testerName=S.testerName;
     ROADMAP=S.draft; saveCfg(); SETTINGS_DRAFT=null;
     $('#dlg').close(); render(); toast('Program saved');

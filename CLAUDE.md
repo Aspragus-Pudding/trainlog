@@ -131,6 +131,13 @@ never swapped out mid-workout.
 - **Joint ladder:** `jointNoteFor(pattern)` is the one place a joint level is
   computed (buildDay, the check-in, and tests/backtest.js all call it). Flags
   count per session, weighted by severity; levels 3+ really do hold load.
+  The ladder answers change from your baseline (`jointBaseline()`: a usual set
+  in `CFG.jointUsual`, else a rolling median), never absolute level — a
+  chronic rating at your usual only lengthens the warmup. A bad rating always
+  counts. Don't make it climb on persistent mild ratings again.
+- **Rating scales are centred in one place.** `fromNeutral()` + `SCALE_SPEC`
+  decide where a scale is neutral; readiness, soreness, recovery and joints
+  all go through it. Never centre a rating by hand (§19 scans for it).
 - **`PENDING`** holds pre-workout plan edits until the session starts.
 - **Readiness** drives load adjustment (discrete tiers) and warmup length
   (continuous score). Adjustments are downward-only by design.

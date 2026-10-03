@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -657,6 +657,58 @@ section('19. anchored scales — neutral rating, zero adjustment');
   const body=src.replace(/function fromNeutral[\s\S]*?\n}\n/,'');
   ok(!/\(\s*\w+\s*-\s*3\s*\)\s*\/\s*2/.test(body),'no hand-rolled (v-3)/2 outside fromNeutral','');
   console.log('  every scale: neutral → 0, floor −1, ceiling +1, monotonic · joint baseline → 0 · formulas inherit it');
+}
+
+/* ─── 20. joint ladder answers change from your baseline ─── */
+section('20. joint ladder — baseline, not absolute level');
+{
+  let t0=200;
+  const S=(v,end)=>[{type:'readiness',id:'jr'+(uid++),ts:day(t0-=1),sleep_quality:3,motivation:3,soreness:{},
+      joints:v?{shoulder:v}:{},joint_scale:3},
+    {type:'session_end',id:'je'+(uid++),ts:day(t0-=0.5),session_id:'js'+uid,joints:{},joint_scale:3,...(end||{})}];
+  const run=(vals,usual)=>{ t0=200; let ev=[]; vals.forEach(v=>ev=ev.concat(S(v))); const A=load(ev);
+    if(usual) A.CFG.jointUsual={shoulder:usual}; return A; };
+  const lv=A=>{ const n=A.jointNoteFor('horizontal_press'); return n?n.level:1; };
+  // vals are oldest → newest; scale: 1 mild, 2 moderate, 3 bad
+  const chronic=Array(12).fill(2);
+  let A=run(chronic);
+  ok(A.jointTrend('shoulder',6).baseSrc==='median'&&A.jointTrend('shoulder',6).base===1,'12 moderate sessions: usual is moderate, from history',JSON.stringify(A.jointTrend('shoulder',6)));
+  ok(lv(A)===2,'a chronic moderate shoulder only lengthens the warmup — never holds or cuts load',String(lv(A)));
+  // the same history with a usual you set
+  ok(lv(run(chronic,'moderate'))===2,'usual set to moderate, rating moderate: warmup only','');
+  ok(lv(run(Array(6).fill(1),'mild'))===2,'usual mild, rating mild: warmup only','');
+  ok(lv(run(Array(6).fill(2),'none'))===5,'usual none, six moderate sessions: still the top rung (above your usual)',String(lv(run(Array(6).fill(2),'none'))));
+  // a bad rating always counts
+  A=run(chronic.concat([3]),'moderate');
+  ok(lv(A)>=3,'a bad rating holds load even when your usual is moderate',String(lv(A)));
+  // a usual can never be "bad"
+  A=run(Array(6).fill(3),'bad');
+  ok(A.jointTrend('shoulder',6).baseSrc!=='set'&&lv(A)===5,'"bad" is not accepted as a usual',JSON.stringify({src:A.jointTrend('shoulder',6).baseSrc,L:lv(A)}));
+  // a flare above a chronic baseline climbs; once it passes, it comes back down
+  A=run(chronic.concat([3,3,3,3,3]));
+  ok(lv(A)===5,'five bad sessions above a moderate usual: top rung',String(lv(A)));
+  A=run(chronic.concat([3,3,3,3,3],Array(6).fill(2)));
+  ok(lv(A)===2,'six sessions back at your usual: the ladder comes back down',String(lv(A)));
+  // too little history: no baseline, any rating counts (the cautious side)
+  A=run([2,2,2]);
+  ok(A.jointTrend('shoulder',6).baseSrc==='none'&&lv(A)===3,'three sessions of history: no usual yet, ratings count in full',String(lv(A)));
+  // drift: the usual you set versus what your sessions say
+  const D=(vals,u)=>{ const A=run(vals,u); return A.jointDriftNote('shoulder'); };
+  ok(/above the usual you set/.test(D(Array(10).fill(2),'mild')),'usual mild, sessions moderate: says so',D(Array(10).fill(2),'mild'));
+  ok(/better than the usual you set/.test(D(Array(10).fill(1),'moderate')),'usual moderate, sessions mild: suggests lowering it',D(Array(10).fill(1),'moderate'));
+  ok(D(Array(10).fill(2),'moderate')==='','usual matches your sessions: nothing to say','');
+  // the explanation says what the ladder did and why
+  const hist=chronic.concat([]); A=run(hist); A.LOG.push(set('incline_machine','hj',60,12,8,0.1));
+  const slot={ex:'incline_machine',role:'primary',reps:[10,15],rpe:8,sets_target:3,sets:[],joint:A.jointNoteFor('horizontal_press')};
+  A.setSession({id:'SJ',slots:[slot],adj:null,score:null});
+  let w=A.suggestFor(slot).why;
+  ok(/shoulder: longer warmup — at your usual/.test(w.line),'line names the action and the reason (at your usual)',w.line);
+  ok(w.detail.some(d=>/your usual is moderate \(from your recent sessions\)/.test(d)&&/never change load/.test(d)),'detail names the usual and its source',JSON.stringify(w.detail));
+  A=run(chronic.concat([3]),'moderate'); A.LOG.push(set('incline_machine','hj2',60,12,8,0.1));
+  const slot2={ex:'incline_machine',role:'primary',reps:[10,15],rpe:8,sets_target:3,sets:[],joint:A.jointNoteFor('horizontal_press')};
+  A.setSession({id:'SJ2',slots:[slot2],adj:null,score:null}); w=A.suggestFor(slot2).why;
+  ok(/shoulder: load held — rated bad recently/.test(w.line),'line says load held because of a bad rating',w.line);
+  console.log('  chronic usual → warmup only · bad always counts · flare climbs and recovers · drift notes · line says what and why');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
