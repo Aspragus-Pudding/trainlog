@@ -813,7 +813,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.28.1';
+const APP_VERSION='1.28.2';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -6444,16 +6444,16 @@ function openSettings(){
     gl.innerHTML=`<div class="qlab">Goal lifts, ranked</div>
       <div class="field">Only the first holds primary status in any block. Rotate it across blocks rather than chasing all three.</div>`;
     S.goals.forEach((g,i)=>{
-      const ex=exById[g], r=el('div','row between sm');
+      const ex=exById[g], r=el('div','row between sm'), dup=S.goals.indexOf(g)!==i;
       r.style.cssText='padding:8px 0;border-top:1px solid var(--line)';
       r.innerHTML=`<span><span class="sidx done" style="width:22px;height:22px;font-size:11px">${i+1}</span>
-        <span style="margin-left:9px">${esc(ex?ex.name:g)}</span></span>`;
+        <span style="margin-left:9px">${esc(ex?ex.name:g)}</span>${dup?'<span class="tiny" style="color:var(--warn)"> · listed twice — pick another</span>':''}</span>`;
       const btns=el('span','row'); btns.style.gap='4px';
       if(i>0){ const u=el('button','iconbtn','↑');
         u.onclick=()=>{[S.goals[i-1],S.goals[i]]=[S.goals[i],S.goals[i-1]];draw();}; btns.appendChild(u); }
       const c=el('button','iconbtn','⇄');
       c.setAttribute('aria-label','Change lift');
-      c.onclick=()=>exPicker('Pick a goal lift', e=>e.id!==g&&mainEligible(e), e=>{ S.goals[i]=e.id; openSettings(); });
+      c.onclick=()=>exPicker('Pick a goal lift', e=>!S.goals.includes(e.id)&&mainEligible(e), e=>{ S.goals[i]=e.id; openSettings(); });
       btns.appendChild(c); r.appendChild(btns); gl.appendChild(r);
     });
     host.appendChild(gl);
@@ -6710,7 +6710,7 @@ function openSettings(){
   $('#rmclose').onclick=()=>{ SETTINGS_DRAFT=null; $('#dlg').close(); };
   $('#rmsave').onclick=()=>{
     S.draft.forEach(b=>b.label=TYPE_NAME[b.type]);
-    CFG.roadmap=S.draft; CFG.goals=S.goals; CFG.target=S.tgt; CFG.start=S.srt; CFG.targetFixed=!!S.fixed;
+    CFG.roadmap=S.draft; CFG.goals=[...new Set(S.goals)]; CFG.target=S.tgt; CFG.start=S.srt; CFG.targetFixed=!!S.fixed;
     // only write the program week when it actually changed, so an untouched
     // preset (CFG.split) stays exactly as it was
     if(splitOf(S.split).key!==splitOf(programSplitSpec()).key){
