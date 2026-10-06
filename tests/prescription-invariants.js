@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -760,6 +760,22 @@ section('21. weeks — chosen days and day types');
   ok(pos.week===2&&pos.sessionsIn===4&&pos.dpw===3,'4 sessions into a 3-day week: week 2',JSON.stringify(pos));
   ok(B.todayDay().name==='Lower A','session 5 of an upper/lower/full week is its day 2 again',B.todayDay().name);
   console.log('  presets unchanged · stable names · repeated days vary · 2–6 days · styles valid · block > program · coverage notes · position by days');
+}
+
+/* ─── 22. notes: the list and the copy are one set ─── */
+section('22. feedback notes — list and copy agree');
+{
+  const ev=[]; for(let i=0;i<14;i++) ev.push({type:'note',id:'n'+i,ts:day(40-i),tag:i%3?'idea':'bug',text:'note '+i});
+  ev.push({type:'note',id:'nx',ts:day(5),tag:'weird',text:'unknown tag'});
+  ev.push({type:'note_resolved',id:'r1',ts:day(1),target_id:'n13'});
+  ev.push({type:'note',id:'nl',ts:day(30),tag:'bug',text:'legacy resolved',resolved:true});
+  const A=load(ev);
+  const open=A.openFeedbackNotes().map(n=>n.id), rep=A.notesReport();
+  ok(!open.includes('n13')&&!open.includes('nl'),'resolved notes (either way) are not open',open.join(','));
+  ok(rep.count===open.length&&JSON.stringify([...rep.ids].sort())===JSON.stringify([...open].sort()),'the copy holds exactly the open notes',rep.count+' vs '+open.length);
+  ok(/unknown tag/.test(rep.text),'a note with a tag this build does not know is still copied','');
+  ok(open.includes('n0'),'old open notes stay open (the list shows them behind "Show older")','');
+  console.log('  one definition of open · copy = list · unknown tags kept');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

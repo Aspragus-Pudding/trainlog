@@ -811,7 +811,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.20.0';
+const APP_VERSION='1.20.1';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -3722,16 +3722,26 @@ function sendFeedback(note){
   fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
     body:JSON.stringify(feedbackPayload(note))}).catch(()=>{});
 }
+/* The open feedback notes, oldest first — the ONE definition of "open". The
+   Progress list and the copy-for-Claude-Code report both read this. They used
+   to filter separately, and the list only showed the newest 8, so older open
+   notes went into the copy without ever appearing on screen. */
+function openFeedbackNotes(){
+  const resolvedIds=new Set(LOG.filter(e=>e.type==='note_resolved').map(e=>e.target_id));
+  return LOG.filter(e=>e.type==='note'&&!e.resolved&&!resolvedIds.has(e.id));
+}
+let NOTES_SHOW_ALL=false;
 /* Everything still open, formatted for pasting straight into Claude Code. */
 function notesReport(){
-  const notes=LOG.filter(e=>e.type==='note'&&!e.resolved);
-  const resolvedIds=new Set(LOG.filter(e=>e.type==='note_resolved').map(e=>e.target_id));
-  const open=notes.filter(n=>!resolvedIds.has(n.id));
+  const open=openFeedbackNotes();
   if(!open.length) return null;
   const byTag={};
   open.forEach(n=>{ (byTag[n.tag]=byTag[n.tag]||[]).push(n); });
+  // a tag this build doesn't know still gets reported, never silently dropped
+  const groups=NOTE_TAGS.map(t=>({id:t.id,label:t.label}))
+    .concat(Object.keys(byTag).filter(k=>!NOTE_TAGS.some(t=>t.id===k)).map(k=>({id:k,label:k})));
   let out='Feedback from the last few sessions.\n\n';
-  NOTE_TAGS.forEach(t=>{
+  groups.forEach(t=>{
     const list=byTag[t.id]; if(!list||!list.length) return;
     out+=`## ${t.label}\n`;
     list.forEach(n=>{
@@ -5063,8 +5073,9 @@ function renderHist(){
   if(!rep){
     cn.appendChild(el('div','empty','Tap the ✎ button any time to jot something down.<br>Notes sync to your backup sheet automatically.'));
   }else{
-    const resolvedIds=new Set(LOG.filter(e=>e.type==='note_resolved').map(e=>e.target_id));
-    LOG.filter(e=>e.type==='note'&&!resolvedIds.has(e.id)).slice(-8).reverse().forEach(n=>{
+    const open=openFeedbackNotes().reverse();
+    // newest 8 first; the rest one tap away — the copy below holds exactly this list
+    (NOTES_SHOW_ALL?open:open.slice(0,8)).forEach(n=>{
       const t=NOTE_TAGS.find(x=>x.id===n.tag);
       const r=el('div',''); r.style.cssText='padding:9px 0;border-top:1px solid var(--line)';
       r.innerHTML=`<div class="row between">
@@ -5077,6 +5088,11 @@ function renderHist(){
       r.appendChild(done);
       cn.appendChild(r);
     });
+    if(open.length>8){
+      const more=el('button','btn ghost wide',NOTES_SHOW_ALL?'Show only the newest 8':'Show '+(open.length-8)+' older');
+      more.style.marginTop='10px'; more.onclick=()=>{ NOTES_SHOW_ALL=!NOTES_SHOW_ALL; render(); };
+      cn.appendChild(more);
+    }
     const cp=el('button','btn pri wide','Copy all for Claude Code');
     cp.style.marginTop='12px';
     cp.onclick=async()=>{
