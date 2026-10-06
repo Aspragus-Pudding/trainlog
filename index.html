@@ -152,6 +152,10 @@ section{display:none;padding-top:14px} section.on{display:block}
 dialog{border:none;padding:0;background:transparent;max-width:540px;width:calc(100% - 20px);color:var(--ink)}
 dialog::backdrop{background:var(--backdrop,rgba(6,8,12,.78))}
 dialog:focus,dialog:focus-visible{outline:none}
+/* the builder's Back / Next / accept row stays on screen however long the step
+   is — the review used to push it below the fold, where it read as missing */
+.bldnav{gap:8px;position:sticky;bottom:-17px;margin:6px -17px -17px;padding:10px 17px 17px;
+  background:var(--card);border-top:1px solid var(--line);z-index:2}
 .sheet{background:var(--card);border-radius:16px;padding:17px;max-height:84vh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .hdrnote{color:var(--muted);font-size:17px;padding:4px 8px;align-self:center}
 .hdrnote:active{color:var(--ink)}
@@ -814,7 +818,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.34.0';
+const APP_VERSION='1.34.1';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -6740,7 +6744,7 @@ function openBuilder(rerun){
     <h2 style="font-size:22px;margin-bottom:3px">${esc(titles[step])}</h2>
     <div class="muted tiny" style="margin-bottom:14px">${esc(subs[step])}</div>
     <div id="bld"></div>
-    <div class="row" style="gap:8px;margin-top:6px" id="bldnav"></div>`);
+    <div class="row bldnav" id="bldnav"></div>`);
   const host=$('#bld'), nav=$('#bldnav');
   const navBtn=(label,cls,fn)=>{ const b=el('button','btn '+cls+' grow',esc(label)); b.onclick=fn; nav.appendChild(b); return b; };
   const card=(on,title,sub,fn)=>{ const b=el('button','qblock'); b.style.cssText='display:block;width:100%;text-align:left;'+(on?'outline:2px solid var(--accent);':'');
@@ -6782,12 +6786,16 @@ function openBuilder(rerun){
       r.innerHTML=`<div class="row between"><span style="font-weight:600">${i+1}. ${esc(ex.name)}</span></div>`;
       const x=el('button','iconbtn','✕'); x.setAttribute('aria-label','Remove'); x.style.color='var(--skip)';
       x.onclick=()=>{ B.goals.splice(i,1); delete B.est[id]; openBuilder(); }; r.firstChild.appendChild(x);
-      if(!bestE1RM(id)){
+      const known=bestE1RM(id);
+      if(known&&!known.stated){
+        // logged sets beat a guess: a stated estimate is ignored once a lift has sets, so don't ask for one
+        r.appendChild(el('div','field','Estimated one-rep max from your log: <b>'+fmt(known.v,0)+' lb</b> (from a set of '+known.reps+'). Your logged sets set the loads, so there is nothing to guess here.')).style.marginTop='8px';
+      }else{
         r.appendChild(el('div','field','Rough one-rep max (optional) — so the first session has loads')).style.marginTop='8px';
         const v=B.est[id];
         r.appendChild(stepper(isBW(ex)?'added '+B.units:B.units, v==null?(isBW(ex)?0:(B.units==='kg'?60:135)):v, B.units==='kg'?2.5:5,
           nv=>{ B.est[id]=Math.max(0,nv); openBuilder(); }, null, {typeable:true,min:0}));
-        r.appendChild(el('div','dim tiny',v==null?'Not set yet — the number is only where the buttons start.':'Saved as your starting estimate.')).style.marginTop='4px';
+        r.appendChild(el('div','dim tiny',v==null?(known?'You already entered '+fmt(known.v,0)+' lb. Leave it to keep that, or set a new number.':'Not set yet — the number is only where the buttons start.'):'Saved as your starting estimate.')).style.marginTop='4px';
       }
       host.appendChild(r);
     });
