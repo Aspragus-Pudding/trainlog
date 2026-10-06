@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -840,6 +840,72 @@ section('25. best set per session');
   const T=load([set('deadlift','T1',300,5,8,3),set('deadlift','T1',300,5,9,3)]);
   ok(T.sessionBests('deadlift').length===1,'equal sets in one session give one row','');
   console.log('  highest e1RM per session · ties to heavier · warmups excluded · PR via prIds · newest first');
+}
+
+/* ─── 26. bidirectional suggestions: locked never overwritten, unlocked recomputes ─── */
+section('26. lock what you edit, recompute the other');
+{
+  const cases=[
+    {ex:'bench', hist:[set('bench','L1',185,6,8,2)], reps:[6,8], rpe:8},            // chart path
+    {ex:'incline_machine', hist:[set('incline_machine','L2',150,10,8,2)], reps:[8,12], rpe:8},  // machine
+    {ex:'chinup', hist:[set('chinup','L3',25,6,8,2)], reps:[5,8], rpe:8}];             // bodyweight + added
+  cases.forEach(c=>{
+    const A=load(c.hist), slot={ex:c.ex,role:'primary',reps:c.reps,rpe:c.rpe,sets_target:3,sets:[]};
+    const ref=A.refE1(slot);
+    ok(ref&&ref.e1>0,c.ex+': priced against the last set','');
+    // weight locked → reps recomputed, weight never touched
+    for(const W of [c.hist[0].weight.value*0.8, c.hist[0].weight.value, c.hist[0].weight.value*1.08]){
+      const d={weight:Math.round(W),unit:'lb',reps:99,lock:{w:true}}, r=A.rebalance(slot,d);
+      ok(r&&r.field==='reps'&&!('weight' in r),c.ex+': locked weight is never in the result',JSON.stringify(r));
+      if(r&&r.priced){
+        ok(Number.isInteger(r.reps)&&r.reps>=1,c.ex+': reps are a whole number',String(r.reps));
+        ok(r.out===(r.reps<c.reps[0]?'below':r.reps>c.reps[1]?'above':null),c.ex+': out-of-range is flagged, not clamped',JSON.stringify(r));
+      }
+    }
+    // reps locked → weight recomputed, reps never touched, never harder than aimed
+    for(const R of [c.reps[0],c.reps[1]]){
+      const d={weight:999,unit:'lb',reps:R,lock:{r:true}}, r=A.rebalance(slot,d);
+      ok(r&&r.field==='weight'&&!('reps' in r),c.ex+': locked reps are never in the result',JSON.stringify(r));
+      if(r&&r.priced) ok(r.weight>0&&r.weight<=999,c.ex+': a weight comes back',JSON.stringify(r));
+    }
+    // nothing recomputes when both numbers, or RPE, are yours — or nothing is
+    [{w:true,r:true},{rpe:true},{w:true,rpe:true},{}].forEach(L=>ok(A.rebalance(slot,{weight:100,unit:'lb',reps:5,lock:L})===null,c.ex+': no recompute with lock '+JSON.stringify(L),''));
+  });
+  // chart path: the recomputed pair actually lands on the target RPE
+  {
+    const A=load([set('bench','P1',185,6,8,2)]), slot={ex:'bench',role:'primary',reps:[6,8],rpe:8,sets_target:3,sets:[]};
+    const e1=A.refE1(slot).e1, T=8;
+    for(let W=135;W<=215;W+=5){
+      const r=A.rebalance(slot,{weight:W,unit:'lb',reps:0,lock:{w:true}});
+      if(!r||!r.priced) continue;
+      const p=A.predictedRpe(e1,W,r.reps), pNext=A.predictedRpe(e1,W,r.reps+1);
+      ok(p<=T+1e-6,'bench '+W+': '+r.reps+' reps is not harder than RPE '+T,String(p));
+      ok(pNext==null||pNext>T-1e-6,'bench '+W+': one more rep would pass RPE '+T,String(pNext));
+    }
+    for(let R=3;R<=12;R++){
+      const r=A.rebalance(slot,{weight:0,unit:'lb',reps:R,lock:{r:true}});
+      if(!r||!r.priced) continue;
+      ok(A.predictedRpe(e1,r.weight,R)<=T+1e-6,'bench '+R+' reps: '+r.weight+' lb is not harder than aimed',String(A.predictedRpe(e1,r.weight,R)));
+      const up=A.stepUp(slot,r.weight), pu=A.predictedRpe(e1,up,R);
+      ok(pu==null||pu>T-1e-6,'bench '+R+' reps: one step heavier would pass the target',String(pu));
+    }
+  }
+  // the draft: a locked field survives recompute and re-seeds until the set is logged
+  {
+    const A=load([set('bench','D1',185,6,8,2)]), slot={ex:'bench',role:'primary',reps:[6,8],rpe:8,sets_target:3,sets:[]};
+    A.setSession({id:'SD',slots:[slot],openIdx:0,adj:null,score:null});
+    A.seedDraft(slot); const d=A.getDraft();
+    ok(d.sugW&&d.sugR&&!A.draftLocked(),'fresh suggestion: both amber, nothing locked','');
+    d.weight=205; d.lock={w:true}; d.lockEx='bench'; A.rebalanceDraft(slot);
+    ok(d.weight===205&&d.sugR&&d.reps<6,'weight locked at 205: reps recomputed (honest, below the range)',JSON.stringify({w:d.weight,r:d.reps}));
+    A.seedDraft(slot,true);
+    ok(d.weight===205&&d.lock.w,'a re-seed of the same exercise keeps the locked weight','');
+    d.reps=8; d.lock={w:true,r:true}; A.rebalanceDraft(slot);
+    ok(d.weight===205&&d.reps===8,'both locked: neither moves','');
+    A.seedDraft(slot);
+    ok(!A.draftLocked()&&d.weight!==205,'"Back to the suggestion" (a plain re-seed) clears the locks','');
+  }
+  console.log('  locked field never in the result · unlocked recomputes · pair lands on target RPE · locks survive re-seeds · cleared by logging/back');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
