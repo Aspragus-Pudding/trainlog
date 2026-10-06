@@ -813,7 +813,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.26.0';
+const APP_VERSION='1.27.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1625,9 +1625,10 @@ function buildDay(tpl, phase){
     const nSets=sc.sets+(prio&&role!=='primary'?1:0);
     // main lifts in strength blocks: one top set, the rest back-offs (§2.2)
     const topback=phase.type==='str'&&role==='primary'&&(CFG.goals||[]).includes(ex.id)&&mainEligible(ex)&&nSets>=2;
-    slots.push({ex:ex.id, role, sets:nSets,
+    const amrap=topback&&isRealizationWeek(phase);
+    slots.push({ex:ex.id, role, sets:amrap?1:nSets,
                 reps:sc.reps, rpe:sc.rpe, prio, joint:jointNote, repSrc:sc.repSrc, repMuscle:sc.repMuscle, repCapped:sc.repCapped,
-                ...(topback?{structure:'topback', backoff:{n:nSets-1}}:{})});
+                ...(amrap?{structure:'amrap'}:topback?{structure:'topback', backoff:{n:nSets-1}}:{})});
   });
   const id=tpl.name.toLowerCase().replace(/\s+/g,'_');
   // A permanently-saved edit to this day (see the preview's "also save to my
@@ -3197,7 +3198,9 @@ function exCard(slot,o){
   nameBtn.innerHTML='<div class="exname">'+esc(ex.name)
     +(slot.role==='primary'?' <span class="leadbadge">Lead lift</span>':'')+'</div>'
     +(modLabel(slot.modifiers)?'<div class="exmod">'+esc(modLabel(slot.modifiers))+'</div>':'')
-    +'<div class="exmeta">'+(isTopBack(slot)
+    +'<div class="exmeta">'+(slot.structure==='amrap'
+        ?'Realization: 1 set, as many reps as you can · aim for '+slot.reps[1]+'+'
+        :isTopBack(slot)
         ?'Top set × '+fmtRange(slot.reps)+' @ RPE '+slot.rpe+' · then '+Math.max(1,n-1)+' back-off'+(n-1===1?'':'s')+' −'+Math.round(backoffCfg().drop*100)+'%'
         :n+' sets × '+fmtRange(slot.reps)+' reps · RPE '+slot.rpe)+(slot.swapped?' · swapped':'')
     +(slot.prio?' · priority':'')
@@ -4864,6 +4867,7 @@ function barSVG(sol){
 }
 
 function startSession(day){
+  (day.slots||[]).forEach(sl=>{ if(sl.structure==='topback'||sl.structure==='amrap') ensureInitialTM(slotTrack(sl).ex); });
   session={id:ulid(),dayId:day.id,dayName:day.name,soreGroups:soreGroupsFor(day),
     prep:buildPrep(day,null).map(m=>({...m,done:false})),readiness:null,
     openIdx:0,ratings:{},adj:null,score:null,
@@ -4900,7 +4904,7 @@ function explainRx(slot, pr, o){
     else if(pr.lb!=null) parts.push('Top: '+fmt(pr.lb,0)+' × '+pr.reps+' @ '+slot.rpe+' · Back-offs: '+n+' × '+pr.reps+' @ '+fmt(backoffLoad(slot,pr.lb),0));
   }
   // 2. where the number came from
-  if(pr.src==='back-off'){ if(pr.note) detail.push(pr.note); return {line:parts.join(' · '), detail}; }
+  if(pr.src==='back-off'||pr.amrap){ if(pr.amrap) parts.push(pr.src); if(pr.note) detail.push(pr.note); return {line:parts.join(' · '), detail}; }
   if(pr.src) parts.push(pr.src==='last session'?'from your last set':pr.src);
   else parts.push('no history yet');
   if(pr.note) detail.push(pr.note);
@@ -4987,6 +4991,10 @@ function suggestFor(slot){
     const b=backoffRx(slot); o.backoff=true;
     return {pr:b, lb:b.lb, why:explainRx(slot,b,o), o};
   }
+  if(slot.structure==='amrap'&&!slot.sets.length){
+    const a=amrapRx(slot);
+    return {pr:a, lb:a.lb, why:explainRx(slot,a,o), o};
+  }
   let pr=nextPrescription(slot);
   // Stagnation probe only on the first set of a session, and only on the
   // chart-free path — the chart path already has its own override-damping
@@ -5039,6 +5047,52 @@ function backoffRx(slot){
       +' The 8% default and the count are judgement defaults.'};
 }
 
+/* ---------- Training max and realization (spec §2.3–2.4) ----------
+   The training max (TM) is a PLANNING number per main lift, separate from the
+   live e1RM the per-set engine prices with. It changes only by recorded
+   decisions — a 'tm_update' event — never by an ordinary session's top set:
+   - initial: 90% of your e1RM, recorded when a strength-block session with
+     that lift starts (Grade D convention);
+   - realization: the AMRAP at the end of a strength block → 90% of its e1RM,
+     capped at +5% per block; short of the block's rep target → −5%.
+   JUDGEMENT DEFAULTS, GRADE D: 90%, +5% cap, −5% on a short AMRAP, and the
+   AMRAP loads by rep focus (8+ reps 75%, 5–7 85%, ≤4 90% of TM). */
+const TM_OF_E1=0.9, TM_CAP_UP=1.05, TM_SHORT=0.95;
+function tmFor(exId){
+  for(let i=LOG.length-1;i>=0;i--){ const e=LOG[i]; if(e.type==='tm_update'&&e.exercise_id===exId&&e.tm_lb>0) return {tm:e.tm_lb, src:'logged', ev:e}; }
+  const b=bestE1RM(exId);
+  return b?{tm:b.v*TM_OF_E1, src:'initial'}:null;
+}
+/* Recorded at a deliberate moment (session start), so it can't drift with every set. */
+function ensureInitialTM(exId){
+  const t=tmFor(exId);
+  if(!t||t.src==='logged') return null;
+  return append({type:'tm_update',exercise_id:exId,tm_lb:t.tm,prev_lb:null,reason:'initial'});
+}
+const amrapPct=reps=>reps[1]>=8?0.75:reps[1]>=5?0.85:0.90;
+/* The last training week of a strength block (before its deload, if any). */
+const isRealizationWeek=ph=>!!ph&&ph.type==='str'&&!ph.onDeload&&ph.week===(ph.deload?ph.weeks-1:ph.weeks);
+function amrapRx(slot){
+  const ex=exById[slot.ex], t=tmFor(slotTrack(slot).ex), pct=amrapPct(slot.reps), off=bwOffset(ex);
+  if(!t) return {lb:null, reps:slot.reps[1], src:null, note:'No training max yet — log a few sets of this lift first. Pick a load you could do for well over '+slot.reps[1]+' reps.'};
+  const lb=gridFloor(slot, Math.max(0,t.tm*pct-off));
+  return {lb, reps:slot.reps[1], src:'realization AMRAP · '+Math.round(pct*100)+'% of your training max', amrap:true,
+    note:'Last week of the strength block: one set of as many reps as you can at '+Math.round(pct*100)+'% of your training max ('+fmt(t.tm,0)+(t.src==='initial'?', 90% of your e1RM':'')+'). '
+      +'Aim for at least '+slot.reps[1]+'. It updates your training max: 90% of what it shows, at most +5%; short of '+slot.reps[1]+' drops it 5%. These percentages are judgement defaults.'};
+}
+/* After the AMRAP is logged: the one place a TM moves up or down. */
+function tmFromAmrap(slot, ev){
+  const ex=exById[slot.ex], exId=slotTrack(slot).ex, cur=tmFor(exId); if(!cur) return null;
+  const prev=cur.tm, target=slot.reps[1], off=bwOffset(ex), L=toLb(ev.weight)+off;
+  let tm, reason;
+  if(ev.reps<target){ tm=prev*TM_SHORT; reason='short'; }
+  else{
+    const e1=impliedE1(L,ev.reps,ev.rpe!=null?ev.rpe:10)||e1rm(L,ev.reps);
+    tm=e1?Math.min(e1*TM_OF_E1,prev*TM_CAP_UP):prev*TM_CAP_UP; reason='realization';
+  }
+  return append({type:'tm_update',exercise_id:exId,tm_lb:tm,prev_lb:prev,reason,set_id:ev.id,target_reps:target});
+}
+
 /* What the engine actually recommended for this set, independent of whether
    the lifter followed it. Additive-only logging (see logSet): never read by
    any prescription or display code, so a set logged before this field
@@ -5082,6 +5136,7 @@ function seedDraft(slot, keepLocks){
   draft.reps=pr.reps??slot.reps[0]; draft.rpe=slot.rpe; draft.group=null; draft.alt=null;
   draft.suggestedLb=lb; draft.suggestedReps=draft.reps; draft.suggested=lb!=null; draft.why=why;
   draft.lock={}; draft.lockEx=slot.ex; draft.sugW=draft.sugR=lb!=null; draft.rebal=null;
+  if(slot.structure==='amrap'&&!slot.sets.length) draft.rpe=10;
   if(prev){
     draft.lock=prev.lock;
     if(prev.lock.w){ draft.weight=prev.w; draft.unit=prev.u; }
@@ -5119,7 +5174,7 @@ function logSet(slot,idx,kind,extend,over){
     weight:{value:W.weight,unit:W.unit}, bar:ex.bar?{value:ex.bar,unit:'lb'}:null,
     reps:W.reps, rpe:kind==='warmup'?null:draft.rpe, set_kind:setKind, group,
     ...(kind!=='warmup'&&cleanMods(slot.modifiers)?{modifiers:cleanMods(slot.modifiers)}:{}),
-    ...(kind!=='warmup'?{role:group?'straight':isTopBack(slot)?(topSetOf(slot)?'backoff':'top'):'straight'}:{}),
+    ...(kind!=='warmup'?{role:group?'straight':slot.structure==='amrap'&&!slot.sets.length?'amrap':isTopBack(slot)?(topSetOf(slot)?'backoff':'top'):'straight'}:{}),
     ...(kind!=='warmup'&&draft.failed?{failed:true}:{}),
     target:{reps:slot.reps,rpe:slot.rpe},
     suggested_lb:stampSuggestion?(draft.suggestedLb??null):null,
@@ -5130,6 +5185,8 @@ function logSet(slot,idx,kind,extend,over){
   const ev=append(candidate);
   if(!ev) return;
   if(kind!=='warmup'){ slot.sets.push(ev); draft.failed=false; }
+  let tmMsg=null;
+  if(ev.role==='amrap'){ const t=tmFromAmrap(slot,ev); if(t) tmMsg='Training max '+fmt(t.prev_lb,0)+' → '+fmt(t.tm_lb,0)+(t.reason==='short'?' (short of '+t.target_reps+')':''); }
   // fatigue-stop back-offs: done when one feels as hard as the top set, or at N+2
   if(ev.role==='backoff'&&backoffCfg().mode==='fatigue'){
     const top=topSetOf(slot), n=(slot.backoff&&slot.backoff.n)||1, done=slot.sets.filter(x=>x.role==='backoff').length;
@@ -5157,7 +5214,8 @@ function logSet(slot,idx,kind,extend,over){
     draft.lock={}; draft.lockEx=slot.ex; draft.sugW=draft.sugR=next.lb!=null; draft.rebal=null;
   }
   saveSession();
-  if(pr){ toast(`New best on ${ex.name} · +${fmt(pr.gain,0)} lb`); if(navigator.vibrate) navigator.vibrate(80); }
+  if(tmMsg) toast(tmMsg);
+  else if(pr){ toast(`New best on ${ex.name} · +${fmt(pr.gain,0)} lb`); if(navigator.vibrate) navigator.vibrate(80); }
   else toast(kind==='warmup'?'Warmup logged':group?`${group.pos===0?'Top set':TECHNIQUES[draft.tech].extend} logged`:`Set ${slot.sets.length} logged`);
   if(kind!=='warmup'){
     const rest=draft.group?45:(REST_BY_ROLE[slot.role]||120);
@@ -5675,6 +5733,8 @@ function renderHist(){
     else c.appendChild(el('div','empty','Log a few working sets and the trend appears here.'));
     if(ex.comparable===false)
       c.appendChild(el('div','dim tiny','Machine-specific — valid against itself, not against other equipment.'));
+    { const t=tmFor(id); if(t&&t.src==='logged') c.appendChild(el('div','sm',
+        '<span class="dim">Training max</span> <b>'+fmt(t.tm,0)+' lb</b> <span class="dim tiny">· planning number, moved only by realization AMRAPs</span>')).style.marginTop='8px'; }
     // recent bests, expandable to every session — same rows as the info sheet's History
     const open=!!GOAL_HIST_OPEN[id], nAll=sessionBests(id).length;
     c.appendChild(el('div','field',open?'Best set, every session':'Best set, last three sessions')).style.marginTop='12px';

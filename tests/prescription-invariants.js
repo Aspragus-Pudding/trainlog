@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -1088,6 +1088,48 @@ section('30. top set + back-offs');
     }
   });
   console.log('  shape only for strength-block main lifts · back-offs lighter, same reps, never feed the engine · fatigue-stop capped · missed reps stored · rep-first holds');
+}
+
+/* ─── 31. training max and realization (spec §2.3–2.4) ─── */
+section('31. training max and realization');
+{
+  const hist=[set('deadlift','T1',315,5,8,9)];
+  const A=load(hist), e1=A.bestE1RM('deadlift').v;
+  let t=A.tmFor('deadlift');
+  ok(t&&t.src==='initial'&&Math.abs(t.tm-e1*0.9)<1e-6,'before anything is recorded, TM = 90% of e1RM',JSON.stringify(t));
+  A.ensureInitialTM('deadlift'); const tm0=A.tmFor('deadlift');
+  ok(tm0.src==='logged'&&Math.abs(tm0.tm-Math.round(e1*0.9*100)/100)<0.01,'the initial TM is recorded once',JSON.stringify(tm0));
+  ok(A.ensureInitialTM('deadlift')===null,'and never re-recorded','');
+  // an ordinary top set never moves the TM
+  A.append(set('deadlift','T2',345,5,7,4));
+  ok(A.tmFor('deadlift').tm===tm0.tm,'a heavy top set does not change the TM','');
+  // realization week: last training week of a strength block, before any deload
+  ok(A.isRealizationWeek({type:'str',week:4,weeks:5,deload:true,onDeload:false})&&!A.isRealizationWeek({type:'str',week:5,weeks:5,deload:true,onDeload:true})
+    &&A.isRealizationWeek({type:'str',week:3,weeks:3})&&!A.isRealizationWeek({type:'str',week:2,weeks:3})&&!A.isRealizationWeek({type:'hyp',week:5,weeks:5}),'realization = last training week of a strength block','');
+  const AC=A.getCFG(); AC.goals=['deadlift'];
+  const tpl={name:'T',slots:[['hinge','primary'],['horizontal_press','secondary']]};
+  const dR=A.buildDay(tpl,{type:'str',week:3,weeks:3,lead:'deadlift',hyp:[]});
+  ok(dR.slots[0].structure==='amrap'&&dR.slots[0].sets===1,'realization week: the main lift is one AMRAP',JSON.stringify(dR.slots[0]));
+  ok(!dR.slots[1].structure,'other lifts are unchanged','');
+  // AMRAP load by rep focus
+  ok(A.amrapPct([8,10])===0.75&&A.amrapPct([5,6])===0.85&&A.amrapPct([3,5])===0.85&&A.amrapPct([2,3])===0.90,'AMRAP % of TM by the block\'s rep focus','');
+  const slot={ex:'deadlift',role:'primary',reps:[3,5],rpe:8,sets_target:1,sets:[],structure:'amrap'};
+  const ar=A.amrapRx(slot);
+  ok(ar.amrap&&ar.lb<=tm0.tm*0.85+1e-6&&ar.lb>tm0.tm*0.85-10,'AMRAP load = 85% of TM, floored to loadable',JSON.stringify(ar));
+  // TM moves: capped up, down when short
+  const run=(reps,rpe)=>{ const B=load(hist), C=B.getCFG(); C.goals=['deadlift']; B.ensureInitialTM('deadlift');
+    const before=B.tmFor('deadlift').tm, sl={...slot,sets:[]};
+    B.setSession({id:'RZ',slots:[sl],openIdx:0,adj:null,ratings:{},startedAt:Date.now()}); B.seedDraft(sl);
+    const d=B.getDraft(); d.weight=B.amrapRx(sl).lb; d.reps=reps; d.rpe=rpe; d.unit='lb'; B.logSet(sl,0,'straight');
+    return {before, after:B.tmFor('deadlift').tm, role:sl.sets[0].role, ev:B.LOG.filter(e=>e.type==='tm_update').pop()}; };
+  let r=run(15,10);
+  ok(r.role==='amrap','the realization set is logged as an AMRAP','');
+  ok(r.after<=r.before*1.05+0.01&&r.after>r.before,'a big AMRAP raises the TM, capped at +5%',JSON.stringify(r));
+  r=run(6,10);
+  ok(r.after<=r.before*1.05+0.01,'any AMRAP: never more than +5% per block',JSON.stringify({b:r.before,a:r.after}));
+  r=run(3,10);
+  ok(Math.abs(r.after-r.before*0.95)<0.02&&r.ev.reason==='short','short of the rep target: TM drops 5%',JSON.stringify(r.ev));
+  console.log('  initial 90% recorded once · top sets never move it · realization week = last training week · AMRAP % by rep focus · +5% cap · −5% when short');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
