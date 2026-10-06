@@ -15,14 +15,14 @@ Nobody can see anyone else's data, including you. There's no server holding it.
 on next launch and offers the update banner. One deploy, five updated apps.
 
 **A fresh install is genuinely fresh.** Defaults carry no goal lifts, no
-program, no gym assumptions. First run is a short setup: units, days per week and
-the kind of days (full body, upper/lower, push/pull/legs, or any mix), up to
-three lifts to build around, a rough one-rep guess for those lifts (optional,
-so the first session has loads instead of dashes), anything they're working
-around, and — only if you've set up notes — what to call them. Every step
-skippable, everything changeable later. After setup, one screen explains the
-basics (check-in, suggestions, RPE, notes, where data lives); it's reachable
-again from the Lifts tab under *How this works*.
+program, no gym assumptions. First run is the program builder: a quick path (goal, days per week, main
+lifts — under a minute) or a full one (adds experience, equipment, dates and
+anything they're working around), ending on a review of the blocks it will
+build with a one-line reason each. Every step skippable, everything
+changeable later, and the builder can be rerun from Edit program without
+touching logged history. After setup, six short cards explain the basics
+(check-in, suggestions, RPE, the explanation line, notes, where data lives);
+they're reachable again from the Lifts tab under *How this works*.
 
 ## What a tester's data touches
 

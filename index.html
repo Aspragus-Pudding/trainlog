@@ -151,6 +151,7 @@ section{display:none;padding-top:14px} section.on{display:block}
 
 dialog{border:none;padding:0;background:transparent;max-width:540px;width:calc(100% - 20px);color:var(--ink)}
 dialog::backdrop{background:var(--backdrop,rgba(6,8,12,.78))}
+dialog:focus,dialog:focus-visible{outline:none}
 .sheet{background:var(--card);border-radius:16px;padding:17px;max-height:84vh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .hdrnote{color:var(--muted);font-size:17px;padding:4px 8px;align-self:center}
 .hdrnote:active{color:var(--ink)}
@@ -813,7 +814,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.33.0';
+const APP_VERSION='1.34.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1684,7 +1685,7 @@ const DAYS=[
 
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
-  goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},checklistOff:{},
+  goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},checklistOff:{},sessionLen:null,
   profile:null,profileParams:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
   feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{}};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
@@ -5291,24 +5292,33 @@ function sequenceBlocks(o){
         left=0;
       }
     }else{
-      let guard=0;
-      while(left>0&&guard++<20){
-        if(left>=cyc.H+cyc.S){ blocks.push(mk('hyp',cyc.H)); left-=cyc.H;
-          for(let j=0;j<cyc.k&&left>=SEQ.str[0];j++){ const w=Math.min(cyc.S,left); blocks.push(mk('str',w)); left-=w; } }
-        else if(left>=SEQ.hyp[0]&&!(wantsPR||seg.endTest)){ blocks.push(mk('hyp',left)); left=0; }
-        else if(left>=SEQ.str[0]&&(wantsPR||seg.endTest)&&blocks.length){ blocks.push(mk('str',Math.min(left,SEQ.str[1]))); left-=Math.min(left,SEQ.str[1]); }
-        else if(left>=SEQ.hyp[0]){ blocks.push(mk('hyp',Math.min(left,SEQ.hyp[1]))); left-=Math.min(left,SEQ.hyp[1]); }
-        else break;
+      // Layout search: leading strength blocks (right after a hypertrophy block
+      // you're keeping), then n cycles of one hypertrophy block and k strength
+      // blocks (plus a final hypertrophy block when the plan shouldn't end on
+      // strength). Strength weeks = the profile's share of the weeks; each
+      // block type's weeks spread evenly within its limits. Picks the feasible
+      // layout closest to the share, cycles near 12 weeks breaking ties.
+      const endStr=wantsPR||seg.endTest, lead=(si===0&&o.prevType==='hyp')?1:0;
+      let best=null;
+      for(let n=0;n<=8;n++) for(let k=1;k<=3;k++){
+        const strN=lead+n*k, hypN=n+(endStr?0:1);
+        if(!strN&&!hypN) continue;
+        if(!hypN&&strN*SEQ.str[1]<left) continue;
+        for(let Ts=strN*SEQ.str[0];Ts<=Math.min(left,strN*SEQ.str[1]);Ts++){
+          const Th=left-Ts;
+          if(hypN?(Th<hypN*SEQ.hyp[0]||Th>hypN*SEQ.hyp[1]):Th!==0) continue;
+          const err=Math.abs(Ts/left-P.ratio)+(n?Math.abs(left/n-12)*0.002:0)+k*0.001;
+          if(!best||err<best.err) best={n,k,Ts,Th,strN,hypN,err};
+        }
       }
-      // the plan ends on strength only if the profile wants PRs (or a test is coming)
-      while(blocks.length>1&&blocks[blocks.length-1].type==='str'&&!(wantsPR||seg.endTest)){ left+=blocks.pop().weeks; }
-      // absorb what's left by stretching blocks within their limits — no stub
-      // blocks — one week at a time, into whichever type is under the profile's share
-      for(let guard=0;left>0&&guard<60;guard++){
-        const tot=blocks.reduce((a,b)=>a+b.weeks,0), strW=blocks.filter(b=>b.type==='str').reduce((a,b)=>a+b.weeks,0);
-        const want=strW/(tot||1)<P.ratio?'str':'hyp';
-        const pick=blocks.find(b=>b.type===want&&b.weeks<SEQ[want][1])||blocks.find(b=>b.weeks<SEQ[b.type][1]);
-        if(!pick) break; pick.weeks++; left--;
+      if(best){
+        const spread=(tot,cnt)=>Array.from({length:cnt},(_,i)=>Math.floor(tot/cnt)+(i<tot%cnt?1:0));
+        const sw=spread(best.Ts,best.strN), hw=spread(best.Th,best.hypN);
+        let si2=0, hi2=0;
+        for(let j=0;j<lead;j++) blocks.push(mk('str',sw[si2++]));
+        for(let c=0;c<best.n;c++){ blocks.push(mk('hyp',hw[hi2++])); for(let j=0;j<best.k;j++) blocks.push(mk('str',sw[si2++])); }
+        if(!endStr&&hi2<hw.length) blocks.push(mk('hyp',hw[hi2++]));
+        left=0;
       }
     }
     if(taper) blocks.push(mk('str',taper,{taper:true}));
@@ -5337,7 +5347,7 @@ function planFromNow(o){
   const curLeft=cur?Math.max(0,blockLen(cur)-(pos.week-1)):0;
   const weeks=Math.max(0,(o.weeks||24)-curLeft);
   const testWeek=o.testWeek!=null?o.testWeek-curLeft:null;
-  const gen=sequenceBlocks({...o, weeks, testWeek});
+  const gen=sequenceBlocks({...o, weeks, testWeek, prevType:cur?cur.type:null});
   return {kept:keep.length, blocks:keep.concat(gen.blocks), reasons:keep.map(()=>'Already in progress — unchanged.').concat(gen.reasons), leftover:gen.leftover};
 }
 /* Equipment filter for exercise selection (spec §4.2 step 5). Dumbbells only
@@ -6096,7 +6106,7 @@ function renderLifts(){
   const stat=el('div','row between sm',`<span class="muted">Storage</span><span class="dim" id="stg">checking…</span>`);
   lg.appendChild(stat);
   lg.appendChild(el('div','row between sm',`<span class="muted">Version</span><span class="dim">${APP_VERSION}</span>`));
-  const hw=el('button','btn ghost wide','How this works'); hw.style.marginTop='10px'; hw.onclick=openIntro; lg.appendChild(hw);
+  const hw=el('button','btn ghost wide','How this works'); hw.style.marginTop='10px'; hw.onclick=()=>openTutorial(0); lg.appendChild(hw);
 
   const since=sessionsSinceExport();
   if(since>=6){
@@ -6135,9 +6145,9 @@ function renderLifts(){
     if(i.persisted===false) node.style.color='var(--warn)';
   });
 
-  const ob=el('button','btn ghost wide','Run first-time setup again');
+  const ob=el('button','btn ghost wide','Rebuild with the program builder');
   ob.style.marginTop='8px';
-  ob.onclick=()=>{ ONB=null; openOnboarding(0); };
+  ob.onclick=()=>{ BUILDER=null; openBuilder(true); };
   lg.appendChild(ob);
 
   const fr=el('button','btn ghost wide','Reset to a fresh install');
@@ -6649,167 +6659,206 @@ let SETTINGS_DRAFT=null;
 /* First-run setup. Every step is skippable and everything it sets is
    changeable later in Edit program — the goal is a usable program in about a
    minute, not an interrogation. Runs once; CFG.onboarded gates it. */
-let ONB=null;
 function needsOnboarding(){ return !CFG.onboarded && !LOG.some(e=>e.type==='set'); }
-function openOnboarding(step){
-  if(!ONB) ONB={units:CFG.units||'lb', week:splitOf(programSplitSpec()).week,
-    goals:[...(CFG.goals||[])], weeks:16, conds:[...(CFG.conditions||[])], est:{}, name:CFG.testerName||''};
-  const O=ONB;
-  step=step==null?0:step;
-  // steps: 0 welcome, 1 units, 2 split, 3 goal lifts, 4 starting estimates
-  // (only with goal lifts), 5 conditions, 6 name (only when notes go to the
-  // person who set this up). Counted from the steps that apply.
-  const ask=k=>k===4?O.goals.length>0:k===6?!!(CFG.feedbackUrl||'').trim():true;
-  const STEPS=[0,1,2,3,4,5,6].filter(ask);
-  // the counter treats estimates as part of the goal-lift step, so the total
-  // doesn't change when goal lifts are picked or cleared
-  const SHOWN=STEPS.filter(k=>k!==4), N=SHOWN.length, stepNo=k=>SHOWN.indexOf(k===4?3:k)+1;
-  const next=k=>{ const i=STEPS.indexOf(k); return i<0?null:STEPS[i+1]; };
-  const prev=k=>{ const i=STEPS.indexOf(k); return i>0?STEPS[i-1]:null; };
-  const finish=()=>{
-    const t=new Date(); t.setDate(t.getDate()+O.weeks*7);
-    CFG.units=O.units; CFG.week=O.week; CFG.goals=O.goals; CFG.conditions=O.conds;
-    if(O.name.trim()) CFG.testerName=O.name.trim().slice(0,40);
-    CFG.start=new Date().toISOString().slice(0,10);
-    CFG.target=t.toISOString().slice(0,10);
-    ROADMAP=[applyShape({type:'hyp',label:'Hypertrophy',weeks:5,hyp:[],deload:true,
-      lead:O.goals[0]||null,emphasis:'moderate',refined:true})];
-    fillToTarget(ROADMAP,CFG.start,CFG.target);
-    CFG.roadmap=ROADMAP; CFG.onboarded=true; saveCfg();
-    // starting estimates: only the goal lifts you gave a number for
-    Object.entries(O.est).forEach(([id,v])=>{ if(v>0&&O.goals.includes(id))
-      append({type:'e1rm_estimate',exercise_id:id,lb:O.units==='kg'?Math.round(v*LB*10)/10:v}); });
-    ONB=null; $('#dlg').close(); TAB='dash'; render();
-    if(!CFG.introSeen) setTimeout(()=>openIntro(),250);
-  };
 
-  const shell=(title,sub,bodyId,backStep,nextLabel,onNext,skipStep)=>{
-    sheet(`<div class="dim tiny" style="margin-bottom:8px">Step ${stepNo(step)} of ${N}</div>
-      <h2 style="font-size:22px;margin-bottom:3px">${esc(title)}</h2>
-      <div class="muted tiny" style="margin-bottom:15px">${esc(sub)}</div>
-      <div id="${bodyId}"></div>
-      <div class="row" style="gap:8px;margin-top:4px">
-        ${backStep!=null?'<button class="btn ghost grow" id="obBack">Back</button>':''}
-        <button class="btn pri grow" id="obNext">${esc(nextLabel)}</button>
-      </div>
-      ${skipStep!=null?'<button class="btn ghost wide" id="obSkip" style="margin-top:8px">Skip this</button>':''}`);
-    if(backStep!=null) $('#obBack').onclick=()=>openOnboarding(backStep);
-    $('#obNext').onclick=onNext;
-    if(skipStep!=null) $('#obSkip').onclick=()=>openOnboarding(skipStep);
-  };
-  const chips=(host,opts,isOn,onPick)=>{
-    const c=el('div','chips');
-    opts.forEach(o=>{ const b=el('button','chip',esc(o.label));
-      b.style.cssText='font-size:13px;padding:7px 12px';
-      b.setAttribute('aria-pressed',isOn(o)?'true':'false');
-      b.onclick=()=>onPick(o); c.appendChild(b); });
-    host.appendChild(c);
-  };
+/* ---------- Program builder (spec §4.2) ----------
+   Rerunnable. Quick setup (goal → days → main lifts → review) or full setup
+   (goal, experience, schedule, main lifts, equipment, dates, constraints,
+   review). Every step skippable. BUILDER is a module-level draft (the
+   SETTINGS_DRAFT pattern) so the exercise picker can come and go without
+   losing what you've chosen. Nothing changes until "Use this program"; a
+   rerun keeps finished blocks and the one you're in, shows before/after, and
+   never touches logged history. */
+let BUILDER=null;
+const BUILDER_QUICK=['path','goal','schedule','lifts','review'];
+const BUILDER_FULL=['path','goal','experience','schedule','lifts','equipment','dates','constraints','review'];
+const BUILDER_DEFAULT_WEEKS=24;   // when there's no target date — judgement default
+function builderDefaults(rerun){
+  return {rerun:!!rerun, path:rerun?'full':null, i:0, units:CFG.units||'lb',
+    profile:CFG.profile||'even_mix', params:{...(CFG.profileParams||{})}, customise:false,
+    experience:CFG.experience||'intermediate', week:splitOf(programSplitSpec()).week, sessionLen:CFG.sessionLen||60,
+    goals:[...new Set(CFG.goals||[])].filter(id=>exById[id]), est:{}, equipment:CFG.equipment||'mixed',
+    // a fresh install's target is a placeholder made at load, not a date you chose
+    target:CFG.onboarded?(CFG.target||''):'', targetFixed:CFG.onboarded&&!!CFG.targetFixed, testDate:CFG.testDate||'', conds:[...(CFG.conditions||[])],
+    name:CFG.testerName||''};
+}
+const builderSteps=B=>B.path==='quick'?BUILDER_QUICK:BUILDER_FULL;
+function builderParams(B){
+  const base=PROFILES[B.profile]||PROFILES.even_mix, o=B.params||{};
+  return {...base, ...['ratio','testEvery','peaks','specificity'].reduce((a,k)=>(o[k]!=null?{...a,[k]:o[k]}:a),{})};
+}
+const isoToday=()=>new Date().toISOString().slice(0,10);
+const weeksBetween=(a,b)=>Math.max(0,Math.round((new Date(b+'T12:00')-new Date(a+'T12:00'))/864e5/7));
+/* The plan the review shows. Pure: reads the draft and, for a rerun, where you are. */
+function builderPlan(B){
+  const from=B.rerun?isoToday():isoToday();
+  const weeks=B.target?Math.max(SEQ.hyp[0],weeksBetween(from,B.target)):BUILDER_DEFAULT_WEEKS;
+  const testWeek=B.testDate?weeksBetween(from,B.testDate):null;
+  const o={params:builderParams(B), experience:B.experience, weeks, testWeek, targetFixed:!!(B.target&&B.targetFixed), goals:B.goals};
+  if(B.rerun){
+    const r=planFromNow(o);
+    // kept blocks keep the week they had, if the program week is changing
+    const oldWeek=splitOf(programSplitSpec()).week;
+    if(oldWeek.join()!==B.week.join())
+      r.blocks.slice(0,r.kept).forEach(b=>{ if(!validWeek(b.week)&&!(b.split&&SPLITS[b.split])) b.week=[...oldWeek]; });
+    return {...r, weeks};
+  }
+  const g=sequenceBlocks(o);
+  return {kept:0, blocks:g.blocks, reasons:g.reasons, leftover:g.leftover, weeks};
+}
+/* Accept: settings from the draft, roadmap from the plan. History untouched. */
+function applyBuilder(B, plan){
+  CFG.units=B.units; CFG.profile=B.profile; CFG.profileParams={...(B.params||{})}; CFG.experience=B.experience;
+  // only when it actually changed — rewriting the same days as a list changes the
+  // program's key and would drop pre-workout edits for nothing
+  if(splitOf(programSplitSpec()).week.join()!==B.week.join()) CFG.week=[...B.week];
+  CFG.sessionLen=B.sessionLen; CFG.goals=[...new Set(B.goals)]; CFG.equipment=B.equipment;
+  CFG.conditions=[...B.conds]; CFG.testDate=B.testDate||null;
+  if(!B.rerun) CFG.start=isoToday();
+  if(B.target){ CFG.target=B.target; CFG.targetFixed=!!B.targetFixed; }
+  else{ const t=new Date(); t.setDate(t.getDate()+plan.weeks*7); CFG.target=t.toISOString().slice(0,10); CFG.targetFixed=false; }
+  if(B.name&&B.name.trim()) CFG.testerName=B.name.trim().slice(0,40);
+  ROADMAP=plan.blocks.map(b=>({...b})); CFG.roadmap=ROADMAP; CFG.onboarded=true; saveCfg();
+  // rough strength for main lifts: stated estimates, never fake sets
+  Object.entries(B.est||{}).forEach(([id,v])=>{ if(v>0&&B.goals.includes(id))
+    append({type:'e1rm_estimate',exercise_id:id,lb:B.units==='kg'?Math.round(v*LB*10)/10:v}); });
+}
+function openBuilder(rerun){
+  if(!BUILDER) BUILDER=builderDefaults(rerun);
+  const B=BUILDER, steps=builderSteps(B), step=B.path?steps[B.i]:'path';
+  const N=steps.length, n=Math.max(1,B.i+1);
+  const go=d=>{ B.i=Math.max(0,Math.min(steps.length-1,B.i+d)); openBuilder(); };
+  const titles={path:B.rerun?'Rebuild your program':'Set up your program', goal:'What are you training for?', experience:'How fast do you progress?',
+    schedule:'How do you train?', lifts:'Your main lifts', equipment:'What equipment do you have?', dates:'Any dates?',
+    constraints:'Anything you\'re working around?', review:B.rerun?'Before and after':'Your program'};
+  const subs={path:B.rerun?'Builds the rest of your program from where you are. Finished blocks and the one you\'re in stay as they are. Nothing changes until you accept.':'About a minute. Every step can be skipped and changed later.',
+    goal:'Sets the balance of strength and size blocks, and how often you test.', experience:'Decides how the program is structured.',
+    schedule:'Days per week and the kind of days.', lifts:'Up to three. They get priority and their own strength tracking.',
+    equipment:'Picks exercises you can actually do.', dates:'Optional. A fixed date or a test date shapes the end of the plan.',
+    constraints:'Flags exercises that load an at-risk position. It warns, never blocks.', review:'One line per block on why it\'s there.'};
+  sheet(`${B.path?`<div class="dim tiny" style="margin-bottom:8px">Step ${n} of ${N}</div>`:''}
+    <h2 style="font-size:22px;margin-bottom:3px">${esc(titles[step])}</h2>
+    <div class="muted tiny" style="margin-bottom:14px">${esc(subs[step])}</div>
+    <div id="bld"></div>
+    <div class="row" style="gap:8px;margin-top:6px" id="bldnav"></div>`);
+  const host=$('#bld'), nav=$('#bldnav');
+  const navBtn=(label,cls,fn)=>{ const b=el('button','btn '+cls+' grow',esc(label)); b.onclick=fn; nav.appendChild(b); return b; };
+  const card=(on,title,sub,fn)=>{ const b=el('button','qblock'); b.style.cssText='display:block;width:100%;text-align:left;'+(on?'outline:2px solid var(--accent);':'');
+    b.innerHTML=`<div style="font-weight:650">${esc(title)}</div>${sub?`<div class="muted tiny" style="margin-top:2px">${esc(sub)}</div>`:''}`; b.onclick=fn; host.appendChild(b); };
+  const chipsRow=(opts,on,fn,label)=>{ const w=el('div','qblock'); if(label) w.innerHTML=`<div class="qlab">${esc(label)}</div>`;
+    const c=el('div','chips'); opts.forEach(([v,l])=>{ const x=el('button','chip',esc(l)); x.setAttribute('aria-pressed',on(v)?'true':'false'); x.onclick=()=>{ fn(v); openBuilder(); }; c.appendChild(x); });
+    w.appendChild(c); host.appendChild(w); return w; };
 
-  if(step===0){
-    shell('Welcome','This builds and adapts a training program from what you actually log. About a minute to set up.',
-      'ob0',null,'Get started',()=>openOnboarding(next(0)));
-    $('#ob0').innerHTML=`<div class="qblock">
-      <div class="muted sm" style="line-height:1.55">
-        Your data stays on this device. Nothing is sent anywhere unless you set up a backup.<br><br>
-        Everything here can be changed later — nothing you pick now is permanent.
-      </div></div>`;
+  if(step==='path'){
+    card(false,'Quick setup','Goal, days per week, main lifts. Everything else on sensible defaults.',()=>{ B.path='quick'; B.i=1; openBuilder(); });
+    card(false,'Full setup','Also experience, equipment, dates and anything you\'re working around.',()=>{ B.path='full'; B.i=1; openBuilder(); });
+    if(!B.rerun) chipsRow([['lb','Pounds'],['kg','Kilograms']],v=>B.units===v,v=>{ B.units=v; },'Units');
+    navBtn(B.rerun?'Cancel':'Skip setup','ghost',()=>{ if(B.rerun){ BUILDER=null; $('#dlg').close(); return; }
+      B.path='quick'; const plan=builderPlan(B); applyBuilder(B,plan); BUILDER=null; $('#dlg').close(); TAB='dash'; render(); if(!CFG.introSeen) setTimeout(()=>openTutorial(0),250); });
     return;
   }
-
-  if(step===1){
-    shell('Units','Which do you think in? You can switch per-set later too.',
-      'ob1',prev(1),'Next',()=>openOnboarding(next(1)));
-    chips($('#ob1'),[{label:'Pounds (lb)',v:'lb'},{label:'Kilograms (kg)',v:'kg'}],
-      o=>O.units===o.v,o=>{O.units=o.v;openOnboarding(1);});
-    return;
-  }
-
-  if(step===2){
-    shell('How do you train?','Pick how many days a week, then the kind of days. Sessions are generated from this.',
-      'ob2',prev(2),'Next',()=>openOnboarding(next(2)));
-    $('#ob2').appendChild(weekPicker(O.week, w=>{ O.week=w; openOnboarding(2); }));
-    return;
-  }
-
-  if(step===3){
-    shell('Pick up to three lifts to build around',
-      'These get priority in every session. Skip if you just want general training.',
-      'ob3',prev(3),'Next',()=>openOnboarding(next(3)),5);
-    const host=$('#ob3');
-    O.goals.forEach((g,i)=>{
-      const ex=exById[g]; const r=el('div','row between sm');
-      r.style.cssText='padding:9px 0;border-top:1px solid var(--line)';
-      r.innerHTML=`<span><span class="sidx done" style="width:22px;height:22px;font-size:11px">${i+1}</span>
-        <span style="margin-left:9px">${esc(ex?ex.name:g)}</span></span>`;
-      const x=el('button','iconbtn','✕'); x.style.color='var(--skip)';
-      x.onclick=()=>{ O.goals.splice(i,1); openOnboarding(3); };
-      r.appendChild(x); host.appendChild(r);
-    });
-    if(O.goals.length<3){
-      const add=el('button','btn wide','Add a lift'); add.style.marginTop='11px';
-      add.onclick=()=>exPicker('Pick a lift to build around',
-        e=>!O.goals.includes(e.id)&&mainEligible(e), e=>{ O.goals.push(e.id); openOnboarding(3); });
-      host.appendChild(add);
+  if(step==='goal'){
+    PROFILE_ORDER.forEach(k=>card(B.profile===k,PROFILES[k].label,PROFILES[k].blurb,()=>{ B.profile=k; B.params={}; openBuilder(); }));
+    const cz=el('button','warmtog',(B.customise?'Hide':'Customise')+' the four settings ▸'); cz.onclick=()=>{ B.customise=!B.customise; openBuilder(); }; host.appendChild(cz);
+    if(B.customise){
+      const P=builderParams(B), cw=el('div','qblock');
+      cw.innerHTML='<div class="qlab">Strength : size</div>';
+      cw.appendChild(stepper('% strength',Math.round(P.ratio*100),5,v=>{ B.params.ratio=Math.max(0,Math.min(80,v))/100; openBuilder(); }));
+      host.appendChild(cw);
+      chipsRow([[0,'Never'],[1,'Every block'],[2,'Every 2nd'],[3,'Every 3rd']],v=>P.testEvery===v,v=>{ B.params.testEvery=v; },'Test strength');
+      chipsRow([['yes','Before a fixed date or test'],['before_tests','Only before a test'],['no','Never']],v=>P.peaks===v,v=>{ B.params.peaks=v; },'Taper (peak)');
+      chipsRow([['high','High'],['medium','Medium'],['low','Low']],v=>P.specificity===v,v=>{ B.params.specificity=v; },'How much to favour the main lifts themselves');
     }
-    return;
   }
-
-  if(step===4){
-    shell('Roughly what could you do for one all-out rep?',
-      'Only for the lifts you picked, so your first session has loads instead of dashes. A rough guess is fine — your logged sets take over from the first session.',
-      'ob4',prev(4),'Next',()=>openOnboarding(next(4)),next(4));
-    $('#obSkip').onclick=()=>{ O.est={}; openOnboarding(next(4)); };   // skipping saves none of them
-    const host=$('#ob4');
-    O.goals.forEach(id=>{
+  if(step==='experience') Object.entries(EXPERIENCE).forEach(([k,e])=>card(B.experience===k,e.short,e.label,()=>{ B.experience=k; openBuilder(); }));
+  if(step==='schedule'){
+    host.appendChild(weekPicker(B.week,w=>{ B.week=w; openBuilder(); }));
+    if(B.path==='full') chipsRow([[45,'45 min'],[60,'1 hour'],[75,'75 min'],[90,'90 min']],v=>B.sessionLen===v,v=>{ B.sessionLen=v; },'Rough session length');
+  }
+  if(step==='lifts'){
+    B.goals.forEach((id,i)=>{
       const ex=exById[id]; if(!ex) return;
-      const blk=el('div','qblock'); blk.appendChild(el('div','qlab',esc(ex.name)));
-      const h=el('div','');
-      const draw=()=>{ h.innerHTML=''; const v=O.est[id];
-        h.appendChild(stepper(isBW(ex)?'added '+O.units:O.units, v==null?(isBW(ex)?0:(O.units==='kg'?60:135)):v, O.units==='kg'?2.5:5,
-          nv=>{ O.est[id]=Math.max(0,nv); draw(); }, null, {typeable:true,min:0}));
-        h.appendChild(el('div','dim tiny',v==null?'Not set yet — the number above is only a starting point for the buttons. Leave it untouched and this lift starts blank.':'Saved as your starting estimate.')).style.marginTop='4px'; };
-      draw(); blk.appendChild(h); host.appendChild(blk);
+      const r=el('div','qblock');
+      r.innerHTML=`<div class="row between"><span style="font-weight:600">${i+1}. ${esc(ex.name)}</span></div>`;
+      const x=el('button','iconbtn','✕'); x.setAttribute('aria-label','Remove'); x.style.color='var(--skip)';
+      x.onclick=()=>{ B.goals.splice(i,1); delete B.est[id]; openBuilder(); }; r.firstChild.appendChild(x);
+      if(!bestE1RM(id)){
+        r.appendChild(el('div','field','Rough one-rep max (optional) — so the first session has loads')).style.marginTop='8px';
+        const v=B.est[id];
+        r.appendChild(stepper(isBW(ex)?'added '+B.units:B.units, v==null?(isBW(ex)?0:(B.units==='kg'?60:135)):v, B.units==='kg'?2.5:5,
+          nv=>{ B.est[id]=Math.max(0,nv); openBuilder(); }, null, {typeable:true,min:0}));
+        r.appendChild(el('div','dim tiny',v==null?'Not set yet — the number is only where the buttons start.':'Saved as your starting estimate.')).style.marginTop='4px';
+      }
+      host.appendChild(r);
+    });
+    if(B.goals.length<3){ const add=el('button','btn wide',B.goals.length?'Add another':'Pick a main lift');
+      add.onclick=()=>exPicker('Pick a main lift', e=>!B.goals.includes(e.id)&&mainEligible(e), e=>{ B.goals.push(e.id); openBuilder(); }, {keepOpen:true,onCancel:()=>openBuilder()});
+      host.appendChild(add); }
+  }
+  if(step==='equipment') chipsRow(Object.entries(EQUIPMENT),v=>B.equipment===v,v=>{ B.equipment=v; });
+  if(step==='dates'){
+    const d=el('div','qblock');
+    d.innerHTML=`<div class="qlab">Target date</div><input type="date" id="bdt" value="${esc(B.target)}">
+      <label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="bdf"${B.targetFixed?' checked':''}><span class="sm">Fixed — the plan has to end on it</span></label>
+      <div class="qlab" style="margin-top:14px">Test or meet date <span class="dim tiny" style="font-weight:400">· optional</span></div><input type="date" id="bdx" value="${esc(B.testDate)}">`;
+    host.appendChild(d);
+    $('#bdt').onchange=e=>{ B.target=e.target.value; }; $('#bdf').onchange=e=>{ B.targetFixed=e.target.checked; }; $('#bdx').onchange=e=>{ B.testDate=e.target.value; };
+  }
+  if(step==='constraints') chipsRow(Object.entries(CONDITIONS).map(([k,c])=>[k,c.name]),v=>B.conds.includes(v),v=>{ B.conds=B.conds.includes(v)?B.conds.filter(x=>x!==v):B.conds.concat(v); });
+  if(step==='review'){
+    const plan=builderPlan(B), list=el('div','qblock');
+    const row=(b,i,dim)=>`<div style="padding:7px 0;border-top:1px solid var(--line);${dim?'opacity:.6':''}">
+      <div class="row between sm"><span style="font-weight:650;color:${blockColor(b)}">${i+1}. ${esc(b.linear?'Novice':blockName(b))}</span><span class="dim tiny">${b.weeks} week${b.weeks>1?'s':''}${b.realize?' · tests':''}${b.deload?' + deload':''}</span></div>
+      <div class="muted tiny" style="margin-top:2px">${esc(plan.reasons[i]||'')}</div></div>`;
+    list.innerHTML=`<div class="qlab">${B.rerun?'New':'Your blocks'} · ${plan.blocks.reduce((a,b)=>a+blockLen(b),0)} weeks</div>`+plan.blocks.map((b,i)=>row(b,i,i<plan.kept)).join('');
+    if(B.rerun){
+      const pos=ROADMAP.length?programPosition():null, before=el('div','qblock');
+      before.innerHTML='<div class="qlab">Now</div>'+ROADMAP.map((b,i)=>`<div class="sm" style="padding:4px 0;${pos&&i<=pos.idx?'opacity:.6':''}"><span style="color:${blockColor(b)}">${i+1}. ${esc(blockName(b))}</span> <span class="dim tiny">· ${b.weeks} wk${b.deload?' + deload':''}</span></div>`).join('');
+      host.appendChild(before);
+    }
+    host.appendChild(list);
+    if(plan.leftover) host.appendChild(el('div','anchor',plan.leftover+' week'+(plan.leftover>1?'s':'')+' left over at the end. Move the target date, or the last block runs a little long.')).style.color='var(--warn)';
+    const P=builderParams(B);
+    host.appendChild(el('div','dim tiny',PROFILES[B.profile].label+' · '+EXPERIENCE[B.experience].short+' · '+splitOf(B.week).name+' '+B.week.length+' days · '
+      +(B.goals.map(id=>exById[id]&&exById[id].name).filter(Boolean).join(', ')||'no main lifts')+(P.ratio>0.55?' · strength-heavy profiles repeat strength blocks to reach their share':''))).style.marginTop='6px';
+    if((CFG.feedbackUrl||'').trim()&&!CFG.testerName){
+      const nm=el('div','qblock'); nm.innerHTML='<div class="qlab">What should we call you?</div><div class="field">Notes you write go to the person who set this up, signed with this name.</div><input type="text" id="bnm" placeholder="First name is fine" style="width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit">';
+      host.appendChild(nm); $('#bnm').value=B.name; $('#bnm').oninput=e=>{ B.name=e.target.value; };
+    }
+    navBtn('Back','ghost',()=>go(-1));
+    navBtn(B.rerun?'Replace the rest of my program':'Use this program','pri',()=>{
+      applyBuilder(B,plan); BUILDER=null; SETTINGS_DRAFT=null; $('#dlg').close(); TAB='dash'; render();
+      toast(B.rerun?'Program rebuilt — your logged history is unchanged':'Program ready');
+      if(!CFG.introSeen) setTimeout(()=>openTutorial(0),250);
     });
     return;
   }
-
-  if(step===5){
-    const last=next(5)==null;
-    shell('Anything you\u2019re working around?',
-      'Flags exercises that load an at-risk position. It only ever warns, never blocks.',
-      'ob5',prev(5),last?'Build my program':'Next',last?finish:()=>openOnboarding(next(5)));
-    const host=$('#ob5');
-    chips(host,Object.entries(CONDITIONS).map(([k,v])=>({label:v.name,v:k})),
-      o=>O.conds.includes(o.v),
-      o=>{ O.conds=O.conds.includes(o.v)?O.conds.filter(x=>x!==o.v):O.conds.concat(o.v); openOnboarding(5); });
-    host.appendChild(el('div','anchor','Leave blank if nothing applies.'));
-    return;
-  }
-
-  if(step===6){
-    shell('What should we call you?',
-      'Notes you write in the app go to the person who set it up for you, signed with this name. Nothing else is sent.',
-      'ob6',prev(6),'Build my program',finish);
-    $('#ob6').innerHTML='<input type="text" id="obname" placeholder="First name is fine" style="width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit;margin-bottom:12px">';
-    const inp=$('#obname'); inp.value=O.name; inp.oninput=e=>{ O.name=e.target.value; };
-    return;
-  }
+  navBtn('Back','ghost',()=>{ if(B.i<=1){ B.path=null; B.i=0; openBuilder(); } else go(-1); });
+  navBtn('Skip','ghost',()=>go(1));
+  navBtn('Next','pri',()=>go(1));
 }
 
-/* One screen, not a tour: the five things a new user needs that the app
-   doesn't otherwise say. Shown once after setup; reachable from the Lifts tab. */
-function openIntro(){
+/* ---------- Tutorial (spec §4.1) — six short cards, once, reachable from Lifts ---------- */
+function openTutorial(i){
   const fb=!!(CFG.feedbackUrl||'').trim(), sync=!!(CFG.syncUrl||'').trim();
-  const item=(t,b)=>`<div class="qblock"><div class="qlab">${t}</div><div class="muted sm" style="line-height:1.5">${b}</div></div>`;
-  sheet(`<h2 style="font-size:22px;margin-bottom:12px">How this works</h2>
-    ${item('The check-in shapes the session','Before each workout it asks how you slept and how you feel. Answer honestly — 3 is a normal day. It can lighten a session; it never adds to one.')}
-    ${item('Suggested weights are suggestions','Change any number before you log the set. What you log is what counts, and the suggestions learn from it.')}
-    ${item('RPE','How hard a set was: 10 means nothing left, 8 means about two more reps were possible.')}
-    ${item('Notes','The ✎ at the top right writes a note — something broke, something confusing, an idea. '+(fb?'Notes go to the person who gave you this app.':'Notes are saved in your log.'))}
-    ${item('Your data','It lives only on this phone. '+(sync?'It\'s also backed up to a sheet after each session.':'If you care about keeping it, save a backup from the Lifts tab now and then.'))}
-    <button class="btn go wide" id="introok">Got it</button>`);
-  $('#introok').onclick=()=>{ CFG.introSeen=true; saveCfg(); $('#dlg').close(); render(); };
+  const cards=[
+    ['The check-in adjusts today\'s session','Before each workout it asks how you slept and how you feel. 3 means normal. It can lighten a session; it never adds to one.'],
+    ['Amber numbers are suggestions','Change anything before logging. Change the weight and the reps recompute, or the other way round — what you set turns white.'],
+    ['RPE','How hard a set was: 10 = nothing left, 8 = about two reps in reserve.'],
+    ['Every number explains itself','The line under each set says why it says what it says. Tap it for the detail.'],
+    ['Notes, setup and cues','The ✎ at the top sends feedback'+(fb?' to the person who gave you this app':'')+'. Setup notes and your own cues live in each exercise\'s info — they show on the card.'],
+    ['Your data stays on this device',sync?'It\'s also backed up to your sheet after each session.':'Back it up from the Lifts tab now and then — if the phone goes, so does the log.']];
+  const k=Math.max(0,Math.min(cards.length-1,i||0)), [t,b]=cards[k];
+  sheet(`<div class="dim tiny" style="margin-bottom:8px">${k+1} of ${cards.length}</div>
+    <h2 style="font-size:22px;margin-bottom:8px">${esc(t)}</h2>
+    <div class="muted sm" style="line-height:1.55;margin-bottom:16px">${esc(b)}</div>
+    <div class="row" style="gap:8px">
+      ${k?'<button class="btn ghost grow" id="tutb">Back</button>':'<button class="btn ghost grow" id="tuts">Skip</button>'}
+      <button class="btn ${k===cards.length-1?'go':'pri'} grow" id="tutn">${k===cards.length-1?'Got it':'Next'}</button></div>`);
+  const done=()=>{ CFG.introSeen=true; saveCfg(); $('#dlg').close(); render(); };
+  if($('#tutb')) $('#tutb').onclick=()=>openTutorial(k-1);
+  if($('#tuts')) $('#tuts').onclick=done;
+  $('#tutn').onclick=()=>k===cards.length-1?done():openTutorial(k+1);
 }
 /* Wipe everything back to a true first-run state. For testing the new-user
    flow, and for handing the app to someone else on a shared device. */
@@ -6885,6 +6934,9 @@ function openSettings(){
       <div class="field">Sessions are built from this. Changing it does not touch your logged history. A block can have its own week below.</div>`;
     sp0.appendChild(weekPicker(S.split, w=>{ S.split=w; draw(); }));
     host.appendChild(sp0);
+    const rb=el('button','btn ghost wide','Rebuild the rest with the program builder'); rb.style.marginBottom='11px';
+    rb.onclick=()=>{ SETTINGS_DRAFT=null; BUILDER=null; openBuilder(true); };
+    host.appendChild(rb);
 
     const gl=el('div','qblock');
     gl.innerHTML=`<div class="qlab">Goal lifts, ranked</div>
@@ -7574,7 +7626,7 @@ $('#fileIn').onchange=e=>{
 loadAll(); applyTheme(); loadPending(); loadWeekEdits(); restoreSession();
 if(session&&session.slots&&session.slots[session.openIdx]) seedDraft(session.slots[session.openIdx]);
 restoreRest(); render(); initUpdates();
-if(needsOnboarding()) setTimeout(()=>openOnboarding(0),250);
+if(needsOnboarding()) setTimeout(()=>{ BUILDER=null; openBuilder(false); },250);
 requestPersistence();
 </script>
 </body>

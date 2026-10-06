@@ -132,6 +132,17 @@ never swapped out mid-workout.
 - **Generation flow:** `currentPhase()` → `generatedDays()` → `buildDay()` →
   `resolveEx()` + `schemeFor()`. Roadmap blocks are ordered intents; dates are
   derived from anchor + order + durations, never stored per block.
+- **Programs come from the builder (spec §3–4).** `sequenceBlocks()` is a
+  pure function (profile parameters, experience, weeks, test date → blocks +
+  reasons); `planFromNow()` keeps finished blocks and the current one;
+  `openBuilder()` / `applyBuilder()` are the only path that writes a whole
+  roadmap, and only on accept. Peak is not a block type — it's `taper:true`
+  on a strength block. Blocks marked `refined` run the batch-B hypertrophy
+  rules (maintenance top set, effort ramp, calibration AMRAP, set cap); a
+  program already under way only gets them from its next block.
+- **The app proposes, you decide.** Program changes the app suggests
+  (novice model, deloads, stall interventions) go through
+  `PROPOSAL_SOURCES` → cards on the dashboard. Never switch silently.
 - **A week is a list of day types** (`CFG.week`, or `b.week` per block; 2–6
   of full/upper/lower/push/pull/legs). `splitOf()` turns any spec — a week,
   or an old preset name in `CFG.split`/`b.split` — into one shape. Presets

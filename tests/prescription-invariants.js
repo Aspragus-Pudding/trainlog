@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','noviceSignal','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','noviceSignal','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -1373,6 +1373,42 @@ section('37. deload proposals');
   ok(!B.currentPhase().onDeload,'after '+dpw+' sessions the block carries on','');
   ok(B.weeksWithoutDeload()===0,'and the deload resets the count','');
   console.log('  neutral readiness never triggers · falling readiness / RPE drift propose · accepted = one week of deload sessions, then back');
+}
+
+/* ─── 38. program builder (spec §4.2) ─── */
+section('38. program builder');
+{
+  // a new user, quick setup with no answers: a valid program
+  const A=load([]); A.getCFG().roadmap=null;
+  const B=A.builderDefaults(false); B.path='quick';
+  let plan=A.builderPlan(B);
+  ok(plan.blocks.length>0&&plan.blocks.reduce((a,b)=>a+b.weeks,0)+plan.leftover===24,'quick setup, nothing chosen: a 24-week program',JSON.stringify(plan.blocks.map(b=>[b.type,b.weeks])));
+  ok(plan.blocks.every(b=>b.refined),'builder blocks run the new rules from the start','');
+  B.goals=['deadlift','deadlift','incline_machine']; B.est={deadlift:315}; B.profile='size_first';
+  plan=A.builderPlan(B); A.applyBuilder(B,plan);
+  const C=A.getCFG();
+  ok(C.onboarded&&C.profile==='size_first'&&JSON.stringify(C.goals)==='["deadlift","incline_machine"]','accepting saves the profile and de-duplicated main lifts',JSON.stringify(C.goals));
+  ok(A.LOG.some(e=>e.type==='e1rm_estimate'&&e.exercise_id==='deadlift'&&e.lb===315),'rough strength is saved as a stated estimate, not a set','');
+  ok(A.getRoadmap().length===plan.blocks.length,'the roadmap is the plan','');
+  // a rerun mid-program keeps history, finished blocks and the current one
+  const hist=[]; for(let i=0;i<7;i++) hist.push({type:'session_end',id:'h'+i,ts:day(40-i*2),session_id:'h'+i,joints:{}});
+  hist.push(set('deadlift','h1',315,5,8,38));
+  const R=load(hist), RC=R.getCFG(); RC.start=new Date(Date.now()-45*864e5).toISOString().slice(0,10); RC.split='full5';
+  const old=[R.applyShape({type:'hyp',label:'H',weeks:5,deload:true,hyp:['chest'],lead:'incline_machine'}),R.applyShape({type:'str',label:'S',weeks:4,deload:false,hyp:[]}),R.applyShape({type:'hyp',label:'H',weeks:5,deload:false,hyp:[]})];
+  R.setRoadmap(old); RC.roadmap=old;
+  const pos=R.programPosition(), before=JSON.stringify(old.slice(0,pos.idx+1));
+  const RB=R.builderDefaults(true); RB.week=['upper','lower','upper','lower']; RB.profile='even_mix';
+  const rp=R.builderPlan(RB), logBefore=R.LOG.length;
+  ok(rp.kept===pos.idx+1,'a rerun keeps finished blocks and the one you\'re in',rp.kept+' vs '+(pos.idx+1));
+  const kept=rp.blocks.slice(0,rp.kept);
+  ok(kept.every(b=>JSON.stringify(b.week)===JSON.stringify(R.splitOf('full5').week)),'kept blocks are pinned to the week they had, even though the new program week is upper/lower','');
+  R.applyBuilder(RB,rp);
+  const after=R.getRoadmap().slice(0,rp.kept).map(b=>{ const c={...b}; delete c.week; return c; });
+  ok(JSON.stringify(after)===JSON.stringify(JSON.parse(before)),'their contents are unchanged','');
+  ok(R.LOG.length===logBefore,'logged history is untouched','');
+  ok(JSON.stringify(R.getCFG().week)==='["upper","lower","upper","lower"]'&&R.getCFG().start===RC.start,'the new week applies from here; the program start date stays','');
+  ok(R.programPosition().idx===pos.idx&&R.programPosition().sessionsIn===pos.sessionsIn,'you are exactly where you were in the program','');
+  console.log('  quick setup works blank · accept saves settings + estimates · rerun keeps history, kept blocks and position, pins their week');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
