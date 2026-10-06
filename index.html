@@ -813,7 +813,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.28.2';
+const APP_VERSION='1.29.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1661,7 +1661,8 @@ const DAYS=[
 
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
-  goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},checklistOff:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
+  goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},checklistOff:{},
+  profile:null,profileParams:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
   feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{}};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
@@ -3002,6 +3003,7 @@ function blockProgress(p){
 }
 function renderDash(){
   const v=$('#v-dash'); v.innerHTML='';
+  v.appendChild(proposalCards());
   const p=currentPhase(), proj=programProjection();
   const longDate=dt=>dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const tgtDate=CFG.target?new Date(CFG.target+'T12:00'):null;
@@ -5048,6 +5050,84 @@ function backoffRx(slot){
     note:'Back-off '+k+(c.mode==='fixed'?' of '+n:'')+': '+Math.round(c.drop*100)+'% under the top set you logged ('+fmt(L,0)+' × '+top.reps+'), same reps.'
       +(c.mode==='fatigue'?' Keep going at this load until it feels as hard as the top set (RPE '+(top.rpe??'—')+'), at most '+(n+2)+' back-offs.':'')
       +' The 8% default and the count are judgement defaults.'};
+}
+
+/* ---------- Profiles and experience (spec §3.1–3.2) ----------
+   A profile is the front door to programming; each maps to four parameters,
+   editable under "customise" (CFG.profileParams overrides). Names are
+   principles, never brands. The ratios, test frequencies and specificity
+   levels are the spec's (research-derived structure, Grade C/D numbers). */
+const PROFILES={
+  pure_strength:{label:'Pure strength', blurb:'Get as strong as possible on your main lifts. Size is a side effect.', ratio:0.80, testEvery:1, peaks:'yes', specificity:'high'},
+  strength_first:{label:'Strength first', blurb:'Mostly strength, with real hypertrophy blocks in between.', ratio:0.65, testEvery:1, peaks:'before_tests', specificity:'high'},
+  even_mix:{label:'Even mix', blurb:'Half strength, half size — classic powerbuilding.', ratio:0.50, testEvery:2, peaks:'before_tests', specificity:'medium'},
+  size_first:{label:'Size first, occasional PRs', blurb:'Mostly building muscle, with a strength test now and then.', ratio:0.25, testEvery:3, peaks:'no', specificity:'medium'},
+  pure_size:{label:'Pure size', blurb:'Building muscle only. No strength tests.', ratio:0.00, testEvery:0, peaks:'no', specificity:'low'}
+};
+const PROFILE_ORDER=['pure_strength','strength_first','even_mix','size_first','pure_size'];
+function profileParams(){
+  const base=PROFILES[CFG.profile]||PROFILES.even_mix, o=CFG.profileParams||{};
+  return {...base, ...['ratio','testEvery','peaks','specificity'].reduce((a,k)=>(o[k]!=null?{...a,[k]:o[k]}:a),{})};
+}
+const EXPERIENCE={
+  novice:{label:'Still adding weight most sessions', short:'Novice'},
+  intermediate:{label:'Progress takes weeks', short:'Intermediate'},
+  advanced:{label:'Progress takes months', short:'Advanced'}
+};
+const EQUIPMENT={barbell:'Barbell gym',machine:'Machine-heavy',dumbbell:'Dumbbells only',mixed:'A bit of everything'};
+/* The data side of experience (spec §3.2): a lifter adding load every session
+   on a main lift for 3+ weeks is progressing like a novice. Per main lift:
+   at least 3 sessions spanning 21+ days, each session's top set heavier than
+   the one before. Judgement default thresholds (the spec's 3 weeks). */
+function noviceSignal(){
+  const lifts=[];
+  [...new Set(CFG.goals||[])].forEach(id=>{
+    if(!exById[id]) return;
+    const h=exerciseSessionHistory(id,'').filter(x=>x.topLb>0);
+    // the most recent unbroken run of session-to-session load increases
+    let run=[h[h.length-1]];
+    for(let i=h.length-2;i>=0;i--){ if(h[i].topLb<run[0].topLb-1e-6) run.unshift(h[i]); else break; }
+    const days=run.length>1?(new Date(run[run.length-1].ts)-new Date(run[0].ts))/864e5:0;
+    if(run.length>=3&&days>=21) lifts.push({id, sessions:run.length, days:Math.round(days)});
+  });
+  return {novice:lifts.length>0, lifts};
+}
+/* ---------- Proposals ----------
+   The app proposes, you decide (spec principle 3). One mechanism for every
+   card — novice model now, deloads (§3.6), stall interventions (batch C).
+   Declining hides a proposal until its condition re-arms (each proposal says
+   for how long); dismissals live in CFG.proposalsDismissed {id: isoDate}. */
+function proposalDismissedRecently(id, days){
+  const d=(CFG.proposalsDismissed||{})[id];
+  return !!d&&(Date.now()-new Date(d).getTime())/864e5<(days||9999);
+}
+function dismissProposal(id){ CFG.proposalsDismissed={...(CFG.proposalsDismissed||{}),[id]:new Date().toISOString()}; saveCfg(); }
+const PROPOSAL_SOURCES=[];
+function activeProposals(){
+  const out=[];
+  PROPOSAL_SOURCES.forEach(fn=>{ try{ const p=fn(); if(p&&!proposalDismissedRecently(p.id,p.snoozeDays)) out.push(p); }catch(err){ console.error('proposal failed',err); } });
+  return out;
+}
+PROPOSAL_SOURCES.push(()=>{
+  if(CFG.experience==='novice') return null;
+  const sig=noviceSignal(); if(!sig.novice) return null;
+  const names=sig.lifts.map(l=>exById[l.id].name+' ('+l.sessions+' sessions in a row, '+l.days+' days)').join(', ');
+  return {id:'novice_model', snoozeDays:28, title:'Your log looks like novice progress',
+    body:'You\'ve added load every session on '+names+'. Lifters progressing like that usually do best adding a little every session on one simple ongoing block, rather than periodized blocks. You can switch, or keep your current plan — this comes back in four weeks if it still applies.',
+    accept:{label:'Use the novice model', fn:()=>{ CFG.experience='novice'; saveCfg(); toast('Novice model on — rebuild your program from Edit program to apply it'); }},
+    decline:{label:'Keep my plan'}};
+});
+function proposalCards(){
+  const ps=activeProposals(), box=el('div','');
+  ps.forEach(p=>{
+    const c=el('div','card pad'); c.style.borderLeft='3px solid var(--accent)';
+    c.innerHTML=`<div style="font-weight:650;margin-bottom:4px">${esc(p.title)}</div><div class="muted sm" style="line-height:1.5">${esc(p.body)}</div>`;
+    const row=el('div','row'); row.style.cssText='gap:8px;margin-top:10px;flex-wrap:wrap';
+    const a=el('button','btn pri s',esc(p.accept.label)); a.onclick=()=>{ p.accept.fn(); dismissProposal(p.id); render(); };
+    const d=el('button','btn s',esc((p.decline&&p.decline.label)||'Not now')); d.onclick=()=>{ if(p.decline&&p.decline.fn) p.decline.fn(); dismissProposal(p.id); render(); };
+    row.append(a,d); c.appendChild(row); box.appendChild(c);
+  });
+  return box;
 }
 
 /* ---------- Training max and realization (spec §2.3–2.4) ----------

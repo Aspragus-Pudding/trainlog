@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','noviceSignal','activeProposals'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -1167,6 +1167,33 @@ section('32. technique: checklist, video prompt, sticking question');
   D.setSession({id:'SD',slots:[dsl],openIdx:0,adj:null,ratings:{}});
   ok(D.stickingPending(dsl)===null,'not for isolation or non-main lifts','');
   console.log('  checklist: own setup first, ≤3 library cues · video every 21 days, skip counts · sticking: hard/missed main-lift sets, once per session');
+}
+
+/* ─── 33. profiles, experience signal, proposals (spec §3.1–3.2) ─── */
+section('33. profiles and the novice signal');
+{
+  const A=load([]), C=A.getCFG();
+  Object.entries(A.PROFILES).forEach(([k,p])=>ok(p.ratio>=0&&p.ratio<=1&&p.testEvery>=0&&['yes','before_tests','no'].includes(p.peaks)&&['high','medium','low'].includes(p.specificity),'profile '+k+' has its four parameters',''));
+  ok(!JSON.stringify(A.PROFILES).match(/5\/3\/1|Juggernaut|Smolov|Sheiko|Westside|Starting Strength/i),'no brand names in profiles','');
+  C.profile='size_first'; ok(A.profileParams().ratio===0.25&&A.profileParams().testEvery===3,'profile parameters','');
+  C.profileParams={testEvery:2}; ok(A.profileParams().testEvery===2&&A.profileParams().ratio===0.25,'"customise" overrides one parameter, keeps the rest','');
+  // novice signal: load up every session for 3+ sessions over 21+ days, on a main lift
+  const up=[set('deadlift','N1',225,5,8,30),set('deadlift','N2',235,5,8,23),set('deadlift','N3',245,5,8,15),set('deadlift','N4',255,5,8,7)];
+  const B=load(up); B.getCFG().goals=['deadlift'];
+  ok(B.noviceSignal().novice&&B.noviceSignal().lifts[0].sessions===4,'four straight increases over 23 days: novice progress',JSON.stringify(B.noviceSignal()));
+  const flat=load([set('deadlift','F1',225,5,8,30),set('deadlift','F2',225,5,8,23),set('deadlift','F3',245,5,8,15)]); flat.getCFG().goals=['deadlift'];
+  ok(!flat.noviceSignal().novice,'a repeated load breaks the run','');
+  const quick=load([set('deadlift','Q1',225,5,8,9),set('deadlift','Q2',235,5,8,6),set('deadlift','Q3',245,5,8,2)]); quick.getCFG().goals=['deadlift'];
+  ok(!quick.noviceSignal().novice,'three increases inside a week is not 3+ weeks','');
+  // it proposes, never switches
+  const P=B.activeProposals();
+  ok(P.some(p=>p.id==='novice_model')&&B.getCFG().experience==null,'novice progress makes a proposal; experience is unchanged until accepted','');
+  B.getCFG().proposalsDismissed={novice_model:new Date().toISOString()};
+  ok(!B.activeProposals().some(p=>p.id==='novice_model'),'declined: hidden while snoozed','');
+  B.getCFG().proposalsDismissed={novice_model:new Date(Date.now()-30*864e5).toISOString()};
+  ok(B.activeProposals().some(p=>p.id==='novice_model'),'and back after the snooze if it still applies','');
+  B.getCFG().experience='novice'; ok(!B.activeProposals().some(p=>p.id==='novice_model'),'no proposal once you are on the novice model','');
+  console.log('  five profiles, no brands · customise overrides · novice = 3+ straight increases over 21+ days · proposes, never switches · snooze');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

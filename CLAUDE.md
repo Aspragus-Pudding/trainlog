@@ -207,6 +207,7 @@ on the Lifts tab so the user can confirm which build is running.
 
 - Training full body, 5 days/week. Powerbuilding, not competitive powerlifting.
 - Goal lifts: Transformer bar squat, deadlift, incline machine press (from settings, Oct 2026 — weighted chin-up was earlier).
+- Profile: size first, occasional PRs (chosen Oct 2026). New hypertrophy rules (effort ramp, calibration AMRAPs, set cap) start from the next hypertrophy block, not mid-block.
 - **Anterior shoulder instability** — labral tear with a Hill-Sachs lesion,
   pre-surgical. The `shoulder_instability` condition flags exercises loading
   abduction + external rotation. Take this seriously; don't weaken those flags.
