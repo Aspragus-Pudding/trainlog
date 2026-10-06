@@ -811,7 +811,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.20.3';
+const APP_VERSION='1.20.4';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -3147,7 +3147,7 @@ function openWeekPreview(openDayId){
       exPicker('Swap '+(cur?cur.name:''), e=>e.id!==sl.ex, e=>{
         editWeekDay(rawDay,d=>{ d.slots[i].ex=e.id; d.slots[i].swapped=true; });
         openWeekPreview(active);
-      });
+      }, {muscle:primaryMuscle(cur)});
     }));
     const rm=mk('✕','Remove exercise',()=>{ editWeekDay(rawDay,d=>{ d.slots.splice(i,1); }); openWeekPreview(active); });
     rm.style.color='var(--skip)'; ctl.appendChild(rm);
@@ -3874,12 +3874,14 @@ const MUSCLE_ORDER=['chest','upper_back','lats','lower_back','traps','front_delt
 /* Shared exercise picker: search box + category bar + create-new, used for
    swapping (mid-session and in the preview), adding an accessory, and
    choosing goal lifts — one implementation, so a fix here fixes it everywhere. */
-function exPicker(title, filterFn, onPick){
+/* opts.muscle: open with that muscle's chip selected (swaps pass the
+   current exercise's primary muscle, so like-for-like comes first). */
+function exPicker(title, filterFn, onPick, opts){
   // muscle is the main way in — a chip lists every exercise that trains it
   // directly (counts a full set), so a deadlift shows under hamstrings, glutes
   // and lower back alike. Rehab and Yours cover what a
   // muscle can't. Rehab movements only appear when asked for — never by default.
-  let q='', mus=null, grp=null;
+  let q='', mus=(opts&&opts.muscle)||null, grp=null, first=true;
   const draw=()=>{
     const base=EX.filter(filterFn);
     let list=base.filter(e=>grp==='rehab'?e.rehab:!e.rehab);
@@ -3900,8 +3902,9 @@ function exPicker(title, filterFn, onPick){
       });
     }
     const muscles=MUSCLE_ORDER.filter(m=>base.some(e=>!e.rehab&&(e.vol||{})[m]===1));
+    if(mus&&!muscles.includes(mus)){ mus=null; return draw(); }
 
-    sheet(`<h2 style="font-size:20px;margin-bottom:10px">${esc(title)}</h2>
+    sheet(`<h2 id="exttl" tabindex="-1" autofocus style="font-size:20px;margin-bottom:10px;outline:none">${esc(title)}</h2>
       <div class="chips" id="exmus" style="margin-bottom:8px"></div>
       <div class="chips" id="excat" style="margin-bottom:10px"></div>
       <input type="text" id="exq" value="${esc(q)}" placeholder="Search by name or pattern"
@@ -3910,6 +3913,8 @@ function exPicker(title, filterFn, onPick){
       <button class="btn ghost wide" id="exnew" style="margin-top:10px">Create a new exercise</button>
       <button class="btn ghost wide" id="exc" style="margin-top:8px">Cancel</button>`);
     const inp=$('#exq'); inp.oninput=e=>{ q=e.target.value; draw(); setTimeout(()=>{const n=$('#exq'); if(n){n.focus();}},0); };
+    // opening never puts the keyboard up — search focuses only when tapped
+    if(first){ first=false; try{ const a=document.activeElement; if(a&&a.id==='exq') a.blur(); $('#exttl').focus({preventScroll:true}); }catch{} }
 
     const chip=(host,label,on,fn)=>{ const b=el('button','chip',esc(label)); b.style.cssText='font-size:12.5px;padding:6px 10px';
       b.setAttribute('aria-pressed',on?'true':'false'); b.onclick=fn; $(host).appendChild(b); };
@@ -3940,7 +3945,7 @@ function openPlanSwap(rawDay,i){
   exPicker('Swap '+cur.name, e=>e.id!==cur.id, e=>{
     editPlan(rawDay,d=>{ d.slots[i].ex=e.id; d.slots[i].swapped=true; });
     openWorkoutPreview(rawDay);
-  });
+  }, {muscle:primaryMuscle(cur)});
 }
 function openPlanAdd(rawDay){
   exPicker('Add an exercise', ()=>true, e=>{
@@ -3955,7 +3960,7 @@ function openSwap(slot,idx){
     slot.ex=e.id; slot.swapped=true; slot.sets=[];
     seedDraft(slot); saveSession(); renderWork();
     toast('Swapped to '+e.name);
-  });
+  }, {muscle:primaryMuscle(cur)});
 }
 
 function entryPanel(slot,idx){
