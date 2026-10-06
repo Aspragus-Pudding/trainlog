@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','noviceSignal','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','noviceSignal','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -1408,7 +1408,13 @@ section('38. program builder');
   ok(R.LOG.length===logBefore,'logged history is untouched','');
   ok(JSON.stringify(R.getCFG().week)==='["upper","lower","upper","lower"]'&&R.getCFG().start===RC.start,'the new week applies from here; the program start date stays','');
   ok(R.programPosition().idx===pos.idx&&R.programPosition().sessionsIn===pos.sessionsIn,'you are exactly where you were in the program','');
-  console.log('  quick setup works blank · accept saves settings + estimates · rerun keeps history, kept blocks and position, pins their week');
+  // every profile × experience gives blocks the review can draw (the novice block once had no shape)
+  A.PROFILE_ORDER.forEach(pf=>Object.keys(A.EXPERIENCE).forEach(ex=>[true,false].forEach(rr=>{
+    const BB=A.builderDefaults(rr); BB.profile=pf; BB.experience=ex;
+    const pl=A.builderPlan(BB);
+    ok(pl.blocks.every(b=>Array.isArray(b.vol)&&b.vol.length===A.blockLen(b)&&b.vol.length>0),pf+' / '+ex+(rr?' rerun':'')+': every block has its weekly shape',JSON.stringify(pl.blocks.map(b=>[b.type,b.weeks,b.vol&&b.vol.length])));
+  })));
+  console.log('  quick setup works blank · accept saves settings + estimates · rerun keeps history, kept blocks and position, pins their week · every profile × experience drawable');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

@@ -818,7 +818,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.34.1';
+const APP_VERSION='1.34.2';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -5278,7 +5278,8 @@ function sequenceBlocks(o){
   const mk=(type,weeks,extra)=>({type,label:TYPE_NAME[type],weeks,deload:false,hyp:[],emphasis:'moderate',refined:true,...extra});
   if(!W) return {blocks:out, reasons:[]};
   if(o.experience==='novice'){
-    return {blocks:[mk('hyp',W,{linear:true,label:'Novice'})],
+    // shaped like every other block — the review counts weeks from its volume shape
+    return {blocks:[applyShape(mk('hyp',W,{linear:true,label:'Novice'}))], leftover:0,
       reasons:['One ongoing block: add a little load every session on your main lifts until progress stalls twice, then switch to blocks. Periodization adds nothing yet at this stage.']};
   }
   const cyc=chooseCycle(P.ratio);
@@ -6728,6 +6729,18 @@ function applyBuilder(B, plan){
     append({type:'e1rm_estimate',exercise_id:id,lb:B.units==='kg'?Math.round(v*LB*10)/10:v}); });
 }
 function openBuilder(rerun){
+  try{ return drawBuilder(rerun); }
+  catch(err){
+    console.error('builder failed', err);
+    sheet(`<h2 style="font-size:20px;margin-bottom:8px">This step hit a problem</h2>
+      <div class="muted sm" style="margin-bottom:6px">Nothing was changed — your program and your log are exactly as they were.</div>
+      <div class="dim tiny" style="margin-bottom:14px">${esc(String(err&&err.message||err))}</div>
+      <div class="row" style="gap:8px"><button class="btn ghost grow" id="bfback">Back a step</button><button class="btn pri grow" id="bfclose">Close</button></div>`);
+    $('#bfback').onclick=()=>{ if(BUILDER&&BUILDER.i>1) BUILDER.i--; else if(BUILDER){ BUILDER.path=null; BUILDER.i=0; } openBuilder(); };
+    $('#bfclose').onclick=()=>{ BUILDER=null; $('#dlg').close(); };
+  }
+}
+function drawBuilder(rerun){
   if(!BUILDER) BUILDER=builderDefaults(rerun);
   const B=BUILDER, steps=builderSteps(B), step=B.path?steps[B.i]:'path';
   const N=steps.length, n=Math.max(1,B.i+1);
