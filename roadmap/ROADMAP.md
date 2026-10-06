@@ -17,6 +17,22 @@ Run them in order. Each is one Claude Code session. Bring the reports back to
 chat if anything surprising comes up — especially the item 1 findings in
 batch 5.
 
+## After batch 8: strength programming (batches A, B, C)
+
+Batches A, B and C come after batch 8. They're specced in
+`docs/spec/strength-programming.md`, which turns the two research reports in
+`docs/research/` into rules. Build from the spec, not the reports.
+
+| Batch | Theme | Runs |
+|---|---|---|
+| **A** | Foundation (spec §1, §2, §6.1–6.3) | After batch 8 |
+| **B** | Program builder | After batch A and the engine phase 2 checkpoint |
+| **C** | Stall engine | After batch B; needs the persona simulator (spec §8) |
+
+The two research reports (`docs/research/strength-programming.md`,
+`docs/research/lift-specific.md`) aren't in the repo yet. Don't start batch A
+until they are.
+
 ## Decisions made
 
 **Program progress counts sessions, not calendar days.** The rotation already
@@ -68,6 +84,9 @@ batch5-correctness.md           Claude Code prompt
 batch6-ux.md                    Claude Code prompt
 batch7-testers.md               Claude Code prompt
 batch8-themes.md                Claude Code prompt
+batch-A-foundation.md           Claude Code prompt
+batch-B-program-builder.md      Claude Code prompt
+batch-C-stall-engine.md         Claude Code prompt
 checkpoint-engine-phase2.md     what to do ~22 Oct — not a prompt
 coaching-cues.json              → copy to docs/ in the repo before batch 6
 research-coaching-cues.md       the brief that produced the JSON; kept for
