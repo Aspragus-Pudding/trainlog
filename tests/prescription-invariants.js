@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -969,6 +969,48 @@ section('28. library model');
   ok(A.familyOf({pattern:'horizontal_press',custom:true})==='horizontal_press'&&A.familyOf({pattern:'calf_raise'})==='isolation','a custom exercise\'s family comes from its movement type','');
   ok(A.customSpecificity('machine','bench')===0.5&&A.customSpecificity('barbell','bench')===0.7,'custom specificity: machine version 0.5, other implement 0.7','');
   console.log('  every exercise has a family · parents valid, same family, acyclic · folds hidden and never generated · custom family from pattern');
+}
+
+/* ─── 29. modifiers: one track per (exercise, signature) ─── */
+section('29. modifier signatures are isolated');
+{
+  const P={pause:{seconds:2,at:'chest'}};
+  // signatures: stable, order-independent, empty for nothing/standard
+  const A0=load([]);
+  ok(A0.modSig(P)==='pause:2@chest','pause signature','');
+  ok(A0.modSig({grip:'close',pause:{seconds:2,at:'chest'}})===A0.modSig({pause:{at:'chest',seconds:2},grip:'close'}),'signature ignores key order','');
+  ok(A0.modSig({})===''&&A0.modSig({grip:'standard'})===''&&A0.modSig(null)==='','no modifier = the empty signature','');
+  ok(A0.modSig({tempo:'fast'})==='','junk tempo is dropped','');
+  ok(/paused 2s on the chest/.test(A0.modLabel(P)),'labels read plainly',A0.modLabel(P));
+  ok(A0.modLabelFromSig('pause:2@chest,rom:board2in')===A0.modLabel({pause:{seconds:2,at:'chest'},rom:{kind:'board',amount:2,unit:'in'}}),'signature reads back to the same words','');
+  // a paused set never drives the normal suggestion, and vice versa
+  const norm=[set('bench','M1',185,6,8,4)], paused=[{...set('bench','M2',165,5,9,2),modifiers:P}];
+  const A=load(norm.concat(paused));
+  const s0={ex:'bench',role:'primary',reps:[5,8],rpe:8,sets_target:3,sets:[]};
+  const sP={...s0,modifiers:P};
+  ok(A.lastSetFor('bench').weight.value===185,'last normal set is the 185, not the later paused 165','');
+  ok(A.lastSetFor('bench',A.modSig(P)).weight.value===165,'last paused set is the paused one','');
+  const B=load(norm);
+  ok(JSON.stringify(A.nextPrescription(s0))===JSON.stringify(B.nextPrescription(s0)),'adding a paused set changes nothing about the normal prescription','');
+  const pp=A.nextPrescription(sP);
+  ok(pp.lb!=null&&pp.lb<=185,'the paused slot prices from the paused history',JSON.stringify(pp));
+  // first time with a modifier: no invented number, the unmodified set as reference
+  const C=load(norm), sT={...s0,modifiers:{tempo:'3-1-0'}}, pt=C.nextPrescription(sT);
+  ok(pt.lb==null&&pt.firstMod&&/pick a weight/.test(pt.note)&&/185 × 6/.test(pt.note),'first time with a modifier: no number, unmodified last set as reference',JSON.stringify(pt));
+  // PRs and bests are per track
+  const D=load([set('bench','R1',185,5,8,6),{...set('bench','R2',150,5,8,4),modifiers:P},{...set('bench','R3',160,5,8,2),modifiers:P}]);
+  const pr=D.prIds();
+  const r3=D.sets().find(x=>x.session_id==='R3');
+  ok(pr.has(r3.id),'a paused best is a paused PR even though it is lighter than the normal best','');
+  ok(D.bestE1RM('bench').v>D.bestE1RM('bench',D.modSig(P)).v,'normal and paused bests are separate','');
+  ok(D.sessionBests('bench').length===1&&D.sessionBests('bench',D.modSig(P)).length===2,'history rows are per track','');
+  ok(JSON.stringify(D.tracksFor('bench'))===JSON.stringify(['',D.modSig(P)]),'tracks listed unmodified first','');
+  // folded exercises read as the parent's track with the folded modifier
+  const E=load([set('board_press','F1',225,3,8,2)]);
+  const ft=E.setTrack(E.sets()[0]);
+  ok(ft.ex==='bench'&&ft.sig==='rom:board2in','a board-press set reads as bench, rom:board',JSON.stringify(ft));
+  ok(E.lastSetFor('bench')==null,'and never as normal bench','');
+  console.log('  stable signatures · paused never moves normal · first time = reference, no number · PRs/bests/history per track · folds map to parent');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

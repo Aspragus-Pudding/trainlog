@@ -92,6 +92,7 @@ section{display:none;padding-top:14px} section.on{display:block}
 .exicons{display:flex;gap:4px;flex:none}
 .iconbtn{width:30px;height:30px;display:grid;place-items:center;color:var(--muted);border-radius:7px}
 .exbody{padding:0 15px 15px}
+.exmod{font-size:12.5px;color:var(--accent);font-weight:600;margin-top:2px}
 .exnote{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4;white-space:pre-line;overflow-wrap:anywhere}
 
 .srow{display:flex;align-items:center;gap:11px;padding:7px 0}
@@ -812,7 +813,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.24.0';
+const APP_VERSION='1.25.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1219,6 +1220,115 @@ function familyOf(ex){
   return TRACKED_FAMILIES.includes(ex.pattern)?ex.pattern:'isolation';
 }
 const mainEligible=ex=>!!ex&&!ex.rehab&&!ex.folded&&familyOf(ex)!=='isolation';
+/* ---------- Modifiers (spec §1.3–1.4) ----------
+   Pause, tempo, range of motion and grip are SET-LEVEL data, not separate
+   exercises: {pause:{seconds,at}, tempo:'3-1-0', rom:{kind,amount,unit},
+   grip}. A slot carries the modifiers its sets are logged with. Each
+   (exercise, signature) pair is its own track: last set, history, best
+   e1RM, PRs and fatigue all read one track, so a paused set never drives the
+   suggestion for a normal one. The signature is derived on read from the
+   stored modifiers — never stored. A set logged under a folded exercise
+   (board press) reads as its parent's track with the folded modifier. */
+const PAUSE_AT={squat:['bottom'],hinge:['below_knee','start'],horizontal_press:['chest'],vertical_press:['start','top'],
+  vertical_pull:['top','start'],horizontal_pull:['top','start'],isolation:['bottom','top']};
+const PAUSE_AT_LABEL={bottom:'at the bottom',chest:'on the chest',below_knee:'below the knee',start:'off the start',top:'at the top'};
+const ROM_KINDS={deficit:'deficit',pin:'pin',board:'board',partial:'partial'};
+const GRIPS={standard:'standard grip',close:'close grip',wide:'wide grip',neutral:'neutral grip'};
+function cleanMods(m){
+  if(!m||typeof m!=='object') return undefined;
+  const o={};
+  if(m.pause&&+m.pause.seconds>0) o.pause={seconds:+m.pause.seconds, at:m.pause.at||'bottom'};
+  if(m.tempo&&/^\d+-\d+-\d+$/.test(String(m.tempo).trim())) o.tempo=String(m.tempo).trim();
+  if(m.rom&&ROM_KINDS[m.rom.kind]) o.rom={kind:m.rom.kind, ...(+m.rom.amount>0?{amount:+m.rom.amount, unit:m.rom.unit||'in'}:{})};
+  if(m.grip&&GRIPS[m.grip]&&m.grip!=='standard') o.grip=m.grip;
+  return Object.keys(o).length?o:undefined;
+}
+/* Stable signature: fixed part order, so the same modifiers always give the same string. '' = unmodified. */
+function modSig(m){
+  const c=cleanMods(m); if(!c) return '';
+  const p=[];
+  if(c.pause) p.push('pause:'+c.pause.seconds+'@'+c.pause.at);
+  if(c.tempo) p.push('tempo:'+c.tempo);
+  if(c.rom) p.push('rom:'+c.rom.kind+(c.rom.amount?c.rom.amount+c.rom.unit:''));
+  if(c.grip) p.push('grip:'+c.grip);
+  return p.join(',');
+}
+function modLabel(m){
+  const c=cleanMods(m); if(!c) return '';
+  const p=[];
+  if(c.pause) p.push('paused '+c.pause.seconds+'s '+(PAUSE_AT_LABEL[c.pause.at]||c.pause.at));
+  if(c.tempo) p.push('tempo '+c.tempo);
+  if(c.rom) p.push((c.rom.amount?c.rom.amount+(c.rom.unit==='cm'?' cm ':'″ '):'')+ROM_KINDS[c.rom.kind]+(c.rom.kind==='partial'?' range':''));
+  if(c.grip) p.push(GRIPS[c.grip]);
+  return p.join(' · ');
+}
+const mergeMods=(a,b)=>cleanMods({...(cleanMods(a)||{}),...(cleanMods(b)||{})});
+/* A signature back to words, for history headings. */
+function modLabelFromSig(sig){
+  const m={};
+  String(sig||'').split(',').filter(Boolean).forEach(p=>{
+    const [k,v]=p.split(':');
+    if(k==='pause'){ const [sec,at]=v.split('@'); m.pause={seconds:+sec,at}; }
+    else if(k==='tempo') m.tempo=v;
+    else if(k==='rom'){ const r=v.match(/^([a-z]+)(\d*\.?\d+)?(in|cm)?$/); if(r) m.rom={kind:r[1],...(r[2]?{amount:+r[2],unit:r[3]||'in'}:{})}; }
+    else if(k==='grip') m.grip=v;
+  });
+  return modLabel(m)||sig;
+}
+/* Which track a logged set belongs to, and which track a slot prescribes for. */
+function setTrack(st){
+  const ex=exById[st.exercise_id];
+  if(ex&&ex.folded) return {ex:ex.folded.parent, sig:modSig(mergeMods(ex.folded.modifiers,st.modifiers))};
+  return {ex:st.exercise_id, sig:modSig(st.modifiers)};
+}
+function slotTrack(slot){
+  const ex=exById[slot.ex];
+  if(ex&&ex.folded) return {ex:ex.folded.parent, sig:modSig(mergeMods(ex.folded.modifiers,slot.modifiers))};
+  return {ex:slot.ex, sig:modSig(slot.modifiers)};
+}
+const onTrack=(st,exId,sig)=>{ const t=setTrack(st); return t.ex===exId&&t.sig===(sig||''); };
+const trackKey=(exId,sig)=>sig?exId+'|'+sig:exId;
+/* The signatures this exercise has history on, unmodified first. */
+function tracksFor(exId){
+  const sigs=new Set();
+  for(const st of sets()){ if(st.set_kind==='warmup') continue; const t=setTrack(st); if(t.ex===exId) sigs.add(t.sig); }
+  return [...sigs].sort((a,b)=>a===''?-1:b===''?1:a.localeCompare(b));
+}
+
+/* One compact editor for a slot's modifiers — used mid-session, in the
+   workout preview and in the week view. onSave(cleanModsOrUndefined). */
+function openModifierEditor(exId, cur, onSave, onCancel){
+  const ex=exById[exId], fam=familyOf(ex), m=JSON.parse(JSON.stringify(cleanMods(cur)||{}));
+  const ats=PAUSE_AT[fam]||PAUSE_AT.isolation;
+  const draw=()=>{
+    sheet(`<h2 style="font-size:20px;margin-bottom:2px">Modify · ${esc(ex.name)}</h2>
+      <div class="muted tiny" style="margin-bottom:12px">Same exercise, done differently. It gets its own history and suggestions — your normal ${esc(ex.name.toLowerCase())} isn't affected.</div>
+      <div class="qblock" id="mdp"><div class="qlab">Pause</div></div>
+      <div class="qblock" id="mdt"><div class="qlab">Tempo <span class="dim tiny" style="font-weight:400">· down-hold-up, seconds</span></div></div>
+      <div class="qblock" id="mdr"><div class="qlab">Range of motion</div></div>
+      <div class="qblock" id="mdg"><div class="qlab">Grip</div></div>
+      <div class="anchor" id="mdsum" style="margin-bottom:10px"></div>
+      <div class="row" style="gap:8px"><button class="btn ghost grow" id="mdcancel">Cancel</button><button class="btn pri grow" id="mdsave">Save</button></div>`);
+    const chips=(host,opts,on,fn)=>{ const c=el('div','chips'); opts.forEach(([v,l])=>{ const b=el('button','chip',esc(l));
+      b.style.cssText='font-size:12.5px;padding:6px 10px'; b.setAttribute('aria-pressed',on(v)?'true':'false'); b.onclick=()=>{ fn(v); draw(); }; c.appendChild(b); });
+      $(host).appendChild(c); };
+    chips('#mdp',[[0,'None'],[1,'1 s'],[2,'2 s'],[3,'3 s']],v=>(m.pause?m.pause.seconds:0)===v,v=>{ if(v) m.pause={seconds:v,at:(m.pause&&m.pause.at)||ats[0]}; else delete m.pause; });
+    if(m.pause&&ats.length>1){ $('#mdp').appendChild(el('div','field','Where')).style.marginTop='8px';
+      chips('#mdp',ats.map(a=>[a,PAUSE_AT_LABEL[a]]),v=>m.pause.at===v,v=>{ m.pause.at=v; }); }
+    chips('#mdt',[['','None'],['3-1-0','3-1-0'],['4-0-0','4-0-0'],['2-2-0','2-2-0'],['5-0-0','5-0-0']],v=>(m.tempo||'')===v,v=>{ if(v) m.tempo=v; else delete m.tempo; });
+    chips('#mdr',[['','Full'],['deficit','Deficit'],['pin','Pin'],['board','Board'],['partial','Partial']],v=>(m.rom?m.rom.kind:'')===v,
+      v=>{ if(v) m.rom={kind:v,amount:(m.rom&&m.rom.amount)||(v==='partial'?0:2),unit:'in'}; else delete m.rom; });
+    if(m.rom&&m.rom.kind!=='partial'){ const g=el('div',''); g.style.marginTop='8px';
+      g.appendChild(stepper('inches',m.rom.amount||0,0.5,v=>{ m.rom.amount=Math.max(0,Math.min(12,v)); draw(); }));
+      $('#mdr').appendChild(g); }
+    chips('#mdg',Object.entries(GRIPS),v=>(m.grip||'standard')===v,v=>{ if(v==='standard') delete m.grip; else m.grip=v; });
+    $('#mdsum').textContent=modLabel(m)?'Will log as: '+modLabel(m):'No modifier — the normal exercise.';
+    $('#mdcancel').onclick=()=>{ if(onCancel) onCancel(); else $('#dlg').close(); };
+    $('#mdsave').onclick=()=>onSave(cleanMods(m));
+  };
+  draw();
+}
+
 /* Specificity for a custom exercise against the parent you picked: machine
    vs free weight 0.5, otherwise 0.7. Judgement default, Grade D (§1.2). */
 const MACHINE_LOADS=['machine','stack','cable'];
@@ -1807,13 +1917,14 @@ function setE1RM(st){
   const ex=exById[st.exercise_id];
   return e1rm(toLb(st.weight)+bwOffset(ex,st.ts),st.reps);
 }
-function bestE1RM(id){ let b=null;
+function bestE1RM(id, sig){ let b=null;
   for(const s of sets()){
-    if(s.exercise_id!==id||s.set_kind==='warmup') continue;
+    if(s.set_kind==='warmup'||!onTrack(s,id,sig)) continue;
     const v=setE1RM(s);
     if(v!=null&&(!b||v>b.v)) b={v,reps:s.reps};
   }
-  if(!b){ const e=statedE1RM(id); if(e) b={v:e+bwOffset(exById[id]),reps:null,stated:true}; }
+  // a stated estimate is for the unmodified lift only
+  if(!b&&!sig){ const e=statedE1RM(id); if(e) b={v:e+bwOffset(exById[id]),reps:null,stated:true}; }
   return b; }
 /* one best e1RM per calendar day, oldest first */
 /* Each session's best working set for one exercise, newest first — the one
@@ -1823,10 +1934,10 @@ function bestE1RM(id){ let b=null;
    e1RM formula's 15 reps falls back to its heaviest set. PR marks come from
    prIds(). Derived on read, never stored. Not exerciseSessionHistory(): that
    one feeds the engine and picks the heaviest set by design. */
-function sessionBests(exId){
+function sessionBests(exId, sig){
   const by=new Map();
   for(const st of sets()){
-    if(st.exercise_id!==exId||st.set_kind==='warmup') continue;
+    if(st.set_kind==='warmup'||!onTrack(st,exId,sig)) continue;
     const e1=setE1RM(st), lb=toLb(st.weight);
     const cur=by.get(st.session_id);
     const better=!cur||(e1!=null&&(cur.e1==null||e1>cur.e1+1e-9||(Math.abs(e1-cur.e1)<1e-9&&lb>cur.lb)))
@@ -1837,8 +1948,8 @@ function sessionBests(exId){
   return [...by.values()].map(b=>({...b,pr:pr.has(b.id)})).sort((a,b)=>new Date(b.ts)-new Date(a.ts));
 }
 /* Rows for sessionBests(), shared by both entry points. */
-function bestSetRows(exId, limit){
-  const all=sessionBests(exId), list=limit?all.slice(0,limit):all;
+function bestSetRows(exId, limit, sig){
+  const all=sessionBests(exId,sig), list=limit?all.slice(0,limit):all;
   const box=el('div','');
   if(!list.length){ box.appendChild(el('div','dim tiny','No working sets logged yet.')); return box; }
   list.forEach(b=>{
@@ -1863,16 +1974,20 @@ function openExerciseHistory(exId, back){
   const sp=sparkline(e1rmSeries(exId), ex.comparable===false?'var(--warn)':'var(--accent)');
   $('#hxtrend').appendChild(sp||el('div','dim tiny','Needs a few sets of 10 reps or fewer before a trend shows.'));
   if(ex.comparable===false) $('#hxtrend').appendChild(el('div','dim tiny','Machine-specific — valid against itself, not against other equipment.'));
-  $('#hxrows').appendChild(bestSetRows(exId));
+  const trs=tracksFor(exId);
+  (trs.length?trs:['']).forEach((sg,i)=>{
+    if(trs.length>1) $('#hxrows').appendChild(el('div','field',sg?esc(modLabelFromSig(sg)):'Unmodified')).style.marginTop=i?'12px':'0';
+    $('#hxrows').appendChild(bestSetRows(exId,0,sg));
+  });
   const dl=diaryEntries({exerciseId:exId});
   $('#hxdiary').appendChild(dl.length?diaryRows(dl):el('div','dim tiny','No entries yet — add one from the info sheet.'));
   $('#hxback').onclick=()=>{ if(back) back(); else $('#dlg').close(); };
 }
 let GOAL_HIST_OPEN={};
-function e1rmSeries(id){
+function e1rmSeries(id, sig){
   const byDay={};
   for(const st of sets()){
-    if(st.exercise_id!==id||st.set_kind==='warmup') continue;
+    if(st.set_kind==='warmup'||!onTrack(st,id,sig)) continue;
     const v=setE1RM(st); if(v==null||st.reps>10) continue;
     const d=st.ts.slice(0,10);
     if(!byDay[d]||v>byDay[d]) byDay[d]=v;
@@ -2088,8 +2203,8 @@ const JOINT_ACTION={
 };
 
 /* Top working set from the most recent OTHER session containing this lift */
-function lastPerformance(id){
-  const mine=sets().filter(x=>x.exercise_id===id&&x.set_kind!=='warmup'
+function lastPerformance(id, sig){
+  const mine=sets().filter(x=>x.set_kind!=='warmup'&&onTrack(x,id,sig)
     &&(!session||x.session_id!==session.id));
   if(!mine.length) return null;
   const sid=mine[mine.length-1].session_id;
@@ -2104,9 +2219,10 @@ function lastPerformance(id){
 function isPR(id, ev){
   const v=setE1RM(ev);
   if(v==null||ev.reps>10||ev.set_kind==='warmup') return null;
+  const tr=setTrack({...ev,exercise_id:ev.exercise_id||id});
   let prev=null;
   for(const st of sets()){
-    if(st.exercise_id!==id||(ev.id&&st.id===ev.id)||st.set_kind==='warmup') continue;
+    if((ev.id&&st.id===ev.id)||st.set_kind==='warmup'||!onTrack(st,tr.ex,tr.sig)) continue;
     const p=setE1RM(st);
     if(p!=null&&st.reps<=10&&(prev==null||p>prev)) prev=p;
   }
@@ -2123,15 +2239,15 @@ function prIds(){
   for(const st of sets()){
     if(st.set_kind==='warmup'||st.reps>10) continue;
     const v=setE1RM(st); if(v==null) continue;
-    const b=best[st.exercise_id];
-    if(b!=null&&v>b+0.5){ out.add(st.id); best[st.exercise_id]=v; }
-    else if(b==null) best[st.exercise_id]=v;
+    const t=setTrack(st), k=trackKey(t.ex,t.sig), b=best[k];
+    if(b!=null&&v>b+0.5){ out.add(st.id); best[k]=v; }
+    else if(b==null) best[k]=v;
   }
   _prCache=out; _prLen=LOG.length; return out;
 }
 const isPRSet=id=>prIds().has(id);
 
-const lastSetFor=id=>{const a=sets().filter(s=>s.exercise_id===id&&s.set_kind!=='warmup');
+const lastSetFor=(id,sig)=>{const a=sets().filter(s=>s.set_kind!=='warmup'&&onTrack(s,id,sig));
   return a.length?a[a.length-1]:null;};
 /* Program position is counted in SESSIONS, not calendar days. One program
    week is the split's days-per-week of trained sessions (countsAsTrained, so
@@ -2295,10 +2411,10 @@ function predictedRpe(e1, totalLb, reps){
 /* One entry per session a top set was logged for this exercise, oldest
    first, carrying whatever suggestion was live when that top set was
    logged (stamped once at log time in logSet(), never rewritten). */
-function exerciseSessionHistory(exId){
+function exerciseSessionHistory(exId, sig){
   const bySession=new Map();
   for(const st of sets()){
-    if(st.exercise_id!==exId||st.set_kind==='warmup') continue;
+    if(st.set_kind==='warmup'||!onTrack(st,exId,sig)) continue;
     if(st.group&&st.group.pos>0) continue;               // top set only
     const w=toLb(st.weight);
     const cur=bySession.get(st.session_id);
@@ -2312,16 +2428,16 @@ function exerciseSessionHistory(exId){
    per session — excluding the first few sessions (novelty gains that won't
    continue) and a recent window only. Null when there isn't enough
    seasoned history yet. */
-function progressionRate(exId){
-  const seasoned=exerciseSessionHistory(exId).slice(NOVELTY_SESSIONS);
+function progressionRate(exId, sig){
+  const seasoned=exerciseSessionHistory(exId,sig).slice(NOVELTY_SESSIONS);
   const recent=seasoned.slice(-RATE_WINDOW);
   if(recent.length<2) return null;
   return (recent[recent.length-1].topLb-recent[0].topLb)/(recent.length-1);
 }
 /* How many recent sessions in a row you've logged meaningfully below what
    was suggested. Resets the moment a suggestion is accepted. */
-function overrideStreak(exId){
-  const hist=exerciseSessionHistory(exId);
+function overrideStreak(exId, sig){
+  const hist=exerciseSessionHistory(exId,sig);
   let n=0;
   for(let i=hist.length-1;i>=0;i--){
     const h=hist[i];
@@ -2333,8 +2449,8 @@ function overrideStreak(exId){
 /* True if the most recent session's suggestion was itself a small "probe"
    bump above the session before it — so the next qualifying session won't
    probe twice in a row. */
-function lastWasProbe(exId){
-  const hist=exerciseSessionHistory(exId);
+function lastWasProbe(exId, sig){
+  const hist=exerciseSessionHistory(exId,sig);
   if(hist.length<2) return false;
   const [prev,last]=hist.slice(-2);
   return last.suggestedLb!=null && last.suggestedLb>prev.topLb+1e-6;
@@ -2410,8 +2526,8 @@ function rpeDeltaStep(slot, L0, R0, RPE0, T){
    Judgement defaults, Grade D. */
 const STAGNATION_SESSIONS=3, STAGNATION_SUPPRESS=2;
 function stagnationProbe(slot){
-  const ex=exById[slot.ex];
-  const hist=exerciseSessionHistory(ex.id);
+  const ex=exById[slot.ex], tr=slotTrack(slot);
+  const hist=exerciseSessionHistory(tr.ex,tr.sig);
   if(hist.length<STAGNATION_SESSIONS) return null;
   const recent=hist.slice(-STAGNATION_SESSIONS);
   const flat=recent.every(h=>Math.abs(h.topLb-recent[0].topLb)<1e-6 && h.reps===recent[0].reps);
@@ -2439,12 +2555,13 @@ function stagnationProbe(slot){
    JUDGEMENT DEFAULTS, GRADE D: 10 pairs from 4 sessions, most recent 30 pairs. */
 const FATIGUE_MIN_PAIRS=10, FATIGUE_MIN_SESSIONS=4, FATIGUE_WINDOW=30;
 let _fatCache={}, _fatLen=-1;
-function fatigueRise(exId){
+function fatigueRise(exId, sig){
   if(_fatLen!==LOG.length){ _fatCache={}; _fatLen=LOG.length; }
-  if(_fatCache[exId]) return _fatCache[exId];
+  const key=trackKey(exId,sig);
+  if(_fatCache[key]) return _fatCache[key];
   const bySess=new Map();
   for(const st of sets()){
-    if(st.exercise_id!==exId||st.set_kind==='warmup'||st.group) continue;
+    if(st.set_kind==='warmup'||st.group||!onTrack(st,exId,sig)) continue;
     if(!bySess.has(st.session_id)) bySess.set(st.session_id,[]);
     bySess.get(st.session_id).push(st);
   }
@@ -2459,7 +2576,7 @@ function fatigueRise(exId){
   pairs=pairs.slice(-FATIGUE_WINDOW);
   const n=pairs.length, sessions=new Set(pairs.map(p=>p.sid)).size;
   const mean=n?pairs.reduce((s,p)=>s+p.d,0)/n:0;
-  return (_fatCache[exId]={n,sessions,mean,ready:n>=FATIGUE_MIN_PAIRS&&sessions>=FATIGUE_MIN_SESSIONS});
+  return (_fatCache[key]={n,sessions,mean,ready:n>=FATIGUE_MIN_PAIRS&&sessions>=FATIGUE_MIN_SESSIONS});
 }
 
 /* The effort the next set is aimed at: the slot's target RPE, lowered by your
@@ -2467,18 +2584,18 @@ function fatigueRise(exId){
    there's enough of it. Shared by nextPrescription() and rebalance(), so a
    recomputed field aims at exactly what the suggestion aimed at. */
 function aimFor(slot){
-  const last=lastSetFor(slot.ex);
+  const tr=slotTrack(slot), last=lastSetFor(tr.ex,tr.sig);
   const inSession=!!(session&&last&&last.session_id===session.id);
-  const fat=inSession?fatigueRise(slot.ex):null;
+  const fat=inSession?fatigueRise(tr.ex,tr.sig):null;
   const rise=fat&&fat.ready&&fat.mean>0?Math.round(fat.mean*2)/2:0;
   return {T:slot.rpe-rise, rise, fat};
 }
 /* The one-rep max a recomputed field is priced against: what your last set
    implies on the chart, else your best e1RM or stated estimate. */
 function refE1(slot){
-  const ex=exById[slot.ex], off=bwOffset(ex), last=lastSetFor(slot.ex);
+  const ex=exById[slot.ex], off=bwOffset(ex), tr=slotTrack(slot), last=lastSetFor(tr.ex,tr.sig);
   if(last&&last.rpe!=null){ const e=impliedE1(toLb(last.weight)+off,last.reps,last.rpe); if(e) return {e1:e,src:'last'}; }
-  const b=bestE1RM(slot.ex);
+  const b=bestE1RM(tr.ex,tr.sig);
   return b?{e1:b.v,src:b.stated?'estimate':'best'}:null;
 }
 /* Bidirectional suggestions. A field you edit is locked; the other numeric
@@ -2542,11 +2659,20 @@ const draftLocked=()=>{ const L=draft.lock||{}; return !!(L.w||L.r||L.rpe); };
    Returns null lb when there's no history — the UI shows a dash rather than
    inventing a number. */
 function nextPrescription(slot){
-  const ex=exById[slot.ex];
-  const last=lastSetFor(slot.ex);
+  const ex=exById[slot.ex], tr=slotTrack(slot);
+  const last=lastSetFor(tr.ex,tr.sig);
   const off=bwOffset(ex);
   const lo=slot.reps[0], hi=slot.reps[1];
   const noBw=bwMissing(ex)?' Priced on added weight only — no bodyweight logged yet.':'';
+  if(!last&&tr.sig){
+    // first time with this modifier: no invented discount — your unmodified
+    // last set is shown as a reference and you pick the weight (Oct 2026 decision)
+    const ref=lastSetFor(tr.ex,'');
+    return {lb:null, reps:lo, src:null, firstMod:true,
+      note:'First time '+modLabel(slotTrack(slot).sig?mergeMods(ex.folded&&ex.folded.modifiers,slot.modifiers):null)+' — pick a weight.'
+        +(ref?' Without it you last did '+fmt(toLb(ref.weight),0)+' × '+ref.reps+(ref.rpe!=null?' @ RPE '+ref.rpe:'')+'.':'')
+        +' Once you log a set it has its own history.'};
+  }
   if(!last){
     const b=bestE1RM(slot.ex);
     if(b){
@@ -2601,16 +2727,16 @@ function nextPrescription(slot){
   if(dir===0) return hold('last session',`Last set ${lastTxt} was right on target, so it repeats.`);
 
   // ── easier than aimed
-  const overridden=overrideStreak(ex.id)>=OVERRIDE_TRIGGER;
+  const overridden=overrideStreak(tr.ex,tr.sig)>=OVERRIDE_TRIGGER;
   if(!atCeiling){
-    if(overridden&&lastWasProbe(ex.id)) return hold('holding at what you\'ve set',
+    if(overridden&&lastWasProbe(tr.ex,tr.sig)) return hold('holding at what you\'ve set',
       `You've logged below the last few suggestions and the last one was already a probe, so this holds ${lastTxt}.`);
     return done({lb:L0,reps:R0+1,src:overridden?'probe · +1 rep':'last session',
       note:`Last set ${lastTxt} was easier than RPE ${T} and below the ${hi}-rep ceiling, so same load, one more rep.`});
   }
   const ready=RPE0<=7.5;
   if(!ready&&overridden){
-    if(lastWasProbe(ex.id)) return hold('holding at what you\'ve set',
+    if(lastWasProbe(tr.ex,tr.sig)) return hold('holding at what you\'ve set',
       `You've logged below the last few suggestions and the last one was already a probe, so this holds ${lastTxt}.`);
     const up=gridFloor(slot,L0+PROBE_INCREMENT_LB);
     if(up>L0+1e-6) return done({lb:up,reps:R0,src:'probe · small bump',
@@ -2620,7 +2746,7 @@ function nextPrescription(slot){
   }
 
   // at or past the top of the range and easier than aimed: add load
-  const rate=ready?progressionRate(ex.id):null;
+  const rate=ready?progressionRate(tr.ex,tr.sig):null;
   const useRate=rate!=null&&rate>0;              // a flat or falling trailing rate is no reason to hold back
   let raw=null;
   if(useRate) raw=L0+rate;
@@ -3030,8 +3156,8 @@ function srowEl(o){
    exercise, plus an arrow when today's prescription (rx: {lb, reps}) moves
    from it. Shown on every card, open or collapsed, before you lift. */
 function lastTimeHtml(slot, rx){
-  const lp=lastPerformance(slot.ex);
-  if(!lp) return '<div class="lasttime dim">First time on this lift</div>';
+  const tr=slotTrack(slot), lp=lastPerformance(tr.ex,tr.sig);
+  if(!lp) return '<div class="lasttime dim">'+(tr.sig?'First time '+esc(modLabel(slot.modifiers)||'with this modifier'):'First time on this lift')+'</div>';
   const st=lp.set, L=toLb(st.weight), w=fmt(st.weight.value)+(st.weight.unit==='kg'?' kg':'');
   let arrow='';
   if(rx&&rx.lb!=null){
@@ -3052,6 +3178,7 @@ function exCard(slot,o){
   nameBtn.style.cssText='text-align:left;padding:0';
   nameBtn.innerHTML='<div class="exname">'+esc(ex.name)
     +(slot.role==='primary'?' <span class="leadbadge">Lead lift</span>':'')+'</div>'
+    +(modLabel(slot.modifiers)?'<div class="exmod">'+esc(modLabel(slot.modifiers))+'</div>':'')
     +'<div class="exmeta">'+n+' sets × '+fmtRange(slot.reps)+' reps · RPE '+slot.rpe+(slot.swapped?' · swapped':'')
     +(slot.prio?' · priority':'')
     +(slot.joint?' · <span style="color:var(--warn)">'+esc(slot.joint.joint)+': '+esc(slot.joint.msg)+'</span>':'')+'</div>'
@@ -3064,7 +3191,7 @@ function exCard(slot,o){
 }
 /* How the suggested load sits against your best estimate, for the preview. */
 function pctOfBest(slot, lb){
-  const ex=exById[slot.ex], b=bestE1RM(slot.ex);
+  const ex=exById[slot.ex], b=bestE1RM(slotTrack(slot).ex,slotTrack(slot).sig);
   if(lb==null||!b||ex.load==='bodyweight'||(isBW(ex)&&!lb&&!bwOffset(ex))) return '';
   return Math.round((lb+bwOffset(ex))/b.v*100)+'% of '+fmt(b.v,0)+' est. 1RM'
     +(ex.load==='bodyweight_plus'?(bwMissing(ex)?' (added weight only, no bodyweight logged)':' (incl. bodyweight)'):'');
@@ -3360,6 +3487,9 @@ function openWeekPreview(openDayId){
         openWeekPreview(active);
       }, {muscle:primaryMuscle(cur)});
     }));
+    ctl.appendChild(mk('Modify','Pause, tempo, range or grip',()=>openModifierEditor(sl.ex, sl.modifiers,
+      mods=>{ editWeekDay(rawDay,d=>{ if(mods) d.slots[i].modifiers=mods; else delete d.slots[i].modifiers; }); openWeekPreview(active); },
+      ()=>openWeekPreview(active))));
     const rm=mk('✕','Remove exercise',()=>{ editWeekDay(rawDay,d=>{ d.slots.splice(i,1); }); openWeekPreview(active); });
     rm.style.color='var(--skip)'; ctl.appendChild(rm);
     row.appendChild(ctl);
@@ -3573,6 +3703,9 @@ function openWorkoutPreview(rawDay){
     ctl.appendChild(mk('−','One set fewer',()=>{ editPlan(rawDay,d=>{ if(d.slots[i].sets>1) d.slots[i].sets--; }); openWorkoutPreview(rawDay); }));
     ctl.appendChild(mk('+','One set more',()=>{ editPlan(rawDay,d=>{ d.slots[i].sets++; }); openWorkoutPreview(rawDay); }));
     ctl.appendChild(mk('Swap','Swap exercise',()=>openPlanSwap(rawDay,i)));
+    ctl.appendChild(mk('Modify','Pause, tempo, range or grip',()=>openModifierEditor(slot.ex, slot.modifiers,
+      mods=>{ editPlan(rawDay,d=>{ if(mods) d.slots[i].modifiers=mods; else delete d.slots[i].modifiers; }); openWorkoutPreview(rawDay); },
+      ()=>openWorkoutPreview(rawDay))));
     const rm=mk('✕','Remove exercise',()=>{ editPlan(rawDay,d=>{ d.slots.splice(i,1); }); openWorkoutPreview(rawDay); });
     rm.style.color='var(--skip)'; ctl.appendChild(rm);
     body.appendChild(planCard(slot,'w',ctl));
@@ -4365,8 +4498,10 @@ function openSwap(slot,idx){
 function entryPanel(slot,idx){
   const ex=exById[slot.ex], p=el('div',''); p.style.marginTop='11px';
   p.appendChild(el('div','hr'));
-  if(!lastPerformance(slot.ex))
-    p.appendChild(el('div','muted sm','First time on this lift — pick something you can hit for the target reps.'))
+  if(!lastPerformance(slotTrack(slot).ex,slotTrack(slot).sig))
+    p.appendChild(el('div','muted sm',slotTrack(slot).sig
+      ?'First time '+esc(modLabel(slot.modifiers))+' — pick a weight. It gets its own history from the first set.'
+      :'First time on this lift — pick something you can hit for the target reps.'))
       .style.marginBottom='9px';
   // amber = suggested, normal = yours. Editing a field locks it; the other
   // number recomputes to hit the target RPE (rebalance()). Editing RPE stops it.
@@ -4382,6 +4517,14 @@ function entryPanel(slot,idx){
     null,{typeable:true,min:5,max:10}));
   p.appendChild(g);
   p.appendChild(sessionRangeEl(slot)).style.marginTop='4px';
+  {
+    const mb=el('button','warmtog',(modLabel(slot.modifiers)?'Modified: '+modLabel(slot.modifiers):'Pause, tempo, range or grip')+' ▸');
+    mb.onclick=()=>openModifierEditor(slot.ex, slot.modifiers, mods=>{
+      if(mods) slot.modifiers=mods; else delete slot.modifiers;
+      seedDraft(slot); saveSession(); $('#dlg').close(); renderWork();
+    }, ()=>{ $('#dlg').close(); renderWork(); });
+    p.appendChild(mb);
+  }
   if(draftLocked()){
     const r=draft.rebal, rng=fmtRange(slot.reps);
     let msg;
@@ -4813,7 +4956,7 @@ function suggestFor(slot){
   }
   // Joint ladder level 3+: no load increase on this exercise, every set —
   // repeat the last logged load. Level 5: no rep increase either.
-  const j=slot.joint, lastJ=(j&&j.level>=3&&pr.lb!=null)?lastSetFor(slot.ex):null;
+  const j=slot.joint, lastJ=(j&&j.level>=3&&pr.lb!=null)?lastSetFor(slotTrack(slot).ex,slotTrack(slot).sig):null;
   if(lastJ){
     const L0=toLb(lastJ.weight);
     if(pr.lb>L0+1e-6){ pr={...pr, lb:L0, reps:lastJ.reps}; o.jointHeld=true; }
@@ -4850,7 +4993,7 @@ function recordedSuggestion(slot, rec){
 function shownLoad(slot, lb){
   const ex=exById[slot.ex];
   const fixedUnit=ex&&ex.unitPref&&ex.unitPref!=='both'?ex.unitPref:null;
-  const last=fixedUnit?null:lastSetFor(slot.ex);
+  const last=fixedUnit?null:(lastSetFor(slotTrack(slot).ex,slotTrack(slot).sig)||lastSetFor(slot.ex));
   const unit=fixedUnit||(last&&last.weight&&last.weight.unit==='kg'?'kg':'lb');
   return unit==='kg'?{value:Math.round(lb/LB*2)/2, unit:'kg'}:{value:lb, unit:'lb'};
 }
@@ -4904,6 +5047,7 @@ function logSet(slot,idx,kind,extend,over){
   const candidate={type:'set',session_id:session.id,slot:slot.ex,exercise_id:ex.id,
     weight:{value:W.weight,unit:W.unit}, bar:ex.bar?{value:ex.bar,unit:'lb'}:null,
     reps:W.reps, rpe:kind==='warmup'?null:draft.rpe, set_kind:setKind, group,
+    ...(kind!=='warmup'&&cleanMods(slot.modifiers)?{modifiers:cleanMods(slot.modifiers)}:{}),
     target:{reps:slot.reps,rpe:slot.rpe},
     suggested_lb:stampSuggestion?(draft.suggestedLb??null):null,
     ...(suggestion&&{suggestion})};
@@ -5684,7 +5828,7 @@ function openSessionDetail(endEv){
       const est=e1rm(toLb(s.weight),s.reps);
       html+=`<div class="row between sm" style="padding:3px 0">
         <span class="muted">${s.set_kind==='warmup'?'warmup':s.group&&s.group.pos>0?TECHNIQUES[s.group.kind].extend:'set '+(i+1)}</span>
-        <span>${fmt(s.weight.value)} ${s.weight.unit} × ${s.reps}${s.rpe?` @ ${s.rpe}`:''}${est&&s.set_kind!=='warmup'?` · ${fmt(est,0)}`:''}</span></div>`;
+        <span>${fmt(s.weight.value)} ${s.weight.unit} × ${s.reps}${s.rpe?` @ ${s.rpe}`:''}${est&&s.set_kind!=='warmup'?` · ${fmt(est,0)}`:''}${modLabel(s.modifiers)?`<span class="dim tiny"> · ${esc(modLabel(s.modifiers))}</span>`:''}</span></div>`;
     });
     html+=`</div>`;
   });
