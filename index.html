@@ -811,7 +811,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.20.1';
+const APP_VERSION='1.20.2';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -2565,8 +2565,14 @@ const $=s=>document.querySelector(s);
 const el=(t,c,h)=>{const n=document.createElement(t);if(c)n.className=c;if(h!=null)n.innerHTML=h;return n;};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
+/* An in-place action (Done on a note, expanding a history) re-renders the
+   tab it's on; keep the scroll position so it doesn't jump back to the top.
+   Switching tabs still starts at the top. Not the Workout tab: its flows
+   (start, finish, next exercise) move you on purpose. */
+let LAST_RENDER_TAB=null;
 function render(){
   applyTheme();
+  const keepY=(LAST_RENDER_TAB===TAB&&TAB!=='work')?window.scrollY:null;
   try{ renderInner(); }
   catch(err){
     console.error('render failed', err);
@@ -2579,6 +2585,8 @@ function render(){
     const rb=document.getElementById('recoverBtn');
     if(rb) rb.onclick=()=>{ TAB='dash'; PENDING=null; savePending(); render(); };
   }
+  LAST_RENDER_TAB=TAB;
+  if(keepY!=null) window.scrollTo(0,keepY);
 }
 function renderInner(){
   const p=currentPhase();
