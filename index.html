@@ -813,7 +813,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.30.0';
+const APP_VERSION='1.31.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1656,7 +1656,7 @@ const splitFor=b=>splitOf(blockSplitSpec(b));
 function activeSplit(){ return splitFor(ROADMAP.length?ROADMAP[programPosition().idx]:null); }
 function generatedDays(){
   const phase=currentPhase();
-  return activeSplit().template.map(t=>buildDay(t,phase));
+  return addMaintenance(activeSplit().template.map(t=>buildDay(t,phase)), phase);
 }
 
 const DAYS=[
@@ -1702,6 +1702,14 @@ function loadAll(){
   try{ const c=JSON.parse(localStorage.getItem(LS_CFG)||'null'); if(c) CFG={...CFG,...c}; }catch{}
   ROADMAP = CFG.roadmap && CFG.roadmap.length ? CFG.roadmap : DEFAULT_ROADMAP.map(b=>({...b}));
   ROADMAP.forEach(b=>{ migratePeak(b); if(!b.vol||!b.vol.length) applyShape(b); });
+  // The batch-B hypertrophy rules (maintenance top set, effort ramp,
+  // calibration AMRAPs, set cap) start with the NEXT block for a program
+  // already under way — never mid-block (decided Oct 2026). Marked once.
+  if(!CFG.rulesV){
+    try{ const pos=ROADMAP.length?programPosition():null;
+      ROADMAP.forEach((b,i)=>{ if(!pos||i>pos.idx) b.refined=true; }); }catch{}
+    CFG.rulesV=2;
+  }
   mergeCustom();
   applyLibraryModel();
   applyNameOverrides();
@@ -2267,7 +2275,14 @@ function prIds(){
 }
 const isPRSet=id=>prIds().has(id);
 
-const lastSetFor=(id,sig)=>{const a=sets().filter(s=>s.set_kind!=='warmup'&&onTrack(s,id,sig));
+/* cls 'top' prices from top sets and AMRAPs, 'work' from ordinary working
+   sets — so a weekly heavy top set doesn't distort the hypertrophy sets after
+   it, and vice versa. Falls back to any set on the track when the class has
+   none yet (every set before roles existed). */
+const TOP_ROLES=['top','amrap'];
+const inClass=(s,cls)=>!cls||(cls==='top'?TOP_ROLES.includes(s.role):!TOP_ROLES.includes(s.role));
+const lastSetFor=(id,sig,cls)=>{ if(cls){ const c=sets().filter(s=>s.set_kind!=='warmup'&&onTrack(s,id,sig)&&inClass(s,cls)); if(c.length) return c[c.length-1]; }
+  const a=sets().filter(s=>s.set_kind!=='warmup'&&onTrack(s,id,sig));
   return a.length?a[a.length-1]:null;};
 /* Program position is counted in SESSIONS, not calendar days. One program
    week is the split's days-per-week of trained sessions (countsAsTrained, so
@@ -2431,10 +2446,11 @@ function predictedRpe(e1, totalLb, reps){
 /* One entry per session a top set was logged for this exercise, oldest
    first, carrying whatever suggestion was live when that top set was
    logged (stamped once at log time in logSet(), never rewritten). */
-function exerciseSessionHistory(exId, sig){
+function exerciseSessionHistory(exId, sig, cls){
+  if(cls){ const any=sets().some(st=>st.set_kind!=='warmup'&&onTrack(st,exId,sig)&&inClass(st,cls)); if(!any) cls=null; }
   const bySession=new Map();
   for(const st of sets()){
-    if(st.set_kind==='warmup'||!onTrack(st,exId,sig)) continue;
+    if(st.set_kind==='warmup'||!onTrack(st,exId,sig)||(cls&&!inClass(st,cls))) continue;
     if(st.group&&st.group.pos>0) continue;               // top set only
     const w=toLb(st.weight);
     const cur=bySession.get(st.session_id);
@@ -2448,16 +2464,16 @@ function exerciseSessionHistory(exId, sig){
    per session — excluding the first few sessions (novelty gains that won't
    continue) and a recent window only. Null when there isn't enough
    seasoned history yet. */
-function progressionRate(exId, sig){
-  const seasoned=exerciseSessionHistory(exId,sig).slice(NOVELTY_SESSIONS);
+function progressionRate(exId, sig, cls){
+  const seasoned=exerciseSessionHistory(exId,sig,cls).slice(NOVELTY_SESSIONS);
   const recent=seasoned.slice(-RATE_WINDOW);
   if(recent.length<2) return null;
   return (recent[recent.length-1].topLb-recent[0].topLb)/(recent.length-1);
 }
 /* How many recent sessions in a row you've logged meaningfully below what
    was suggested. Resets the moment a suggestion is accepted. */
-function overrideStreak(exId, sig){
-  const hist=exerciseSessionHistory(exId,sig);
+function overrideStreak(exId, sig, cls){
+  const hist=exerciseSessionHistory(exId,sig,cls);
   let n=0;
   for(let i=hist.length-1;i>=0;i--){
     const h=hist[i];
@@ -2469,8 +2485,8 @@ function overrideStreak(exId, sig){
 /* True if the most recent session's suggestion was itself a small "probe"
    bump above the session before it — so the next qualifying session won't
    probe twice in a row. */
-function lastWasProbe(exId, sig){
-  const hist=exerciseSessionHistory(exId,sig);
+function lastWasProbe(exId, sig, cls){
+  const hist=exerciseSessionHistory(exId,sig,cls);
   if(hist.length<2) return false;
   const [prev,last]=hist.slice(-2);
   return last.suggestedLb!=null && last.suggestedLb>prev.topLb+1e-6;
@@ -2556,7 +2572,7 @@ function rpeDeltaStep(slot, L0, R0, RPE0, T){
 const STAGNATION_SESSIONS=3, STAGNATION_SUPPRESS=2;
 function stagnationProbe(slot){
   const ex=exById[slot.ex], tr=slotTrack(slot);
-  const hist=exerciseSessionHistory(tr.ex,tr.sig);
+  const hist=exerciseSessionHistory(tr.ex,tr.sig,priceClass(slot));
   if(hist.length<STAGNATION_SESSIONS) return null;
   const recent=hist.slice(-STAGNATION_SESSIONS);
   const flat=recent.every(h=>Math.abs(h.topLb-recent[0].topLb)<1e-6 && h.reps===recent[0].reps);
@@ -2613,7 +2629,7 @@ function fatigueRise(exId, sig){
    there's enough of it. Shared by nextPrescription() and rebalance(), so a
    recomputed field aims at exactly what the suggestion aimed at. */
 function aimFor(slot){
-  const tr=slotTrack(slot), last=lastSetFor(tr.ex,tr.sig);
+  const tr=slotTrack(slot), last=lastSetFor(tr.ex,tr.sig,priceClass(slot));
   const inSession=!!(session&&last&&last.session_id===session.id);
   const fat=inSession?fatigueRise(tr.ex,tr.sig):null;
   const rise=fat&&fat.ready&&fat.mean>0?Math.round(fat.mean*2)/2:0;
@@ -2622,7 +2638,7 @@ function aimFor(slot){
 /* The one-rep max a recomputed field is priced against: what your last set
    implies on the chart, else your best e1RM or stated estimate. */
 function refE1(slot){
-  const ex=exById[slot.ex], off=bwOffset(ex), tr=slotTrack(slot), last=lastSetFor(tr.ex,tr.sig);
+  const ex=exById[slot.ex], off=bwOffset(ex), tr=slotTrack(slot), last=lastSetFor(tr.ex,tr.sig,priceClass(slot));
   if(last&&last.rpe!=null){ const e=impliedE1(toLb(last.weight)+off,last.reps,last.rpe); if(e) return {e1:e,src:'last'}; }
   const b=bestE1RM(tr.ex,tr.sig);
   return b?{e1:b.v,src:b.stated?'estimate':'best'}:null;
@@ -2688,8 +2704,8 @@ const draftLocked=()=>{ const L=draft.lock||{}; return !!(L.w||L.r||L.rpe); };
    Returns null lb when there's no history — the UI shows a dash rather than
    inventing a number. */
 function nextPrescription(slot){
-  const ex=exById[slot.ex], tr=slotTrack(slot);
-  const last=lastSetFor(tr.ex,tr.sig);
+  const ex=exById[slot.ex], tr=slotTrack(slot), cls=priceClass(slot);
+  const last=lastSetFor(tr.ex,tr.sig,cls);
   const off=bwOffset(ex);
   const lo=slot.reps[0], hi=slot.reps[1];
   const noBw=bwMissing(ex)?' Priced on added weight only — no bodyweight logged yet.':'';
@@ -2756,16 +2772,16 @@ function nextPrescription(slot){
   if(dir===0) return hold('last session',`Last set ${lastTxt} was right on target, so it repeats.`);
 
   // ── easier than aimed
-  const overridden=overrideStreak(tr.ex,tr.sig)>=OVERRIDE_TRIGGER;
+  const overridden=overrideStreak(tr.ex,tr.sig,cls)>=OVERRIDE_TRIGGER;
   if(!atCeiling){
-    if(overridden&&lastWasProbe(tr.ex,tr.sig)) return hold('holding at what you\'ve set',
+    if(overridden&&lastWasProbe(tr.ex,tr.sig,cls)) return hold('holding at what you\'ve set',
       `You've logged below the last few suggestions and the last one was already a probe, so this holds ${lastTxt}.`);
     return done({lb:L0,reps:R0+1,src:overridden?'probe · +1 rep':'last session',
       note:`Last set ${lastTxt} was easier than RPE ${T} and below the ${hi}-rep ceiling, so same load, one more rep.`});
   }
   const ready=RPE0<=7.5;
   if(!ready&&overridden){
-    if(lastWasProbe(tr.ex,tr.sig)) return hold('holding at what you\'ve set',
+    if(lastWasProbe(tr.ex,tr.sig,cls)) return hold('holding at what you\'ve set',
       `You've logged below the last few suggestions and the last one was already a probe, so this holds ${lastTxt}.`);
     const up=gridFloor(slot,L0+PROBE_INCREMENT_LB);
     if(up>L0+1e-6) return done({lb:up,reps:R0,src:'probe · small bump',
@@ -2775,7 +2791,7 @@ function nextPrescription(slot){
   }
 
   // at or past the top of the range and easier than aimed: add load
-  const rate=ready?progressionRate(tr.ex,tr.sig):null;
+  const rate=ready?progressionRate(tr.ex,tr.sig,cls):null;
   const useRate=rate!=null&&rate>0;              // a flat or falling trailing rate is no reason to hold back
   let raw=null;
   if(useRate) raw=L0+rate;
@@ -3209,7 +3225,9 @@ function exCard(slot,o){
   nameBtn.innerHTML='<div class="exname">'+esc(ex.name)
     +(slot.role==='primary'?' <span class="leadbadge">Lead lift</span>':'')+'</div>'
     +(modLabel(slot.modifiers)?'<div class="exmod">'+esc(modLabel(slot.modifiers))+'</div>':'')
-    +'<div class="exmeta">'+(slot.structure==='amrap'
+    +'<div class="exmeta">'+(isMaint(slot)
+        ?'1 top set × '+fmtRange(MAINT_TOP.reps)+' @ RPE '+MAINT_TOP.rpe+' · then '+Math.max(1,n-1)+' × '+fmtRange(slot.reps)+' @ RPE '+slot.rpe
+        :slot.structure==='amrap'
         ?'Realization: 1 set, as many reps as you can · aim for '+slot.reps[1]+'+'
         :isTopBack(slot)
         ?'Top set × '+fmtRange(slot.reps)+' @ RPE '+slot.rpe+' · then '+Math.max(1,n-1)+' back-off'+(n-1===1?'':'s')+' −'+Math.round(backoffCfg().drop*100)+'%'
@@ -3428,7 +3446,7 @@ function renderWork(){
         load:s?fmt(s.weight.value)+' '+s.weight.unit+' × '+s.reps+(s.failed?' · missed':''):'—',
         pr:s&&isPRSet(s.id),
         badge:s?(s.group&&s.group.pos>0?TECHNIQUES[s.group.kind].extend:(s.role==='backoff'?'back-off':s.role==='top'?'top · RPE '+s.rpe:(s.rpe?'RPE '+s.rpe:'warmup')))
-          :(isTopBack(slot)?(j===0?'top · RPE '+slot.rpe:'back-off'):'RPE '+slot.rpe),
+          :(isTopBack(slot)?(j===0?'top · RPE '+slot.rpe:'back-off'):isMaint(slot)&&j===0?'top · RPE '+MAINT_TOP.rpe:'RPE '+slot.rpe),
         badgeOn:!!s, chev:!!s,
         onclick:s?()=>openEditSet(slot,j):null, aria:s?'Edit set '+(j+1):null}));
     }
@@ -3623,7 +3641,7 @@ function planCard(slot, key, controls){
       body.appendChild(srowEl({idx:j+1, load:fmt(backoffLoad(slot,lb),0)+' lb × '+reps, badge:'back-off'}));
       continue;
     }
-    body.appendChild(srowEl({idx:j+1, load:loadTxt+' × '+reps, badge:isTopBack(slot)&&j===0?'top · RPE '+slot.rpe:'RPE '+slot.rpe}));
+    body.appendChild(srowEl({idx:j+1, load:loadTxt+' × '+reps, badge:(isTopBack(slot)||isMaint(slot))&&j===0?'top · RPE '+(isMaint(slot)?MAINT_TOP.rpe:slot.rpe):'RPE '+slot.rpe}));
   }
   const ramp=lb!=null?warmupRamp(slot,lb):[];
   if(ramp.length){
@@ -4879,7 +4897,7 @@ function barSVG(sol){
 }
 
 function startSession(day){
-  (day.slots||[]).forEach(sl=>{ if(sl.structure==='topback'||sl.structure==='amrap') ensureInitialTM(slotTrack(sl).ex); });
+  (day.slots||[]).forEach(sl=>{ if(sl.structure==='topback'||sl.structure==='amrap'||sl.structure==='maint') ensureInitialTM(slotTrack(sl).ex); });
   session={id:ulid(),dayId:day.id,dayName:day.name,soreGroups:soreGroupsFor(day),
     prep:buildPrep(day,null).map(m=>({...m,done:false})),readiness:null,
     openIdx:0,ratings:{},adj:null,score:null,
@@ -4917,6 +4935,8 @@ function explainRx(slot, pr, o){
   }
   // 2. where the number came from
   if(pr.src==='back-off'||pr.amrap){ if(pr.amrap) parts.push(pr.src); if(pr.note) detail.push(pr.note); return {line:parts.join(' · '), detail}; }
+  if(pr.maint){ parts.unshift('strength upkeep: 1 top set this week @ RPE '+MAINT_TOP.rpe);
+    detail.push('One heavy set a week on each main lift keeps strength expression from fading during a hypertrophy block; your usual hypertrophy sets follow it. How long strength holds without it is uncertain (Grade D), as are the 3–5 reps and RPE 7.5.'); }
   if(pr.src) parts.push(pr.src==='last session'?'from your last set':pr.src);
   else parts.push('no history yet');
   if(pr.note) detail.push(pr.note);
@@ -5007,7 +5027,25 @@ function suggestFor(slot){
     const a=amrapRx(slot);
     return {pr:a, lb:a.lb, why:explainRx(slot,a,o), o};
   }
+  if(isMaint(slot)&&!topSetOf(slot)){
+    const v=maintTopView(slot), m=nextPrescription(v);
+    const pr={...m, maint:true};
+    return {pr, lb:pr.lb, why:explainRx(v,pr,o), o};
+  }
   let pr=nextPrescription(slot);
+  // novice linear progression: a main lift's first set of the session adds
+  // one step whenever last session's work was done (reps at or above the
+  // range floor, not harder than aimed). Every later set follows the normal
+  // engine. Spec §3.2: add load every session until progress stalls twice.
+  const ph=currentPhase();
+  if(ph&&ph.linear&&o.fresh&&isMainLift(slot.ex)&&pr.lb!=null){
+    const tr=slotTrack(slot), last=lastSetFor(tr.ex,tr.sig);
+    if(last&&last.rpe!=null&&last.reps>=slot.reps[0]&&last.rpe<=slot.rpe+RPE_HOLD_TOL){
+      const L0=toLb(last.weight);
+      pr={...pr, lb:stepUp(slot,L0), reps:Math.min(last.reps,slot.reps[1]), src:'novice · add load every session',
+        note:'Novice model: last session you did '+fmt(L0,0)+' × '+last.reps+' @ RPE '+last.rpe+', so the load goes up one step at the same reps. This continues until progress stalls twice.'};
+    }
+  }
   // Stagnation probe only on the first set of a session, and only on the
   // chart-free path — the chart path already has its own override-damping
   // and probe logic (overrideStreak/lastWasProbe), and layering both would
@@ -5041,6 +5079,38 @@ function backoffCfg(){
   return {drop:Math.min(0.2,Math.max(0.03,+b.drop||0.08)), mode:b.mode==='fatigue'?'fatigue':'fixed'};
 }
 const isTopBack=slot=>!!slot&&slot.structure==='topback';
+/* Which history a slot's next set prices from: a top set (topback / amrap /
+   a maintenance slot before its top set) or ordinary working sets. A slot
+   can force it with _cls (the maintenance view below). */
+function priceClass(slot){
+  if(slot._cls) return slot._cls;
+  if(slot.structure==='amrap'||isTopBack(slot)) return 'top';
+  return 'work';
+}
+/* Strength maintenance (spec §3.4): in a hypertrophy block each main lift
+   gets ONE top set a week at RPE 7–8 so strength expression doesn't fade,
+   then its usual hypertrophy sets. Residual-effect logic; how long strength
+   holds without it is Grade D, as are the 3–5 reps and RPE 7.5 used here. */
+const MAINT_TOP={reps:[3,5], rpe:7.5};
+const isMaint=slot=>!!slot&&slot.structure==='maint';
+const maintTopView=slot=>({...slot, reps:MAINT_TOP.reps.slice(), rpe:MAINT_TOP.rpe, _cls:'top'});
+function addMaintenance(days, phase){
+  if(!phase||phase.type!=='hyp'||phase.onDeload||!phase.refined||phase.linear) return days;
+  [...new Set(CFG.goals||[])].filter(id=>exById[id]&&mainEligible(exById[id])).forEach(id=>{
+    let placed=false;
+    for(const d of days){
+      const sl=d.slots.find(x=>x.ex===id);
+      if(sl){ sl.structure='maint'; sl.sets+=1; placed=true; break; }
+    }
+    // a main lift the week never trains still gets its weekly top set, on the shortest day
+    if(!placed&&days.length){
+      const d=days.reduce((a,b)=>b.slots.length<a.slots.length?b:a,days[0]);
+      const sc=schemeFor('secondary',phase.type,phase.week,phase.weeks,exById[id]);
+      d.slots.push({ex:id,role:'secondary',sets:1+Math.max(1,sc.sets-1),reps:sc.reps,rpe:sc.rpe,structure:'maint',repSrc:sc.repSrc,joint:jointNoteFor(exById[id].pattern)});
+    }
+  });
+  return days;
+}
 const topSetOf=slot=>(slot.sets||[]).find(x=>x.role==='top')||null;
 function backoffLoad(slot, topLb){
   const c=backoffCfg();
@@ -5132,7 +5202,7 @@ function chooseCycle(ratio){
 function sequenceBlocks(o){
   const P=o.params, W=Math.max(0,Math.round(o.weeks||0)), goals=(o.goals||[]).filter(Boolean);
   const wantsPR=P.testEvery>0, out=[];
-  const mk=(type,weeks,extra)=>({type,label:TYPE_NAME[type],weeks,deload:false,hyp:[],emphasis:'moderate',...extra});
+  const mk=(type,weeks,extra)=>({type,label:TYPE_NAME[type],weeks,deload:false,hyp:[],emphasis:'moderate',refined:true,...extra});
   if(!W) return {blocks:out, reasons:[]};
   if(o.experience==='novice'){
     return {blocks:[mk('hyp',W,{linear:true,label:'Novice'})],
@@ -5252,6 +5322,26 @@ function proposalCards(){
   return box;
 }
 
+/* Novice stalls: a session in the novice block where a main lift's first set
+   fell short (reps below the floor, or harder than aimed by more than the
+   tolerance). Two on any main lift → propose moving to blocks. */
+function noviceStalls(exId){
+  // each session's first working set, against the target it was logged with
+  const first=new Map();
+  for(const st of sets()){ if(st.set_kind==='warmup'||!onTrack(st,exId,'')) continue; if(!first.has(st.session_id)) first.set(st.session_id,st); }
+  return [...first.values()].filter(x=>x.target&&x.rpe!=null&&
+    (x.failed||x.reps<x.target.reps[0]||x.rpe>x.target.rpe+RPE_HOLD_TOL)).length;
+}
+PROPOSAL_SOURCES.push(()=>{
+  const ph=currentPhase(); if(!ph||!ph.linear) return null;
+  const stalled=[...new Set(CFG.goals||[])].filter(id=>exById[id]&&noviceStalls(id)>=2);
+  if(!stalled.length) return null;
+  return {id:'novice_done', snoozeDays:14, title:'Progress has stalled twice',
+    body:'On '+stalled.map(id=>exById[id].name).join(' and ')+', adding load every session has stopped working twice. That is the usual point to move to hypertrophy and strength blocks. Rebuild your program from Edit program to switch.',
+    accept:{label:'Switch to blocks', fn:()=>{ CFG.experience='intermediate'; saveCfg(); toast('Set to intermediate — rebuild your program from Edit program to apply it'); }},
+    decline:{label:'Keep going'}};
+});
+
 /* ---------- Training max and realization (spec §2.3–2.4) ----------
    The training max (TM) is a PLANNING number per main lift, separate from the
    live e1RM the per-set engine prices with. It changes only by recorded
@@ -5306,7 +5396,7 @@ function tmFromAmrap(slot, ev){
 const isMainLift=exId=>(CFG.goals||[]).includes(exId);
 function techFirstSet(slot){
   if(slot.structure==='amrap') return !slot.sets.length;
-  if(isTopBack(slot)) return !topSetOf(slot);
+  if(isTopBack(slot)||isMaint(slot)) return !topSetOf(slot);
   return !slot.sets.length;
 }
 /* §6.1 — your own setup note first, then up to three library setup cues. */
@@ -5338,7 +5428,7 @@ const STICK_LABEL={bottom:'At the bottom',off_chest:'Off the chest',off_floor:'O
 function stickingPending(slot){
   if(!session||!isMainLift(slot.ex)) return null;
   const fam=familyOf(exById[slot.ex]); if(!FAMILY_STICKING[fam]) return null;
-  const st=slot.sets.find(x=>x.role==='top'||x.role==='amrap')||(isTopBack(slot)||slot.structure==='amrap'?null:slot.sets[0]);
+  const st=slot.sets.find(x=>x.role==='top'||x.role==='amrap')||(isTopBack(slot)||isMaint(slot)||slot.structure==='amrap'?null:slot.sets[0]);
   if(!st||!(st.failed||(st.rpe!=null&&st.rpe>=9.5))) return null;
   if((session.stickSkip||{})[slot.ex]) return null;
   if(LOG.some(e=>e.type==='sticking_report'&&e.session_id===session.id&&e.exercise_id===slot.ex)) return null;
@@ -5475,7 +5565,7 @@ function logSet(slot,idx,kind,extend,over){
     weight:{value:W.weight,unit:W.unit}, bar:ex.bar?{value:ex.bar,unit:'lb'}:null,
     reps:W.reps, rpe:kind==='warmup'?null:draft.rpe, set_kind:setKind, group,
     ...(kind!=='warmup'&&cleanMods(slot.modifiers)?{modifiers:cleanMods(slot.modifiers)}:{}),
-    ...(kind!=='warmup'?{role:group?'straight':slot.structure==='amrap'&&!slot.sets.length?'amrap':isTopBack(slot)?(topSetOf(slot)?'backoff':'top'):'straight'}:{}),
+    ...(kind!=='warmup'?{role:group?'straight':slot.structure==='amrap'&&!slot.sets.length?'amrap':isTopBack(slot)?(topSetOf(slot)?'backoff':'top'):isMaint(slot)&&!topSetOf(slot)?'top':'straight'}:{}),
     ...(kind!=='warmup'&&draft.failed?{failed:true}:{}),
     target:{reps:slot.reps,rpe:slot.rpe},
     suggested_lb:stampSuggestion?(draft.suggestedLb??null):null,
@@ -5965,7 +6055,7 @@ function fillToTarget(draft, startDate, targetDate, splitKey){
     const next=(!last||last.type==='str')?'hyp':'str';
     const weeks=next==='hyp'?5:4;
     if(avail-have < weeks+1) break;
-    draft.push(applyShape({type:next,label:TYPE_NAME[next],weeks,hyp:[],deload:true}));
+    draft.push(applyShape({type:next,label:TYPE_NAME[next],weeks,hyp:[],deload:true,refined:true}));
     have+=weeks+1; added++;
   }
   // peaks are no longer appended here: a taper goes only before a fixed
@@ -6428,7 +6518,7 @@ function openOnboarding(step){
     CFG.start=new Date().toISOString().slice(0,10);
     CFG.target=t.toISOString().slice(0,10);
     ROADMAP=[applyShape({type:'hyp',label:'Hypertrophy',weeks:5,hyp:[],deload:true,
-      lead:O.goals[0]||null,emphasis:'moderate'})];
+      lead:O.goals[0]||null,emphasis:'moderate',refined:true})];
     fillToTarget(ROADMAP,CFG.start,CFG.target);
     CFG.roadmap=ROADMAP; CFG.onboarded=true; saveCfg();
     // starting estimates: only the goal lifts you gave a number for

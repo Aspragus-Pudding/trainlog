@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','noviceSignal','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','noviceSignal','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -1248,6 +1248,50 @@ section('34. block sequencer');
   ok(pb.type==='str'&&pb.taper===true,'an existing peak block reads as a tapered strength block','');
   ok(!A.isRealizationWeek({type:'str',taper:true,week:3,weeks:3})&&!A.isRealizationWeek({type:'str',realize:false,week:3,weeks:3})&&A.isRealizationWeek({type:'str',week:3,weeks:3}),'realization only in strength blocks meant to test (older blocks: every one)','');
   console.log('  blocks in limits, no stubs, no peaks · ends per profile · interleaved · test frequency · tapers only before dates · novice · peak migration');
+}
+
+/* ─── 35. maintenance top set + novice linear model (spec §3.2, 3.4) ─── */
+section('35. maintenance top set and novice linear');
+{
+  const A=load([]), C=A.getCFG(); C.goals=['deadlift','incline_machine'];
+  const days=()=>[{name:'A',slots:[{ex:'deadlift',role:'primary',sets:3,reps:[6,8],rpe:8},{ex:'leg_ext',role:'accessory',sets:3,reps:[10,15],rpe:9}]},
+                  {name:'B',slots:[{ex:'deadlift',role:'secondary',sets:3,reps:[8,12],rpe:8}]}];
+  let d=A.addMaintenance(days(),{type:'hyp',week:1,weeks:5,refined:true});
+  ok(d[0].slots[0].structure==='maint'&&d[0].slots[0].sets===4,'first day with the main lift gets the weekly top set (+1 set)',JSON.stringify(d[0].slots[0]));
+  ok(!d[1].slots[0].structure,'only once a week','');
+  const added=d.flatMap(x=>x.slots).find(x=>x.ex==='incline_machine');
+  ok(added&&added.structure==='maint','a main lift the week never trains still gets its top set',JSON.stringify(added));
+  ok(!A.addMaintenance(days(),{type:'hyp',week:1,weeks:5}).some(x=>x.slots.some(s=>s.structure)),'not in a block that started before these rules (from your next block)','');
+  ok(!A.addMaintenance(days(),{type:'str',week:1,weeks:4,refined:true}).some(x=>x.slots.some(s=>s.structure==='maint')),'not in strength blocks (they have top sets already)','');
+  ok(!A.addMaintenance(days(),{type:'hyp',week:6,weeks:6,refined:true,onDeload:true}).some(x=>x.slots.some(s=>s.structure)),'not on a deload week','');
+  // pricing: the top set from top sets, the hypertrophy sets from working sets
+  const hist=[set('deadlift','M1',335,4,7.5,7,{role:'top'}),set('deadlift','M1',245,10,8,7,{role:'straight'})];
+  const B=load(hist), slot={ex:'deadlift',role:'primary',reps:[8,12],rpe:8,sets_target:4,sets:[],structure:'maint'};
+  B.setSession({id:'MS',slots:[slot],openIdx:0,adj:null,ratings:{},startedAt:Date.now()});
+  const top=B.suggestFor(slot);
+  ok(top.pr.maint&&top.lb>=330&&top.pr.reps<=5,'the weekly top set prices from your last top set (335 × 4)',JSON.stringify({lb:top.lb,reps:top.pr.reps}));
+  ok(/strength upkeep/.test(top.why.line),'and says what it is',top.why.line);
+  slot.sets.push({...hist[0],session_id:'MS'});   // pretend it was logged
+  const work=B.suggestFor(slot);
+  ok(work.lb<300&&work.pr.reps>=8,'after it, the hypertrophy sets price from your working sets (245 × 10), not the top set',JSON.stringify({lb:work.lb,reps:work.pr.reps}));
+  ok(B.lastSetFor('deadlift','', 'top').role==='top'&&B.lastSetFor('deadlift','','work').role==='straight','role classes keep the two histories apart','');
+  // novice linear: the first set adds a step when last session was done
+  const N=load([set('deadlift','L1',225,5,8,3,{target:{reps:[5,5],rpe:8}})]), NC=N.getCFG(); NC.goals=['deadlift'];
+  N.setRoadmap([N.applyShape({type:'hyp',label:'Novice',weeks:20,deload:false,hyp:[],linear:true})]);
+  const ns={ex:'deadlift',role:'primary',reps:[5,5],rpe:8,sets_target:3,sets:[]};
+  N.setSession({id:'NS',slots:[ns],openIdx:0,adj:null,ratings:{},startedAt:Date.now()});
+  const nr=N.suggestFor(ns);
+  ok(nr.lb>225&&nr.pr.reps===5&&/novice/.test(nr.pr.src),'novice: last session done → one step up, same reps',JSON.stringify({lb:nr.lb,r:nr.pr.reps,src:nr.pr.src}));
+  const N2=load([set('deadlift','L1',225,4,9.5,3,{target:{reps:[5,5],rpe:8}})]); N2.getCFG().goals=['deadlift'];
+  N2.setRoadmap([N2.applyShape({type:'hyp',label:'Novice',weeks:20,deload:false,hyp:[],linear:true})]);
+  N2.setSession({id:'NS2',slots:[{...ns}],openIdx:0,adj:null,ratings:{},startedAt:Date.now()});
+  ok(N2.suggestFor(N2.getSession().slots[0]).lb<=225,'a missed session does not add load','');
+  // two stalls → a proposal to move to blocks
+  const S=load([set('deadlift','X1',245,4,9.5,9,{target:{reps:[5,5],rpe:8}}),set('deadlift','X2',245,3,10,5,{target:{reps:[5,5],rpe:8}})]); S.getCFG().goals=['deadlift'];
+  S.setRoadmap([S.applyShape({type:'hyp',label:'Novice',weeks:20,deload:false,hyp:[],linear:true})]);
+  ok(S.activeProposals().some(p=>p.id==='novice_done'),'two stalled sessions propose switching to blocks','');
+  ok(S.getCFG().experience==null||S.getCFG().experience!=='intermediate','and nothing switches until you accept','');
+  console.log('  weekly top set placed once, gated to new blocks · top and working sets price separately · novice adds a step, stalls propose blocks');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
