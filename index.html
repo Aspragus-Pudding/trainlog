@@ -811,7 +811,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.22.0';
+const APP_VERSION='1.22.1';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -4631,13 +4631,17 @@ function recordedSuggestion(slot, rec){
     rep_range:slot.repSrc!=='block'?{src:slot.repSrc,muscle:slot.repMuscle||null,capped:!!slot.repCapped}:null
   };
 }
-/* The load as the set card shows it: kg machines in half-kg steps, everything
-   else in lb. seedDraft() and the stored suggestion both use this, so what's
-   recorded is what was shown. */
+/* The load as the set card shows it, in the unit you lift it in: a kg-only
+   machine, or an exercise you last logged in kg, in half-kg steps; everything
+   else in lb. The engine works in lb, so a 93 kg set came back as 205.03 lb —
+   shown, nudged to 207.53 and loggable as a raw conversion. seedDraft() and
+   the stored suggestion both use this, so what's recorded is what was shown. */
 function shownLoad(slot, lb){
   const ex=exById[slot.ex];
   const fixedUnit=ex&&ex.unitPref&&ex.unitPref!=='both'?ex.unitPref:null;
-  return fixedUnit==='kg'?{value:Math.round(lb/LB*2)/2, unit:'kg'}:{value:lb, unit:'lb'};
+  const last=fixedUnit?null:lastSetFor(slot.ex);
+  const unit=fixedUnit||(last&&last.weight&&last.weight.unit==='kg'?'kg':'lb');
+  return unit==='kg'?{value:Math.round(lb/LB*2)/2, unit:'kg'}:{value:lb, unit:'lb'};
 }
 function seedDraft(slot, keepLocks){
   const ex=exById[slot.ex];

@@ -630,8 +630,12 @@ section('18. stored loads are rounded');
   A.exById.__kg_machine={id:'__kg_machine',unitPref:'kg'};   // like a custom kg-only machine (m_rd_fly)
   const sh=A.shownLoad({ex:'__kg_machine'},15*A.LB);
   ok(sh.unit==='kg'&&sh.value===15,'a kg machine\'s suggestion is recorded as shown, in kg',JSON.stringify(sh));
-  const lbEx=A.EX.find(e=>!e.unitPref);
+  const lbEx=A.EX.find(e=>!e.unitPref&&e.id!=='bench');   // bench has a kg set from above
   ok(A.shownLoad({ex:lbEx.id},185).value===185,'an lb suggestion is recorded as shown','');
+  // an exercise last logged in kg is suggested in kg, never as a raw lb conversion
+  const K=load([{...set('deadlift','K1',93,6,7.5,2),weight:{value:93,unit:'kg'}}]);
+  const ks=K.shownLoad({ex:'deadlift'},93*K.LB);
+  ok(ks.unit==='kg'&&ks.value===93,'last logged in kg: shown as 93 kg, not 205.03 lb',JSON.stringify(ks));
   console.log('  loads to 0.01 lb at the one write point · typed weights untouched · suggestion recorded as shown');
 }
 
