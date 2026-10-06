@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -776,6 +776,31 @@ section('22. feedback notes — list and copy agree');
   ok(/unknown tag/.test(rep.text),'a note with a tag this build does not know is still copied','');
   ok(open.includes('n0'),'old open notes stay open (the list shows them behind "Show older")','');
   console.log('  one definition of open · copy = list · unknown tags kept');
+}
+
+/* ─── 23. an explicit rep range beats the coarse-machine cap, everywhere ─── */
+section('23. explicit rep range beats the cap');
+{
+  const A=load([]), C=A.getCFG();
+  const ex=A.exById.m_rd_fly;   // 10 lb steps, rear delts: muscle default 10–20, capped to 15
+  let sc=A.schemeFor('accessory','hyp',1,5,ex);
+  ok(sc.reps[1]===15&&sc.repCapped,'precondition: the default is capped to 15 on a coarse machine',JSON.stringify(sc));
+  C.repRanges={m_rd_fly:[10,20]};
+  sc=A.schemeFor('accessory','hyp',1,5,ex);
+  ok(sc.reps[0]===10&&sc.reps[1]===20&&sc.repSrc==='exercise'&&!sc.repCapped,'your 10–20 beats the cap',JSON.stringify(sc));
+  ['primary','secondary'].forEach(r=>ok(A.schemeFor(r,'str',1,4,ex).reps[1]===20,'your range applies as '+r+' too',''));
+  // saved mid-session: the open session, pre-workout edits and saved days all follow
+  C.repRanges={};
+  const slot={ex:'m_rd_fly',role:'accessory',reps:[10,15],rpe:9,sets_target:3,sets:[],repSrc:'muscle',repCapped:true};
+  A.setSession({id:'SR',slots:[slot,{ex:'bench',role:'primary',reps:[6,8],rpe:8,sets_target:3,sets:[]}],openIdx:1,adj:null,score:null});
+  C.dayOverrides={full_body_b:{slots:[{ex:'m_rd_fly',role:'accessory',reps:[10,15],rpe:9}]}};
+  C.repRanges={m_rd_fly:[10,20]}; A.applyRepRange('m_rd_fly');
+  ok(JSON.stringify(slot.reps)==='[10,20]'&&slot.repSrc==='exercise','the open session picks up the new range',JSON.stringify(slot));
+  ok(JSON.stringify(A.getSession().slots[1].reps)==='[6,8]','other exercises are untouched','');
+  ok(JSON.stringify(C.dayOverrides.full_body_b.slots[0].reps)==='[10,20]','a saved preset day picks it up',JSON.stringify(C.dayOverrides));
+  delete C.repRanges.m_rd_fly; A.applyRepRange('m_rd_fly');
+  ok(JSON.stringify(slot.reps)==='[10,15]'&&slot.repCapped,'reset puts the capped default back everywhere',JSON.stringify(slot));
+  console.log('  explicit range beats the cap in every role · applies to the open session and saved days · reset restores');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

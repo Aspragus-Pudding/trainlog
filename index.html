@@ -811,7 +811,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.20.4';
+const APP_VERSION='1.20.5';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -3827,22 +3827,52 @@ function openInfo(exId){
   };
 }
 
-/* The exercise's stored rep range — every future session, every slot. The
-   per-session edit lives in the set panel and never touches this. */
+/* A range saved (or reset) on the info sheet applies everywhere at once:
+   today's session, pre-workout edits, this week's edits and saved preset
+   days — not only sessions generated later. Those all store the reps a slot
+   was built with, which is why an edit mid-session used to change nothing
+   until the next session. Re-resolved through schemeFor(), the same path
+   generation uses, so the explicit range beats the coarse-machine cap here
+   exactly as it does there. */
+function applyRepRange(exId){
+  const ex=exById[exId]; if(!ex) return;
+  const p=currentPhase();
+  const fix=sl=>{
+    if(!sl||sl.ex!==exId) return 0;
+    const sc=schemeFor(sl.role||'accessory',p.type,p.week,p.weeks,ex);
+    sl.reps=sc.reps.slice(); sl.repSrc=sc.repSrc; sl.repMuscle=sc.repMuscle; sl.repCapped=sc.repCapped;
+    return 1;
+  };
+  const fixAll=slots=>(slots||[]).reduce((n,sl)=>n+fix(sl),0);
+  if(session&&fixAll(session.slots)){
+    const open=session.slots[session.openIdx];
+    if(open&&open.ex===exId) seedDraft(open);
+    saveSession();
+  }
+  if(PENDING&&fixAll(PENDING.slots)) savePending();
+  if(Object.values(WEEKEDITS||{}).reduce((n,d)=>n+fixAll(d&&d.slots),0)) saveWeekEdits();
+  if(Object.values(CFG.dayOverrides||{}).reduce((n,d)=>n+fixAll(d&&d.slots),0)) saveCfg();
+}
+/* The exercise's stored rep range — every slot, from now on. The per-session
+   edit lives in the set panel and never touches this. */
 function drawRepRangeEditor(host, ex){
   const saved=(CFG.repRanges||{})[ex.id]||ex.repRange, d=defaultRepRange(ex);
   const cur=saved||d.reps, why=saved?'set by you':d.src==='muscle'?(ML[d.muscle]||d.muscle).toLowerCase()+' default'+(d.capped?', capped for this machine\'s steps':''):'follows the '+d.block+' block';
+  // when your range is past the cap the default would have applied, say so
+  const capNote=saved&&d.capped&&saved[1]>COARSE_REP_CAP
+    ?'Default cap '+COARSE_REP_CAP+' for coarse machines — you\'ve overridden to '+saved[1]+'.':'';
   let lo=cur[0], hi=cur[1], editing=false;
   const draw=()=>{
     host.innerHTML=`<div class="qlab">Rep range · default for this exercise</div>
       <div class="row between sm"><span>${fmtRange(cur)} reps</span><span class="dim tiny">${esc(why)}</span></div>
-      <div class="anchor">Used in every future session, including when it's your lead lift. To change it just for today, use the set panel during the session.</div>`;
+      ${capNote?`<div class="anchor" style="color:var(--warn)">${esc(capNote)}</div>`:''}
+      <div class="anchor">Applies straight away — today's session, your saved days and every future session, including when it's your lead lift. To change it just for today, use the set panel during the session.</div>`;
     if(!editing){
       const b=el('button','btn s','Change default'); b.style.marginTop='8px';
       b.onclick=()=>{ editing=true; draw(); }; host.appendChild(b);
       if(saved){ const r=el('button','btn s','Reset to default'); r.style.cssText='margin:8px 0 0 6px';
         r.onclick=()=>{ delete CFG.repRanges[ex.id]; if(ex.custom&&ex.repRange){ delete ex.repRange; CFG.customEx=(CFG.customEx||[]).map(c=>c.id===ex.id?ex:c); }
-          saveCfg(); render(); openInfo(ex.id); toast('Back to the default range'); };
+          saveCfg(); applyRepRange(ex.id); render(); openInfo(ex.id); toast('Back to the default range'); };
         host.appendChild(r); }
       return;
     }
@@ -3851,7 +3881,7 @@ function drawRepRangeEditor(host, ex){
     g.appendChild(stepper('highest',hi,1,v=>{hi=Math.max(lo,Math.min(v,30));draw();}));
     host.appendChild(g);
     const sv=el('button','btn pri s','Save as this exercise\'s default'); sv.style.marginTop='8px';
-    sv.onclick=()=>{ CFG.repRanges=CFG.repRanges||{}; CFG.repRanges[ex.id]=[lo,hi]; saveCfg(); render(); openInfo(ex.id); toast('Default range saved'); };
+    sv.onclick=()=>{ CFG.repRanges=CFG.repRanges||{}; CFG.repRanges[ex.id]=[lo,hi]; saveCfg(); applyRepRange(ex.id); render(); openInfo(ex.id); toast('Default range saved'); };
     host.appendChild(sv);
   };
   draw();
