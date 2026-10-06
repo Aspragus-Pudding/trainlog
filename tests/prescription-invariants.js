@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -821,6 +821,25 @@ section('24. bar weight per exercise');
   A.EX.push(cx); A.exById[cx.id]=cx; C.barOverrides={cx_test_bar:99}; A.applyBarOverrides();
   ok(cx.bar===20,'overrides never rewrite a custom exercise','');
   console.log('  override drives plates, loadable and warmups · reset restores · custom bars untouched');
+}
+
+/* ─── 25. per-session best sets (goal-lift cards + info sheet history) ─── */
+section('25. best set per session');
+{
+  const A=load([
+    set('deadlift','D1',300,5,8,10), set('deadlift','D1',320,2,9,10),                 // 300×5 has the higher e1RM
+    {...set('deadlift','D1',405,1,null,10),set_kind:'warmup'},                            // warmups never count
+    set('deadlift','D2',315,5,8,5), set('deadlift','D2',330,4,8,5),
+    set('deadlift','D3',200,20,7,1)]);                                                    // past the formula: heaviest
+  const b=A.sessionBests('deadlift');
+  ok(b.length===3&&b[0].session_id==='D3'&&b[2].session_id==='D1','one row per session, newest first',b.map(x=>x.session_id).join());
+  ok(b[2].lb===300&&b[2].reps===5,'best = highest e1RM, not heaviest load (300×5 over 320×2)',JSON.stringify(b[2]));
+  ok(b[1].lb===330&&b[1].pr===true,'a set that beats the running best is marked PR',JSON.stringify(b[1]));
+  ok(b[0].lb===200&&b[0].e1==null,'a session past 15 reps falls back to its heaviest set','');
+  ok(!b.some(x=>x.lb===405),'warmups are never a best set','');
+  const T=load([set('deadlift','T1',300,5,8,3),set('deadlift','T1',300,5,9,3)]);
+  ok(T.sessionBests('deadlift').length===1,'equal sets in one session give one row','');
+  console.log('  highest e1RM per session · ties to heavier · warmups excluded · PR via prIds · newest first');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

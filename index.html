@@ -811,7 +811,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.20.6';
+const APP_VERSION='1.21.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1732,6 +1732,56 @@ function bestE1RM(id){ let b=null;
   if(!b){ const e=statedE1RM(id); if(e) b={v:e+bwOffset(exById[id]),reps:null,stated:true}; }
   return b; }
 /* one best e1RM per calendar day, oldest first */
+/* Each session's best working set for one exercise, newest first — the one
+   implementation behind the Progress goal-lift cards and the info sheet's
+   History. "Best" = highest e1RM (setE1RM: total load for bodyweight+added
+   lifts), ties to the heavier set; a session whose sets are all past the
+   e1RM formula's 15 reps falls back to its heaviest set. PR marks come from
+   prIds(). Derived on read, never stored. Not exerciseSessionHistory(): that
+   one feeds the engine and picks the heaviest set by design. */
+function sessionBests(exId){
+  const by=new Map();
+  for(const st of sets()){
+    if(st.exercise_id!==exId||st.set_kind==='warmup') continue;
+    const e1=setE1RM(st), lb=toLb(st.weight);
+    const cur=by.get(st.session_id);
+    const better=!cur||(e1!=null&&(cur.e1==null||e1>cur.e1+1e-9||(Math.abs(e1-cur.e1)<1e-9&&lb>cur.lb)))
+      ||(e1==null&&cur.e1==null&&lb>cur.lb);
+    if(better) by.set(st.session_id,{id:st.id,session_id:st.session_id,ts:st.ts,weight:st.weight,lb,reps:st.reps,rpe:st.rpe,e1});
+  }
+  const pr=prIds();
+  return [...by.values()].map(b=>({...b,pr:pr.has(b.id)})).sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+}
+/* Rows for sessionBests(), shared by both entry points. */
+function bestSetRows(exId, limit){
+  const all=sessionBests(exId), list=limit?all.slice(0,limit):all;
+  const box=el('div','');
+  if(!list.length){ box.appendChild(el('div','dim tiny','No working sets logged yet.')); return box; }
+  list.forEach(b=>{
+    const r=el('div','row between sm'); r.style.cssText='padding:5px 0;border-top:1px solid var(--line)';
+    const d=new Date(b.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    r.innerHTML=`<span class="grow">${fmt(b.weight.value)} ${esc(b.weight.unit)} × ${b.reps}${b.rpe!=null?' @ RPE '+b.rpe:''}${b.pr?'<span class="pr">PR</span>':''}</span>
+      <span class="dim tiny" style="flex:none;text-align:right">${b.e1!=null?'e1RM '+fmt(b.e1,0)+' · ':''}${d}</span>`;
+    box.appendChild(r);
+  });
+  return box;
+}
+/* Full history for one exercise: e1RM trend plus every session's best set. */
+function openExerciseHistory(exId, back){
+  const ex=exById[exId]; if(!ex) return;
+  const n=sessionBests(exId).length;
+  sheet(`<h2 style="font-size:20px;margin-bottom:2px">${esc(ex.name)}</h2>
+    <div class="muted tiny" style="margin-bottom:12px">History · best set per session, newest first · ${n} session${n===1?'':'s'}</div>
+    <div class="qblock" id="hxtrend"><div class="qlab">e1RM trend</div></div>
+    <div class="qblock" id="hxrows"></div>
+    <button class="btn ghost wide" id="hxback">${back?'Back':'Close'}</button>`);
+  const sp=sparkline(e1rmSeries(exId), ex.comparable===false?'var(--warn)':'var(--accent)');
+  $('#hxtrend').appendChild(sp||el('div','dim tiny','Needs a few sets of 10 reps or fewer before a trend shows.'));
+  if(ex.comparable===false) $('#hxtrend').appendChild(el('div','dim tiny','Machine-specific — valid against itself, not against other equipment.'));
+  $('#hxrows').appendChild(bestSetRows(exId));
+  $('#hxback').onclick=()=>{ if(back) back(); else $('#dlg').close(); };
+}
+let GOAL_HIST_OPEN={};
 function e1rmSeries(id){
   const byDay={};
   for(const st of sets()){
@@ -3826,7 +3876,8 @@ function openInfo(exId){
     <div class="qblock"><div class="qlab">Your history</div>
       <div class="row between sm"><span class="muted">Best estimated 1RM</span><span>${b?fmt(b.v,0)+' lb':'—'}</span></div>
       <div class="row between sm"><span class="muted">Last logged</span><span>${last?`${fmt(last.weight.value)} ${last.weight.unit} × ${last.reps}`:'—'}</span></div>
-      <div class="row between sm"><span class="muted">Sessions performed</span><span>${exposureCount(exId)}</span></div></div>
+      <div class="row between sm"><span class="muted">Sessions performed</span><span>${exposureCount(exId)}</span></div>
+      <button class="btn s" id="ihist" style="margin-top:9px">History</button></div>
     <button class="btn ghost wide" id="irename" style="margin-bottom:8px">Rename</button>
     ${ex.custom?'<button class="btn ghost wide" id="iedit" style="margin-bottom:8px">Edit this custom exercise</button>':''}
     ${ex.custom?'<button class="btn ghost wide" id="idel" style="margin-bottom:8px;color:var(--skip)">Delete this custom exercise</button>':''}
@@ -3834,6 +3885,7 @@ function openInfo(exId){
   $('#iclose').onclick=()=>$('#dlg').close();
   drawRepRangeEditor($('#irr'), ex);
   if($('#ibar')) drawBarEditor($('#ibar'), ex);
+  $('#ihist').onclick=()=>openExerciseHistory(exId, ()=>openInfo(exId));
   $('#irename').onclick=()=>openRenameEx(ex);
   if(ex.custom&&$('#iedit')) $('#iedit').onclick=()=>openCustomEx(null,ex);
   if(ex.custom&&$('#idel')) $('#idel').onclick=()=>{
@@ -5087,6 +5139,15 @@ function renderHist(){
     else c.appendChild(el('div','empty','Log a few working sets and the trend appears here.'));
     if(ex.comparable===false)
       c.appendChild(el('div','dim tiny','Machine-specific — valid against itself, not against other equipment.'));
+    // recent bests, expandable to every session — same rows as the info sheet's History
+    const open=!!GOAL_HIST_OPEN[id], nAll=sessionBests(id).length;
+    c.appendChild(el('div','field',open?'Best set, every session':'Best set, last three sessions')).style.marginTop='12px';
+    c.appendChild(bestSetRows(id, open?0:3));
+    if(nAll>3){
+      const hb=el('button','btn s',open?'Show recent only':'View history ('+nAll+' sessions)'); hb.style.marginTop='8px';
+      hb.onclick=()=>{ GOAL_HIST_OPEN[id]=!open; render(); };
+      c.appendChild(hb);
+    }
     v.appendChild(c);
   });
 
