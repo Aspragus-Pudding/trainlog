@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -801,6 +801,26 @@ section('23. explicit rep range beats the cap');
   delete C.repRanges.m_rd_fly; A.applyRepRange('m_rd_fly');
   ok(JSON.stringify(slot.reps)==='[10,15]'&&slot.repCapped,'reset puts the capped default back everywhere',JSON.stringify(slot));
   console.log('  explicit range beats the cap in every role · applies to the open session and saved days · reset restores');
+}
+
+/* ─── 24. per-exercise bar weight ─── */
+section('24. bar weight per exercise');
+{
+  const A=load([]), C=A.getCFG();
+  const bb=A.EX.find(e=>e.load==='barbell'&&e.plateSet==='main_lb'&&e.bar===45);
+  const slot={ex:bb.id,role:'primary',reps:[5,5],rpe:8,sets_target:3,sets:[]};
+  ok(A.loadable(slot,135)===135,'precondition: 135 is loadable on a 45 lb bar','');
+  C.barOverrides={[bb.id]:35}; A.applyBarOverrides();
+  ok(A.exById[bb.id].bar===35,'the override is what the exercise carries','');
+  ok(A.loadable(slot,136)===135,'plates solve on the 35 lb bar (35 + 2×50)',String(A.loadable(slot,136)));
+  ok(A.warmupRamp(slot,135)[0].lb===35,'the warmup ramp starts from the bar you set',JSON.stringify(A.warmupRamp(slot,135)[0]));
+  delete C.barOverrides[bb.id]; A.applyBarOverrides();
+  ok(A.exById[bb.id].bar===45,'removing the override restores the library bar','');
+  // a custom exercise's bar is its own definition — never an override
+  const cx={id:'cx_test_bar',name:'Test bar',custom:true,load:'barbell',plateSet:'main_lb',bar:20,inc:5,pattern:'squat',vol:{quads:1}};
+  A.EX.push(cx); A.exById[cx.id]=cx; C.barOverrides={cx_test_bar:99}; A.applyBarOverrides();
+  ok(cx.bar===20,'overrides never rewrite a custom exercise','');
+  console.log('  override drives plates, loadable and warmups · reset restores · custom bars untouched');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

@@ -811,7 +811,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.20.5';
+const APP_VERSION='1.20.6';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1153,6 +1153,20 @@ function applyNameOverrides(){
     if(exById[id]&&name) exById[id].name=name;
   });
 }
+/* Your bar weight per exercise (CFG.barOverrides, lb), applied onto the
+   library at load like names — so the plate solver, loadable(), the warmup
+   ramp and the entry panel all read ex.bar and need no special case. The
+   library's own figure is kept so the info sheet can reset to it. */
+const BAR_DEFAULT={};
+function applyBarOverrides(){
+  EX.forEach(ex=>{
+    if(ex.custom) return;   // a custom exercise's bar is part of its own definition
+    if(!(ex.id in BAR_DEFAULT)) BAR_DEFAULT[ex.id]=ex.bar||0;
+    const o=(CFG.barOverrides||{})[ex.id];
+    ex.bar=(typeof o==='number'&&isFinite(o)&&o>=0)?o:BAR_DEFAULT[ex.id];
+  });
+}
+const barEditable=ex=>!!ex&&(ex.load==='barbell'||(ex.custom?(ex.bar||0):(BAR_DEFAULT[ex.id]||0))>0);
 
 /* roadmap — the phase ladder the chart draws */
 const DEFAULT_ROADMAP=[
@@ -1444,7 +1458,7 @@ const DAYS=[
 
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
-  goals:[],units:'lb',onboarded:false,week:null,dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
+  goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
   feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{}};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
@@ -1477,6 +1491,7 @@ function loadAll(){
   ROADMAP.forEach(b=>{ if(!b.vol||!b.vol.length) applyShape(b); });
   mergeCustom();
   applyNameOverrides();
+  applyBarOverrides();
   applySetupLink();
   if(!CFG.start){
     CFG.start=new Date().toISOString().slice(0,10);
@@ -3807,6 +3822,7 @@ function openInfo(exId){
     <div class="qblock"><div class="qlab">Progression</div>
       <div class="muted sm">${esc(mode)}</div>
       <div class="anchor">Smallest jump ${ex.inc} lb${ex.bar?` · bar ${ex.bar} lb`:''}</div></div>
+    ${barEditable(ex)?'<div class="qblock" id="ibar"></div>':''}
     <div class="qblock"><div class="qlab">Your history</div>
       <div class="row between sm"><span class="muted">Best estimated 1RM</span><span>${b?fmt(b.v,0)+' lb':'—'}</span></div>
       <div class="row between sm"><span class="muted">Last logged</span><span>${last?`${fmt(last.weight.value)} ${last.weight.unit} × ${last.reps}`:'—'}</span></div>
@@ -3817,6 +3833,7 @@ function openInfo(exId){
     <button class="btn ghost wide" id="iclose">Close</button>`);
   $('#iclose').onclick=()=>$('#dlg').close();
   drawRepRangeEditor($('#irr'), ex);
+  if($('#ibar')) drawBarEditor($('#ibar'), ex);
   $('#irename').onclick=()=>openRenameEx(ex);
   if(ex.custom&&$('#iedit')) $('#iedit').onclick=()=>openCustomEx(null,ex);
   if(ex.custom&&$('#idel')) $('#idel').onclick=()=>{
@@ -3825,6 +3842,38 @@ function openInfo(exId){
     const i=EX.findIndex(e=>e.id===exId); if(i>-1) EX.splice(i,1); delete exById[exId];
     $('#dlg').close(); render(); toast('Deleted');
   };
+}
+
+/* Bar weight for one exercise — used by the plate solver and shown in the
+   set panel. Logged weights are totals, so changing it never alters a logged
+   set; it changes which totals are loadable from here on. */
+function drawBarEditor(host, ex){
+  const def=ex.custom?(ex.bar||0):(BAR_DEFAULT[ex.id]||0), own=ex.custom?null:(CFG.barOverrides||{})[ex.id];
+  let v=ex.bar||0, editing=false;
+  const draw=()=>{
+    host.innerHTML=`<div class="qlab">Bar weight</div>
+      <div class="row between sm"><span>${fmt(ex.bar||0)} lb</span><span class="dim tiny">${ex.custom?'your exercise':own!=null?'set by you · library says '+fmt(def)+' lb':'library default'}</span></div>
+      <div class="anchor">Used to work out the plates, and shown in the set panel. Logged weights are totals, so past sets don't change.</div>`;
+    if(!editing){
+      const b=el('button','btn s','Change bar weight'); b.style.marginTop='8px';
+      b.onclick=()=>{ editing=true; draw(); }; host.appendChild(b);
+      if(own!=null){ const r=el('button','btn s','Reset to '+fmt(def)+' lb'); r.style.cssText='margin:8px 0 0 6px';
+        r.onclick=()=>{ delete CFG.barOverrides[ex.id]; saveCfg(); applyBarOverrides(); render(); openInfo(ex.id); toast('Bar weight reset'); };
+        host.appendChild(r); }
+      return;
+    }
+    const g=el('div',''); g.style.marginTop='8px';
+    g.appendChild(stepper('bar lb',v,2.5,nv=>{ v=Math.max(0,Math.min(150,nv)); draw(); },null,{typeable:true,min:0}));
+    host.appendChild(g);
+    const sv=el('button','btn pri s','Save bar weight'); sv.style.marginTop='8px';
+    sv.onclick=()=>{
+      if(ex.custom){ ex.bar=v; CFG.customEx=(CFG.customEx||[]).map(c=>c.id===ex.id?ex:c); }
+      else{ CFG.barOverrides=CFG.barOverrides||{};
+        if(Math.abs(v-def)<1e-9) delete CFG.barOverrides[ex.id]; else CFG.barOverrides[ex.id]=v; }
+      saveCfg(); applyBarOverrides(); render(); openInfo(ex.id); toast('Bar weight saved'); };
+    host.appendChild(sv);
+  };
+  draw();
 }
 
 /* A range saved (or reset) on the info sheet applies everywhere at once:
@@ -4023,8 +4072,8 @@ function entryPanel(slot,idx){
     p.appendChild(barSVG(sol));
     if(sol&&!sol.exact) p.appendChild(el('div','warnline',`Nearest loadable: ${fmt(sol.achieved)} ${draft.unit}`));
     p.appendChild(el('div','plates', sol&&sol.plates.length
-      ?`${sol.plates.join(' + ')} per side · ${ex.bar} ${draft.unit} bar`
-      :`Bar only · ${ex.bar} ${draft.unit}`));
+      ?`${sol.plates.join(' + ')} per side · ${fmt(barIn)} ${draft.unit} bar`
+      :`Bar only · ${fmt(barIn)} ${draft.unit}`));
   }
   if(ex.plateLoaded){
     // Plates only. The empty machine's own resistance varies by model and
@@ -4498,7 +4547,7 @@ function logSet(slot,idx,kind,extend,over){
   const rec=(kind!=='warmup'&&!group)?suggestFor(slot):null;
   const suggestion=recordedSuggestion(slot,rec);
   const candidate={type:'set',session_id:session.id,slot:slot.ex,exercise_id:ex.id,
-    weight:{value:W.weight,unit:W.unit}, bar:ex.bar?{value:ex.bar,unit:W.unit}:null,
+    weight:{value:W.weight,unit:W.unit}, bar:ex.bar?{value:ex.bar,unit:'lb'}:null,
     reps:W.reps, rpe:kind==='warmup'?null:draft.rpe, set_kind:setKind, group,
     target:{reps:slot.reps,rpe:slot.rpe},
     suggested_lb:stampSuggestion?(draft.suggestedLb??null):null,
@@ -6063,7 +6112,7 @@ function finishImport(res){
   if(res.cfg&&confirm('This backup contains a program (roadmap, goals, split). Restore it too?\n\nYour current program will be replaced.')){
     CFG={...CFG,...res.cfgData}; ROADMAP=(CFG.roadmap&&CFG.roadmap.length)?CFG.roadmap:ROADMAP;
     ROADMAP.forEach(b=>{ if(!b.vol||!b.vol.length) applyShape(b); });
-    mergeCustom();
+    mergeCustom(); applyBarOverrides();
     applySetupLink(); saveCfg();
   }
   render();
