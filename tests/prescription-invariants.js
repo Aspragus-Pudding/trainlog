@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','noviceSignal','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','noviceSignal','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -1292,6 +1292,52 @@ section('35. maintenance top set and novice linear');
   ok(S.activeProposals().some(p=>p.id==='novice_done'),'two stalled sessions propose switching to blocks','');
   ok(S.getCFG().experience==null||S.getCFG().experience!=='intermediate','and nothing switches until you accept','');
   console.log('  weekly top set placed once, gated to new blocks · top and working sets price separately · novice adds a step, stalls propose blocks');
+}
+
+/* ─── 36. hypertrophy refinements (spec §3.5) ─── */
+section('36. effort ramp, calibration AMRAP, stop adding sets, session cap');
+{
+  const A=load([]);
+  ok(A.effortRamp('primary',1,5)===7&&A.effortRamp('primary',5,5)===9,'compounds: 3 in reserve → 1 (RPE 7 → 9)','');
+  ok(A.effortRamp('accessory',1,5)===7&&A.effortRamp('accessory',5,5)===10,'isolations: 3 in reserve → 0 (RPE 7 → 10)','');
+  for(let w=1;w<6;w++) ok(A.effortRamp('accessory',w+1,6)>=A.effortRamp('accessory',w,6),'ramp never goes back down (week '+w+')','');
+  const tpl={name:'T',slots:[['squat','primary'],['knee_extension','accessory']]};
+  const d1=A.buildDay(tpl,{type:'hyp',week:1,weeks:6,deload:true,refined:true,hyp:[]});
+  ok(d1.slots[0].rpe===7&&d1.slots[1].rpe===7&&d1.slots[1].calib&&!d1.slots[0].calib,'refined week 1: RPE 7 across, last isolation set is a calibration AMRAP',JSON.stringify(d1.slots.map(s=>[s.rpe,!!s.calib])));
+  const d5=A.buildDay(tpl,{type:'hyp',week:5,weeks:6,deload:true,refined:true,hyp:[]});
+  ok(d5.slots[0].rpe===9&&d5.slots[1].rpe===10&&!d5.slots[1].calib,'last training week (before the deload): RPE 9 compounds, 10 isolations, no calibration',JSON.stringify(d5.slots.map(s=>s.rpe)));
+  const old=A.buildDay(tpl,{type:'hyp',week:1,weeks:5,hyp:[]});
+  ok(!old.slots.some(s=>s.ramp||s.calib)&&old.slots[0].rpe===8,'a block from before these rules keeps its old RPE targets','');
+  // calibration AMRAP is the slot's last set
+  {
+    const B=load([set('leg_ext','C0',100,12,8,4)]);
+    const sl={ex:'leg_ext',role:'accessory',reps:[10,15],rpe:7,sets_target:3,sets:[],calib:true};
+    B.setSession({id:'CA',slots:[sl],openIdx:0,adj:null,ratings:{},startedAt:Date.now()}); B.seedDraft(sl);
+    const d=B.getDraft(); d.rpe=7; B.logSet(sl,0,'straight'); d.rpe=7; B.logSet(sl,0,'straight');
+    ok(d.rpe===10&&/calibration/.test(d.why.line),'the last set asks for as many reps as you can',JSON.stringify({rpe:d.rpe,line:d.why.line}));
+    d.reps=18; B.logSet(sl,0,'straight');
+    ok(sl.sets[2].role==='amrap'&&sl.sets[0].role==='straight','and is logged as an AMRAP','');
+  }
+  // stop adding sets when performance drops two sessions running
+  {
+    const D=load([set('leg_ext','P1',120,12,8,9),set('leg_ext','P2',115,12,8,6),set('leg_ext','P3',110,12,8,3)]);
+    ok(D.muscleDropping('quads'),'three falling sessions on quads','');
+    const w3=D.buildDay({name:'T',slots:[['knee_extension','accessory']]},{type:'hyp',week:3,weeks:6,refined:true,hyp:[]});
+    const w3n=load([]).buildDay({name:'T',slots:[['knee_extension','accessory']]},{type:'hyp',week:3,weeks:6,refined:true,hyp:[]});
+    ok(w3.slots[0].frozen==='quads'&&w3.slots[0].sets<w3n.slots[0].sets,'sets held at last week\'s count instead of ramping',JSON.stringify([w3.slots[0].sets,w3n.slots[0].sets]));
+    ok(!load([set('leg_ext','Q1',110,12,8,9),set('leg_ext','Q2',115,12,8,6),set('leg_ext','Q3',110,12,8,3)]).muscleDropping('quads'),'one dip is not a trend','');
+  }
+  // per-session cap
+  {
+    const day={slots:[{ex:'bench',role:'primary',sets:5},{ex:'incline_machine',role:'secondary',sets:5},{ex:'machine_press',role:'accessory',sets:5},{ex:'curl',role:'accessory',sets:3}]};
+    A.capSessionVolume(day);
+    const chest=day.slots.reduce((a,sl)=>a+(A.exById[sl.ex].vol.chest||0)*sl.sets,0);
+    ok(chest<=11+1e-9,'no muscle over ~11 sets in one session',String(chest));
+    ok(day.slots[0].sets===5,'the main lift keeps its sets — accessories go first',JSON.stringify(day.slots.map(s=>s.sets)));
+    ok(day.slots.every(s=>s.sets>=2),'no slot drops below 2 sets','');
+    ok(day.slots[3].sets===3,'muscles under the cap are untouched','');
+  }
+  console.log('  ramp 7→9 / 7→10, monotonic, only new blocks · week-1 calibration AMRAP on the last isolation set · sets freeze on a falling trend · ≤11 sets per muscle per session');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

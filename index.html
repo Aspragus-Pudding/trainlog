@@ -813,7 +813,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.31.0';
+const APP_VERSION='1.32.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1622,6 +1622,15 @@ function buildDay(tpl, phase){
     if(!ex) return;
     used.add(ex.id);
     const sc=schemeFor(role,phase.type,phase.week,phase.weeks,ex,phase.taper);
+    const refinedHyp=phase.refined&&phase.type==='hyp'&&!phase.onDeload&&!phase.linear;
+    if(refinedHyp){
+      sc.rpe=effortRamp(role,phase.week,trainingWeeksOf(phase)); sc.ramp=true;
+      const m=primaryMuscle(ex);
+      if(m&&phase.week>1&&muscleDropping(m)){
+        const prev=schemeFor(role,phase.type,phase.week-1,phase.weeks,ex,phase.taper);
+        if(prev.sets<sc.sets){ sc.sets=prev.sets; sc.frozen=m; }
+      }
+    }
     const k=VOL_EMPHASIS[phase.emphasis||'moderate'];
     const ek=energyCfg().vol;
     sc.sets=Math.max(2,Math.round(sc.sets*k*ek));
@@ -1637,7 +1646,10 @@ function buildDay(tpl, phase){
     const amrap=topback&&isRealizationWeek(phase);
     slots.push({ex:ex.id, role, sets:amrap?1:nSets,
                 reps:sc.reps, rpe:sc.rpe, prio, joint:jointNote, repSrc:sc.repSrc, repMuscle:sc.repMuscle, repCapped:sc.repCapped,
-                ...(amrap?{structure:'amrap'}:topback?{structure:'topback', backoff:{n:nSets-1}}:{})});
+                ...(amrap?{structure:'amrap'}:topback?{structure:'topback', backoff:{n:nSets-1}}:{}),
+                ...(sc.ramp?{ramp:true}:{}), ...(sc.frozen?{frozen:sc.frozen}:{}),
+                // week 1: the last set of each isolation is an AMRAP — calibrates RPE (and feeds engine phase 2)
+                ...(refinedHyp&&phase.week===1&&role==='accessory'?{calib:true}:{})});
   });
   const id=tpl.name.toLowerCase().replace(/\s+/g,'_');
   // A permanently-saved edit to this day (see the preview's "also save to my
@@ -1656,7 +1668,9 @@ const splitFor=b=>splitOf(blockSplitSpec(b));
 function activeSplit(){ return splitFor(ROADMAP.length?ROADMAP[programPosition().idx]:null); }
 function generatedDays(){
   const phase=currentPhase();
-  return addMaintenance(activeSplit().template.map(t=>buildDay(t,phase)), phase);
+  const days=addMaintenance(activeSplit().template.map(t=>buildDay(t,phase)), phase);
+  if(phase&&phase.refined&&phase.type==='hyp'&&!phase.onDeload) days.forEach(capSessionVolume);
+  return days;
 }
 
 const DAYS=[
@@ -3446,7 +3460,7 @@ function renderWork(){
         load:s?fmt(s.weight.value)+' '+s.weight.unit+' × '+s.reps+(s.failed?' · missed':''):'—',
         pr:s&&isPRSet(s.id),
         badge:s?(s.group&&s.group.pos>0?TECHNIQUES[s.group.kind].extend:(s.role==='backoff'?'back-off':s.role==='top'?'top · RPE '+s.rpe:(s.rpe?'RPE '+s.rpe:'warmup')))
-          :(isTopBack(slot)?(j===0?'top · RPE '+slot.rpe:'back-off'):isMaint(slot)&&j===0?'top · RPE '+MAINT_TOP.rpe:'RPE '+slot.rpe),
+          :(isTopBack(slot)?(j===0?'top · RPE '+slot.rpe:'back-off'):isMaint(slot)&&j===0?'top · RPE '+MAINT_TOP.rpe:slot.calib&&j===slot.sets_target-1?'AMRAP':'RPE '+slot.rpe),
         badgeOn:!!s, chev:!!s,
         onclick:s?()=>openEditSet(slot,j):null, aria:s?'Edit set '+(j+1):null}));
     }
@@ -4935,6 +4949,11 @@ function explainRx(slot, pr, o){
   }
   // 2. where the number came from
   if(pr.src==='back-off'||pr.amrap){ if(pr.amrap) parts.push(pr.src); if(pr.note) detail.push(pr.note); return {line:parts.join(' · '), detail}; }
+  if(slot.ramp&&!pr.maint){ const tw=trainingWeeksOf(p);
+    detail.push('Effort ramps across the block: week '+p.week+' of '+tw+' is RPE '+slot.rpe+' ('+(10-slot.rpe)+' reps in reserve). Compounds go from 3 in reserve to 1, isolations from 3 to 0 — closer to failure as the block goes on.'); }
+  if(slot.frozen) detail.push('Sets held at last week\'s count: your '+(ML[slot.frozen]||slot.frozen).toLowerCase()+' work dropped in performance two sessions running, so more sets would likely add fatigue, not growth.');
+  if(slot.capped) detail.push('One or more sets removed to keep '+(ML[slot.capped.muscle]||slot.capped.muscle).toLowerCase()+' at about '+slot.capped.cap+' sets this session — past that, extra sets in one session add little (judgement default).');
+  if(pr.calibAmrap) parts.push('last set: as many reps as you can (calibration)');
   if(pr.maint){ parts.unshift('strength upkeep: 1 top set this week @ RPE '+MAINT_TOP.rpe);
     detail.push('One heavy set a week on each main lift keeps strength expression from fading during a hypertrophy block; your usual hypertrophy sets follow it. How long strength holds without it is uncertain (Grade D), as are the 3–5 reps and RPE 7.5.'); }
   if(pr.src) parts.push(pr.src==='last session'?'from your last set':pr.src);
@@ -5027,6 +5046,11 @@ function suggestFor(slot){
     const a=amrapRx(slot);
     return {pr:a, lb:a.lb, why:explainRx(slot,a,o), o};
   }
+  if(slot.calib&&slot.sets.length===slot.sets_target-1&&slot.sets.length>0){
+    const base=nextPrescription(slot);
+    const pr={...base, calibAmrap:true, note:(base.note||'')+' Last set: as many reps as you can at this load — a calibration set, so the app learns how your RPE ratings line up with reps left. Week 1 only.'};
+    return {pr, lb:pr.lb, why:explainRx(slot,pr,o), o};
+  }
   if(isMaint(slot)&&!topSetOf(slot)){
     const v=maintTopView(slot), m=nextPrescription(v);
     const pr={...m, maint:true};
@@ -5087,6 +5111,49 @@ function priceClass(slot){
   if(slot.structure==='amrap'||isTopBack(slot)) return 'top';
   return 'work';
 }
+/* ---------- Hypertrophy refinements (spec §3.5) — refined blocks only ----------
+   EFFORT RAMP: proximity to failure rises across the block — compounds from
+   3 reps in reserve to 1 (RPE 7 → 9), isolations from 3 to 0 (RPE 7 → 10).
+   Grade A–B that proximity to failure matters for hypertrophy; the exact
+   ramp endpoints are the spec's, the linear path between them a judgement
+   default. */
+function effortRamp(role, week, trainingWeeks){
+  const t=trainingWeeks>1?Math.min(1,Math.max(0,(week-1)/(trainingWeeks-1))):1;
+  const end=role==='accessory'?10:9;
+  return Math.round((7+(end-7)*t)*2)/2;
+}
+const trainingWeeksOf=ph=>ph.deload?ph.weeks-1:ph.weeks;
+/* STOP ADDING SETS: a muscle whose exercises have dropped in performance two
+   sessions running (best e1RM falling across the last three sessions) keeps
+   last week's set count instead of this week's ramp. */
+function muscleDropping(m){
+  return EX.some(ex=>{
+    if(primaryMuscle(ex)!==m) return false;
+    const b=sessionBests(ex.id,'').slice(0,3).map(x=>x.e1);
+    return b.length===3&&b.every(v=>v!=null)&&b[0]<b[1]&&b[1]<b[2];
+  });
+}
+/* PER-SESSION CAP: about 10–11 fractional sets per muscle in one session
+   (B–C: diminishing returns per session; 11 here is a judgement default).
+   Over the cap, sets come off accessories first, then secondary work, never
+   taking a slot below 2 sets or touching the main lift's top set. */
+const SESSION_MUSCLE_CAP=11;
+function capSessionVolume(day){
+  const muscleSets=()=>{ const m={}; day.slots.forEach(sl=>{ const ex=exById[sl.ex]; if(!ex) return;
+    Object.entries(ex.vol||{}).forEach(([k,w])=>m[k]=(m[k]||0)+w*sl.sets); }); return m; };
+  const order={accessory:0,secondary:1,primary:2};
+  for(let guard=0;guard<40;guard++){
+    const m=muscleSets(), over=Object.entries(m).find(([,v])=>v>SESSION_MUSCLE_CAP+1e-9);
+    if(!over) break;
+    const [mus]=over;
+    const cand=day.slots.filter(sl=>exById[sl.ex]&&(exById[sl.ex].vol||{})[mus]>0&&sl.sets>(isMaint(sl)?3:2))
+      .sort((a,b)=>(order[a.role]??0)-(order[b.role]??0)||(exById[b.ex].vol[mus]-exById[a.ex].vol[mus]));
+    if(!cand.length) break;
+    cand[0].sets--; cand[0].capped={muscle:mus, cap:SESSION_MUSCLE_CAP};
+  }
+  return day;
+}
+
 /* Strength maintenance (spec §3.4): in a hypertrophy block each main lift
    gets ONE top set a week at RPE 7–8 so strength expression doesn't fade,
    then its usual hypertrophy sets. Residual-effect logic; how long strength
@@ -5528,6 +5595,7 @@ function seedDraft(slot, keepLocks){
   draft.suggestedLb=lb; draft.suggestedReps=draft.reps; draft.suggested=lb!=null; draft.why=why;
   draft.lock={}; draft.lockEx=slot.ex; draft.sugW=draft.sugR=lb!=null; draft.rebal=null;
   if(slot.structure==='amrap'&&!slot.sets.length) draft.rpe=10;
+  if(slot.calib&&slot.sets.length===slot.sets_target-1&&slot.sets.length>0) draft.rpe=10;
   if(prev){
     draft.lock=prev.lock;
     if(prev.lock.w){ draft.weight=prev.w; draft.unit=prev.u; }
@@ -5565,7 +5633,7 @@ function logSet(slot,idx,kind,extend,over){
     weight:{value:W.weight,unit:W.unit}, bar:ex.bar?{value:ex.bar,unit:'lb'}:null,
     reps:W.reps, rpe:kind==='warmup'?null:draft.rpe, set_kind:setKind, group,
     ...(kind!=='warmup'&&cleanMods(slot.modifiers)?{modifiers:cleanMods(slot.modifiers)}:{}),
-    ...(kind!=='warmup'?{role:group?'straight':slot.structure==='amrap'&&!slot.sets.length?'amrap':isTopBack(slot)?(topSetOf(slot)?'backoff':'top'):isMaint(slot)&&!topSetOf(slot)?'top':'straight'}:{}),
+    ...(kind!=='warmup'?{role:group?'straight':(slot.structure==='amrap'&&!slot.sets.length)||(slot.calib&&slot.sets.length===slot.sets_target-1&&slot.sets.length>0)?'amrap':isTopBack(slot)?(topSetOf(slot)?'backoff':'top'):isMaint(slot)&&!topSetOf(slot)?'top':'straight'}:{}),
     ...(kind!=='warmup'&&draft.failed?{failed:true}:{}),
     target:{reps:slot.reps,rpe:slot.rpe},
     suggested_lb:stampSuggestion?(draft.suggestedLb??null):null,
@@ -5600,6 +5668,7 @@ function logSet(slot,idx,kind,extend,over){
       draft.weight = draft.unit==='kg' ? Math.round(next.lb/LB*2)/2 : next.lb;
       draft.reps=next.pr.reps; draft.suggestedLb=next.lb; draft.suggestedReps=next.pr.reps;
       draft.suggested=true; draft.alt=null; draft.why=next.why;
+      if(next.pr.calibAmrap) draft.rpe=10;
     }
     // the set is logged: locks clear, both numbers are the suggestion again
     draft.lock={}; draft.lockEx=slot.ex; draft.sugW=draft.sugR=next.lb!=null; draft.rebal=null;
