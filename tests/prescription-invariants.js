@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','noviceSignal','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','noviceSignal','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -1338,6 +1338,41 @@ section('36. effort ramp, calibration AMRAP, stop adding sets, session cap');
     ok(day.slots[3].sets===3,'muscles under the cap are untouched','');
   }
   console.log('  ramp 7→9 / 7→10, monotonic, only new blocks · week-1 calibration AMRAP on the last isolation set · sets freeze on a falling trend · ≤11 sets per muscle per session');
+}
+
+/* ─── 37. fatigue-triggered deloads (spec §3.6) ─── */
+section('37. deload proposals');
+{
+  let t0=40;
+  const rd=(v)=>({type:'readiness',id:'d'+(uid++),ts:day(t0-=1),sleep_quality:v,motivation:v,recovery:v,soreness:{},joints:{},joint_scale:3});
+  const end=()=>({type:'session_end',id:'e'+(uid++),ts:day(t0-=0.5),session_id:'s'+uid,joints:{}});
+  const sess=v=>[rd(v),end()];
+  // neutral readiness is never a trigger
+  t0=40; let ev=[]; for(let i=0;i<6;i++) ev=ev.concat(sess(3));
+  let A=load(ev);
+  ok(!A.deloadSignals().some(x=>x.k==='readiness'),'neutral readiness: no deload trigger','');
+  // readiness falling three sessions running
+  t0=40; ev=[].concat(sess(4),sess(3.5),sess(3),sess(2)); A=load(ev);
+  ok(A.deloadSignals().some(x=>x.k==='readiness'&&x.strong),'readiness down three sessions running: a deload is proposed','');
+  ok(A.activeProposals().some(p=>p.id==='deload'),'as a card','');
+  t0=40; ev=[].concat(sess(4),sess(3),sess(3.5),sess(2)); A=load(ev);
+  ok(!A.deloadSignals().some(x=>x.k==='readiness'),'a bounce breaks the trend','');
+  // RPE drift at a matched load
+  const D=load([set('deadlift','R1',315,5,7,20),set('deadlift','R2',315,5,8.5,2)]); D.getCFG().goals=['deadlift'];
+  ok(D.deloadSignals().some(x=>x.k==='rpe'),'the same 315 × 5 at RPE 8.5 vs 7 three weeks ago: drift ≥1 on a main lift','');
+  const D2=load([set('deadlift','R1',315,5,7,20),set('deadlift','R2',345,5,8.5,2)]); D2.getCFG().goals=['deadlift'];
+  ok(!D2.deloadSignals().some(x=>x.k==='rpe'),'heavier load is not a matched load','');
+  // accepting: the next week of sessions is a deload, then it ends
+  t0=40; ev=[].concat(sess(4),sess(3.5),sess(3),sess(2)); const B=load(ev);
+  B.setRoadmap([B.applyShape({type:'hyp',label:'H',weeks:8,deload:false,hyp:[]})]); B.getCFG().start=new Date(Date.now()-60*864e5).toISOString().slice(0,10);
+  const p=B.activeProposals().find(x=>x.id==='deload'); p.accept.fn();
+  ok(B.currentPhase().onDeload&&B.currentPhase().type==='deload','accepted: the next sessions are a deload','');
+  ok(!B.activeProposals().some(x=>x.id==='deload'),'no deload proposal during a deload','');
+  const dpw=B.LOG.filter(e=>e.type==='deload_start').pop().sessions;
+  for(let i=0;i<dpw;i++) B.append({type:'session_end',session_id:'post'+i,joints:{}});
+  ok(!B.currentPhase().onDeload,'after '+dpw+' sessions the block carries on','');
+  ok(B.weeksWithoutDeload()===0,'and the deload resets the count','');
+  console.log('  neutral readiness never triggers · falling readiness / RPE drift propose · accepted = one week of deload sessions, then back');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

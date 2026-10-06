@@ -813,7 +813,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.32.0';
+const APP_VERSION='1.33.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -2392,7 +2392,8 @@ function currentPhase(){
   if(!ROADMAP.length) return {...EMPTY_PHASE};
   const pos=programPosition(), b=ROADMAP[pos.idx], L=blockLen(b);
   if(pos.past) return {...b,idx:pos.idx,week:L,weeks:L};
-  const wk=pos.week, onDeload=b.deload&&wk>b.weeks;
+  const wk=pos.week, ov=deloadOverlay(), onDeload=(b.deload&&wk>b.weeks)||!!ov;
+  if(ov&&!(b.deload&&wk>b.weeks)) return {...b, idx:pos.idx, week:wk, weeks:L, onDeload:true, proposedDeload:ov, label:'Deload', type:'deload'};
   return {...b, idx:pos.idx, week:wk, weeks:L, onDeload,
           label:onDeload?'Deload':b.label, type:onDeload?'deload':b.type};
 }
@@ -5407,6 +5408,91 @@ PROPOSAL_SOURCES.push(()=>{
     body:'On '+stalled.map(id=>exById[id].name).join(' and ')+', adding load every session has stopped working twice. That is the usual point to move to hypertrophy and strength blocks. Rebuild your program from Edit program to switch.',
     accept:{label:'Switch to blocks', fn:()=>{ CFG.experience='intermediate'; saveCfg(); toast('Set to intermediate — rebuild your program from Edit program to apply it'); }},
     decline:{label:'Keep going'}};
+});
+
+/* ---------- Fatigue-triggered deloads (spec §3.6) ----------
+   Proposed as a card, never imposed (B against fixed deloads as a growth
+   tool; the fixed per-block toggle stays for anyone who wants it). Triggers,
+   any of — JUDGEMENT DEFAULT thresholds, Grade D:
+   - readiness falling three sessions running;
+   - RPE up ≥1 at a matched load (±2.5%) versus 2–3 weeks ago, on a main lift
+     or on two other exercises;
+   - a joint at ladder level 3+;
+   - 10+ weeks of sessions without a deload (a soft note only).
+   Neutral readiness can't trigger it — a flat line isn't a trend. Accepting
+   records 'deload_start' {sessions}: the next week of sessions (your days per
+   week) is a deload in place of a normal week. */
+/* Sessions trained after a given log entry — by position, since the log is
+   append-only (timestamps can tie). */
+function trainedAfterIndex(i){ let n=0; for(let k=i+1;k<LOG.length;k++) if(countsAsTrained(LOG[k])) n++; return n; }
+let _ovCache=null, _ovLen=-1;
+function deloadOverlay(){
+  if(_ovLen===LOG.length) return _ovCache;
+  _ovLen=LOG.length; _ovCache=null;
+  for(let i=LOG.length-1;i>=0;i--){ const e=LOG[i];
+    if(e.type==='deload_start'){ const done=trainedAfterIndex(i); if(done<(e.sessions||5)) _ovCache={ev:e, done, sessions:e.sessions||5}; break; } }
+  return _ovCache;
+}
+function readinessFalling(){
+  const r=readinessSeries().slice(-4).map(x=>x.v);
+  return r.length===4&&r[1]<r[0]&&r[2]<r[1]&&r[3]<r[2];
+}
+/* RPE at a matched load now vs 14–28 days ago, per exercise (working sets). */
+function rpeDrift(exId){
+  const ss=sets().filter(st=>st.set_kind!=='warmup'&&st.rpe!=null&&onTrack(st,exId,'')&&inClass(st,'work'));
+  if(ss.length<2) return null;
+  const now=Date.now(), recent=ss.filter(st=>(now-new Date(st.ts))/864e5<=7);
+  let best=null;
+  recent.forEach(r=>{ const L=toLb(r.weight);
+    ss.forEach(o=>{ const age=(new Date(r.ts)-new Date(o.ts))/864e5;
+      if(age<14||age>28) return;
+      const Lo=toLb(o.weight); if(!L||Math.abs(Lo-L)/L>0.025) return;
+      const d=r.rpe-o.rpe; if(best==null||d>best) best=d; }); });
+  return best;
+}
+function weeksWithoutDeload(){
+  const dpw=sessionsPerWeek()||5;
+  let lastTs=null, lastIdx=-1;
+  for(let i=LOG.length-1;i>=0;i--){ const e=LOG[i]; if(e.type==='deload_start'){ lastTs=e.ts; lastIdx=i; break; } }
+  // counted from the END of the last deload, not its start
+  const n=lastIdx>=0?Math.max(0,trainedAfterIndex(lastIdx)-(LOG[lastIdx].sessions||dpw)):LOG.filter(e=>countsAsTrained(e)&&e.ts>(CFG.start?CFG.start+'T00:00':'')).length;
+  // a scheduled block deload also resets the count
+  const ph=currentPhase(); if(ph&&ph.onDeload) return 0;
+  const pos=ROADMAP.length?programPosition():null;
+  if(pos&&!lastTs){
+    // weeks trained since the last deload week actually reached (a block's
+    // planned deload only counts once you're past it)
+    let w=0;
+    for(let i=0;i<=pos.idx;i++){ const b=ROADMAP[i];
+      if(b.type==='deload'){ if(i<pos.idx) w=0; continue; }
+      w+=i<pos.idx?b.weeks:Math.min(b.weeks,pos.week-1);
+      if(i<pos.idx&&b.deload) w=0; }
+    return w;
+  }
+  return Math.floor(n/dpw);
+}
+function deloadSignals(){
+  const out=[];
+  if(readinessFalling()) out.push({k:'readiness', strong:true, text:'your readiness has dropped three sessions running'});
+  const goals=[...new Set(CFG.goals||[])].filter(id=>exById[id]);
+  const drifted=EX.filter(ex=>!ex.rehab).map(ex=>({ex, d:rpeDrift(ex.id)})).filter(x=>x.d!=null&&x.d>=1);
+  if(drifted.some(x=>goals.includes(x.ex.id))||drifted.length>=2)
+    out.push({k:'rpe', strong:true, text:'the same weights feel at least 1 RPE harder than 2–3 weeks ago ('+drifted.slice(0,3).map(x=>x.ex.name).join(', ')+')'});
+  const hot=JOINTS.filter(j=>jointLevel(jointTrend(j,6))>=3);
+  if(hot.length) out.push({k:'joint', strong:true, text:'your '+hot.join(' and ')+' '+(hot.length>1?'are':'is')+' at ladder level 3 or higher'});
+  if(weeksWithoutDeload()>=10) out.push({k:'weeks', strong:false, text:'it has been 10 or more weeks since a deload'});
+  return out;
+}
+PROPOSAL_SOURCES.push(()=>{
+  const ph=currentPhase(); if(!ph||ph.onDeload||!ROADMAP.length) return null;
+  const sig=deloadSignals(); if(!sig.length) return null;
+  const strong=sig.some(x=>x.strong);
+  const dpw=sessionsPerWeek()||5;
+  return {id:'deload', snoozeDays:strong?7:14, title:strong?'Take a deload week?':'Due for a deload?',
+    body:'Because '+sig.map(x=>x.text).join('; ')+'. A deload is '+dpw+' lighter sessions — fewer sets, easier loads — in place of a normal week, then the block carries on. '
+      +(strong?'':'This one is just the calendar, so skip it if you feel fine. ')+'The thresholds are judgement defaults.',
+    accept:{label:'Deload this week', fn:()=>{ append({type:'deload_start',sessions:dpw,reasons:sig.map(x=>x.k)}); toast('Deload week on — the next '+dpw+' sessions are lighter'); }},
+    decline:{label:'Not now'}};
 });
 
 /* ---------- Training max and realization (spec §2.3–2.4) ----------
