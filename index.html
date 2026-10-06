@@ -813,7 +813,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.27.0';
+const APP_VERSION='1.28.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1661,7 +1661,7 @@ const DAYS=[
 
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
-  goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
+  goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},checklistOff:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
   feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{}};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
@@ -3498,7 +3498,7 @@ function openWeekPreview(openDayId){
           f?`<span style="color:${f.level==='red'?'var(--danger)':'var(--warn)'}"> ${f.level==='red'?'▲':'●'}</span>`:''}</div>
           <div class="dim tiny">${sl.sets} × ${sl.reps[0]===sl.reps[1]?sl.reps[0]:sl.reps[0]+'–'+sl.reps[1]} @ RPE ${sl.rpe}${sl.role?' · '+sl.role:''}</div></span>
       </div>`;
-    const ctl=el('div','row'); ctl.style.cssText='gap:6px;margin-top:8px';
+    const ctl=el('div','row'); ctl.style.cssText='gap:6px;margin-top:8px;flex-wrap:wrap';
     const mk=(lab,aria,fn)=>{ const b=el('button','btn s',lab); b.setAttribute('aria-label',aria); b.onclick=fn; return b; };
     ctl.appendChild(mk('−','One set fewer',()=>{ editWeekDay(rawDay,d=>{ if(d.slots[i].sets>1) d.slots[i].sets--; }); openWeekPreview(active); }));
     ctl.appendChild(mk('+','One set more',()=>{ editWeekDay(rawDay,d=>{ d.slots[i].sets++; }); openWeekPreview(active); }));
@@ -4527,6 +4527,7 @@ function openSwap(slot,idx){
 function entryPanel(slot,idx){
   const ex=exById[slot.ex], p=el('div',''); p.style.marginTop='11px';
   p.appendChild(el('div','hr'));
+  p.appendChild(techniqueBlock(slot));
   if(!lastPerformance(slotTrack(slot).ex,slotTrack(slot).sig))
     p.appendChild(el('div','muted sm',slotTrack(slot).sig
       ?'First time '+esc(modLabel(slot.modifiers))+' — pick a weight. It gets its own history from the first set.'
@@ -5032,7 +5033,9 @@ const isTopBack=slot=>!!slot&&slot.structure==='topback';
 const topSetOf=slot=>(slot.sets||[]).find(x=>x.role==='top')||null;
 function backoffLoad(slot, topLb){
   const c=backoffCfg();
-  let lb=gridFloor(slot, topLb*(1-c.drop));
+  // nearest loadable weight to the drop (flooring on a 10 lb machine turned 8% into 15%),
+  // but always lighter than the top set
+  let lb=loadable(slot, topLb*(1-c.drop));
   // a drop smaller than this machine's step still has to be lighter than the top set
   if(lb>=topLb-1e-6){ const d=stepDown(slot,topLb); lb=d>0?d:topLb; }
   return Math.min(lb,topLb);
@@ -5091,6 +5094,102 @@ function tmFromAmrap(slot, ev){
     tm=e1?Math.min(e1*TM_OF_E1,prev*TM_CAP_UP):prev*TM_CAP_UP; reason='realization';
   }
   return append({type:'tm_update',exercise_id:exId,tm_lb:tm,prev_lb:prev,reason,set_id:ev.id,target_reps:target});
+}
+
+/* ---------- Technique layer (spec §6.1–6.3) ----------
+   The app can't see the lift; it can make setup consistent, prompt video and
+   ask where a rep failed. All three attach to a main lift's TOP set — or,
+   where the session has no top set (hypertrophy blocks until batch B), its
+   first working set. */
+const isMainLift=exId=>(CFG.goals||[]).includes(exId);
+function techFirstSet(slot){
+  if(slot.structure==='amrap') return !slot.sets.length;
+  if(isTopBack(slot)) return !topSetOf(slot);
+  return !slot.sets.length;
+}
+/* §6.1 — your own setup note first, then up to three library setup cues. */
+function checklistItems(exId){
+  const out=[], own=exNote(exId,'setup');
+  if(own) own.split(/\n+/).map(t=>t.trim()).filter(Boolean).forEach(t=>out.push({text:t, own:true}));
+  const cue=CUES[exId];
+  const lib=cue&&cue.setup?String(cue.setup).split(/(?<=\.)\s+/).map(t=>t.trim()).filter(Boolean)
+    :(EXERCISE_TIPS[exId]||[]);
+  lib.slice(0,3).forEach(t=>out.push({text:t, own:false}));
+  return out;
+}
+/* §6.2 — every 3–4 weeks per main lift (21 days; judgement default, Grade D).
+   The app never stores video: it records that the prompt was done or skipped. */
+const VIDEO_EVERY_DAYS=21;
+function lastVideoPrompt(exId){
+  for(let i=LOG.length-1;i>=0;i--){ const e=LOG[i]; if(e.type==='video_prompt'&&e.exercise_id===exId) return e; }
+  return null;
+}
+function videoDue(exId, now){
+  const last=lastVideoPrompt(exId);
+  return !last||((now||Date.now())-new Date(last.ts).getTime())/864e5>=VIDEO_EVERY_DAYS;
+}
+/* §6.3 — after a main lift's top set / AMRAP (or first set, see above) that
+   failed or was logged at RPE ≥ 9.5: where did it slow down? Once per
+   exercise per session. */
+const STICK_LABEL={bottom:'At the bottom',off_chest:'Off the chest',off_floor:'Off the floor',mid:'Mid-range',
+  below_knee:'Below the knee',lockout:'At lockout',start:'At the start',top:'At the top',nowhere:'Nowhere specific'};
+function stickingPending(slot){
+  if(!session||!isMainLift(slot.ex)) return null;
+  const fam=familyOf(exById[slot.ex]); if(!FAMILY_STICKING[fam]) return null;
+  const st=slot.sets.find(x=>x.role==='top'||x.role==='amrap')||(isTopBack(slot)||slot.structure==='amrap'?null:slot.sets[0]);
+  if(!st||!(st.failed||(st.rpe!=null&&st.rpe>=9.5))) return null;
+  if((session.stickSkip||{})[slot.ex]) return null;
+  if(LOG.some(e=>e.type==='sticking_report'&&e.session_id===session.id&&e.exercise_id===slot.ex)) return null;
+  return {set:st, options:FAMILY_STICKING[fam].concat('nowhere')};
+}
+function techniqueBlock(slot){
+  const box=el('div',''); if(!session) return box;
+  const ex=exById[slot.ex], main=isMainLift(slot.ex), first=techFirstSet(slot);
+  session.checklist=session.checklist||{}; session.video=session.video||{};
+  // §6.1 setup checklist
+  if(main&&first&&!session.checklist[slot.ex]&&!(CFG.checklistOff||{})[slot.ex]){
+    const items=checklistItems(slot.ex);
+    if(items.length){
+      const c=el('div','qblock'); c.style.cssText='margin:10px 0 0;border-left:3px solid var(--accent)';
+      c.innerHTML='<div class="qlab">Before your '+(isTopBack(slot)||slot.structure==='amrap'?'top set':'first set')+'</div>';
+      items.forEach(it=>{ const r=el('label',''); r.style.cssText='display:flex;gap:8px;align-items:flex-start;padding:4px 0;cursor:pointer';
+        r.innerHTML='<input type="checkbox" style="margin-top:3px"><span class="sm'+(it.own?'':' muted')+'">'+esc(it.text)+'</span>'; c.appendChild(r); });
+      const row=el('div','row'); row.style.cssText='gap:6px;margin-top:6px';
+      const ok=el('button','btn s','Done'); ok.onclick=()=>{ session.checklist[slot.ex]=true; saveSession(); renderWork(); };
+      const off=el('button','btn s ghost','Don\'t show for this exercise'); off.onclick=()=>{ CFG.checklistOff=CFG.checklistOff||{}; CFG.checklistOff[slot.ex]=true; saveCfg(); renderWork(); };
+      row.append(ok,off); c.appendChild(row);
+      if(!exNote(slot.ex,'setup')) c.appendChild(el('div','dim tiny','Add your own setup — seat, pin, stance — on the exercise\'s info sheet; it shows first here.')).style.marginTop='6px';
+      box.appendChild(c);
+    }
+  }
+  // §6.2 video prompt
+  if(main&&first&&!session.video[slot.ex]&&videoDue(slot.ex)){
+    const last=lastVideoPrompt(slot.ex), lastDone=[...LOG].reverse().find(e=>e.type==='video_prompt'&&e.exercise_id===slot.ex&&e.done);
+    const v=el('div','qblock'); v.style.cssText='margin:10px 0 0';
+    v.innerHTML='<div class="qlab">Film this set</div><div class="muted sm">Side view, whole body in frame. The app doesn\'t keep the video — it just reminds you.'
+      +(lastDone?' Compare with the one from '+esc(new Date(lastDone.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'}))+'.':'')+'</div>';
+    const row=el('div','row'); row.style.cssText='gap:6px;margin-top:8px';
+    const rec=done=>{ append({type:'video_prompt',exercise_id:slot.ex,session_id:session.id,done,trigger:'scheduled'}); session.video[slot.ex]=true; saveSession(); renderWork(); };
+    const y=el('button','btn s','I\'ll film it'); y.onclick=()=>rec(true);
+    const n=el('button','btn s ghost','Skip this time'); n.onclick=()=>rec(false);
+    row.append(y,n); v.appendChild(row); box.appendChild(v);
+  }
+  // §6.3 sticking point
+  const sp=stickingPending(slot);
+  if(sp){
+    const q=el('div','qblock'); q.style.cssText='margin:10px 0 0;border-left:3px solid var(--warn)';
+    q.innerHTML='<div class="qlab">Where did it slow down?</div><div class="dim tiny">That set was '+(sp.set.failed?'a missed rep':'RPE '+sp.set.rpe)+'. One tap — it helps work out what to change if this lift stalls.</div>';
+    const ch=el('div','chips'); ch.style.marginTop='8px';
+    sp.options.forEach(o=>{ const b=el('button','chip',esc(STICK_LABEL[o]||o)); b.style.cssText='font-size:12.5px;padding:6px 10px';
+      b.onclick=()=>{ append({type:'sticking_report',exercise_id:slot.ex,session_id:session.id,set_id:sp.set.id,region:o,
+        signature:modSig(sp.set.modifiers)||undefined}); renderWork(); toast('Noted'); };
+      ch.appendChild(b); });
+    q.appendChild(ch);
+    const sk=el('button','btn s ghost','Not now'); sk.style.marginTop='8px';
+    sk.onclick=()=>{ session.stickSkip=session.stickSkip||{}; session.stickSkip[slot.ex]=true; saveSession(); renderWork(); };
+    q.appendChild(sk); box.appendChild(q);
+  }
+  return box;
 }
 
 /* What the engine actually recommended for this set, independent of whether
@@ -6560,6 +6659,15 @@ function openSettings(){
       bo.appendChild(mc);
       if(S.backoff.mode==='fatigue') bo.appendChild(el('div','anchor','Keeps adding back-offs at the same load until one feels as hard as the top set — at most two more than the plan.'));
       host.appendChild(bo);
+    }
+    const off=Object.keys(CFG.checklistOff||{}).filter(id=>CFG.checklistOff[id]&&exById[id]);
+    if(off.length){
+      const cb=el('div','qblock'); cb.innerHTML='<div class="qlab">Setup checklists you\'ve hidden</div>';
+      off.forEach(id=>{ const r=el('div','row between sm'); r.style.padding='4px 0';
+        r.innerHTML='<span>'+esc(exById[id].name)+'</span>';
+        const b=el('button','btn s','Show again'); b.onclick=()=>{ delete CFG.checklistOff[id]; saveCfg(); draw(); };
+        r.appendChild(b); cb.appendChild(r); });
+      host.appendChild(cb);
     }
     host.appendChild(themeBlock());
     if(S.syncUrl){

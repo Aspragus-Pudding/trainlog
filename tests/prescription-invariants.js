@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -1037,7 +1037,7 @@ section('30. top set + back-offs');
   const top=slot.sets[0];
   ok(top.role==='top','the first set is logged as the top set',JSON.stringify(top.role));
   ok(d.weight<325&&d.reps===5,'next comes a back-off: lighter, same reps',JSON.stringify({w:d.weight,r:d.reps}));
-  ok(d.weight<=325*0.92+1e-6&&d.weight>=325*0.92-5,'back-off ≈ 8% under the top set, floored to a loadable weight',String(d.weight));
+  ok(Math.abs(d.weight-325*0.92)<=5&&d.weight<325,'back-off ≈ 8% under the top set, at the nearest loadable weight below it',String(d.weight));
   ok(/back-off 1 of 3/.test(d.why.line),'the line says which back-off',d.why.line);
   A.logSet(slot,0,'straight'); A.logSet(slot,0,'straight'); A.logSet(slot,0,'straight');
   ok(slot.sets.slice(1).every(x=>x.role==='backoff'&&A.toLb(x.weight)<325),'every back-off is lighter than the top set','');
@@ -1054,6 +1054,10 @@ section('30. top set + back-offs');
       const b=Z.backoffLoad(sl,L); ok(b<=L+1e-9,id+' '+L+' drop '+drop+': back-off not heavier than the top set',String(b));
     }
   });
+  // coarse machines: nearest step to the 8% drop, not a floor that doubles it
+  { const M=load([]), ms={ex:'incline_machine',role:'primary',reps:[4,6],rpe:8,sets_target:3,sets:[],structure:'topback'};
+    const step=M.exById.incline_machine.inc, b=M.backoffLoad(ms,130);
+    ok(b<130&&Math.abs(b-130*0.92)<=step/2+1e-9,'10 lb steps: 130 → nearest to 8% under ('+b+')',String(b)); }
   // fatigue-stop: stops when a back-off feels like the top set, never past N+2
   {
     const F=load(hist), sl={ex:'deadlift',role:'primary',reps:[3,5],rpe:8,sets_target:3,sets:[],structure:'topback',backoff:{n:2}};
@@ -1130,6 +1134,39 @@ section('31. training max and realization');
   r=run(3,10);
   ok(Math.abs(r.after-r.before*0.95)<0.02&&r.ev.reason==='short','short of the rep target: TM drops 5%',JSON.stringify(r.ev));
   console.log('  initial 90% recorded once · top sets never move it · realization week = last training week · AMRAP % by rep focus · +5% cap · −5% when short');
+}
+
+/* ─── 32. technique layer (spec §6.1–6.3) ─── */
+section('32. technique: checklist, video prompt, sticking question');
+{
+  const A=load([]), C=A.getCFG(); C.goals=['deadlift'];
+  // checklist: your setup first, then at most three library cues
+  A.saveExNote('deadlift','setup','Bar over midfoot\nShins to bar');
+  const it=A.checklistItems('deadlift');
+  ok(it[0].own&&it[0].text==='Bar over midfoot'&&it[1].own,'your own setup lines come first',JSON.stringify(it));
+  ok(it.filter(x=>!x.own).length<=3,'at most three library cues','');
+  // video: due when never prompted or 21+ days since; done or skipped both reset it
+  ok(A.videoDue('deadlift'),'never prompted: due','');
+  A.append({type:'video_prompt',exercise_id:'deadlift',done:false});
+  ok(!A.videoDue('deadlift'),'just prompted (even skipped): not due','');
+  ok(A.videoDue('deadlift',Date.now()+22*864e5),'22 days later: due again','');
+  // sticking question: main lift, failed or RPE ≥ 9.5, once per exercise per session
+  const mk=(st)=>{ const B=load([]); B.getCFG().goals=['deadlift'];
+    const sl={ex:'deadlift',role:'primary',reps:[3,5],rpe:8,sets_target:4,sets:[st],structure:'topback'};
+    B.setSession({id:'SQ',slots:[sl],openIdx:0,adj:null,ratings:{}}); return {B,sl}; };
+  let r=mk({id:'x1',role:'top',rpe:9.5,reps:5,weight:{value:315,unit:'lb'},exercise_id:'deadlift'});
+  const p=r.B.stickingPending(r.sl);
+  ok(p&&p.options.includes('off_floor')&&p.options.includes('nowhere'),'a hard top set asks where it slowed, with the hinge regions',JSON.stringify(p&&p.options));
+  r.B.append({type:'sticking_report',exercise_id:'deadlift',session_id:'SQ',set_id:'x1',region:'off_floor'});
+  ok(r.B.stickingPending(r.sl)===null,'asked once per exercise per session','');
+  r=mk({id:'x2',role:'top',rpe:8,reps:5,weight:{value:315,unit:'lb'},exercise_id:'deadlift'});
+  ok(r.B.stickingPending(r.sl)===null,'an RPE 8 top set does not ask','');
+  r=mk({id:'x3',role:'top',rpe:8,reps:4,failed:true,weight:{value:315,unit:'lb'},exercise_id:'deadlift'});
+  ok(r.B.stickingPending(r.sl)!==null,'a missed rep asks regardless of RPE','');
+  const D=load([]); D.getCFG().goals=[]; const dsl={ex:'curl',role:'accessory',reps:[8,12],rpe:9,sets_target:3,sets:[{id:'y',rpe:10,reps:8,weight:{value:30,unit:'lb'}}]};
+  D.setSession({id:'SD',slots:[dsl],openIdx:0,adj:null,ratings:{}});
+  ok(D.stickingPending(dsl)===null,'not for isolation or non-main lifts','');
+  console.log('  checklist: own setup first, ≤3 library cues · video every 21 days, skip counts · sticking: hard/missed main-lift sets, once per session');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
