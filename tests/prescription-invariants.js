@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -938,6 +938,37 @@ section('27. notes split by purpose');
   ok(A.diaryEntries({exerciseId:'bench'}).length===2&&A.diaryEntries({sessionId:'S9'}).length===1,'diary filters by exercise and by session','');
   ok(A.sets().length===0,'none of these are sets — volume and PRs never see them','');
   console.log('  feedback excludes training notes · old ones become diary · setup/cue newest-wins · diary by exercise/session · never sets');
+}
+
+/* ─── 28. library model: families, parents, folds (spec §1) ─── */
+section('28. library model');
+{
+  const A=load([]);
+  A.EX.forEach(e=>ok(['squat','hinge','horizontal_press','vertical_press','vertical_pull','horizontal_pull','isolation'].includes(A.familyOf(e)),'every exercise has a family: '+e.id,''));
+  ok(A.familyOf(A.exById.bench)==='horizontal_press'&&A.familyOf(A.exById.curl)==='isolation','families come from the pattern','');
+  ok(A.familyOf(A.exById.cg_bench)==='horizontal_press'&&A.exById.cg_bench.pattern==='elbow_extension','close-grip bench: bench family, triceps pattern kept for volume','');
+  ok(A.familyOf(A.exById.m_rd_fly)==='isolation','rear-delt flies are isolation, not a row family','');
+  A.EX.filter(e=>e.parent).forEach(e=>{
+    const p=A.exById[e.parent];
+    ok(!!p,e.id+': parent exists','');
+    ok(p&&A.familyOf(p)===A.familyOf(e),e.id+': parent is in the same family',e.parent);
+    ok(e.specificity>0&&e.specificity<=1,e.id+': specificity in (0,1]',String(e.specificity));
+    let x=e, n=0; while(x&&x.parent&&n<10){ x=A.exById[x.parent]; n++; } ok(n<10,e.id+': no parent cycle','');
+  });
+  // folds: kept for old data, never offered, never generated
+  ['board_press','neutral_pulldown'].forEach(id=>{
+    const e=A.exById[id];
+    ok(e&&e.folded&&A.exById[e.folded.parent],id+' is folded onto an existing parent','');
+    ok(!A.mainEligible(e),id+' is not offered as a main lift','');
+  });
+  const used=new Set(); let gotFolded=false;
+  for(let i=0;i<20;i++){ const r=A.resolveEx('vertical_pull','accessory',used); if(!r) break; if(r.folded) gotFolded=true; used.add(r.id); }
+  ok(!gotFolded,'generation never picks a folded exercise','');
+  ok(A.mainEligible(A.exById.incline_machine)&&A.mainEligible(A.exById.ssb_squat)&&!A.mainEligible(A.exById.calf),'main lifts come from the tracked families','');
+  // custom exercises: family from pattern, specificity from implement
+  ok(A.familyOf({pattern:'horizontal_press',custom:true})==='horizontal_press'&&A.familyOf({pattern:'calf_raise'})==='isolation','a custom exercise\'s family comes from its movement type','');
+  ok(A.customSpecificity('machine','bench')===0.5&&A.customSpecificity('barbell','bench')===0.7,'custom specificity: machine version 0.5, other implement 0.7','');
+  console.log('  every exercise has a family · parents valid, same family, acyclic · folds hidden and never generated · custom family from pattern');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

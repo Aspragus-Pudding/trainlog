@@ -812,7 +812,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.23.0';
+const APP_VERSION='1.24.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1145,6 +1145,88 @@ let exById=Object.fromEntries(EX.map(e=>[e.id,e]));
 function mergeCustom(){
   (CFG.customEx||[]).forEach(c=>{ if(!exById[c.id]){ EX.push(c); exById[c.id]=c; } });
 }
+/* ---------- Exercise library model (docs/spec/strength-programming.md §1) ----------
+   FAMILY: the movement an exercise trains toward — a mapping from its
+   pattern, not a new taxonomy. Only the six compound families get strength
+   tracking (main lifts, stall detection); everything else is 'isolation'.
+   An exercise may override its family (close-grip bench is an elbow
+   extension for volume and joints, but a bench variant for stalls).
+   PARENT + SPECIFICITY: which exercise this is a variant of, and how close
+   (0–1). SPECIFICITY VALUES ARE JUDGEMENT DEFAULTS, GRADE D: 0.9 same
+   movement changed only in position (grip), 0.7 different implement or
+   body position, 0.5 machine version, 0.3 same family different pattern,
+   0.1 an accessory for the same muscles.
+   STICKING: the sticking regions a variant targets (Grade D tags), used by
+   the stall engine later. FAMILY_STICKING lists the regions you can report
+   for a family.
+   FOLD RULE (decided Oct 2026): if only position, range or tempo changes,
+   it's a modifier on the parent; if the muscle emphasis shifts, it's a
+   separate exercise. Folded entries stay in EX so old logs, backups and
+   saved days still resolve, but they're never offered or auto-selected. */
+const TRACKED_FAMILIES=['squat','hinge','horizontal_press','vertical_press','vertical_pull','horizontal_pull'];
+const FAMILY_LABEL={squat:'Squat',hinge:'Hinge',horizontal_press:'Horizontal press',vertical_press:'Vertical press',
+  vertical_pull:'Vertical pull',horizontal_pull:'Row',isolation:'Isolation'};
+const FAMILY_STICKING={squat:['bottom','mid','top'], hinge:['off_floor','below_knee','lockout'],
+  horizontal_press:['off_chest','mid','lockout'], vertical_press:['start','mid','lockout'],
+  vertical_pull:['start','mid','top'], horizontal_pull:['start','mid','top']};
+const EX_LINKS={
+  // squat
+  ssb_squat:{parent:'squat',spec:.7}, transformer_low_bar:{parent:'squat',spec:.7}, transformer_high_bar:{parent:'squat',spec:.7},
+  transformer_front:{parent:'front_squat',spec:.7}, transformer_goblet:{parent:'goblet',spec:.7},
+  front_squat:{parent:'squat',spec:.7,sticking:['bottom','mid']}, hack:{parent:'squat',spec:.5,sticking:['bottom']},
+  pendulum:{parent:'squat',spec:.5,sticking:['bottom']}, belt_squat:{parent:'squat',spec:.5}, leg_press:{parent:'squat',spec:.3,sticking:['bottom']},
+  bulgarian:{parent:'squat',spec:.3},
+  // hinge
+  transformer_hinge:{parent:'deadlift',spec:.5}, trap_bar:{parent:'deadlift',spec:.7,sticking:['off_floor']},
+  rdl:{parent:'deadlift',spec:.3,sticking:['below_knee','lockout']}, belt_rdl:{parent:'deadlift',spec:.3,sticking:['below_knee']},
+  good_morning:{parent:'deadlift',spec:.3,sticking:['below_knee']}, hip_thrust:{parent:'deadlift',spec:.1,sticking:['lockout']},
+  back_ext:{parent:'deadlift',spec:.1,sticking:['lockout']}, roman_hinge:{parent:'deadlift',spec:.1,sticking:['lockout']},
+  // horizontal press
+  floor_press:{parent:'bench',spec:.7,sticking:['mid','lockout']}, decline_press:{parent:'bench',spec:.7},
+  db_bench:{parent:'bench',spec:.7,sticking:['off_chest']}, cg_bench:{parent:'bench',spec:.9,family:'horizontal_press',sticking:['lockout']},
+  machine_press:{parent:'bench',spec:.5}, pin_chest_press:{parent:'bench',spec:.5}, ln_pl_press:{parent:'bench',spec:.5},
+  cable_press:{parent:'bench',spec:.3}, weighted_pushup:{parent:'bench',spec:.3},
+  pin_incline_press:{parent:'incline_machine',spec:.7}, incline_db:{parent:'incline_machine',spec:.7},
+  // vertical press
+  z_press:{parent:'ohp',spec:.7,sticking:['start','mid']}, db_press:{parent:'ohp',spec:.7}, seated_db_press:{parent:'ohp',spec:.7},
+  machine_ohp:{parent:'ohp',spec:.5}, landmine:{parent:'ohp',spec:.3},
+  // vertical pull
+  pullup:{parent:'chinup',spec:.9}, assisted_pullup:{parent:'chinup',spec:.7}, pulldown:{parent:'chinup',spec:.5},
+  uh_pl_pulldown:{parent:'chinup',spec:.5}, sa_plate_pulldown:{parent:'pulldown',spec:.7},
+  // rear-delt and shoulder isolation filed under horizontal pulling for joints and swaps
+  face_pull:{family:'isolation'}, seated_rd_fly:{family:'isolation'}, bo_rd_fly:{family:'isolation'}, m_rd_fly:{family:'isolation'},
+  sw_rd_fly:{family:'isolation'}, rear_fly:{family:'isolation'}, pullover:{family:'isolation'},
+  // folded into modifier signatures on their parent
+  board_press:{folded:{parent:'bench',modifiers:{rom:{kind:'board',amount:2,unit:'in'}}}},
+  neutral_pulldown:{folded:{parent:'pulldown',modifiers:{grip:'neutral'}}}
+};
+/* Applied once at load onto the built-in library (built-ins are never
+   persisted, so this can't leak into CFG). Custom exercises carry their own
+   parent/specificity from creation and get their family from their pattern. */
+function applyLibraryModel(){
+  EX.forEach(ex=>{
+    if(ex.custom) return;
+    const L=EX_LINKS[ex.id]; if(!L) return;
+    if(L.family) ex.family=L.family;
+    if(L.parent){ ex.parent=L.parent; ex.specificity=L.spec; }
+    if(L.sticking) ex.sticking=L.sticking.slice();
+    if(L.folded){ ex.folded=L.folded; ex.parent=L.folded.parent; ex.specificity=.9; }
+  });
+}
+function familyOf(ex){
+  if(!ex) return 'isolation';
+  if(ex.family==='isolation'||TRACKED_FAMILIES.includes(ex.family)) return ex.family;
+  return TRACKED_FAMILIES.includes(ex.pattern)?ex.pattern:'isolation';
+}
+const mainEligible=ex=>!!ex&&!ex.rehab&&!ex.folded&&familyOf(ex)!=='isolation';
+/* Specificity for a custom exercise against the parent you picked: machine
+   vs free weight 0.5, otherwise 0.7. Judgement default, Grade D (§1.2). */
+const MACHINE_LOADS=['machine','stack','cable'];
+function customSpecificity(load, parent){
+  const p=exById[parent]; if(!p) return null;
+  return MACHINE_LOADS.includes(load)!==MACHINE_LOADS.includes(p.load)?.5:.7;
+}
+
 /* Renaming a built-in exercise never touches its id, so every id-keyed
    lookup (EXERCISE_TIPS, FLAGS, split templates) is unaffected — only the
    display name on the shared object changes. Custom exercises rename by
@@ -1383,7 +1465,7 @@ function newSlotFor(ex, role){
 /* Pick an exercise for a pattern+role. Goal lifts win a primary slot;
    otherwise rank by your own ratings, then by what you've actually used. */
 function resolveEx(pattern, role, used){
-  const pool=EX.filter(e=>e.pattern===pattern&&!used.has(e.id));
+  const pool=EX.filter(e=>e.pattern===pattern&&!used.has(e.id)&&!e.folded);
   if(!pool.length) return null;
   if(role==='primary'){
     const goal=pool.find(e=>(CFG.goals||[]).includes(e.id));
@@ -1491,6 +1573,7 @@ function loadAll(){
   ROADMAP = CFG.roadmap && CFG.roadmap.length ? CFG.roadmap : DEFAULT_ROADMAP.map(b=>({...b}));
   ROADMAP.forEach(b=>{ if(!b.vol||!b.vol.length) applyShape(b); });
   mergeCustom();
+  applyLibraryModel();
   applyNameOverrides();
   applyBarOverrides();
   applySetupLink();
@@ -3538,7 +3621,7 @@ function openEstimates(){
 function openLibrary(){
   let q='', only=null;
   const draw=()=>{
-    const list=EX.filter(e=>!q||e.name.toLowerCase().includes(q.toLowerCase())||e.pattern.includes(q.toLowerCase().replace(/ /g,'_')))
+    const list=EX.filter(e=>!e.folded).filter(e=>!q||e.name.toLowerCase().includes(q.toLowerCase())||e.pattern.includes(q.toLowerCase().replace(/ /g,'_')))
       .filter(e=>only==='custom'?e.custom:only==='rehab'?e.rehab:only==='flagged'?flagFor(e.id):true)
       .sort((a,b)=>a.pattern===b.pattern?a.name.localeCompare(b.name):a.pattern.localeCompare(b.pattern));
     sheet(`<h2 style="font-size:21px;margin-bottom:3px">Exercise library</h2>
@@ -3602,12 +3685,12 @@ const LOADING_TYPES=[
     hint:'Log the weight you add, not the total. Estimated 1RM uses your latest logged bodyweight plus the added weight.'}
 ];
 const loadingType=load=>LOADING_TYPES.find(t=>t.load===load)||LOADING_TYPES[1];
-function openCustomEx(onCreate, editingEx){
-  const st=editingEx?{name:editingEx.name,pattern:editingEx.pattern,load:editingEx.load,
+function openCustomEx(onCreate, editingEx, resume){
+  const st=resume?resume:editingEx?{name:editingEx.name,parent:editingEx.parent||null,makeMain:false,pattern:editingEx.pattern,load:editingEx.load,
       primary:Object.entries(editingEx.vol).find(([,w])=>w===1)?.[0]||'chest',
       secondary:Object.entries(editingEx.vol).filter(([,w])=>w<1).map(([m])=>m),
       inc:editingEx.inc,bar:editingEx.bar||0,unitPref:editingEx.unitPref||'both',unilateral:!!editingEx.unilateral}
-    :{name:'',pattern:'horizontal_press',load:'machine',primary:'chest',  // horizontal_press = 'Chest press' in the picker above
+    :{name:'',parent:null,makeMain:false,pattern:'horizontal_press',load:'machine',primary:'chest',  // horizontal_press = 'Chest press' in the picker above
       secondary:[],inc:10,bar:0,unitPref:'both',unilateral:false};
   /* Plain-English movement types, shown instead of raw pattern ids. Order
    roughly matches how someone would describe the exercise out loud. */
@@ -3676,6 +3759,32 @@ const MOVEMENT_TYPES=[
       "Fine to pick this — it just means the app won't be able to suggest swap alternatives for it later."));
     host.appendChild(mtBlock);
 
+    // §1.5 — both optional, only for movements with strength tracking
+    const fam=familyOf({pattern:st.pattern});
+    if(fam!=='isolation'){
+      if(st.parent&&familyOf(exById[st.parent])!==fam) st.parent=null;
+      const pv=el('div','qblock');
+      pv.innerHTML=`<div class="qlab">Is this a version of something you already do? <span class="dim tiny" style="font-weight:400">· optional</span></div>
+        <div class="field">Lets the app treat it as a variant — for swaps now, and for working out what to change when a lift stalls later.</div>`;
+      const pc=el('div','chips');
+      const own=el('button','chip','It\'s its own movement'); own.style.cssText='font-size:12.5px;padding:6px 10px';
+      own.setAttribute('aria-pressed',st.parent?'false':'true'); own.onclick=()=>{ st.parent=null; draw(); };
+      const pick=el('button','chip',st.parent&&exById[st.parent]?'Version of: '+esc(exById[st.parent].name):'Pick the exercise…');
+      pick.style.cssText='font-size:12.5px;padding:6px 10px'; pick.setAttribute('aria-pressed',st.parent?'true':'false');
+      pick.onclick=()=>exPicker('A version of…', e=>familyOf(e)===fam&&(!editingEx||e.id!==editingEx.id),
+        e=>{ st.parent=e.id; openCustomEx(onCreate,editingEx,st); },
+        {noCreate:true, keepOpen:true, onCancel:()=>openCustomEx(onCreate,editingEx,st)});
+      pc.append(own,pick); pv.appendChild(pc); host.appendChild(pv);
+      if(!editingEx){
+        const mm=el('label',''); mm.style.cssText='display:flex;align-items:center;gap:8px;cursor:pointer';
+        mm.innerHTML='<input type="checkbox"'+(st.makeMain?' checked':'')+'><span class="sm">Make this a main lift</span>';
+        mm.querySelector('input').onchange=e=>{ st.makeMain=e.target.checked; };
+        const mb=el('div','qblock'); mb.appendChild(mm);
+        mb.appendChild(el('div','anchor','Main lifts get priority in every session. You can have up to three; change them in Edit program.'));
+        host.appendChild(mb);
+      }
+    }
+
     mk('How is it loaded?',LOADING_TYPES.map(t=>t.load),st.load,v=>{
       const t=loadingType(v); st.load=v; st.inc=t.inc; st.bar=t.bar||0; },v=>loadingType(v).label);
     host.lastChild.appendChild(el('div','anchor',esc(loadingType(st.load).hint)));
@@ -3717,6 +3826,8 @@ const MOVEMENT_TYPES=[
     const vol={[st.primary]:1}; st.secondary.forEach(m=>vol[m]=0.5);
     if(editingEx){
       const lt=loadingType(st.load);
+      const famE=familyOf({pattern:st.pattern}), parE=famE!=='isolation'&&st.parent?st.parent:null;
+      editingEx.parent=parE||undefined; editingEx.specificity=parE?customSpecificity(st.load,parE):undefined;
       Object.assign(editingEx,{name,pattern:st.pattern,load:st.load,bar:st.bar||0,
         plateSet:lt.plate?'main_lb':null,inc:st.inc,prog:lt.prog,
         comparable:lt.comparable,unitPref:st.unitPref,vol,
@@ -3728,12 +3839,21 @@ const MOVEMENT_TYPES=[
     }
     const id='cx_'+name.toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,28)+'_'+Math.random().toString(36).slice(2,5);
     const lt=loadingType(st.load);
+    const fam=familyOf({pattern:st.pattern}), par=fam!=='isolation'&&st.parent?st.parent:null;
     const ex={id,name,pattern:st.pattern,load:st.load,bar:st.bar||0,
       plateSet:lt.plate?'main_lb':null,inc:st.inc,prog:lt.prog,
       comparable:lt.comparable,custom:true,unitPref:st.unitPref,vol,
-      plateLoaded:st.load==='machine',unilateral:st.load==='machine'&&!!st.unilateral};
-    CFG.customEx=(CFG.customEx||[]).concat(ex); saveCfg(); mergeCustom();
-    $('#dlg').close(); toast(name+' added');
+      plateLoaded:st.load==='machine',unilateral:st.load==='machine'&&!!st.unilateral,
+      ...(par?{parent:par,specificity:customSpecificity(st.load,par)}:{})};
+    CFG.customEx=(CFG.customEx||[]).concat(ex);
+    let mainNote='';
+    if(st.makeMain&&fam!=='isolation'){
+      CFG.goals=CFG.goals||[];
+      if(CFG.goals.length<3){ CFG.goals.push(id); mainNote=' as a main lift'; }
+      else mainNote=' — you already have three main lifts, so swap one in Edit program';
+    }
+    saveCfg(); mergeCustom();
+    $('#dlg').close(); toast(name+' added'+mainNote);
     if(onCreate) onCreate(ex); else render();
   };
 }
@@ -3999,8 +4119,11 @@ function openInfo(exId){
     : tips.length ? `<div class="qblock"><div class="qlab">Coaching cues</div>
       ${tips.map(t=>`<div class="muted sm" style="margin-bottom:7px">• ${esc(t)}</div>`).join('')}
       ${disclaimer}</div>` : '';
+  const parentEx=ex.parent?exById[ex.parent]:null;
   sheet(`<h2 style="font-size:20px;margin-bottom:2px">${esc(ex.name)}</h2>
-    <div class="muted tiny" style="margin-bottom:15px">${esc(ex.pattern.replace(/_/g,' '))} · ${esc(loadName(ex.load))}</div>
+    <div class="muted tiny" style="margin-bottom:15px">${esc(ex.pattern.replace(/_/g,' '))} · ${esc(loadName(ex.load))}${
+      familyOf(ex)!=='isolation'?' · '+esc(FAMILY_LABEL[familyOf(ex)])+' family':''}${
+      parentEx?' · a version of '+esc(parentEx.name):''}</div>
     ${tipsHtml}
     <div class="qblock" id="inotes"></div>
     ${(()=>{const f=flagFor(exId); if(!f) return '';
@@ -4158,7 +4281,7 @@ function exPicker(title, filterFn, onPick, opts){
   // muscle can't. Rehab movements only appear when asked for — never by default.
   let q='', mus=(opts&&opts.muscle)||null, grp=null, first=true;
   const draw=()=>{
-    const base=EX.filter(filterFn);
+    const base=EX.filter(e=>!e.folded&&filterFn(e));
     let list=base.filter(e=>grp==='rehab'?e.rehab:!e.rehab);
     if(grp==='custom') list=list.filter(e=>e.custom);
     if(mus) list=list.filter(e=>(e.vol||{})[mus]===1);
@@ -4206,12 +4329,13 @@ function exPicker(title, filterFn, onPick, opts){
         <div class="dim tiny" style="font-weight:400">${esc(e.pattern.replace(/_/g,' '))} · ${esc(loadName(e.load))}${
           rt?` · stimulus ${rt.st.toFixed(1)}/5 across ${rt.n}`:''}${
           f?` · ${esc(f.why)}`:''}</div>`;
-      b.onclick=()=>{ $('#dlg').close(); onPick(e); };
+      b.onclick=()=>{ if(!(opts&&opts.keepOpen)) $('#dlg').close(); onPick(e); };
       $('#exl').appendChild(b);
     });
     if(!list.length) $('#exl').appendChild(el('div','empty','Nothing matches. Create one below.'));
+    if(opts&&opts.noCreate) $('#exnew').hidden=true;
     $('#exnew').onclick=()=>openCustomEx(ex=>{ $('#dlg').close(); onPick(ex); });
-    $('#exc').onclick=()=>$('#dlg').close();
+    $('#exc').onclick=()=>{ if(opts&&opts.onCancel) opts.onCancel(); else $('#dlg').close(); };
   };
   draw();
 }
@@ -5797,7 +5921,7 @@ function openOnboarding(step){
     if(O.goals.length<3){
       const add=el('button','btn wide','Add a lift'); add.style.marginTop='11px';
       add.onclick=()=>exPicker('Pick a lift to build around',
-        e=>!O.goals.includes(e.id), e=>{ O.goals.push(e.id); openOnboarding(3); });
+        e=>!O.goals.includes(e.id)&&mainEligible(e), e=>{ O.goals.push(e.id); openOnboarding(3); });
       host.appendChild(add);
     }
     return;
@@ -5946,7 +6070,7 @@ function openSettings(){
         u.onclick=()=>{[S.goals[i-1],S.goals[i]]=[S.goals[i],S.goals[i-1]];draw();}; btns.appendChild(u); }
       const c=el('button','iconbtn','⇄');
       c.setAttribute('aria-label','Change lift');
-      c.onclick=()=>exPicker('Pick a goal lift', e=>e.id!==g, e=>{ S.goals[i]=e.id; openSettings(); });
+      c.onclick=()=>exPicker('Pick a goal lift', e=>e.id!==g&&mainEligible(e), e=>{ S.goals[i]=e.id; openSettings(); });
       btns.appendChild(c); r.appendChild(btns); gl.appendChild(r);
     });
     host.appendChild(gl);

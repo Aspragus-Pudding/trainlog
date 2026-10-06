@@ -117,6 +117,14 @@ never swapped out mid-workout.
 - **`EX`** is the exercise library array; **`exById`** is the lookup. Custom
   exercises live in `CFG.customEx` and are merged in by `mergeCustom()` at load.
   Anything iterating `EX` automatically sees custom exercises.
+- **Library model (spec §1):** every exercise has a family (`familyOf()`,
+  from its pattern; six tracked compound families, the rest `isolation`), and
+  may have a `parent` + `specificity` (`EX_LINKS` for built-ins, set at
+  creation for custom ones). **Fold rule:** if only position, range or tempo
+  changes, it's a modifier on the parent; if the muscle emphasis shifts, it's
+  a separate exercise (close-grip bench stays separate — it's a triceps
+  movement). Folded entries stay in `EX` for old data but are never offered
+  or generated.
 - **`exPicker()`** is the one shared exercise picker (search + category chips +
   create-new). Swapping, adding, and goal-lift selection all route through it.
   Don't write a second bespoke picker — that's how mid-session swap ended up
@@ -198,7 +206,7 @@ on the Lifts tab so the user can confirm which build is running.
 ## User context
 
 - Training full body, 5 days/week. Powerbuilding, not competitive powerlifting.
-- Goal lifts: weighted chin-up, deadlift, incline machine press.
+- Goal lifts: Transformer bar squat, deadlift, incline machine press (from settings, Oct 2026 — weighted chin-up was earlier).
 - **Anterior shoulder instability** — labral tear with a Hill-Sachs lesion,
   pre-surgical. The `shoulder_instability` condition flags exercises loading
   abduction + external rotation. Take this seriously; don't weaken those flags.
