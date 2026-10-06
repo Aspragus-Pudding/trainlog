@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','noviceSignal','activeProposals'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','noviceSignal','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -1194,6 +1194,60 @@ section('33. profiles and the novice signal');
   ok(B.activeProposals().some(p=>p.id==='novice_model'),'and back after the snooze if it still applies','');
   B.getCFG().experience='novice'; ok(!B.activeProposals().some(p=>p.id==='novice_model'),'no proposal once you are on the novice model','');
   console.log('  five profiles, no brands · customise overrides · novice = 3+ straight increases over 21+ days · proposes, never switches · snooze');
+}
+
+/* ─── 34. block sequencer (spec §3.3) ─── */
+section('34. block sequencer');
+{
+  const A=load([]), goals=['ssb_squat','deadlift','incline_machine'];
+  const lim={hyp:[5,10],str:[3,6]};
+  A.PROFILE_ORDER.forEach(k=>{
+    const P=A.PROFILES[k];
+    for(const W of [12,16,20,24,30,40]){
+      const r=A.sequenceBlocks({params:P,experience:'intermediate',weeks:W,goals});
+      const tag=k+' '+W+'wk';
+      const tot=r.blocks.reduce((a,b)=>a+b.weeks,0);
+      ok(tot+r.leftover===W,tag+': blocks + leftover = weeks',tot+'+'+r.leftover);
+      r.blocks.forEach((b,i)=>ok(b.taper?b.weeks===2:b.weeks>=lim[b.type][0]&&b.weeks<=lim[b.type][1],tag+': block '+(i+1)+' within limits (no stub blocks)',b.type+' '+b.weeks));
+      ok(!r.blocks.some(b=>b.type==='peak'),tag+': never a peak block','');
+      ok(!r.blocks.some(b=>b.taper),tag+': no taper without a fixed target or test date','');
+      const last=r.blocks[r.blocks.length-1];
+      if(r.blocks.length) ok(P.testEvery>0?true:last.type==='hyp',tag+': ends on strength only when the profile wants PRs',last.type);
+      // interleave: below ~55% strength, never two strength blocks in a row and never two hypertrophy blocks in a row
+      if(P.ratio>0&&P.ratio<=0.5) ok(!r.blocks.some((b,i)=>i&&b.type==='hyp'&&r.blocks[i-1].type==='hyp'),tag+': hypertrophy and strength alternate','');
+      if(P.ratio===0) ok(r.blocks.every(b=>b.type==='hyp'),tag+': pure size is hypertrophy only','');
+      // test frequency
+      const strs=r.blocks.filter(b=>b.type==='str'&&!b.taper);
+      if(P.testEvery===0) ok(!strs.some(b=>b.realize),tag+': never tests','');
+      else{
+        strs.forEach((b,j)=>{ if((j+1)%P.testEvery===0) ok(b.realize,tag+': strength block '+(j+1)+' tests (every '+P.testEvery+')',''); });
+        if(strs.length) ok(strs[strs.length-1].realize,tag+': the last strength block tests (the profile wants PRs)','');
+        strs.forEach((b,j)=>{ if((j+1)%P.testEvery!==0&&j<strs.length-1) ok(!b.realize,tag+': strength block '+(j+1)+' does not test','');});
+      }
+    }
+  });
+  // shares land near the profile's target over a long plan
+  [['even_mix',.5],['size_first',.25],['pure_strength',.8]].forEach(([k,t])=>{
+    const r=A.sequenceBlocks({params:A.PROFILES[k],experience:'intermediate',weeks:48,goals});
+    const st=r.blocks.filter(b=>b.type==='str').reduce((a,b)=>a+b.weeks,0)/48;
+    ok(Math.abs(st-t)<=0.1,k+': strength share within 10 points of '+t+' over 48 weeks',st.toFixed(2));
+  });
+  // tapers: before a test date, or a fixed target when the profile peaks
+  const tt=A.sequenceBlocks({params:A.PROFILES.even_mix,experience:'intermediate',weeks:30,testWeek:20,goals});
+  let acc=0, taperEnd=null; tt.blocks.forEach(b=>{ acc+=b.weeks; if(b.taper) taperEnd=acc; });
+  ok(taperEnd===20,'a test at week 20: the taper ends that week',String(taperEnd));
+  const i20=tt.blocks.findIndex(b=>b.taper);
+  ok(tt.blocks[i20-1].type==='str','and a strength block comes right before it','');
+  ok(A.sequenceBlocks({params:A.PROFILES.pure_strength,experience:'intermediate',weeks:24,targetFixed:true,goals}).blocks.slice(-1)[0].taper,'pure strength + fixed target: ends on a taper','');
+  ok(!A.sequenceBlocks({params:A.PROFILES.even_mix,experience:'intermediate',weeks:24,targetFixed:true,goals}).blocks.some(b=>b.taper),'even mix peaks only before tests, not a target','');
+  // novice: one ongoing block
+  const nv=A.sequenceBlocks({params:A.PROFILES.even_mix,experience:'novice',weeks:24,goals});
+  ok(nv.blocks.length===1&&nv.blocks[0].linear&&nv.blocks[0].weeks===24,'novice: one ongoing block','');
+  // old peak blocks become tapered strength blocks
+  const pb=A.migratePeak({type:'peak',label:'Peaking',weeks:3});
+  ok(pb.type==='str'&&pb.taper===true,'an existing peak block reads as a tapered strength block','');
+  ok(!A.isRealizationWeek({type:'str',taper:true,week:3,weeks:3})&&!A.isRealizationWeek({type:'str',realize:false,week:3,weeks:3})&&A.isRealizationWeek({type:'str',week:3,weeks:3}),'realization only in strength blocks meant to test (older blocks: every one)','');
+  console.log('  blocks in limits, no stubs, no peaks · ends per profile · interleaved · test frequency · tapers only before dates · novice · peak migration');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

@@ -813,7 +813,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.29.0';
+const APP_VERSION='1.30.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1372,10 +1372,13 @@ const DEFAULT_ROADMAP=[
  {type:'str', label:'Strength',    weeks:4, vol:[13,12,11,8],    int:[78,82,86,66]},
  {type:'hyp', label:'Hypertrophy', weeks:5, vol:[11,13,15,17,9], int:[64,68,72,76,58]},
  {type:'str', label:'Strength',    weeks:4, vol:[13,12,10,7],    int:[80,84,88,68]},
- {type:'peak',label:'Peaking',     weeks:3, vol:[8,6,4],         int:[90,93,96]},
+ {type:'str', label:'Strength',    weeks:3, vol:[8,6,4],         int:[90,93,96], taper:true},
 ];
 const TYPE_COLOR={hyp:'var(--hyp)',str:'var(--str)',peak:'var(--peak)',deload:'var(--deload)'};
-const TYPE_NAME={hyp:'Hypertrophy',str:'Strength',peak:'Peaking',deload:'Deload'};
+const TYPE_NAME={hyp:'Hypertrophy',str:'Strength',peak:'Taper',deload:'Deload'};
+/* A tapered strength block draws in the peak colour, so it still stands out. */
+const blockColor=b=>b&&b.taper?TYPE_COLOR.peak:TYPE_COLOR[b.type];
+const blockName=b=>b&&b.taper?'Taper':TYPE_NAME[b.type];
 /* default volume/intensity shape per block type, used when a block is added */
 const TYPE_SHAPE={
   hyp:  {vol:[10,12,14,16,9], int:[62,66,70,74,58]},
@@ -1394,6 +1397,11 @@ function shapeFor(type,weeks){
   }
   return out;
 }
+/* Peak is not a selectable block type any more (spec §3.3): a peak is a
+   strength block flagged taper:true, inserted only before a fixed target date
+   or a test date. Older roadmaps' peak blocks read as tapered strength
+   blocks — same shape, same rep scheme. */
+function migratePeak(b){ if(b&&b.type==='peak'){ b.type='str'; b.taper=true; if(!b.label||b.label==='Peaking') b.label='Strength'; } return b; }
 /* A deload is appended to a block, never a replacement for one. b.weeks is
    working weeks; b.vol/b.int carry the deload week on the end when b.deload. */
 const VOL_EMPHASIS={low:0.75, moderate:1.0, high:1.3};
@@ -1407,7 +1415,7 @@ const ENERGY={
 };
 const energyCfg=()=>ENERGY[CFG.energy||'maintenance'];
 function applyShape(b){
-  const sh=shapeFor(b.type,b.weeks);
+  const sh=shapeFor(b.taper&&b.type==='str'?'peak':b.type,b.weeks);
   const k=VOL_EMPHASIS[b.emphasis||'moderate'];
   if(k!==1) sh.vol=sh.vol.map(v=>Math.max(3,Math.round(v*k)));
   if(b.deload&&b.type!=='deload'){ sh.vol.push(TYPE_SHAPE.deload.vol[0]); sh.int.push(TYPE_SHAPE.deload.int[0]); }
@@ -1546,7 +1554,8 @@ function repRangeOverride(ex, role, blockType){
   }
   return null;
 }
-function schemeFor(role, blockType, weekOfBlock, blockWeeks, ex){
+function schemeFor(role, blockType, weekOfBlock, blockWeeks, ex, taper){
+  if(taper&&blockType==='str') blockType='peak';
   const T={
     hyp:{primary:[4,[6,8],8],   secondary:[3,[8,12],8], accessory:[3,[10,15],9]},
     str:{primary:[4,[3,5],8],   secondary:[3,[5,8],8],  accessory:[3,[8,12],9]},
@@ -1589,14 +1598,14 @@ function resolveEx(pattern, role, used){
   // rehab movements are prescribed deliberately, never auto-selected
   const avail=pool.filter(e=>!e.rehab);
   if(avail.length) pool.length=0, pool.push(...avail);
-  const score=e=>{
+  const score=e=>equipmentScore(e)+(()=>{
     const f=flagFor(e.id);
     if(f&&f.level==='red') return -1000;
     if(f&&f.level==='yellow') return -50;
     const rs=LOG.filter(x=>x.type==='exercise_rating'&&x.exercise_id===e.id);
     if(rs.length>=3) return 100+rs.reduce((a,r)=>a+r.stimulus*2+r.enjoyment,0)/rs.length;
     return exposureCount(e.id);
-  };
+  })();
   return pool.sort((a,b)=>score(b)-score(a))[0];
 }
 
@@ -1612,7 +1621,7 @@ function buildDay(tpl, phase){
     if(!ex) ex=resolveEx(pattern,role,used);
     if(!ex) return;
     used.add(ex.id);
-    const sc=schemeFor(role,phase.type,phase.week,phase.weeks,ex);
+    const sc=schemeFor(role,phase.type,phase.week,phase.weeks,ex,phase.taper);
     const k=VOL_EMPHASIS[phase.emphasis||'moderate'];
     const ek=energyCfg().vol;
     sc.sets=Math.max(2,Math.round(sc.sets*k*ek));
@@ -1692,7 +1701,7 @@ function loadAll(){
       .map(l=>{try{return JSON.parse(l)}catch{return null}}).filter(Boolean); }catch{ LOG=[]; }
   try{ const c=JSON.parse(localStorage.getItem(LS_CFG)||'null'); if(c) CFG={...CFG,...c}; }catch{}
   ROADMAP = CFG.roadmap && CFG.roadmap.length ? CFG.roadmap : DEFAULT_ROADMAP.map(b=>({...b}));
-  ROADMAP.forEach(b=>{ if(!b.vol||!b.vol.length) applyShape(b); });
+  ROADMAP.forEach(b=>{ migratePeak(b); if(!b.vol||!b.vol.length) applyShape(b); });
   mergeCustom();
   applyLibraryModel();
   applyNameOverrides();
@@ -2983,7 +2992,7 @@ function openCompress(proj,p){
   const rows=ROADMAP.map((b,i)=>{
     const a=r.draft[i], changed=a.weeks!==b.weeks;
     return `<div class="row between sm" style="padding:5px 0;border-top:1px solid var(--line)">
-      <span>${i+1}. ${esc(TYPE_NAME[b.type])}${b.deload&&b.type!=='deload'?' + deload':''}</span>
+      <span>${i+1}. ${esc(blockName(b))}${b.deload&&b.type!=='deload'?' + deload':''}</span>
       <span${changed?' style="color:var(--warn);font-weight:600"':' class="muted"'}>${b.weeks} → ${a.weeks} wk</span></div>`;
   }).join('');
   sheet(`<h2 style="font-size:20px;margin-bottom:3px">Compress to hit your date</h2>
@@ -3020,7 +3029,7 @@ function renderDash(){
     <div class="legend">
       <span><i class="sw" style="background:var(--hyp)"></i>Hypertrophy</span>
       <span><i class="sw" style="background:var(--str)"></i>Strength</span>
-      <span><i class="sw" style="background:var(--peak)"></i>Peaking</span>
+      <span><i class="sw" style="background:var(--peak)"></i>Taper</span>
       <span><i class="sw" style="background:var(--muted);height:2px;border-radius:0"></i>Intensity</span>
     </div>`;
   v.appendChild(hero);
@@ -3100,11 +3109,11 @@ function renderDash(){
     const cur=i===p.idx, done=to<((()=>{let a=0;for(const x of ROADMAP.slice(0,p.idx))a+=blockLen(x);return a+p.week;})());
     const r=el('div','row between'); r.style.cssText='padding:9px 0;border-top:1px solid var(--line)';
     r.innerHTML=`<span class="grow">
-        <div style="font-weight:${cur?'650':'500'};color:${cur?TYPE_COLOR[b.type]:done?'var(--dim)':'var(--ink)'}">
-          Phase ${i+1} · ${TYPE_NAME[b.type]}${b.deload?' + deload':''}</div>
+        <div style="font-weight:${cur?'650':'500'};color:${cur?blockColor(b):done?'var(--dim)':'var(--ink)'}">
+          Phase ${i+1} · ${blockName(b)}${b.realize===false?' · no test':''}${b.deload?' + deload':''}</div>
         <div class="dim tiny">weeks ${from}–${to}${b.lead&&exById[b.lead]?' · leads with '+esc(exById[b.lead].name):''}${
           (b.hyp||[]).length?' · '+b.hyp.map(m=>ML[m]).join(', '):''}</div></span>
-      <span class="tiny" style="color:${cur?TYPE_COLOR[b.type]:'var(--dim)'};flex:none">${
+      <span class="tiny" style="color:${cur?blockColor(b):'var(--dim)'};flex:none">${
         cur?'week '+p.week+' of '+L:done?'done':L+'w'}</span>`;
     cl.appendChild(r);
   });
@@ -3148,7 +3157,7 @@ function phaseChart(cur){
   let acc=0;
   ROADMAP.forEach(b=>{
     const L=blockLen(b);
-    labels+=`<text x="${padL+(acc+L/2)*bw}" y="${H-4}" fill="${TYPE_COLOR[b.type]}"
+    labels+=`<text x="${padL+(acc+L/2)*bw}" y="${H-4}" fill="${blockColor(b)}"
              font-size="9.5" text-anchor="middle" opacity=".8">${L}w</text>`;
     acc+=L;
     if(acc<n) labels+=`<line x1="${padL+acc*bw}" y1="${top}" x2="${padL+acc*bw}" y2="${top+plotH}" stroke="var(--line)"/>`;
@@ -5092,6 +5101,119 @@ function noviceSignal(){
   });
   return {novice:lifts.length>0, lifts};
 }
+/* ---------- Block sequencer (spec §3.3) ----------
+   Pure: from profile parameters, experience, weeks available and an optional
+   test week, a block list plus a one-line reason per block. Never touches
+   ROADMAP — the builder shows it as a before/after and applies on accept.
+   - Novice: one ongoing block (no periodization; Grade B for untrained lifters).
+   - Otherwise cycles of one hypertrophy block (5–10 wk) then k strength blocks
+     (3–6 wk), choosing lengths and k to hit the profile's strength share. The
+     spec's limits alone cap one-and-one cycles near 55% strength, so higher
+     ratios repeat strength blocks — still interleaved, never all at the end.
+   - Strength blocks end in a realization week every testEvery-th block, and
+     the last one does too when the profile wants PRs. The plan ends on a
+     strength block only then.
+   - A 2-week taper goes before a test date (or a fixed target, for profiles
+     with peaks: 'yes').
+   - Leftover weeks are absorbed by stretching or trimming blocks within their
+     limits, never a stub block. JUDGEMENT DEFAULTS (C/D): block-length limits,
+     the 2-week taper, the cycle search. */
+const SEQ={hyp:[5,10], str:[3,6], taper:2};
+function chooseCycle(ratio){
+  if(ratio<=0) return {H:8,S:0,k:0};
+  let best=null;
+  for(let H=SEQ.hyp[0];H<=SEQ.hyp[1];H++) for(let S=SEQ.str[0];S<=SEQ.str[1];S++) for(let k=1;k<=3;k++){
+    const len=H+S*k; if(len>20) continue;
+    const err=Math.abs(S*k/len-ratio)+Math.abs(len-12)*0.004;   // closest share; cycles near 12 weeks break ties
+    if(!best||err<best.err) best={H,S,k,err};
+  }
+  return best;
+}
+function sequenceBlocks(o){
+  const P=o.params, W=Math.max(0,Math.round(o.weeks||0)), goals=(o.goals||[]).filter(Boolean);
+  const wantsPR=P.testEvery>0, out=[];
+  const mk=(type,weeks,extra)=>({type,label:TYPE_NAME[type],weeks,deload:false,hyp:[],emphasis:'moderate',...extra});
+  if(!W) return {blocks:out, reasons:[]};
+  if(o.experience==='novice'){
+    return {blocks:[mk('hyp',W,{linear:true,label:'Novice'})],
+      reasons:['One ongoing block: add a little load every session on your main lifts until progress stalls twice, then switch to blocks. Periodization adds nothing yet at this stage.']};
+  }
+  const cyc=chooseCycle(P.ratio);
+  // a test week splits the plan: the part before it ends strength → taper
+  const testAt=o.testWeek!=null&&o.testWeek>SEQ.hyp[0]+SEQ.str[0]&&o.testWeek<=W?Math.round(o.testWeek):null;
+  const segments=testAt?[{weeks:testAt,endTest:true},{weeks:W-testAt,endTest:false}]:[{weeks:W,endTest:!!(o.targetFixed&&P.peaks==='yes')}];
+  segments.forEach((seg,si)=>{
+    let left=seg.weeks; const blocks=[];
+    const taper=seg.endTest&&(P.peaks!=='no'||testAt)?SEQ.taper:0;
+    left-=taper;
+    if(cyc.S===0){                                   // pure size: hypertrophy blocks only
+      if(left>=SEQ.hyp[0]){
+        const n=Math.max(1,Math.ceil(left/SEQ.hyp[1]),Math.round(left/8)), base=Math.floor(left/n);
+        for(let i=0;i<n;i++) blocks.push(mk('hyp',base+(i<left-base*n?1:0)));
+        left=0;
+      }
+    }else{
+      let guard=0;
+      while(left>0&&guard++<20){
+        if(left>=cyc.H+cyc.S){ blocks.push(mk('hyp',cyc.H)); left-=cyc.H;
+          for(let j=0;j<cyc.k&&left>=SEQ.str[0];j++){ const w=Math.min(cyc.S,left); blocks.push(mk('str',w)); left-=w; } }
+        else if(left>=SEQ.hyp[0]&&!(wantsPR||seg.endTest)){ blocks.push(mk('hyp',left)); left=0; }
+        else if(left>=SEQ.str[0]&&(wantsPR||seg.endTest)&&blocks.length){ blocks.push(mk('str',Math.min(left,SEQ.str[1]))); left-=Math.min(left,SEQ.str[1]); }
+        else if(left>=SEQ.hyp[0]){ blocks.push(mk('hyp',Math.min(left,SEQ.hyp[1]))); left-=Math.min(left,SEQ.hyp[1]); }
+        else break;
+      }
+      // the plan ends on strength only if the profile wants PRs (or a test is coming)
+      while(blocks.length>1&&blocks[blocks.length-1].type==='str'&&!(wantsPR||seg.endTest)){ left+=blocks.pop().weeks; }
+      // absorb what's left by stretching blocks within their limits — no stub
+      // blocks — one week at a time, into whichever type is under the profile's share
+      for(let guard=0;left>0&&guard<60;guard++){
+        const tot=blocks.reduce((a,b)=>a+b.weeks,0), strW=blocks.filter(b=>b.type==='str').reduce((a,b)=>a+b.weeks,0);
+        const want=strW/(tot||1)<P.ratio?'str':'hyp';
+        const pick=blocks.find(b=>b.type===want&&b.weeks<SEQ[want][1])||blocks.find(b=>b.weeks<SEQ[b.type][1]);
+        if(!pick) break; pick.weeks++; left--;
+      }
+    }
+    if(taper) blocks.push(mk('str',taper,{taper:true}));
+    blocks.forEach(b=>out.push({...b, seg:si, leftover:0}));
+    if(left>0) out.leftover=(out.leftover||0)+left;
+  });
+  // realization weeks and lead lifts
+  let strN=0; const strIdx=out.map((b,i)=>b.type==='str'&&!b.taper?i:-1).filter(i=>i>=0), lastStr=strIdx[strIdx.length-1];
+  out.forEach((b,i)=>{
+    if(goals.length) b.lead=goals[(b.type==='str'?strN:i)%goals.length];
+    if(b.type==='str'&&!b.taper){ strN++; b.realize=P.testEvery>0&&(strN%P.testEvery===0||(i===lastStr&&wantsPR)); }
+    applyShape(b); delete b.seg; delete b.leftover;
+  });
+  const reasons=out.map(b=>b.taper?'Two lighter, heavier-per-rep weeks so you arrive at the test fresh.'
+    :b.type==='hyp'?'Build muscle: more sets at moderate loads'+(cyc.S?', which sets up the strength block after it.':'.')
+    :b.realize?'Heavier, fewer reps on your main lifts, ending in a realization AMRAP that updates your training max.'
+    :'Heavier, fewer reps on your main lifts; no test this time (your profile tests every '+(P.testEvery>1?P.testEvery+' strength blocks':'block')+').');
+  return {blocks:out, reasons, leftover:out.leftover||0};
+}
+/* The builder's plan from where you are: blocks already finished and the one
+   you're in stay as they are; the rest is generated. */
+function planFromNow(o){
+  const pos=ROADMAP.length?programPosition():null;
+  const keep=pos?ROADMAP.slice(0,pos.idx+1).map(b=>JSON.parse(JSON.stringify(b))):[];
+  const cur=pos?ROADMAP[pos.idx]:null;
+  const curLeft=cur?Math.max(0,blockLen(cur)-(pos.week-1)):0;
+  const weeks=Math.max(0,(o.weeks||24)-curLeft);
+  const testWeek=o.testWeek!=null?o.testWeek-curLeft:null;
+  const gen=sequenceBlocks({...o, weeks, testWeek});
+  return {kept:keep.length, blocks:keep.concat(gen.blocks), reasons:keep.map(()=>'Already in progress — unchanged.').concat(gen.reasons), leftover:gen.leftover};
+}
+/* Equipment filter for exercise selection (spec §4.2 step 5). Dumbbells only
+   is a hard filter; machine-heavy and barbell are preferences. Unset = as
+   before. */
+function equipmentScore(ex){
+  const q=CFG.equipment;
+  if(!q||q==='mixed') return 0;
+  if(q==='dumbbell') return ['dumbbell','bodyweight','bodyweight_plus'].includes(ex.load)?0:-10000;
+  if(q==='machine') return ['machine','stack','cable'].includes(ex.load)?40:0;
+  if(q==='barbell') return ex.load==='barbell'?40:0;
+  return 0;
+}
+
 /* ---------- Proposals ----------
    The app proposes, you decide (spec principle 3). One mechanism for every
    card — novice model now, deloads (§3.6), stall interventions (batch C).
@@ -5154,7 +5276,7 @@ function ensureInitialTM(exId){
 }
 const amrapPct=reps=>reps[1]>=8?0.75:reps[1]>=5?0.85:0.90;
 /* The last training week of a strength block (before its deload, if any). */
-const isRealizationWeek=ph=>!!ph&&ph.type==='str'&&!ph.onDeload&&ph.week===(ph.deload?ph.weeks-1:ph.weeks);
+const isRealizationWeek=ph=>!!ph&&ph.type==='str'&&!ph.taper&&ph.realize!==false&&!ph.onDeload&&ph.week===(ph.deload?ph.weeks-1:ph.weeks);
 function amrapRx(slot){
   const ex=exById[slot.ex], t=tmFor(slotTrack(slot).ex), pct=amrapPct(slot.reps), off=bwOffset(ex);
   if(!t) return {lb:null, reps:slot.reps[1], src:null, note:'No training max yet — log a few sets of this lift first. Pick a load you could do for well over '+slot.reps[1]+' reps.'};
@@ -5695,7 +5817,7 @@ function renderLifts(){
     if(m){
       c.appendChild(el('div','srowlab','MEV / MRV — '+ML[m]));
       const g=el('div','sgrid'), L=LANDMARKS[m];
-      [['hyp','Hypertrophy',1,1],['str','Strength',.8,.75],['peak','Peaking',.6,.5]]
+      [['hyp','Hypertrophy',1,1],['str','Strength',.8,.75],['peak','Taper',.6,.5]]
       .forEach(([t,label,a,z])=>g.appendChild(el('div','scell',
         `<div class="snum">${Math.round(L.MEV*a)} / ${Math.round(L.MRV*z)}</div><div class="slab ${t}">${label}</div>`)));
       c.appendChild(g);
@@ -5703,7 +5825,7 @@ function renderLifts(){
     c.appendChild(el('div','srowlab','Progression model'));
     const g2=el('div','sgrid');
     const mode=ex.prog==='percentage'?'Percentage':ex.prog==='double'?'Double':'Reps';
-    [['hyp','Hypertrophy'],['str','Strength'],['peak','Peaking']].forEach(([t,label])=>
+    [['hyp','Hypertrophy'],['str','Strength'],['peak','Taper']].forEach(([t,label])=>
       g2.appendChild(el('div','scell',`<div class="snum" style="font-size:14px">${mode}</div><div class="slab ${t}">${label}</div>`)));
     c.appendChild(g2); v.appendChild(c);
   });
@@ -5800,11 +5922,13 @@ function lintRoadmap(){
   if(!ROADMAP.length) return [{sev:'warn',msg:'No blocks yet. Add at least one.'}];
   ROADMAP.forEach((b,i)=>{
     const prev=ROADMAP[i-1];
-    if(b.type==='peak'&&(!prev||prev.type!=='str'))
-      w.push({sev:'warn',msg:`Block ${i+1}: peaking with no strength block before it.`});
+    if(b.taper&&(!prev||prev.type!=='str'))
+      w.push({sev:'warn',msg:`Block ${i+1}: a taper with no strength block before it.`});
+    if(b.taper&&!CFG.targetFixed&&!CFG.testDate)
+      w.push({sev:'info',msg:`Block ${i+1}: a taper only makes sense before a fixed target date or a test date — neither is set.`});
     if(b.type==='str'&&(!prev||(prev.type!=='hyp'&&prev.type!=='deload')))
       w.push({sev:'warn',msg:`Block ${i+1}: strength with no accumulation before it.`});
-    const lim={hyp:[3,7],str:[2,6],peak:[1,3],deload:[1,2]}[b.type];
+    const lim=b.taper?[1,3]:{hyp:[3,10],str:[2,6],deload:[1,2]}[b.type]||[1,10];
     if(b.weeks<lim[0]||b.weeks>lim[1])
       w.push({sev:'info',msg:`Block ${i+1}: ${b.weeks} weeks is outside the usual ${lim[0]}–${lim[1]} for ${TYPE_NAME[b.type].toLowerCase()}.`});
     if(b.emphasis==='high'&&Math.max(...b.vol)>=20)
@@ -5819,7 +5943,7 @@ function lintRoadmap(){
   let run=0;
   ROADMAP.forEach((b,i)=>{
     if(b.type==='deload'){ run=0; } else { run+=b.weeks; if(b.deload) run=0; }
-    if(run>9){ w.push({sev:'warn',fixAt:i,msg:`${run} weeks without a deload by block ${i+1}.`}); run=0; }
+    if(run>9){ w.push({sev:'info',fixAt:i,msg:`${run} weeks without a scheduled deload by block ${i+1}. The app proposes one when your readiness or effort says you need it; add one here if you prefer them fixed.`}); run=0; }
   });
   if(CFG.target&&CFG.start){
     const avail=weeksAvailable(CFG.start,CFG.target,programSplitSpec());
@@ -5844,11 +5968,8 @@ function fillToTarget(draft, startDate, targetDate, splitKey){
     draft.push(applyShape({type:next,label:TYPE_NAME[next],weeks,hyp:[],deload:true}));
     have+=weeks+1; added++;
   }
-  // if a peaking block fits in what's left, finish on one
-  if(avail-have>=2 && avail-have<=4 && draft.length && draft[draft.length-1].type!=='peak'){
-    draft.push(applyShape({type:'peak',label:'Peaking',weeks:Math.min(3,avail-have),hyp:[],deload:false}));
-    added++;
-  }
+  // peaks are no longer appended here: a taper goes only before a fixed
+  // target or a test date, and the builder (sequenceBlocks) places it
   return added;
 }
 
@@ -6545,15 +6666,21 @@ function openSettings(){
 
       const top=el('div','row between'); top.style.marginBottom='9px';
       const types=el('div','row'); types.style.cssText='gap:5px;flex-wrap:wrap;min-width:0';
-      (b.type==='deload'?['deload']:['hyp','str','peak']).forEach(t=>{
+      (b.type==='deload'?['deload']:['hyp','str']).forEach(t=>{
         const on=b.type===t;
         const c=el('button','chip',TYPE_NAME[t]);
         c.style.cssText='font-size:12.5px;padding:6px 10px';
         c.setAttribute('aria-pressed',on?'true':'false');
         if(on) c.style.cssText+=`;background:${TYPE_COLOR[t]};border-color:${TYPE_COLOR[t]};color:var(--on-block);font-weight:600`;
-        c.onclick=()=>{ if(b.type===t) return; b.type=t; applyShape(b); draw(); };
+        c.onclick=()=>{ if(b.type===t) return; b.type=t; if(t!=='str') delete b.taper; applyShape(b); draw(); };
         types.appendChild(c);
       });
+      if(b.type==='str'){
+        const tp=el('button','chip','Taper'+(b.taper?' ✓':'')); tp.style.cssText='font-size:12.5px;padding:6px 10px';
+        tp.setAttribute('aria-pressed',b.taper?'true':'false'); tp.setAttribute('aria-label','Taper: a short peak before a test');
+        tp.onclick=()=>{ if(b.taper) delete b.taper; else b.taper=true; applyShape(b); draw(); };
+        types.appendChild(tp);
+      }
       const move=el('div','row'); move.style.cssText='gap:4px;flex:none';
       const mu=el('button','iconbtn','↑'); mu.setAttribute('aria-label','Move block earlier');
       if(i===0) mu.style.opacity='.25'; else mu.onclick=()=>{[S.draft[i-1],S.draft[i]]=[S.draft[i],S.draft[i-1]];draw();};
