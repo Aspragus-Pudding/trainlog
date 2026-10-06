@@ -29,9 +29,10 @@ Batches A, B and C come after batch 8. They're specced in
 | **B** | Program builder | After batch A and the engine phase 2 checkpoint |
 | **C** | Stall engine | After batch B; needs the persona simulator (spec §8) |
 
-The two research reports (`docs/research/strength-programming.md`,
-`docs/research/lift-specific.md`) aren't in the repo yet. Don't start batch A
-until they are.
+The evidence behind the spec is in `docs/research/`:
+`strength-programming.md` (programs, plateaus, periodization, goal
+profiles) and `lift-specific.md` (per-lift decision tables, diagnostic
+ratios, specialization — batch C ports its tables as data).
 
 ## Decisions made
 
