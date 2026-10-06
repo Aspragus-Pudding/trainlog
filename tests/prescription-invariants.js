@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -298,7 +298,10 @@ section('9. RPE-delta pricing path');
   let p=A.rpeDeltaStep(slot(10,15,9),60,10,7,9);
   ok(p.lb===60&&p.reps===12,'easier mid-range should add exactly the RPE gap in reps',JSON.stringify(p));
   p=A.rpeDeltaStep(slot(10,15,9),60,14,7,9);
-  ok(p.lb>60&&p.reps===10,'easier, reps would exceed ceiling: should step load up and reset to floor',JSON.stringify(p));
+  // spec §2.5: a 5 lb step on 60 lb is >5%, so reach the top of the range first
+  ok(p.lb===60&&p.reps===15,'easier, reps would pass the ceiling, step >5%: top of the range at this load first',JSON.stringify(p));
+  p=A.rpeDeltaStep(slot(10,15,9),200,14,7,9);
+  ok(p.lb>200&&p.reps===10,'easier, reps would pass the ceiling, step ≤5%: step load up and reset to floor',JSON.stringify(p));
   p=A.rpeDeltaStep(slot(10,15,9),60,13,10,9);
   ok(p.lb===60&&p.reps===12,'harder mid-range should hold load and drop reps',JSON.stringify(p));
   p=A.rpeDeltaStep(slot(10,15,9),60,10,9.5,9);
@@ -1011,6 +1014,80 @@ section('29. modifier signatures are isolated');
   ok(ft.ex==='bench'&&ft.sig==='rom:board2in','a board-press set reads as bench, rom:board',JSON.stringify(ft));
   ok(E.lastSetFor('bench')==null,'and never as normal bench','');
   console.log('  stable signatures · paused never moves normal · first time = reference, no number · PRs/bests/history per track · folds map to parent');
+}
+
+/* ─── 30. set roles: top set + back-offs, failed reps, rep-first (spec §2.1, 2.2, 2.5, 2.6) ─── */
+section('30. top set + back-offs');
+{
+  // the shape is only built for main lifts in strength blocks
+  const G=load([]), GC=G.getCFG(); GC.goals=['deadlift'];
+  const tpl={name:'T',slots:[['hinge','primary'],['horizontal_press','secondary']]};
+  const dStr=G.buildDay(tpl,{type:'str',week:1,weeks:4,lead:'deadlift',hyp:[]});
+  const dHyp=G.buildDay(tpl,{type:'hyp',week:1,weeks:5,lead:'deadlift',hyp:[]});
+  ok(dStr.slots[0].ex==='deadlift'&&dStr.slots[0].structure==='topback'&&dStr.slots[0].backoff.n===dStr.slots[0].sets-1,'strength block: the main lift is top set + back-offs',JSON.stringify(dStr.slots[0]));
+  ok(!dStr.slots[1].structure,'not for non-main lifts','');
+  ok(!dHyp.slots[0].structure,'not in hypertrophy blocks (that slot is batch B)','');
+  // a session: top set, then back-offs priced from what was lifted
+  const hist=[set('deadlift','H1',315,5,8,7)];
+  const A=load(hist), slot={ex:'deadlift',role:'primary',reps:[3,5],rpe:8,sets_target:4,sets:[],structure:'topback',backoff:{n:3}};
+  A.setSession({id:'TB',slots:[slot],openIdx:0,adj:null,ratings:{},startedAt:Date.now()});
+  A.seedDraft(slot); const d=A.getDraft();
+  ok(/Top: .* · Back-offs: 3 × /.test(d.why.line),'the line shows the top set and the back-offs',d.why.line);
+  d.weight=325; d.reps=5; d.rpe=8.5; d.unit='lb'; A.logSet(slot,0,'straight');
+  const top=slot.sets[0];
+  ok(top.role==='top','the first set is logged as the top set',JSON.stringify(top.role));
+  ok(d.weight<325&&d.reps===5,'next comes a back-off: lighter, same reps',JSON.stringify({w:d.weight,r:d.reps}));
+  ok(d.weight<=325*0.92+1e-6&&d.weight>=325*0.92-5,'back-off ≈ 8% under the top set, floored to a loadable weight',String(d.weight));
+  ok(/back-off 1 of 3/.test(d.why.line),'the line says which back-off',d.why.line);
+  A.logSet(slot,0,'straight'); A.logSet(slot,0,'straight'); A.logSet(slot,0,'straight');
+  ok(slot.sets.slice(1).every(x=>x.role==='backoff'&&A.toLb(x.weight)<325),'every back-off is lighter than the top set','');
+  // next session's top set prices from the top set, never from a back-off
+  const B=load(hist.concat(slot.sets.map(x=>({...x,session_id:'TB'}))));
+  ok(B.lastSetFor('deadlift').role==='top','back-offs never feed the engine\'s last set','');
+  ok(B.sessionBests('deadlift')[0].lb===325,'history and trend read the top set','');
+  ok(![...B.prIds()].some(id=>B.sets().find(x=>x.id===id&&x.role==='backoff')),'a back-off is never a PR','');
+  // back-offs never exceed the top set, on any equipment and drop
+  ['deadlift','incline_machine','bench','uh_pl_pulldown'].forEach(id=>{
+    const sl={ex:id,role:'primary',reps:[3,5],rpe:8,sets_target:4,sets:[],structure:'topback'};
+    for(const L of [45,95,135,200,315,405]) for(const drop of [0.03,0.08,0.15]){
+      load([]).getCFG(); const Z=load([]); Z.getCFG().backoff={drop,mode:'fixed'};
+      const b=Z.backoffLoad(sl,L); ok(b<=L+1e-9,id+' '+L+' drop '+drop+': back-off not heavier than the top set',String(b));
+    }
+  });
+  // fatigue-stop: stops when a back-off feels like the top set, never past N+2
+  {
+    const F=load(hist), sl={ex:'deadlift',role:'primary',reps:[3,5],rpe:8,sets_target:3,sets:[],structure:'topback',backoff:{n:2}};
+    F.getCFG().backoff={drop:0.08,mode:'fatigue'};
+    F.setSession({id:'FS',slots:[sl],openIdx:0,adj:null,ratings:{},startedAt:Date.now()});
+    F.seedDraft(sl); const fd=F.getDraft();
+    fd.weight=325; fd.reps=5; fd.rpe=8; F.logSet(sl,0,'straight');
+    for(let i=0;i<8&&sl.sets.length<sl.sets_target;i++){ fd.rpe=7; F.logSet(sl,0,'straight'); }
+    ok(sl.sets.filter(x=>x.role==='backoff').length===4,'fatigue-stop never runs past N+2 back-offs',String(sl.sets.length));
+    const F2=load(hist), s2={...sl,sets:[],sets_target:3};
+    F2.getCFG().backoff={drop:0.08,mode:'fatigue'};
+    F2.setSession({id:'FS2',slots:[s2],openIdx:0,adj:null,ratings:{},startedAt:Date.now()});
+    F2.seedDraft(s2); const f2=F2.getDraft();
+    f2.weight=325; f2.reps=5; f2.rpe=8; F2.logSet(s2,0,'straight');
+    f2.rpe=7; F2.logSet(s2,0,'straight'); f2.rpe=8; F2.logSet(s2,0,'straight');
+    ok(s2.sets_target===s2.sets.length&&s2.sets.length===3,'fatigue-stop ends when a back-off reaches the top set\'s RPE',JSON.stringify({t:s2.sets_target,n:s2.sets.length}));
+  }
+  // failed reps are flagged on the set
+  {
+    const Q=load([]), sl={ex:'bench',role:'accessory',reps:[6,8],rpe:8,sets_target:2,sets:[]};
+    Q.setSession({id:'FL',slots:[sl],openIdx:0,adj:null,ratings:{},startedAt:Date.now()});
+    Q.seedDraft(sl); const qd=Q.getDraft(); qd.weight=185; qd.reps=5; qd.failed=true; Q.logSet(sl,0,'straight');
+    ok(sl.sets[0].failed===true&&sl.sets[0].role==='straight','a missed rep is stored on the set','');
+    ok(!qd.failed,'and the toggle clears for the next set','');
+  }
+  // §2.5 rep-first: below the top of the range and not harder than aimed, load never rises when the step is >5%
+  ['incline_machine','bench','uh_pl_pulldown','lat_raise'].forEach(id=>{
+    for(const L of [20,50,100,150]) for(const R of [6,7]) for(const rpe of [6,7,7.5,8]){
+      const Y=load([set(id,'RF',L,R,rpe,2)]), sl={ex:id,role:'accessory',reps:[6,8],rpe:8,sets_target:3,sets:[]};
+      const pr=Y.nextPrescription(sl), step=Y.stepUp(sl,L)-L;
+      if(step/L>0.05&&pr.lb!=null) ok(pr.lb<=L+1e-6,id+' '+L+'×'+R+'@'+rpe+': reps first before a >5% jump',JSON.stringify(pr));
+    }
+  });
+  console.log('  shape only for strength-block main lifts · back-offs lighter, same reps, never feed the engine · fatigue-stop capped · missed reps stored · rep-first holds');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

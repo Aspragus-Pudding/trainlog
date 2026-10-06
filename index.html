@@ -813,7 +813,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.25.0';
+const APP_VERSION='1.26.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1286,7 +1286,12 @@ function slotTrack(slot){
   if(ex&&ex.folded) return {ex:ex.folded.parent, sig:modSig(mergeMods(ex.folded.modifiers,slot.modifiers))};
   return {ex:slot.ex, sig:modSig(slot.modifiers)};
 }
-const onTrack=(st,exId,sig)=>{ const t=setTrack(st); return t.ex===exId&&t.sig===(sig||''); };
+/* Set roles (spec §2.1): top, backoff, amrap, straight, practice. Back-offs
+   and practice sets are deliberately lighter, so they never feed the
+   engine's history, a lift's trend or its PRs — those read top sets, AMRAPs
+   and ordinary straight sets (every set logged before roles existed). */
+const LIGHT_ROLES=['backoff','practice'];
+const onTrack=(st,exId,sig)=>{ if(LIGHT_ROLES.includes(st.role)) return false; const t=setTrack(st); return t.ex===exId&&t.sig===(sig||''); };
 const trackKey=(exId,sig)=>sig?exId+'|'+sig:exId;
 /* The signatures this exercise has history on, unmodified first. */
 function tracksFor(exId){
@@ -1617,8 +1622,12 @@ function buildDay(tpl, phase){
     // priority muscles get an extra set on non-primary work
     const prio=(phase.hyp||[]).some(m=>ex.vol[m]>=1);
     if(easeOff) sc.sets=Math.max(2,sc.sets-1);
-    slots.push({ex:ex.id, role, sets:sc.sets+(prio&&role!=='primary'?1:0),
-                reps:sc.reps, rpe:sc.rpe, prio, joint:jointNote, repSrc:sc.repSrc, repMuscle:sc.repMuscle, repCapped:sc.repCapped});
+    const nSets=sc.sets+(prio&&role!=='primary'?1:0);
+    // main lifts in strength blocks: one top set, the rest back-offs (§2.2)
+    const topback=phase.type==='str'&&role==='primary'&&(CFG.goals||[]).includes(ex.id)&&mainEligible(ex)&&nSets>=2;
+    slots.push({ex:ex.id, role, sets:nSets,
+                reps:sc.reps, rpe:sc.rpe, prio, joint:jointNote, repSrc:sc.repSrc, repMuscle:sc.repMuscle, repCapped:sc.repCapped,
+                ...(topback?{structure:'topback', backoff:{n:nSets-1}}:{})});
   });
   const id=tpl.name.toLowerCase().replace(/\s+/g,'_');
   // A permanently-saved edit to this day (see the preview's "also save to my
@@ -1651,7 +1660,7 @@ const DAYS=[
 
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
-  goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
+  goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
   feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{}};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
@@ -2218,7 +2227,7 @@ function lastPerformance(id, sig){
 /* Is this the best estimate so far for that lift, ignoring the set itself? */
 function isPR(id, ev){
   const v=setE1RM(ev);
-  if(v==null||ev.reps>10||ev.set_kind==='warmup') return null;
+  if(v==null||ev.reps>10||ev.set_kind==='warmup'||LIGHT_ROLES.includes(ev.role)) return null;
   const tr=setTrack({...ev,exercise_id:ev.exercise_id||id});
   let prev=null;
   for(const st of sets()){
@@ -2237,7 +2246,7 @@ function prIds(){
   if(_prCache&&_prLen===LOG.length) return _prCache;
   const best={}, out=new Set();
   for(const st of sets()){
-    if(st.set_kind==='warmup'||st.reps>10) continue;
+    if(st.set_kind==='warmup'||st.reps>10||LIGHT_ROLES.includes(st.role)) continue;
     const v=setE1RM(st); if(v==null) continue;
     const t=setTrack(st), k=trackKey(t.ex,t.sig), b=best[k];
     if(b!=null&&v>b+0.5){ out.add(st.id); best[k]=v; }
@@ -2487,6 +2496,10 @@ function stepDown(slot, lb){ return gridFloor(slot,lb-1e-6); }
    exactly. Judgement default, Grade D: RPE_HOLD_TOL is a tolerance, not a
    measured value. */
 const RPE_HOLD_TOL=0.5;
+/* Spec §2.5: when the next loadable step is more than 5% of the load, reach the
+   top of the rep range before adding load. Grade C (strongest support from
+   stalled overhead pressers); the 5% line is the spec's. */
+const REP_FIRST_STEP=0.05;
 function rpeDeltaStep(slot, L0, R0, RPE0, T){
   const lo=slot.reps[0], hi=slot.reps[1];
   const lastTxt=`${fmt(L0,0)} × ${R0} @ RPE ${RPE0}`;
@@ -2506,6 +2519,11 @@ function rpeDeltaStep(slot, L0, R0, RPE0, T){
     const g=Math.max(1,Math.round(delta)), proposed=R0+g;
     if(proposed<=hi) return {lb:L0, reps:proposed, src:'reps in reserve',
       note:`Last set ${lastTxt} — about ${g} rep${g===1?'':'s'} in reserve left against target RPE ${T}, so same load, ${proposed} reps.`};
+    // §2.5 increment-aware: below the top of the range and the next step is
+    // more than 5% of the load — reach the top of the range at this load first
+    const up=stepUp(slot,L0);
+    if(R0<hi&&L0>0&&(up-L0)/L0>REP_FIRST_STEP) return {lb:L0, reps:hi, src:'reps first · then load',
+      note:`Last set ${lastTxt} had reserve left, but the next step (${fmt(L0,0)} → ${fmt(up,0)}) is more than 5% of the load, so reps go to the top of the ${lo}–${hi} range at this load first.`};
     return {lb:stepUp(slot,L0), reps:lo, src:'hit top of range · load up',
       note:`Last set ${lastTxt} — hit the top of the ${lo}–${hi} range with reserve left, so load goes up one step and reps restart at ${lo}.`};
   }
@@ -3179,7 +3197,9 @@ function exCard(slot,o){
   nameBtn.innerHTML='<div class="exname">'+esc(ex.name)
     +(slot.role==='primary'?' <span class="leadbadge">Lead lift</span>':'')+'</div>'
     +(modLabel(slot.modifiers)?'<div class="exmod">'+esc(modLabel(slot.modifiers))+'</div>':'')
-    +'<div class="exmeta">'+n+' sets × '+fmtRange(slot.reps)+' reps · RPE '+slot.rpe+(slot.swapped?' · swapped':'')
+    +'<div class="exmeta">'+(isTopBack(slot)
+        ?'Top set × '+fmtRange(slot.reps)+' @ RPE '+slot.rpe+' · then '+Math.max(1,n-1)+' back-off'+(n-1===1?'':'s')+' −'+Math.round(backoffCfg().drop*100)+'%'
+        :n+' sets × '+fmtRange(slot.reps)+' reps · RPE '+slot.rpe)+(slot.swapped?' · swapped':'')
     +(slot.prio?' · priority':'')
     +(slot.joint?' · <span style="color:var(--warn)">'+esc(slot.joint.joint)+': '+esc(slot.joint.msg)+'</span>':'')+'</div>'
     +(o.lastTime===false?'':lastTimeHtml(slot,o.rx))
@@ -3391,9 +3411,10 @@ function renderWork(){
     for(let j=0;j<Math.max(slot.sets_target,slot.sets.length);j++){
       const s=slot.sets[j];
       body.appendChild(srowEl({idx:j+1, done:!!s, empty:!s,
-        load:s?fmt(s.weight.value)+' '+s.weight.unit+' × '+s.reps:'—',
+        load:s?fmt(s.weight.value)+' '+s.weight.unit+' × '+s.reps+(s.failed?' · missed':''):'—',
         pr:s&&isPRSet(s.id),
-        badge:s?(s.group&&s.group.pos>0?TECHNIQUES[s.group.kind].extend:(s.rpe?'RPE '+s.rpe:'warmup')):'RPE '+slot.rpe,
+        badge:s?(s.group&&s.group.pos>0?TECHNIQUES[s.group.kind].extend:(s.role==='backoff'?'back-off':s.role==='top'?'top · RPE '+s.rpe:(s.rpe?'RPE '+s.rpe:'warmup')))
+          :(isTopBack(slot)?(j===0?'top · RPE '+slot.rpe:'back-off'):'RPE '+slot.rpe),
         badgeOn:!!s, chev:!!s,
         onclick:s?()=>openEditSet(slot,j):null, aria:s?'Edit set '+(j+1):null}));
     }
@@ -3583,8 +3604,13 @@ function planCard(slot, key, controls){
   const loadTxt=isBW(ex)?(lb?'+'+fmt(lb,0)+' lb':'bodyweight'):(lb!=null?fmt(lb,0)+' lb':'—');
   const reps=lb!=null&&pr.reps!=null?String(pr.reps):fmtRange(slot.reps);
   const {box,body}=exCard(slot,{rx:lb!=null?{lb,reps:pr.reps}:null});
-  for(let j=0;j<slot.sets;j++)
-    body.appendChild(srowEl({idx:j+1, load:loadTxt+' × '+reps, badge:'RPE '+slot.rpe}));
+  for(let j=0;j<slot.sets;j++){
+    if(isTopBack(slot)&&j>0&&lb!=null&&!isBW(ex)){
+      body.appendChild(srowEl({idx:j+1, load:fmt(backoffLoad(slot,lb),0)+' lb × '+reps, badge:'back-off'}));
+      continue;
+    }
+    body.appendChild(srowEl({idx:j+1, load:loadTxt+' × '+reps, badge:isTopBack(slot)&&j===0?'top · RPE '+slot.rpe:'RPE '+slot.rpe}));
+  }
   const ramp=lb!=null?warmupRamp(slot,lb):[];
   if(ramp.length){
     const wk=key+':'+slot.ex, wrap=el('div','');
@@ -4622,8 +4648,12 @@ function entryPanel(slot,idx){
     }
   }
 
+  const fl=el('label',''); fl.style.cssText='display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:10px';
+  fl.innerHTML='<input type="checkbox"'+(draft.failed?' checked':'')+'><span class="sm">Missed a rep — went for it and didn\'t finish</span>';
+  fl.querySelector('input').onchange=e=>{ draft.failed=e.target.checked; };
+  p.appendChild(fl);
   const act=el('div','row'); act.style.marginTop='11px';
-  const log=el('button','btn pri grow',T.extend?`Log top set`:'Log set');
+  const log=el('button','btn pri grow',T.extend?`Log top set`:isTopBack(slot)&&!topSetOf(slot)?'Log top set':'Log set');
   log.onclick=()=>logSet(slot,idx,'straight');
   const warm=el('button','btn s','Warmup'); warm.onclick=()=>logSet(slot,idx,'warmup');
   act.append(log,warm);
@@ -4864,7 +4894,13 @@ function explainRx(slot, pr, o){
     parts.push(bn+' block');
     detail.push('Rep range '+fmtRange(slot.reps)+' at RPE '+slot.rpe+' comes from the '+bn+' block'+(p.weeks?' (week '+p.week+' of '+p.weeks+')':'')+' for '+(slot.role==='accessory'?'an accessory':'a '+(slot.role||'working'))+' lift.');
   }
+  if(isTopBack(slot)){
+    const c=backoffCfg(), n=(slot.backoff&&slot.backoff.n)||Math.max(1,(slot.sets_target||slot.sets)-1);
+    if(pr.src==='back-off') parts.push('back-off '+pr.backoffK+(c.mode==='fixed'?' of '+pr.backoffN:'')+' · '+Math.round(c.drop*100)+'% under your top set');
+    else if(pr.lb!=null) parts.push('Top: '+fmt(pr.lb,0)+' × '+pr.reps+' @ '+slot.rpe+' · Back-offs: '+n+' × '+pr.reps+' @ '+fmt(backoffLoad(slot,pr.lb),0));
+  }
   // 2. where the number came from
+  if(pr.src==='back-off'){ if(pr.note) detail.push(pr.note); return {line:parts.join(' · '), detail}; }
   if(pr.src) parts.push(pr.src==='last session'?'from your last set':pr.src);
   else parts.push('no history yet');
   if(pr.note) detail.push(pr.note);
@@ -4944,8 +4980,14 @@ function whyEl(exp, key, cls){
    from what you actually lifted, which already reflects them. Applying them
    again would compound the cut set after set. */
 function suggestFor(slot){
-  let pr=nextPrescription(slot);
   const o={idx:session?session.slots.indexOf(slot):null, fresh:!slot.sets.length};
+  // after the top set, back-offs come from what you actually lifted — readiness
+  // and joint cuts are already in it
+  if(isTopBack(slot)&&topSetOf(slot)){
+    const b=backoffRx(slot); o.backoff=true;
+    return {pr:b, lb:b.lb, why:explainRx(slot,b,o), o};
+  }
+  let pr=nextPrescription(slot);
   // Stagnation probe only on the first set of a session, and only on the
   // chart-free path — the chart path already has its own override-damping
   // and probe logic (overrideStreak/lastWasProbe), and layering both would
@@ -4968,6 +5010,35 @@ function suggestFor(slot){
   if(lb!=null&&o.fresh&&slot.joint&&slot.joint.level>=4){ const b=lb; lb=loadable(slot, lb*0.9); o.jointCut=true; o.jointApplied=pct(b,lb); }
   return {pr, lb, why:explainRx(slot,pr,o), o};
 }
+/* Top set + back-offs (spec §2.2). Main lifts in strength blocks: one top
+   set priced by the normal engine, then back-offs at the top set you
+   ACTUALLY logged × (1 − drop), same reps. Never heavier than the top set.
+   JUDGEMENT DEFAULTS, GRADE D: the 8% drop and back-off count = the block's
+   sets − 1. Fatigue-stop mode (Edit program): keep going at the back-off
+   load until it feels as hard as the top set, at most N+2 back-offs. */
+function backoffCfg(){
+  const b=CFG.backoff||{};
+  return {drop:Math.min(0.2,Math.max(0.03,+b.drop||0.08)), mode:b.mode==='fatigue'?'fatigue':'fixed'};
+}
+const isTopBack=slot=>!!slot&&slot.structure==='topback';
+const topSetOf=slot=>(slot.sets||[]).find(x=>x.role==='top')||null;
+function backoffLoad(slot, topLb){
+  const c=backoffCfg();
+  let lb=gridFloor(slot, topLb*(1-c.drop));
+  // a drop smaller than this machine's step still has to be lighter than the top set
+  if(lb>=topLb-1e-6){ const d=stepDown(slot,topLb); lb=d>0?d:topLb; }
+  return Math.min(lb,topLb);
+}
+function backoffRx(slot){
+  const top=topSetOf(slot); if(!top) return null;
+  const c=backoffCfg(), L=toLb(top.weight), lb=backoffLoad(slot,L);
+  const k=slot.sets.filter(x=>x.role==='backoff').length+1, n=(slot.backoff&&slot.backoff.n)||Math.max(1,slot.sets_target-1);
+  return {lb, reps:top.reps, src:'back-off', backoffK:k, backoffN:n,
+    note:'Back-off '+k+(c.mode==='fixed'?' of '+n:'')+': '+Math.round(c.drop*100)+'% under the top set you logged ('+fmt(L,0)+' × '+top.reps+'), same reps.'
+      +(c.mode==='fatigue'?' Keep going at this load until it feels as hard as the top set (RPE '+(top.rpe??'—')+'), at most '+(n+2)+' back-offs.':'')
+      +' The 8% default and the count are judgement defaults.'};
+}
+
 /* What the engine actually recommended for this set, independent of whether
    the lifter followed it. Additive-only logging (see logSet): never read by
    any prescription or display code, so a set logged before this field
@@ -5048,6 +5119,8 @@ function logSet(slot,idx,kind,extend,over){
     weight:{value:W.weight,unit:W.unit}, bar:ex.bar?{value:ex.bar,unit:'lb'}:null,
     reps:W.reps, rpe:kind==='warmup'?null:draft.rpe, set_kind:setKind, group,
     ...(kind!=='warmup'&&cleanMods(slot.modifiers)?{modifiers:cleanMods(slot.modifiers)}:{}),
+    ...(kind!=='warmup'?{role:group?'straight':isTopBack(slot)?(topSetOf(slot)?'backoff':'top'):'straight'}:{}),
+    ...(kind!=='warmup'&&draft.failed?{failed:true}:{}),
     target:{reps:slot.reps,rpe:slot.rpe},
     suggested_lb:stampSuggestion?(draft.suggestedLb??null):null,
     ...(suggestion&&{suggestion})};
@@ -5056,7 +5129,13 @@ function logSet(slot,idx,kind,extend,over){
   if(pr) candidate.pr=true;
   const ev=append(candidate);
   if(!ev) return;
-  if(kind!=='warmup') slot.sets.push(ev);
+  if(kind!=='warmup'){ slot.sets.push(ev); draft.failed=false; }
+  // fatigue-stop back-offs: done when one feels as hard as the top set, or at N+2
+  if(ev.role==='backoff'&&backoffCfg().mode==='fatigue'){
+    const top=topSetOf(slot), n=(slot.backoff&&slot.backoff.n)||1, done=slot.sets.filter(x=>x.role==='backoff').length;
+    const reached=top&&top.rpe!=null&&ev.rpe!=null&&ev.rpe>=top.rpe;
+    slot.sets_target=(reached||done>=n+2)?slot.sets.length:Math.max(slot.sets_target,slot.sets.length+1);
+  }
   // after a top set of a technique, pre-fill the extension
   if(group&&group.pos===0){
     draft.reps=T.repHint(draft.reps);
@@ -6146,7 +6225,8 @@ function openSettings(){
       tgt: CFG.target, srt: CFG.start, fixed: !!CFG.targetFixed,
       split: (s=>Array.isArray(s)?[...s]:s)(programSplitSpec()), syncUrl: CFG.syncUrl||'', feedbackUrl: CFG.feedbackUrl||'', testerName: CFG.testerName||'',
       energy: CFG.energy||'maintenance', conds: [...(CFG.conditions||[])],
-      jointUsual: {...(CFG.jointUsual||{})}
+      jointUsual: {...(CFG.jointUsual||{})},
+      backoff: {...backoffCfg()}
     };
   }
   const S=SETTINGS_DRAFT;
@@ -6405,6 +6485,22 @@ function openSettings(){
       fbk.appendChild(stop); host.appendChild(fbk);
       $('#tname').onchange=e=>{ S.testerName=e.target.value.trim().slice(0,40); };
     }
+    // back-offs after a main lift's top set, in strength blocks (§2.2)
+    {
+      const bo=el('div','qblock');
+      bo.innerHTML=`<div class="qlab">Back-off sets</div>
+        <div class="field">In strength blocks, your main lifts get one top set, then back-offs at a lighter load. The 8% default is a judgement default.</div>`;
+      const g=el('div',''); g.style.marginTop='6px';
+      g.appendChild(stepper('drop %',Math.round(S.backoff.drop*100),1,v=>{ S.backoff.drop=Math.min(20,Math.max(3,v))/100; draw(); }));
+      bo.appendChild(g);
+      const mc=el('div','chips'); mc.style.marginTop='8px';
+      [['fixed','A fixed number of sets'],['fatigue','Until it feels like the top set']].forEach(([v,l])=>{
+        const c=el('button','chip',l); c.setAttribute('aria-pressed',S.backoff.mode===v?'true':'false');
+        c.onclick=()=>{ S.backoff.mode=v; draw(); }; mc.appendChild(c); });
+      bo.appendChild(mc);
+      if(S.backoff.mode==='fatigue') bo.appendChild(el('div','anchor','Keeps adding back-offs at the same load until one feels as hard as the top set — at most two more than the plan.'));
+      host.appendChild(bo);
+    }
     host.appendChild(themeBlock());
     if(S.syncUrl){
       const tb=el('button','btn s','Test it now'); tb.style.marginTop='9px';
@@ -6452,7 +6548,7 @@ function openSettings(){
     if(splitOf(S.split).key!==splitOf(programSplitSpec()).key){
       if(Array.isArray(S.split)) CFG.week=[...S.split]; else { CFG.split=S.split; CFG.week=null; }
     }
-    CFG.syncUrl=S.syncUrl; CFG.energy=S.energy; CFG.conditions=S.conds; CFG.jointUsual=S.jointUsual;
+    CFG.syncUrl=S.syncUrl; CFG.energy=S.energy; CFG.conditions=S.conds; CFG.jointUsual=S.jointUsual; CFG.backoff=S.backoff;
     CFG.feedbackUrl=S.feedbackUrl; CFG.testerName=S.testerName;
     ROADMAP=S.draft; saveCfg(); SETTINGS_DRAFT=null;
     $('#dlg').close(); render(); toast('Program saved');
