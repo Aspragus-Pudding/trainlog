@@ -92,6 +92,7 @@ section{display:none;padding-top:14px} section.on{display:block}
 .exicons{display:flex;gap:4px;flex:none}
 .iconbtn{width:30px;height:30px;display:grid;place-items:center;color:var(--muted);border-radius:7px}
 .exbody{padding:0 15px 15px}
+.exnote{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4;white-space:pre-line;overflow-wrap:anywhere}
 
 .srow{display:flex;align-items:center;gap:11px;padding:7px 0}
 .sidx{width:26px;height:26px;border-radius:50%;background:var(--card-2);color:var(--muted);
@@ -811,7 +812,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.22.1';
+const APP_VERSION='1.23.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1774,11 +1775,14 @@ function openExerciseHistory(exId, back){
     <div class="muted tiny" style="margin-bottom:12px">History · best set per session, newest first · ${n} session${n===1?'':'s'}</div>
     <div class="qblock" id="hxtrend"><div class="qlab">e1RM trend</div></div>
     <div class="qblock" id="hxrows"></div>
+    <div class="qblock" id="hxdiary"><div class="qlab">Diary</div></div>
     <button class="btn ghost wide" id="hxback">${back?'Back':'Close'}</button>`);
   const sp=sparkline(e1rmSeries(exId), ex.comparable===false?'var(--warn)':'var(--accent)');
   $('#hxtrend').appendChild(sp||el('div','dim tiny','Needs a few sets of 10 reps or fewer before a trend shows.'));
   if(ex.comparable===false) $('#hxtrend').appendChild(el('div','dim tiny','Machine-specific — valid against itself, not against other equipment.'));
   $('#hxrows').appendChild(bestSetRows(exId));
+  const dl=diaryEntries({exerciseId:exId});
+  $('#hxdiary').appendChild(dl.length?diaryRows(dl):el('div','dim tiny','No entries yet — add one from the info sheet.'));
   $('#hxback').onclick=()=>{ if(back) back(); else $('#dlg').close(); };
 }
 let GOAL_HIST_OPEN={};
@@ -2968,7 +2972,9 @@ function exCard(slot,o){
     +'<div class="exmeta">'+n+' sets × '+fmtRange(slot.reps)+' reps · RPE '+slot.rpe+(slot.swapped?' · swapped':'')
     +(slot.prio?' · priority':'')
     +(slot.joint?' · <span style="color:var(--warn)">'+esc(slot.joint.joint)+': '+esc(slot.joint.msg)+'</span>':'')+'</div>'
-    +(o.lastTime===false?'':lastTimeHtml(slot,o.rx));
+    +(o.lastTime===false?'':lastTimeHtml(slot,o.rx))
+    +Object.entries(EX_NOTE_KINDS).map(([k,lab])=>{ const t=exNote(ex.id,k);
+      return t?'<div class="exnote"><span class="dim">'+esc(k==='setup'?'Setup':'Cue')+'</span> '+esc(t)+'</div>':''; }).join('');
   const body=el('div','exbody');
   head.appendChild(nameBtn); box.appendChild(head); box.appendChild(body);
   return {box,head,nameBtn,body};
@@ -3769,11 +3775,13 @@ function openRenameEx(ex){
 /* Quick note capture. Notes are ordinary log events, so they export, sync and
    restore with everything else. Tagged by what you were doing when you wrote
    them, which is what makes them actionable later. */
+/* Feedback only — what goes to the copy-for-Claude-Code report and the
+   tester feedback URL. "Training note" used to live here; those notes are
+   now read as diary entries (diaryEntries()), so the log is never rewritten. */
 const NOTE_TAGS=[
   {id:'bug',   label:'Something broke'},
   {id:'ux',    label:'Annoying / confusing'},
-  {id:'idea',  label:'Idea'},
-  {id:'train', label:'Training note'}
+  {id:'idea',  label:'Idea'}
 ];
 const TAB_LABEL={dash:'Dashboard',work:'Workout',lifts:'Lifts',hist:'Progress'};
 function openNote(prefillTag){
@@ -3858,9 +3866,85 @@ function sendFeedback(note){
    notes went into the copy without ever appearing on screen. */
 function openFeedbackNotes(){
   const resolvedIds=new Set(LOG.filter(e=>e.type==='note_resolved').map(e=>e.target_id));
-  return LOG.filter(e=>e.type==='note'&&!e.resolved&&!resolvedIds.has(e.id));
+  return LOG.filter(e=>e.type==='note'&&e.tag!=='train'&&!e.resolved&&!resolvedIds.has(e.id));
 }
-let NOTES_SHOW_ALL=false;
+/* ---------- Notes by purpose ----------
+   Feedback: 'note' events (above). Setup and Cues: 'exercise_note' events
+   {exercise_id, kind:'setup'|'cue', text} — permanent, one text per exercise
+   per kind; an edit appends a new event and the newest wins, an empty text
+   clears it. Diary: 'diary' events {exercise_id?, session_id?, text} — dated,
+   shown only in history views, never on the card. All append-only, all in
+   the log, so backups carry them and resetToFresh() clears them. */
+const EX_NOTE_KINDS={setup:'Setup', cue:'Your cues'};
+function exNote(exId, kind){
+  for(let i=LOG.length-1;i>=0;i--){ const e=LOG[i];
+    if(e.type==='exercise_note'&&e.exercise_id===exId&&e.kind===kind) return e.text||''; }
+  return '';
+}
+function saveExNote(exId, kind, text){
+  const t=String(text||'').trim().slice(0,600);
+  if(t===exNote(exId,kind)) return true;
+  return !!append({type:'exercise_note',exercise_id:exId,kind,text:t});
+}
+/* An old "Training note" carried its context as "Day · Exercise name"; the
+   exercise is recovered from that when it matches one. */
+function legacyNoteEx(e){
+  const last=String(e.context||'').split(' · ').pop().trim().toLowerCase();
+  const ex=last?EX.find(x=>x.name.toLowerCase()===last):null;
+  return ex?ex.id:null;
+}
+function diaryEntries(f){
+  f=f||{};
+  const out=[];
+  LOG.forEach(e=>{
+    if(e.type==='diary') out.push({id:e.id,ts:e.ts,text:e.text,exercise_id:e.exercise_id||null,session_id:e.session_id||null});
+    else if(e.type==='note'&&e.tag==='train') out.push({id:e.id,ts:e.ts,text:e.text,exercise_id:legacyNoteEx(e),session_id:null,legacy:true});
+  });
+  return out.filter(d=>(!f.exerciseId||d.exercise_id===f.exerciseId)&&(!f.sessionId||d.session_id===f.sessionId))
+    .sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+}
+function diaryRows(list){
+  const box=el('div','');
+  list.forEach(d=>{
+    const r=el('div',''); r.style.cssText='padding:7px 0;border-top:1px solid var(--line)';
+    const ex=d.exercise_id?exById[d.exercise_id]:null;
+    const end=d.session_id?LOG.find(e=>e.type==='session_end'&&e.session_id===d.session_id):null;
+    r.appendChild(el('div','sm',esc(d.text)));
+    r.appendChild(el('div','dim tiny',esc([new Date(d.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'}),
+      ex?ex.name:null, end?(end.day_name||'Session'):null].filter(Boolean).join(' · ')))).style.marginTop='2px';
+    box.appendChild(r);
+  });
+  return box;
+}
+function openDiaryEntry(exId, back){
+  const ex=exById[exId];
+  sheet(`<h2 style="font-size:20px;margin-bottom:2px">Diary · ${esc(ex.name)}</h2>
+    <div class="muted tiny" style="margin-bottom:12px">How it went. Dated, and shown only in this exercise's history — never on the card.</div>
+    <textarea id="dtext" rows="4" placeholder="Felt strong off the floor, grip went on the last set"
+      style="width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit;font-size:15px;resize:vertical"></textarea>
+    <div class="row" style="gap:8px;margin-top:10px"><button class="btn ghost grow" id="dcancel">Cancel</button><button class="btn pri grow" id="dsave">Save entry</button></div>`);
+  $('#dcancel').onclick=()=>back?back():$('#dlg').close();
+  $('#dsave').onclick=()=>{ const t=($('#dtext').value||'').trim(); if(t.length<2){ toast('Write something first'); return; }
+    if(append({type:'diary',exercise_id:exId,text:t.slice(0,2000)})) toast('Diary entry saved');
+    back?back():$('#dlg').close(); };
+}
+/* Setup and cues on the info sheet: one text each, edited in place. */
+function drawExNotes(host, ex){
+  host.innerHTML=`<div class="qlab">Your setup and cues</div>
+    <div class="field">Shown on this exercise's card, in the preview and during the session.</div>`;
+  const areas={};
+  Object.entries(EX_NOTE_KINDS).forEach(([k,lab])=>{
+    host.appendChild(el('div','field',lab)).style.marginTop='8px';
+    const ta=el('textarea',''); ta.rows=2; ta.value=exNote(ex.id,k);
+    ta.placeholder=k==='setup'?'Seat 3, pin 8, pinky on the ring':'Drive through the heels, ribs down';
+    ta.style.cssText='width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:10px;font:inherit;font-size:15px;resize:vertical';
+    host.appendChild(ta); areas[k]=ta;
+  });
+  const sv=el('button','btn s','Save setup and cues'); sv.style.marginTop='8px';
+  sv.onclick=()=>{ const ok=Object.entries(areas).every(([k,ta])=>saveExNote(ex.id,k,ta.value)); render(); toast(ok?'Saved':'Could not save — your log is unchanged'); };
+  host.appendChild(sv);
+}
+let NOTES_SHOW_ALL=false, DIARY_ALL=false;
 /* Everything still open, formatted for pasting straight into Claude Code. */
 function notesReport(){
   const open=openFeedbackNotes();
@@ -3918,6 +4002,7 @@ function openInfo(exId){
   sheet(`<h2 style="font-size:20px;margin-bottom:2px">${esc(ex.name)}</h2>
     <div class="muted tiny" style="margin-bottom:15px">${esc(ex.pattern.replace(/_/g,' '))} · ${esc(loadName(ex.load))}</div>
     ${tipsHtml}
+    <div class="qblock" id="inotes"></div>
     ${(()=>{const f=flagFor(exId); if(!f) return '';
       const col=f.level==='red'?'var(--danger)':'var(--warn)';
       return `<div class="qblock" style="border-left:3px solid ${col}">
@@ -3934,7 +4019,7 @@ function openInfo(exId){
       <div class="row between sm"><span class="muted">Best estimated 1RM</span><span>${b?fmt(b.v,0)+' lb':'—'}</span></div>
       <div class="row between sm"><span class="muted">Last logged</span><span>${last?`${fmt(last.weight.value)} ${last.weight.unit} × ${last.reps}`:'—'}</span></div>
       <div class="row between sm"><span class="muted">Sessions performed</span><span>${exposureCount(exId)}</span></div>
-      <button class="btn s" id="ihist" style="margin-top:9px">History</button></div>
+      <div class="row" style="gap:6px;margin-top:9px"><button class="btn s" id="ihist">History and diary</button><button class="btn s" id="idiary">Add diary entry</button></div></div>
     <button class="btn ghost wide" id="irename" style="margin-bottom:8px">Rename</button>
     ${ex.custom?'<button class="btn ghost wide" id="iedit" style="margin-bottom:8px">Edit this custom exercise</button>':''}
     ${ex.custom?'<button class="btn ghost wide" id="idel" style="margin-bottom:8px;color:var(--skip)">Delete this custom exercise</button>':''}
@@ -3943,6 +4028,8 @@ function openInfo(exId){
   drawRepRangeEditor($('#irr'), ex);
   if($('#ibar')) drawBarEditor($('#ibar'), ex);
   $('#ihist').onclick=()=>openExerciseHistory(exId, ()=>openInfo(exId));
+  $('#idiary').onclick=()=>openDiaryEntry(exId, ()=>openInfo(exId));
+  drawExNotes($('#inotes'), ex);
   $('#irename').onclick=()=>openRenameEx(ex);
   if(ex.custom&&$('#iedit')) $('#iedit').onclick=()=>openCustomEx(null,ex);
   if(ex.custom&&$('#idel')) $('#idel').onclick=()=>{
@@ -4965,7 +5052,15 @@ function openPost(){
   const j=el('div','qblock');
   j.innerHTML='<div class="qlab">Anything flare up?</div><div class="chips" id="pj"></div>';
   $('#pk').appendChild(j); jointChips('#pj',st.joints);
+  const dq=el('div','qblock');
+  dq.innerHTML=`<div class="qlab">Diary <span class="dim tiny" style="font-weight:400">· optional</span></div>
+    <textarea id="pdiary" rows="3" placeholder="How it went"
+      style="width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit;font-size:15px;resize:vertical"></textarea>
+    <div class="anchor">Saved with this session. Shown in your session history, not on any card.</div>`;
+  $('#pk').appendChild(dq);
   const end=save=>{
+    const dtx=(($('#pdiary')&&$('#pdiary').value)||'').trim();
+    if(save&&dtx.length>=2) append({type:'diary',session_id:session.id,text:dtx.slice(0,2000)});
     if(save) Object.entries(st.quickRate).forEach(([exId,r])=>{
       if(r.stimulus&&r.enjoyment) append({type:'exercise_rating', exercise_id:exId,
         stimulus:r.stimulus, enjoyment:r.enjoyment, rating_phase:'end_of_session',
@@ -5364,6 +5459,17 @@ function renderHist(){
   }
   v.appendChild(cn);
 
+  // diary
+  const dAll=diaryEntries();
+  if(dAll.length){
+    const cd=el('div','card pad');
+    cd.appendChild(el('div','row between',`<span style="font-weight:650">Diary</span><span class="dim tiny">${dAll.length} entr${dAll.length===1?'y':'ies'}</span>`));
+    cd.appendChild(diaryRows(DIARY_ALL?dAll:dAll.slice(0,5)));
+    if(dAll.length>5){ const m=el('button','btn s',DIARY_ALL?'Show recent only':'Show all '+dAll.length); m.style.marginTop='8px';
+      m.onclick=()=>{ DIARY_ALL=!DIARY_ALL; render(); }; cd.appendChild(m); }
+    v.appendChild(cd);
+  }
+
   // session history
   const ends=LOG.filter(e=>e.type==='session_end').slice(-30).reverse();
   const cs=el('div','card');
@@ -5459,8 +5565,11 @@ function openSessionDetail(endEv){
     html+=`</div>`;
   });
   if(!ss.length) html+=`<div class="empty">No sets recorded for this session.</div>`;
+  const sd=diaryEntries({sessionId:endEv.session_id});
+  if(sd.length) html+=`<div class="qblock" id="sddiary"><div class="qlab">Diary</div></div>`;
   html+=`<button class="btn ghost wide" id="sdclose">Close</button>`;
   sheet(html);
+  if(sd.length) $('#sddiary').appendChild(diaryRows(sd));
   $('#sdclose').onclick=()=>$('#dlg').close();
 }
 

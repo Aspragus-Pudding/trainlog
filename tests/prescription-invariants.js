@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -910,6 +910,34 @@ section('26. lock what you edit, recompute the other');
     ok(!A.draftLocked()&&d.weight!==205,'"Back to the suggestion" (a plain re-seed) clears the locks','');
   }
   console.log('  locked field never in the result · unlocked recomputes · pair lands on target RPE · locks survive re-seeds · cleared by logging/back');
+}
+
+/* ─── 27. notes by purpose: feedback, setup, cues, diary ─── */
+section('27. notes split by purpose');
+{
+  const A=load([
+    {type:'note',id:'f1',ts:day(9),tag:'bug',text:'a bug'},
+    {type:'note',id:'t1',ts:day(8),tag:'train',text:'felt heavy',context:'Full body D · Barbell bench press',screen:'Workout'},
+    {type:'note',id:'t2',ts:day(7),tag:'train',text:'no context'}]);
+  ok(A.openFeedbackNotes().map(n=>n.id).join()==='f1','old training notes are not feedback',A.openFeedbackNotes().map(n=>n.id).join());
+  ok(!/felt heavy/.test(A.notesReport().text),'and never go into the copy-for-Claude-Code report','');
+  ok(!A.NOTE_TAGS.some(t=>t.id==='train'),'"Training note" is gone from the feedback menu','');
+  const d=A.diaryEntries();
+  ok(d.length===2&&d.every(x=>x.legacy),'old training notes read as diary entries (nothing rewritten)',JSON.stringify(d));
+  ok(A.diaryEntries({exerciseId:'bench'}).length===1,'a training note whose context names an exercise lands in that exercise\'s diary','');
+  // setup / cues: newest wins, empty clears, one per exercise per kind
+  A.saveExNote('bench','setup','Seat 3, pin 8'); A.saveExNote('bench','cue','Elbows 45°');
+  ok(A.exNote('bench','setup')==='Seat 3, pin 8'&&A.exNote('bench','cue')==='Elbows 45°','setup and cue stored per exercise','');
+  const n0=A.LOG.length; A.saveExNote('bench','setup','Seat 3, pin 8');
+  ok(A.LOG.length===n0,'saving the same text appends nothing','');
+  A.saveExNote('bench','setup','Seat 4'); ok(A.exNote('bench','setup')==='Seat 4','an edit appends and the newest wins','');
+  A.saveExNote('bench','setup',''); ok(A.exNote('bench','setup')===''&&A.exNote('bench','cue')==='Elbows 45°','clearing one kind leaves the other','');
+  ok(A.exNote('squat','setup')==='','other exercises are untouched','');
+  // diary events: per exercise or per session, never in sets() or volume
+  A.append({type:'diary',exercise_id:'bench',text:'grip went'}); A.append({type:'diary',session_id:'S9',text:'good day'});
+  ok(A.diaryEntries({exerciseId:'bench'}).length===2&&A.diaryEntries({sessionId:'S9'}).length===1,'diary filters by exercise and by session','');
+  ok(A.sets().length===0,'none of these are sets — volume and PRs never see them','');
+  console.log('  feedback excludes training notes · old ones become diary · setup/cue newest-wins · diary by exercise/session · never sets');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
