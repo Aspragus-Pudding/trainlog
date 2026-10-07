@@ -1879,7 +1879,8 @@ section('47. injury library: warn, never decide');
   const lv=id=>{ const f=O.flagFor(id); return f&&(f.level==='red'||f.level==='yellow')?f.level:null; };
   ok(lv('bench')==='yellow'&&lv('incline_machine')===null,'bench and incline machine press flagged exactly as before (amber, none)',lv('bench')+' / '+lv('incline_machine'));
   // nothing that was red stops being red; nothing new turns red for the owner
-  const OLD={dip:'red',pullover:'red',bench:'yellow',db_bench:'yellow',decline_press:'yellow',ohp:'yellow',seated_db_press:'yellow',machine_ohp:'yellow',z_press:'yellow',weighted_pushup:'yellow'};
+  // fly, cable_fly, bn_press, bn_pulldown and snatch were red in the hand-made table before they existed as exercises (added Oct 2026)
+  const OLD={fly:'red',cable_fly:'red',bn_press:'red',bn_pulldown:'red',snatch:'red',dip:'red',pullover:'red',bench:'yellow',db_bench:'yellow',decline_press:'yellow',ohp:'yellow',seated_db_press:'yellow',machine_ohp:'yellow',z_press:'yellow',weighted_pushup:'yellow'};
   ok(Object.entries(OLD).every(([id,l])=>lv(id)===l),'every hand-made shoulder flag is exactly what it was',JSON.stringify(Object.keys(OLD).map(id=>id+':'+lv(id))));
   ok(O.EX.filter(e=>!e.rehab&&!e.folded&&!OLD[e.id]).every(e=>lv(e.id)!=='red'),'no exercise turns red for the owner that was not red before','');
   // the rule: a condition never changes the generated workout; only your exclusions do

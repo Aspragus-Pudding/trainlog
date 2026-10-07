@@ -535,6 +535,26 @@
   ],
   "modify": [
    {
+    "exercise": "bn_pulldown",
+    "substitute": "pulldown",
+    "note": "in front of the head, neutral grip"
+   },
+   {
+    "exercise": "bn_press",
+    "substitute": "landmine",
+    "note": "hands in front of the shoulders"
+   },
+   {
+    "exercise": "fly",
+    "substitute": "machine_press",
+    "note": "elbows stay in front of the body line"
+   },
+   {
+    "exercise": "cable_fly",
+    "substitute": "machine_press",
+    "note": "elbows stay in front of the body line"
+   },
+   {
     "exercise": "pullup",
     "substitute": "pulldown",
     "note": "control the top; no passive hang between reps"
@@ -908,6 +928,26 @@
     "exercise": "dip",
     "substitute": "cg_bench",
     "note": "triceps work without the deep shoulder position"
+   },
+   {
+    "exercise": "bn_pulldown",
+    "substitute": "pulldown",
+    "note": "in front of the head, neutral grip"
+   },
+   {
+    "exercise": "bn_press",
+    "substitute": "landmine",
+    "note": "hands in front of the shoulders"
+   },
+   {
+    "exercise": "fly",
+    "substitute": "machine_press",
+    "note": "elbows stay in front of the body line"
+   },
+   {
+    "exercise": "cable_fly",
+    "substitute": "machine_press",
+    "note": "elbows stay in front of the body line"
    }
   ],
   "in_workout_cues": [
@@ -4582,6 +4622,11 @@
     "note": "slow, heavy, through a tolerable arc"
    },
    {
+    "exercise": "box_jump",
+    "substitute": "leg_press",
+    "note": "slow and heavy first; jumps are earned at stage 3"
+   },
+   {
     "exercise": "goblet",
     "substitute": "goblet+rom:pin",
     "note": "box squat to a set depth"
@@ -5065,6 +5110,11 @@
     "exercise": "sissy",
     "substitute": "leg_ext",
     "note": "slow, heavy, through a tolerable arc"
+   },
+   {
+    "exercise": "box_jump",
+    "substitute": "leg_press",
+    "note": "slow and heavy first; jumps are earned at stage 3"
    }
   ],
   "in_workout_cues": [
@@ -5308,7 +5358,13 @@
     "level": "caution"
    }
   ],
-  "modify": [],
+  "modify": [
+   {
+    "exercise": "box_jump",
+    "substitute": "leg_press",
+    "note": "controlled, no landing or pivot"
+   }
+  ],
   "in_workout_cues": [
    {
     "trigger": "pre_session",
@@ -5606,6 +5662,16 @@
     "note": "less ankle bend"
    },
    {
+    "exercise": "pogo_hop",
+    "substitute": "calf",
+    "note": "slow heavy calf raises first; hops come at stage 3"
+   },
+   {
+    "exercise": "pogo_hop",
+    "substitute": "seated_calf",
+    "note": "load the calf and foot without impact"
+   },
+   {
     "exercise": "transformer_high_bar",
     "substitute": "transformer_low_bar",
     "note": "more hip, less forward knee"
@@ -5776,7 +5842,13 @@
     "level": "caution"
    }
   ],
-  "modify": [],
+  "modify": [
+   {
+    "exercise": "box_jump",
+    "substitute": "leg_press",
+    "note": "no impact until pain-free for 5 days and hopping is painless"
+   }
+  ],
   "in_workout_cues": [
    {
     "trigger": "pre_session",
@@ -5927,7 +5999,18 @@
     "level": "caution"
    }
   ],
-  "modify": [],
+  "modify": [
+   {
+    "exercise": "pogo_hop",
+    "substitute": "calf",
+    "note": "slow heavy calf raises first; hops come at stage 3"
+   },
+   {
+    "exercise": "box_jump",
+    "substitute": "calf",
+    "note": "plyometrics are earned once 25 hops are pain-free"
+   }
+  ],
   "in_workout_cues": [
    {
     "trigger": "pre_session",
@@ -6176,7 +6259,18 @@
     "level": "caution"
    }
   ],
-  "modify": [],
+  "modify": [
+   {
+    "exercise": "pogo_hop",
+    "substitute": "seated_calf",
+    "note": "load the calf and foot without impact"
+   },
+   {
+    "exercise": "box_jump",
+    "substitute": "calf",
+    "note": "no impact while the heel is irritable"
+   }
+  ],
   "in_workout_cues": [
    {
     "trigger": "pre_session",
@@ -6405,7 +6499,13 @@
     "level": "caution"
    }
   ],
-  "modify": [],
+  "modify": [
+   {
+    "exercise": "box_jump",
+    "substitute": "calf",
+    "note": "balance and calf strength before landings"
+   }
+  ],
   "in_workout_cues": [
    {
     "trigger": "pre_session",
@@ -6660,6 +6760,11 @@
     "exercise": "bulgarian",
     "substitute": "bulgarian+rom:partial",
     "note": "shorter stride, shin more vertical"
+   },
+   {
+    "exercise": "box_jump",
+    "substitute": "leg_press",
+    "note": "no landing through a stiff ankle"
    }
   ],
   "in_workout_cues": [
@@ -6742,7 +6847,13 @@
     "level": "caution"
    }
   ],
-  "modify": [],
+  "modify": [
+   {
+    "exercise": "box_jump",
+    "substitute": "leg_press",
+    "note": "no push-off through the big toe"
+   }
+  ],
   "in_workout_cues": [
    {
     "trigger": "pre_session",
@@ -7061,7 +7172,13 @@
     "level": "caution"
    }
   ],
-  "modify": [],
+  "modify": [
+   {
+    "exercise": "box_jump",
+    "substitute": "leg_press",
+    "note": "no impact until pain-free for 5 days and hopping is painless"
+   }
+  ],
   "in_workout_cues": [
    {
     "trigger": "pre_session",
@@ -7465,6 +7582,16 @@
     "exercise": "pushdown",
     "substitute": "pushdown+lockout:soft",
     "note": "soft lockout"
+   },
+   {
+    "exercise": "leg_press",
+    "substitute": "leg_press+lockout:soft",
+    "note": "stop just short of locked knees"
+   },
+   {
+    "exercise": "kb_swing",
+    "substitute": "hip_thrust",
+    "note": "controlled end range instead of a ballistic one"
    }
   ],
   "in_workout_cues": [
