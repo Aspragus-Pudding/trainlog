@@ -8536,7 +8536,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
   }
 }
 </script>
-<script type="application/json" id="whats-new">{"version":"1.55.0","lines":["The exercise library grew from 121 to 219 exercises. It adds Smith machine, kettlebell, band, specialty-bar (EZ, trap bar, safety squat bar) and more cable and machine versions, each with the same warnings and cues as the movement it's based on.","Search by equipment: type \"smith\", \"cable\", \"kb\" or \"band\". Each exercise shows what you hold.","When the app builds a workout, what you've actually been doing now outranks your equipment answer. If you've logged Smith bench ten times, you get Smith bench.","New \"Straps\" option under Modify on pulls and shrugs. For outer-elbow pain, a strapped shrug isn't flagged red, and dead hangs are amber, not red.","If one of your own exercises matches a new built-in by name, its info sheet offers to move your history to the built-in. Nothing happens unless you tap it."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.55.1","lines":["For outer-elbow tendinopathy, loaded carries (farmer, kettlebell, trap bar, suitcase) are now red instead of amber.","Dead hangs stay amber. They're an isometric hold, which that condition's pain rule allows below 7/10, and light carries are fine under the same cap.","General \"elbow pain\" is unchanged: carries stay amber there."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9103,7 +9103,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.55.0';
+const APP_VERSION='1.55.1';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -9494,8 +9494,15 @@ function authoredFlag(exId, mods, o){
    built by hand for these conditions), else the library; then your own
    ratings (exerciseVerdict) — "you've done this fine" softens it to a note,
    "it's hurt you" makes it red. Returns null, or {level: 'red'|'yellow'|'ok', …}. */
+/* Where the library's specific entry overrules the hand-written table (which was
+   written for broad conditions). One row so far: for outer-elbow tendinopathy a
+   loaded carry is red (dynamic heavy gripping), though the old 'elbow pain' table
+   has it amber. Hangs stay amber (isometric); light carries are in the entry's note. */
+const LIBRARY_WINS={el_lateral_tendinopathy:new Set(['farmer'])};
+const libraryWins=(exId,lib)=>{ const w=lib&&LIBRARY_WINS[lib.cond]; if(!w) return false; const ex=exById[exId]; return w.has(exId)||(!!ex&&ex.gen&&genChain(ex).some(p=>w.has(p.id))); };
 function flagFor(exId, mods){
-  const lib=libraryFlag(exId,mods), auth=authoredFlag(exId,mods);
+  const lib=libraryFlag(exId,mods); let auth=authoredFlag(exId,mods);
+  if(auth&&libraryWins(exId,lib)&&LEVEL_RANK[lib.level]>LEVEL_RANK[auth.level]) auth=null;
   let f=auth?{...auth, swap:auth.swap||lib&&lib.swap||null, swapNote:auth.swap?auth.swapNote:lib&&lib.swapNote||null}:lib;
   const v=exerciseVerdict(exId);
   if(v&&v.verdict==='bad') return {...(f||{cond:null}), level:'red', why:v.text, verdict:v};

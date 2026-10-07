@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.55.1 — 2026-10-07
+- For outer-elbow tendinopathy, loaded carries (farmer, kettlebell, trap bar, suitcase) are now red instead of amber.
+- Dead hangs stay amber. They're an isometric hold, which that condition's pain rule allows below 7/10, and light carries are fine under the same cap.
+- General "elbow pain" is unchanged: carries stay amber there.
+
 ## 1.55.0 — 2026-10-07
 - The exercise library grew from 121 to 219 exercises. It adds Smith machine, kettlebell, band, specialty-bar (EZ, trap bar, safety squat bar) and more cable and machine versions, each with the same warnings and cues as the movement it's based on.
 - Search by equipment: type "smith", "cable", "kb" or "band". Each exercise shows what you hold.

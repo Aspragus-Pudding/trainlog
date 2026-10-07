@@ -2464,6 +2464,10 @@ section('58. library: implements, inheritance, generator ranking, search, straps
     const hang=A.libraryFlag('hang'), farmer=A.libraryFlag('farmer'), shrug=A.flagFor('shrug'), strapped=A.flagFor('shrug',{straps:true});
     ok(hang&&hang.level==='yellow'&&/isometric/.test(hang.why)&&farmer&&farmer.level==='red','outer elbow, library layer: a dead hang (isometric) is yellow under the pain cap; a heavy carry is red',JSON.stringify({hang,farmer}));
     ok(shrug&&shrug.level==='red'&&!strapped,'outer elbow: a shrug is red, a strapped shrug isn\'t',JSON.stringify({shrug,strapped}));
+    // the one row where the library overrules the hand-written table (v1.55.1): loaded carries red for outer elbow, hangs amber
+    ok((A.flagFor('farmer')||{}).level==='red'&&(A.flagFor('kb_carry')||{}).level==='red'&&(A.flagFor('hang')||{}).level==='yellow','outer elbow, as shown: loaded carries red (the library wins that row), the dead hang amber','');
+    C.conditions=['elbow_pain'];
+    ok((A.flagFor('farmer')||{}).level==='yellow','general elbow pain keeps the hand-written amber for carries','');
     C.conditions=[]; }
   ok(A.strapsApply(A.exById.deadlift)&&A.strapsApply(A.exById.shrug)&&A.strapsApply(A.exById.cable_row)&&!A.strapsApply(A.exById.farmer)&&!A.strapsApply(A.exById.hang)&&A.modSig({straps:true})==='straps:on','straps on pulls and shrugs, never on carries or hangs','');
   // cues come from the nearest ancestor that has them
