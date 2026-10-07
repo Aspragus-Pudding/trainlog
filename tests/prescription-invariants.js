@@ -46,8 +46,13 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK'];
-function load(events){
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','activeProposals','generatedDays'];
+/* A stub document that serves the embedded injury library and movement tags, so the
+   engine's flags run on the real data (everything else stays a stub). */
+const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
+const EMBEDS={injuries:EMBED('injuries'),'movement-tags':EMBED('movement-tags')};
+function docWithData(){ const d=stub(); return new Proxy(d,{get(t,k){ if(k==='getElementById') return id=>id in EMBEDS?{textContent:EMBEDS[id]}:stub(); return d[k]; }}); }
+function load(events, withData){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
   const ls={getItem:k=>k in store?store[k]:null,setItem:(k,v)=>{store[k]=String(v);},removeItem:k=>{delete store[k];}};
@@ -57,7 +62,7 @@ function load(events){
     'setRoadmap:x=>{ROADMAP=x},getRoadmap:()=>ROADMAP,getCFG:()=>CFG};';
   const fn=new Function('document','window','navigator','localStorage','location','history','setTimeout','setInterval',
     'alert','confirm','fetch','Notification','matchMedia','requestAnimationFrame','console',body);
-  return fn(stub(),stub(),stub(),ls,stub(),stub(),()=>0,()=>0,()=>{},()=>true,()=>Promise.resolve({}),stub(),()=>stub(),()=>0,{log(){},warn(){},error(){}});
+  return fn(withData?docWithData():stub(),stub(),stub(),ls,stub(),stub(),()=>0,()=>0,()=>{},()=>true,()=>Promise.resolve({}),stub(),()=>stub(),()=>0,{log(){},warn(){},error(){}});
 }
 
 const day=n=>new Date(Date.now()-n*864e5).toISOString();
@@ -1850,6 +1855,91 @@ section('46. alpha safety');
   ok(A0().BUILDER_QUICK.includes('constraints')&&A0().BUILDER_QUICK.includes('equipment'),'quick setup asks what you are working around and what your gym has','');
   function A0(){ return load([]); }
   console.log('  restore never imports addresses · setup links field-scoped · worst flag wins · custom flagged by name · no specialty bars for new users · condition-aware subs');
+}
+
+/* ─── 47. injury library (batch D1a) ─── */
+section('47. injury library: warn, never decide');
+{
+  const loadD=ev=>load(ev,true);
+  // a stored CFG, as the app would load it
+  const withCfg=(cfg,events)=>{ const st={'trainlog.cfg.v1':JSON.stringify(cfg)}; if(events&&events.length) st['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
+    const ls={getItem:k=>k in st?st[k]:null,setItem:(k,v)=>{st[k]=String(v);},removeItem:k=>{delete st[k];},key:i=>Object.keys(st)[i]??null,get length(){return Object.keys(st).length;}};
+    const pick=EXPORTS.map(n=>n+':(()=>{try{return '+n+'}catch(e){}})()').join(',');
+    const body=src+'\n;return {'+pick+',setSession:x=>{session=x},getCFG:()=>CFG,setRoadmap:x=>{ROADMAP=x}};';
+    return new Function('document','window','navigator','localStorage','location','history','setTimeout','setInterval','alert','confirm','fetch','Notification','matchMedia','requestAnimationFrame','console',body)
+      (docWithData(),stub(),stub(),ls,stub(),stub(),()=>0,()=>0,()=>{},()=>true,()=>Promise.resolve({}),stub(),()=>stub(),()=>0,{log(){},warn(){},error(){}}); };
+  const A0=loadD([]);
+  ok(A0.INJ.length>=40,'the library loads from the embedded data',String(A0.INJ.length));
+  // the owner's own case: old id → new id, flags exactly as before for what he uses, program unchanged
+  const O=withCfg({conditions:['shoulder_instability'],onboarded:true,goals:['deadlift','incline_machine']});
+  const C=O.getCFG();
+  ok(JSON.stringify(C.conditions)==='["sh_ant_instability"]','an old condition id maps to the library id on load',JSON.stringify(C.conditions));
+  ok(O.hasLegacy('shoulder_instability'),'and every rule keyed by the old id still applies','');
+  ok(['dip','pullover','bench','ohp','z_press','db_bench'].every(x=>C.excludedEx.includes(x))&&!C.excludedEx.includes('landmine')&&!C.excludedEx.includes('incline_machine'),'what flags used to steer away from is now your exclusion list (ticked, editable), so the program does not change',JSON.stringify(C.excludedEx));
+  const lv=id=>{ const f=O.flagFor(id); return f&&(f.level==='red'||f.level==='yellow')?f.level:null; };
+  ok(lv('bench')==='yellow'&&lv('incline_machine')===null,'bench and incline machine press flagged exactly as before (amber, none)',lv('bench')+' / '+lv('incline_machine'));
+  // nothing that was red stops being red; nothing new turns red for the owner
+  const OLD={dip:'red',pullover:'red',bench:'yellow',db_bench:'yellow',decline_press:'yellow',ohp:'yellow',seated_db_press:'yellow',machine_ohp:'yellow',z_press:'yellow',weighted_pushup:'yellow'};
+  ok(Object.entries(OLD).every(([id,l])=>lv(id)===l),'every hand-made shoulder flag is exactly what it was',JSON.stringify(Object.keys(OLD).map(id=>id+':'+lv(id))));
+  ok(O.EX.filter(e=>!e.rehab&&!e.folded&&!OLD[e.id]).every(e=>lv(e.id)!=='red'),'no exercise turns red for the owner that was not red before','');
+  // the rule: a condition never changes the generated workout; only your exclusions do
+  const days=A=>A.generatedDays().map(d=>d.slots.map(x=>x.ex).join(',')).join(' | ');
+  const base=withCfg({conditions:[],onboarded:true,goals:[],excludedEx:[]}), withK=withCfg({conditions:['kn_pfp','lb_pain','el_lateral_tendinopathy'],onboarded:true,goals:[],excludedEx:[]});
+  ok(days(base)===days(withK),'picking conditions changes no exercise in the generated week (it only warns)',days(withK));
+  const ex=withCfg({conditions:['kn_pfp'],onboarded:true,goals:[],excludedEx:['squat','bench']});
+  ok(!days(ex).split(/[,| ]+/).includes('squat')&&!days(ex).split(/[,| ]+/).includes('bench'),'an exercise YOU excluded is never picked automatically',days(ex));
+  const gl=withCfg({conditions:[],onboarded:true,goals:['bench'],excludedEx:['bench']});
+  ok(days(gl).includes('bench'),'a goal lift you chose still appears (your explicit choice wins)','');
+  // severity: broad = amber, specific core = red, structural non-core = a note (not a warning)
+  const W=c=>{ const A=loadD([]); A.getCFG().conditions=c; return A; };
+  ok(W(['kn_pain']).flagFor('squat').level==='yellow','a broad pick (knee pain) is amber',JSON.stringify(W(['kn_pain']).flagFor('squat')));
+  // every umbrella, straight from the library (no hand-made layer in the way): amber only
+  const umbRed=A0.INJ.filter(e=>e.category==='UMBRELLA').filter(u=>{ const X=W([u.id]); return X.EX.some(e=>{ const f=X.libraryFlag(e.id); return f&&f.level==='red'; }); }).map(u=>u.id);
+  ok(umbRed.length===0,'no broad pick ever produces a red flag',umbRed.join(','));
+  // where the hand-made table has an opinion it decides: rotator cuff pain makes OHP red in the library, the table says amber
+  ok(W(['sh_rcrsp']).libraryFlag('ohp').level==='red'&&W(['sh_rcrsp']).flagFor('ohp').level==='yellow','the hand-made table outranks the library where it rates an exercise',JSON.stringify(W(['sh_rcrsp']).flagFor('ohp')));
+  ok(W(['thigh_hamstring_strain']).flagFor('rdl').level==='red','a specific pick is red for its core mechanism (hamstring strain → RDL)',JSON.stringify(W(['thigh_hamstring_strain']).flagFor('rdl')));
+  const hm=W(['sys_hypermobility']).flagFor('bench');
+  ok(!hm||hm.level==='note','a structural condition shows its standing cue as a note, not a warning',JSON.stringify(hm));
+  ok(!W(['kn_pfp']).isWarning(W(['kn_pfp']).flagFor('leg_curl')),'unrelated exercises stay unflagged','');
+  // tags: modifiers and custom exercises
+  ok(!A0.exTags('bench',{rom:{kind:'board',amount:2,unit:'in'}}).includes('shoulder_horiz_abd_endrange'),'a board press drops the end-range shoulder tag','');
+  ok(!A0.exTags('bench',{lockout:'soft'}).includes('elbow_ext_endrange_loaded'),'soft lockout drops the lockout tag','');
+  ok(A0.modLabel({lockout:'soft'})==='soft lockout'&&A0.modSig({lockout:'soft'})==='lockout:soft','soft lockout is a modifier like pause or tempo','');
+  const CU=loadD([]); CU.getCFG().customEx=[{id:'cx_mybench',name:'My bench',pattern:'horizontal_press',load:'barbell',parent:'bench',vol:{chest:1},custom:true}]; CU.mergeCustom();
+  ok(JSON.stringify(CU.exTags('cx_mybench'))===JSON.stringify(CU.exTags('bench')),'a custom exercise inherits its parent\'s tags',JSON.stringify(CU.exTags('cx_mybench')));
+  CU.getCFG().customEx[0].tags=['wrist_ext_loaded']; CU.mergeCustom();
+  ok(JSON.stringify(CU.exTags('cx_mybench'))==='["wrist_ext_loaded"]','and your own edit to its tags wins',JSON.stringify(CU.exTags('cx_mybench')));
+  // suggested swap resolves to a real exercise (or a modifier on one)
+  const sw=W(['el_lateral_tendinopathy']); const fsw=sw.EX.map(e=>sw.flagFor(e.id)).find(f=>f&&f.swap);
+  ok(!!fsw&&!!sw.exById[fsw.swap.ex],'a flag carries a suggested swap you can take with one tap',JSON.stringify(fsw&&fsw.swap));
+  // your own verdict
+  {
+    let t=30; const ev=[];
+    const sess=sev=>{ const sid='v'+(t); ev.push({type:'readiness',id:'r'+t,ts:day(t),sleep_quality:3,motivation:3,recovery:3,soreness:{},joints:{},joint_scale:3},
+      set('rdl',sid,185,8,7,t-0.01),{type:'exercise_joint',id:'j'+t,ts:day(t-0.02),exercise_id:'rdl',session_id:sid,joint:'hip',severity:sev},
+      {type:'session_end',id:'e'+t,ts:day(t-0.03),session_id:sid,joints:{}}); t-=3; };
+    [0,1,0,0].forEach(sess);
+    let V=loadD(ev); V.getCFG().conditions=['thigh_hamstring_strain'];
+    ok(V.flagFor('rdl').level==='ok'&&/fine/.test(V.flagFor('rdl').why),'rated fine 3+ times with no next-morning rise: the flag becomes "fine for you"',JSON.stringify(V.flagFor('rdl')));
+    [2,3].forEach(sess);
+    V=loadD(ev); V.getCFG().conditions=['thigh_hamstring_strain']; V.getCFG().excludedEx=[];
+    ok(V.flagFor('rdl').level==='red','moderate or worse twice recently: red, whatever the library says',JSON.stringify(V.flagFor('rdl')));
+    const card=V.activeProposals().find(x=>x.id.startsWith('verdict:rdl'));
+    ok(!!card&&V.getCFG().excludedEx.length===0,'the app asks whether to stop including it — it never excludes on its own','');
+    if(card) card.accept.fn();
+    ok(V.getCFG().excludedEx.includes('rdl'),'and only your yes adds it to your exclusions','');
+    const U=loadD(ev); U.getCFG().conditions=[];
+    ok(U.flagFor('rdl')&&U.flagFor('rdl').level==='red','your own bad ratings flag it even with no condition picked','');
+  }
+  // the joint question is asked only where it matters
+  { const Q=loadD([]); Q.getCFG().conditions=['kn_pfp'];
+    ok(Q.jointQuestionFor('squat')==='knee'&&Q.jointQuestionFor('lat_raise')===null,'the joint question: knee exercises yes, unrelated ones no',Q.jointQuestionFor('squat')+' / '+Q.jointQuestionFor('lat_raise')); }
+  // building the exclusion list never leaves the condition list changed
+  { const G=loadD([]); G.getCFG().conditions=['lb_pain']; G.likelyFlaggedFor(['kn_pfp']);
+    ok(JSON.stringify(G.getCFG().conditions)==='["lb_pain"]','previewing other picks restores your real ones','');
+    const lf=G.likelyFlaggedFor(['kn_pfp']); ok(lf.every(x=>x.f.level==='red'||x.f.level==='yellow'),'the "don\'t include" list shows only real warnings',''); }
+  console.log('  owner unchanged · conditions never change the workout · only your exclusions do · amber/red/note · tags inherit · verdicts suggest, never decide');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

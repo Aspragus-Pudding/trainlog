@@ -30,6 +30,11 @@ tests/prospective.js    engine phase 2 check: were suggestions taken, did they l
 tests/simulate.js       persona simulator: made-up lifters train through the real app for months (node tests/simulate.js)
 docs/calibration-plan.md   phase-2 personal-calibration spec, not yet implemented
 docs/coaching-cues.json    per-exercise coaching cues — the editable source (see below)
+docs/injuries.json      injury & condition library — the editable source (research schema + avoid[].level)
+docs/injuries.derived.json  built from it by tools/derive-injuries.js (umbrellas = own tags + children's CORE tags)
+docs/movement_tags.json movement-tag vocabulary + the tags each built-in exercise carries + modifier effects
+tools/derive-injuries.js   writes injuries.derived.json and embeds both JSON files into index.html
+tests/injury-validate.js   library checks incl. the over-flagging limits (≤30% flagged, ≤10% red per condition)
 ```
 
 **Coaching cues are a two-step edit.** `docs/coaching-cues.json` is the source.
@@ -190,12 +195,21 @@ never swapped out mid-workout.
   demo has its own clock (`DEMO_OFF`); network paths check `DEMO` and stop.
   The only direct `localStorage` reads are `STORE`'s own definition and
   `demoCopyReal()` (read-only). §43 checks real keys stay byte-identical.
-- **Conditions are general, not shoulder-only.** `FLAGS` per condition
-  (additive only; never soften shoulder_instability), `flagFor()` returns the
-  worst flag across conditions and matches custom exercises by name
-  (`FLAG_NAME_HINTS`). Stall-engine additions route through
-  `CONDITION_SUBS` / `VARIANT_UNSAFE`. Specialty bars (`specialty:` on the
-  Transformer entries) are never auto-picked until logged.
+- **Injury library (batch D1a): the app warns, it never decides.** Conditions
+  are library ids (`INJ`, from docs/injuries.json; old ids map via
+  `LEGACY_COND`, and `legacyConds()` keeps every rule keyed by the old ids
+  working). An exercise is flagged when its movement tags (`exTags()`,
+  modifiers add/remove) meet a selected entry's avoid tags: umbrella → amber,
+  specific core → red, structural non-core → a note. The hand-made `FLAGS`
+  table is an authored layer that decides where it has an opinion — never
+  soften the shoulder_instability rows. Your own ratings (`exercise_joint`
+  events → `exerciseVerdict()`) outrank both. **Flags never steer
+  generation**; only `CFG.excludedEx` (your exclusions) does, and the app
+  only ever *proposes* an exclusion. Over-flagging is a hard test — narrow
+  tags, don't loosen limits. Editing the library is two steps: edit the JSON,
+  run `node tools/derive-injuries.js`, then `node tests/injury-validate.js`.
+  Specialty bars (`specialty:` on the Transformer entries) are never
+  auto-picked until logged.
 - **Testers:** restoring a backup never imports `syncUrl`/`feedbackUrl`/
   `testerName`; setup links (`?sync=&feedback=&who=`) can also be pasted in
   Settings; `isTester()` hides owner-only copy. ALPHA.md is the setup guide.

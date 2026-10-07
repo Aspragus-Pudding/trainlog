@@ -67,18 +67,22 @@ Defaults the alpha doesn't yet adapt to:
 - **Specialty bars** (the Kabuki Transformer) are never picked automatically.
   A tester only gets them by choosing them or logging one.
 
-**Conditions beyond yours.** Setup and Edit program offer anterior shoulder
-instability, shoulder impingement, knee, low back, wrist, elbow, hip and ankle.
-- **Each condition flags its exercises.** Yellow means "watch this" and the
-  exercise is deprioritised. Red means "at-risk position".
-- **Several conditions at once:** the worst flag wins.
-- **Custom exercises are flagged by name** (a "cable fly" gets the fly flag).
-- **The stall engine works around them.** Anything it adds goes to a
-  substitute: no extra barbell pressing for shoulder instability, no extra
-  barbell squatting or hinging for low back, no extra barbell squatting for
-  knee pain, and no deficit deadlifts for low back.
-- **Coaching-cue joint notes still exist for the shoulder only.** It's a known
-  gap.
+**Injuries and conditions.** Setup and Edit program open a picker: region,
+then the broad option ("Knee pain") or a closer match ("Pain around/behind
+kneecap") — about 50 entries from the injury research, across every region.
+- The app only ever **warns**. A flagged exercise stays in the program with a
+  badge and a one-tap suggested swap. Broad picks give amber; a specific one
+  gives red only for its core movement; permanent conditions (an old elbow
+  fracture, hypermobility) show their standing cue as a note instead.
+- **Only the tester decides what's left out.** Setup shows the flagged
+  exercises; whatever they tick is never put in their program automatically.
+  They can add it back any time.
+- **It learns them.** After a workout, flagged or joint-relevant exercises
+  get one quick question ("how did your knee feel?"). After a few sessions an
+  exercise that's been fine is marked fine for them; one that keeps hurting
+  turns red and the app asks — never decides — whether to stop including it.
+- **Over-flagging is tested:** no condition flags more than 30% of the
+  library, red flags stay under 10%.
 
 ## What a tester's data touches
 

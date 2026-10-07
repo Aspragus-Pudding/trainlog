@@ -1,0 +1,7050 @@
+[
+ {
+  "id": "neck_pain",
+  "chip_label": "Neck pain / stiffness",
+  "clinical_name": "Nonspecific neck pain (umbrella)",
+  "region": "neck",
+  "category": "UMBRELLA",
+  "parent_id": null,
+  "one_liner": "Risk lives in holding the neck at the end of its range and in sudden loaded turns, more than in any single lift.",
+  "self_id_cues": [
+   "My neck is sore or stiff",
+   "I'm not sure exactly what it is",
+   "Turning my head or long sitting makes it worse"
+  ],
+  "core_cue": "Keep the neck neutral under load and move it often between sets.",
+  "warmup": [
+   {
+    "exercise": "chin_tuck",
+    "dose": "1x10",
+    "note": "gentle, no forcing"
+   },
+   {
+    "exercise": "thoracic_rotation",
+    "dose": "1x8 each side",
+    "note": "turn the upper back, not just the neck"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "deep_neck_flexor_endurance",
+    "sets": "3",
+    "reps": "10x10s",
+    "frequency": "3x/wk",
+    "placement": "warmup"
+   },
+   {
+    "exercise": "row",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Neck check: keep it neutral under load today."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10, or worse next morning: drop back a step."
+   }
+  ],
+  "red_flags": [
+   "New arm or hand weakness, numbness or tingling",
+   "Balance or walking changes",
+   "Sudden severe headache"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "neck_mobility",
+  "chip_label": "Stiff, sore neck",
+  "clinical_name": "Neck pain with mobility deficits",
+  "region": "neck",
+  "category": "CHRONIC_RECURRENT",
+  "parent_id": "neck_pain",
+  "one_liner": "Risk lives in sustained end-range neck positions and sudden loaded neck turns.",
+  "self_id_cues": [
+   "My neck feels stiff and sore, especially after sitting",
+   "Turning my head one way is limited",
+   "No pain or tingling down my arm"
+  ],
+  "core_cue": "Move often, and build strength around the neck and upper back.",
+  "warmup": [
+   {
+    "exercise": "chin_tuck",
+    "dose": "1x10",
+    "note": "gentle"
+   },
+   {
+    "exercise": "active_neck_rotation",
+    "dose": "1x8 each side",
+    "note": "within comfort"
+   },
+   {
+    "exercise": "scapular_setting",
+    "dose": "1x10",
+    "note": "shoulders down and back"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "deep_neck_flexor_endurance",
+    "sets": "3",
+    "reps": "10x10s",
+    "frequency": "3x/wk",
+    "placement": "warmup"
+   },
+   {
+    "exercise": "row",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "neutral_neck_shrug",
+    "sets": "3",
+    "reps": "10-12",
+    "frequency": "2x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Neck check: move it often today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Keep the neck neutral; no forward head on shrugs."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10, or worse next morning: drop back a step."
+   }
+  ],
+  "red_flags": [
+   "Arm weakness",
+   "New numbness or tingling down the arm",
+   "Balance or walking changes"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "settle irritability"
+    ],
+    "exercises": [
+     {
+      "exercise": "deep_neck_flexor_isometric",
+      "sets": "4-5",
+      "reps": "30-45s",
+      "frequency": "daily"
+     },
+     {
+      "exercise": "walking",
+      "sets": "1",
+      "reps": "10-20 min",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "neck pain <=3/10 on turning"
+    ],
+    "duration": "0-2 wk"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "normal pain-free neck range"
+    ],
+    "exercises": [
+     {
+      "exercise": "active_neck_rotation",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     },
+     {
+      "exercise": "thoracic_rotation",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "rotation symmetric both ways"
+    ],
+    "duration": "1-3 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "neck and upper-back strength"
+    ],
+    "exercises": [
+     {
+      "exercise": "deep_neck_flexor_endurance",
+      "sets": "3",
+      "reps": "10x10s",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "row",
+      "sets": "3-4",
+      "reps": "8-15",
+      "frequency": "3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "24-h rule holds at 2 load steps"
+    ],
+    "duration": "3-12 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "full upper-body training"
+    ],
+    "exercises": [
+     {
+      "exercise": "neutral_neck_shrug",
+      "sets": "3",
+      "reps": "8-12",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "training pain <=3/10, no next-day flare"
+    ],
+    "duration": "4-12 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "deep_neck_flexor_endurance",
+      "sets": "2",
+      "reps": "10x10s",
+      "frequency": "2x/wk"
+     },
+     {
+      "exercise": "row",
+      "sets": "3",
+      "reps": "10-15",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "A",
+  "sources": [
+   "Blanpied PR et al. Neck Pain: Revision 2017 clinical practice guideline. JOSPT 2017"
+  ]
+ },
+ {
+  "id": "neck_fusion",
+  "chip_label": "Neck fusion / plates",
+  "clinical_name": "Cervical fusion with hardware",
+  "region": "neck",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "neck_pain",
+  "one_liner": "Risk lives in forcing neck rotation and in loading the segments next to the fusion.",
+  "self_id_cues": [
+   "I've had a neck fusion or plates put in",
+   "Turning my head is limited for good",
+   "A surgeon has told me which positions to avoid"
+  ],
+  "core_cue": "Turn the body, not the neck, and keep heavy loads off the head and neck.",
+  "warmup": [
+   {
+    "exercise": "thoracic_rotation",
+    "dose": "1x8 each side",
+    "note": "turn from the upper back"
+   },
+   {
+    "exercise": "scapular_setting",
+    "dose": "1x10",
+    "note": "rehearse a neutral neck"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "deep_neck_flexor_endurance",
+    "sets": "3",
+    "reps": "10x10s",
+    "frequency": "3x/wk",
+    "placement": "warmup"
+   },
+   {
+    "exercise": "upper_back_strength",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "thoracic_mobility",
+    "sets": "2",
+    "reps": "10",
+    "frequency": "daily",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Turn the body, not the neck, today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Heavy load near the neck: keep it neutral, or use the suggested swap."
+   }
+  ],
+  "red_flags": [
+   "New arm or hand weakness or tingling",
+   "Balance or walking changes"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "sh_impingement",
+  "chip_label": "Shoulder impingement / pinching",
+  "clinical_name": "Rotator cuff-related shoulder pain spectrum (umbrella)",
+  "region": "shoulder",
+  "category": "UMBRELLA",
+  "parent_id": null,
+  "one_liner": "Risk lives in loading the arm up and out, or deep at the bottom of a press, beyond what the shoulder is currently strong enough for.",
+  "self_id_cues": [
+   "My shoulder pinches when I lift my arm or press",
+   "I'm not sure exactly what it is",
+   "It aches lying on that side"
+  ],
+  "core_cue": "Strengthen into the pain-free range and progress load gradually.",
+  "warmup": [
+   {
+    "exercise": "band_external_rotation",
+    "dose": "2x15",
+    "note": "elbow at the side"
+   },
+   {
+    "exercise": "scap_push_up",
+    "dose": "1x10",
+    "note": "slow"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "external_rotation_strength",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "row",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Shoulder check: stay in the pain-free range today."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 4/10, or not settled within the day: regress."
+   }
+  ],
+  "red_flags": [
+   "Sudden weakness after a fall",
+   "Night pain with weight loss",
+   "Neck pain with arm tingling"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "sh_unstable",
+  "chip_label": "Shoulder feels loose / unstable",
+  "clinical_name": "Glenohumeral instability spectrum (umbrella)",
+  "region": "shoulder",
+  "category": "UMBRELLA",
+  "parent_id": null,
+  "one_liner": "Risk lives at the end of shoulder range under load, where the joint's restraints rather than its muscles hold it in place.",
+  "self_id_cues": [
+   "My shoulder feels loose or like it might slip",
+   "I'm not sure which direction it goes",
+   "Some positions make me nervous to load"
+  ],
+  "core_cue": "Keep loaded arms in ranges you control; no apprehension allowed.",
+  "warmup": [
+   {
+    "exercise": "band_external_internal_rotation_at_side",
+    "dose": "2x15",
+    "note": "elbow at the side"
+   },
+   {
+    "exercise": "serratus_wall_slide",
+    "dose": "1x10",
+    "note": "controlled"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "cuff_strength",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "scapular_stability",
+    "sets": "3",
+    "reps": "10-12",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Stay in ranges you control today."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Any apprehension: stop the set."
+   }
+  ],
+  "red_flags": [
+   "New numbness in the arm after a dislocation",
+   "A dislocation that doesn't go back in",
+   "Slipping with very light load"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "sh_rcrsp",
+  "chip_label": "Pinchy shoulder lifting arm up",
+  "clinical_name": "Rotator cuff-related shoulder pain / cuff tendinopathy / subacromial pain",
+  "region": "shoulder",
+  "category": "CHRONIC_RECURRENT",
+  "parent_id": "sh_impingement",
+  "one_liner": "Risk lives in loaded arm elevation, where the arm goes up and out while the cuff is under-strength for the job.",
+  "self_id_cues": [
+   "Pain on the outside of my upper arm lifting overhead",
+   "Painful arc halfway up",
+   "Lying on that shoulder aches"
+  ],
+  "core_cue": "Strengthen into the pain-free range and progress load. A tolerable ache (4/10 or less that settles) is OK.",
+  "warmup": [
+   {
+    "exercise": "band_external_rotation",
+    "dose": "2x15",
+    "note": "elbow at the side"
+   },
+   {
+    "exercise": "scap_push_up",
+    "dose": "1x10",
+    "note": "slow"
+   },
+   {
+    "exercise": "landmine_press_light",
+    "dose": "1x8",
+    "note": "pain-free range"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "external_rotation_strength",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "row",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "landmine_or_incline_press",
+    "sets": "3",
+    "reps": "8-12",
+    "frequency": "3x/wk",
+    "placement": "main"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "shoulder_overhead_loaded",
+    "mechanism": "heavy pressing through a painful arc",
+    "level": "core"
+   },
+   {
+    "movement": "shoulder_ext_endrange_loaded",
+    "mechanism": "high-volume dips at end range",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "ohp",
+    "substitute": "landmine",
+    "note": "presses up and forward, short of the painful arc"
+   },
+   {
+    "exercise": "machine_ohp",
+    "substitute": "landmine",
+    "note": "or keep the machine within the pain-free range"
+   },
+   {
+    "exercise": "dip",
+    "substitute": "cg_bench",
+    "note": "triceps work without the deep shoulder position"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Shoulder check: painful arc 0-10?"
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Elevation load: stay in the pain-free range."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 4/10, or not settled within the day: regress."
+   }
+  ],
+  "red_flags": [
+   "Sudden weakness after a fall",
+   "Night pain with weight loss",
+   "Neck pain with arm tingling"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "settle pain"
+    ],
+    "exercises": [
+     {
+      "exercise": "external_rotation_isometric",
+      "sets": "4-5",
+      "reps": "30-45s",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "painful arc <=3/10"
+    ],
+    "duration": "0-2 wk"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "pain-free range"
+    ],
+    "exercises": [
+     {
+      "exercise": "active_shoulder_elevation",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "range symmetric with the other side"
+    ],
+    "duration": "1-4 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "cuff and shoulder strength"
+    ],
+    "exercises": [
+     {
+      "exercise": "external_rotation_strength",
+      "sets": "3",
+      "reps": "10-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "row",
+      "sets": "3-4",
+      "reps": "8-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "landmine_or_incline_press",
+      "sets": "3-4",
+      "reps": "8-12",
+      "frequency": "3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "24-h rule holds at 2 load steps"
+    ],
+    "duration": "2-12 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "overhead lifts"
+    ],
+    "exercises": [
+     {
+      "exercise": "overhead_press",
+      "sets": "3",
+      "reps": "6-10",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "overhead pain <=4/10 and settled within the day"
+    ],
+    "duration": "8-16 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "external_rotation_strength",
+      "sets": "2-3",
+      "reps": "10-15",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": null,
+  "interactions": [
+   {
+    "with_id": "sh_ant_instability",
+    "change": "avoid behind-the-neck positions anyway; no conflict"
+   }
+  ],
+  "evidence_grade": "B",
+  "sources": [
+   "JOSPT 2024 FITT systematic review (exercise effective; no consensus on type)",
+   "JOSPT 2026 meta-analysis (active and strength exercise recommended for strength deficits)",
+   "Raulline Ullern et al. BMC Musculoskeletal Disorders 2025, scoping review of 28 RCTs (no consensus on pain allowance)"
+  ]
+ },
+ {
+  "id": "sh_ant_instability",
+  "chip_label": "Anterior shoulder instability",
+  "clinical_name": "Anterior glenohumeral instability",
+  "region": "shoulder",
+  "category": "CHRONIC_RECURRENT",
+  "parent_id": "sh_unstable",
+  "one_liner": "Risk lives in abduction plus external rotation: arm out to the side and rotated back, under load.",
+  "self_id_cues": [
+   "My shoulder has popped out the front",
+   "Arm back in a throwing position feels like it'll slip",
+   "Wide-grip bench at the bottom feels scary"
+  ],
+  "core_cue": "Keep loaded elbows in front of the body line; no apprehension allowed, ever.",
+  "warmup": [
+   {
+    "exercise": "band_external_internal_rotation_at_side",
+    "dose": "2x15",
+    "note": "elbow at the side"
+   },
+   {
+    "exercise": "serratus_wall_slide",
+    "dose": "1x10",
+    "note": "controlled"
+   },
+   {
+    "exercise": "light_bench_shallow",
+    "dose": "1x8",
+    "note": "stop at a shallow depth"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "cuff_strength",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "scapular_stability",
+    "sets": "3",
+    "reps": "10-12",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "closed_chain_safe_range",
+    "sets": "3",
+    "reps": "20-30s",
+    "frequency": "2x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "shoulder_abd_er_loaded",
+    "mechanism": "the apprehension position: arm out and rotated back under load",
+    "level": "core"
+   },
+   {
+    "movement": "shoulder_horiz_abd_endrange",
+    "mechanism": "elbows behind the body at the bottom of a free-weight press",
+    "level": "caution"
+   },
+   {
+    "movement": "shoulder_ext_endrange_loaded",
+    "mechanism": "deep dips drive the head of the arm bone forward",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "bench",
+    "substitute": "bench+rom:board",
+    "note": "moderate grip, board stop short of the chest"
+   },
+   {
+    "exercise": "incline_db",
+    "substitute": "incline_machine",
+    "note": "fixed path keeps the elbows in front"
+   },
+   {
+    "exercise": "db_bench",
+    "substitute": "db_bench+rom:partial",
+    "note": "stop before the elbows pass the torso"
+   },
+   {
+    "exercise": "weighted_pushup",
+    "substitute": "weighted_pushup+rom:partial",
+    "note": "stop short of the bottom"
+   },
+   {
+    "exercise": "dip",
+    "substitute": "cg_bench",
+    "note": "triceps work without the deep shoulder position"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Elbows in front today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Apprehension position: keep the elbows in front, or use the suggested swap."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Any apprehension: stop the set."
+   }
+  ],
+  "red_flags": [
+   "New numbness in the arm after a dislocation",
+   "A dislocation that doesn't go back in",
+   "Repeated slipping with very light load"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "settle the shoulder; sling only if a clinician advised one"
+    ],
+    "exercises": [
+     {
+      "exercise": "isometric_er_ir_at_side",
+      "sets": "4-5",
+      "reps": "30-45s",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "no apprehension in daily tasks"
+    ],
+    "duration": "0-2 wk"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "range short of apprehension"
+    ],
+    "exercises": [
+     {
+      "exercise": "active_shoulder_range_short_of_apprehension",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "range returns without apprehension"
+    ],
+    "duration": "1-3 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "strength into progressively more abduction"
+    ],
+    "exercises": [
+     {
+      "exercise": "cuff_strength",
+      "sets": "3-4",
+      "reps": "8-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "scapular_stability",
+      "sets": "3",
+      "reps": "10-12",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "closed_chain_safe_range",
+      "sets": "3",
+      "reps": "20-30s",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "24-h rule holds at 2 load steps",
+     "no apprehension"
+    ],
+    "duration": "3-12 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "overhead and bench at full range only if there is no apprehension"
+    ],
+    "exercises": [
+     {
+      "exercise": "bench_press_graded_depth",
+      "sets": "3",
+      "reps": "6-10",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "no apprehension at the new depth",
+     "no next-day flare"
+    ],
+    "duration": "4-12 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "cuff_strength",
+      "sets": "2-3",
+      "reps": "10-15",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": null,
+  "interactions": [
+   {
+    "with_id": "el_hyperextension",
+    "change": "both favour soft lockout; no conflict"
+   },
+   {
+    "with_id": "sys_hypermobility",
+    "change": "strength first; avoid end-range stretching"
+   }
+  ],
+  "evidence_grade": "C",
+  "sources": [
+   "App default (clinical consensus on mechanism and positions; no CPG retrieved), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "sh_mdi_hypermobile",
+  "chip_label": "Shoulder slips in lots of directions",
+  "clinical_name": "Multidirectional instability / hypermobile shoulder",
+  "region": "shoulder",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "sh_unstable",
+  "one_liner": "Risk lives at the shoulder's end of range in passive hangs and stretches, where the capsule rather than the muscles holds the joint.",
+  "self_id_cues": [
+   "My shoulder slips in more than one direction",
+   "I'm bendy in other joints too",
+   "Hanging from a bar feels loose rather than stretched"
+  ],
+  "core_cue": "Own the middle, strength over stretch, at the shoulder.",
+  "warmup": [
+   {
+    "exercise": "band_external_internal_rotation_at_side",
+    "dose": "2x15",
+    "note": "mid-range"
+   },
+   {
+    "exercise": "active_scapular_hang",
+    "dose": "1x5",
+    "note": "shoulders pulled down, no passive hang"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "high_load_shoulder_strength",
+    "sets": "3-4",
+    "reps": "10RM to 8RM",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "scapular_stability",
+    "sets": "3",
+    "reps": "10-12",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "isometric_near_end_range",
+    "sets": "3",
+    "reps": "20-30s",
+    "frequency": "2x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "shoulder_hang_traction",
+    "mechanism": "passive end-range hang loads the capsule, not the muscle",
+    "level": "core"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "pullup",
+    "substitute": "pulldown",
+    "note": "control the top; no passive hang between reps"
+   },
+   {
+    "exercise": "chinup",
+    "substitute": "pulldown",
+    "note": "control the top; no passive hang between reps"
+   },
+   {
+    "exercise": "hang",
+    "substitute": "farmer",
+    "note": "grip work without the overhead hang, or an active scapular hang"
+   },
+   {
+    "exercise": "hang_raise",
+    "substitute": "captains_leg",
+    "note": "same abs work, back supported"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Own the middle today; no passive hangs or dislocates."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Hang position: keep the shoulders active, or use the suggested swap."
+   }
+  ],
+  "red_flags": [
+   "Frequent subluxations",
+   "New numbness or tingling in the arm"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [
+   {
+    "with_id": "sys_hypermobility",
+    "change": "identical own-the-middle cue across all joints"
+   }
+  ],
+  "evidence_grade": "C",
+  "sources": [
+   "Liaghat B et al. Br J Sports Med 2022;56(22):1269-1276. doi:10.1136/bjsports-2021-105223",
+   "Engelbert RHH et al. Am J Med Genet C 2017;175C(1):158-167. doi:10.1002/ajmg.c.31545"
+  ]
+ },
+ {
+  "id": "sh_ac_old_separation",
+  "chip_label": "Bump on top of shoulder (old AC injury)",
+  "clinical_name": "Healed AC separation (grade III+)",
+  "region": "shoulder",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "sh_impingement",
+  "one_liner": "Risk lives at the bottom of a deep bench or dip, where the healed joint on top of the shoulder is squeezed hardest.",
+  "self_id_cues": [
+   "I have a bump on top of my shoulder from an old injury",
+   "I separated my shoulder years ago",
+   "Deep dips or the bottom of bench ache on top"
+  ],
+  "core_cue": "Keep the bar off the bottom of the bench and the elbows off the bottom of the dip.",
+  "warmup": [
+   {
+    "exercise": "band_pull_apart",
+    "dose": "1x15",
+    "note": "light"
+   },
+   {
+    "exercise": "light_press_short_range",
+    "dose": "1x8",
+    "note": "rehearse stopping short of the bottom"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "cuff_strength",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "scapular_stability",
+    "sets": "3",
+    "reps": "10-12",
+    "frequency": "2x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "row",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "shoulder_ext_endrange_loaded",
+    "mechanism": "the bottom of a deep dip loads the AC joint",
+    "level": "core"
+   },
+   {
+    "movement": "shoulder_horiz_abd_endrange",
+    "mechanism": "full-range wide-grip bench at the bottom",
+    "level": "core"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "dip",
+    "substitute": "weighted_pushup+grip:close",
+    "note": "close hands, elbows tucked"
+   },
+   {
+    "exercise": "bench",
+    "substitute": "bench+rom:board",
+    "note": "board stop short of the chest"
+   },
+   {
+    "exercise": "weighted_pushup",
+    "substitute": "weighted_pushup+grip:close",
+    "note": "close hands, elbows tucked"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Stop short of the bottom on presses and dips today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Deep shoulder position: shorten the range, or use the suggested swap."
+   }
+  ],
+  "red_flags": [
+   "New deformity or pain after a fall"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "el_pain",
+  "chip_label": "Elbow pain",
+  "clinical_name": "Elbow pain (umbrella)",
+  "region": "elbow",
+  "category": "UMBRELLA",
+  "parent_id": null,
+  "one_liner": "Risk lives in hard gripping and in loaded lockout, the two jobs the elbow does under a bar.",
+  "self_id_cues": [
+   "My elbow hurts when I grip or lock out",
+   "I'm not sure exactly what it is",
+   "Pulling or pressing aggravates it"
+  ],
+  "core_cue": "Grip just hard enough and stop just short of a hard lockout.",
+  "warmup": [
+   {
+    "exercise": "band_pushdown",
+    "dose": "1x15",
+    "note": "mid-range"
+   },
+   {
+    "exercise": "wrist_extension_isometric",
+    "dose": "2x30s",
+    "note": "moderate effort"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "wrist_extensor_isometric",
+    "sets": "3",
+    "reps": "30s",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "eccentric_curl_soft_stop",
+    "sets": "3",
+    "reps": "8",
+    "frequency": "2x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Elbow day: soft lockout, straps on heavy pulls."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10, or worse tomorrow morning: drop back a step."
+   }
+  ],
+  "red_flags": [
+   "Tingling in ring/little fingers",
+   "Locking or giving way",
+   "Swelling after a fall"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [
+   {
+    "with_id": "wr_pain",
+    "change": "check pressing grip width"
+   }
+  ],
+  "evidence_grade": "B",
+  "sources": [
+   "Lucado AM et al. Lateral Elbow Pain and Muscle Function Impairments. JOSPT 2022;52(12):CPG1-CPG111. doi:10.2519/jospt.2022.0302"
+  ]
+ },
+ {
+  "id": "el_lateral_tendinopathy",
+  "chip_label": "Outside-elbow pain gripping",
+  "clinical_name": "Lateral elbow tendinopathy",
+  "region": "elbow",
+  "category": "CHRONIC_RECURRENT",
+  "parent_id": "el_pain",
+  "one_liner": "Risk lives in hard gripping with the wrist bent back, as in heavy holds, pull-ups and carries.",
+  "self_id_cues": [
+   "Outside-elbow pain lifting a kettle or mug",
+   "My grip feels weaker",
+   "Pulling and deadlift grip hurt"
+  ],
+  "core_cue": "Grip just hard enough, and use straps on heavy pulls while you build tendon capacity.",
+  "warmup": [
+   {
+    "exercise": "wrist_extension_isometric",
+    "dose": "3x30s",
+    "note": "moderate effort"
+   },
+   {
+    "exercise": "light_wrist_curl",
+    "dose": "1x15",
+    "note": "light"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "wrist_extensor_isometric",
+    "sets": "3",
+    "reps": "30-45s",
+    "frequency": "daily, then 3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "wrist_extensor_eccentric",
+    "sets": "3",
+    "reps": "15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "grip_strength",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2x/wk",
+    "placement": "finisher"
+   },
+   {
+    "exercise": "shoulder_scapula_work",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "max_grip_wrist_ext",
+    "mechanism": "high wrist extensor tendon load from maximal or long gripping",
+    "level": "core"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "deadlift",
+    "substitute": "transformer_hinge",
+    "note": "or keep the deadlift and use straps"
+   },
+   {
+    "exercise": "pullup",
+    "substitute": "pulldown",
+    "note": "neutral handle, straps if needed"
+   },
+   {
+    "exercise": "farmer",
+    "substitute": "trap_bar",
+    "note": "use straps; grip demand drops"
+   },
+   {
+    "exercise": "hang",
+    "substitute": "rev_wrist",
+    "note": "build extensor capacity directly instead of a long hold"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Straps on for heavy pulls."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Grip-load move: straps, or use the suggested swap."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10 or worse next day: back off. Over 7/10: isometrics only."
+   }
+  ],
+  "red_flags": [
+   "Tingling in the hand",
+   "A locking elbow",
+   "Swelling after trauma"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "settle pain"
+    ],
+    "exercises": [
+     {
+      "exercise": "wrist_extensor_isometric",
+      "sets": "4-5",
+      "reps": "30-45s",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "grip pain <=3/10"
+    ],
+    "duration": "0-2 wk"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "full pain-free wrist and elbow range"
+    ],
+    "exercises": [
+     {
+      "exercise": "active_wrist_elbow_range",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "range symmetric with the other side"
+    ],
+    "duration": "1-3 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "tendon load capacity"
+    ],
+    "exercises": [
+     {
+      "exercise": "wrist_extensor_eccentric",
+      "sets": "3",
+      "reps": "15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "grip_strength",
+      "sets": "3-4",
+      "reps": "8-15",
+      "frequency": "3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "24-h rule holds at 2 load steps"
+    ],
+    "duration": "2-12 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "full grip"
+    ],
+    "exercises": [
+     {
+      "exercise": "deadlift_no_straps",
+      "sets": "3",
+      "reps": "5",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "grip pain <=3/10, no next-day flare"
+    ],
+    "duration": "4-12 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "forearm_circuit",
+      "sets": "2",
+      "reps": "15",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": null,
+  "interactions": [
+   {
+    "with_id": "wr_pain",
+    "change": "check grip width"
+   }
+  ],
+  "evidence_grade": "B",
+  "sources": [
+   "Lucado AM et al. Lateral Elbow Pain and Muscle Function Impairments. JOSPT 2022;52(12):CPG1-CPG111. doi:10.2519/jospt.2022.0302"
+  ]
+ },
+ {
+  "id": "el_hyperextension",
+  "chip_label": "Elbow hyperextends (old fracture)",
+  "clinical_name": "Cubitus recurvatum / post-fracture malunion with hyperlaxity",
+  "region": "elbow",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "el_pain",
+  "one_liner": "Risk lives in the last few degrees of straightening under load, where the joint, not the muscle, takes the weight.",
+  "self_id_cues": [
+   "My elbow bends backwards past straight",
+   "I broke it as a kid and it healed on its own",
+   "Locking out on push-ups feels wrong"
+  ],
+  "core_cue": "Soft lockout: stop a few degrees short of straight on every press, carry, hang and plank.",
+  "warmup": [
+   {
+    "exercise": "band_pushdown",
+    "dose": "1x15",
+    "note": "mid-range"
+   },
+   {
+    "exercise": "band_curl",
+    "dose": "1x15",
+    "note": "mid-range"
+   },
+   {
+    "exercise": "light_press_soft_lockout",
+    "dose": "1x5",
+    "note": "rehearse the stop before loading"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "eccentric_curl_soft_stop",
+    "sets": "3",
+    "reps": "8 (3-4s down)",
+    "frequency": "2x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "isometric_near_end_range_push_pull",
+    "sets": "3",
+    "reps": "20-30s",
+    "frequency": "2x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "grip_forearm_work",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2x/wk",
+    "placement": "finisher"
+   },
+   {
+    "exercise": "triceps_soft_stop",
+    "sets": "3",
+    "reps": "10-12",
+    "frequency": "2x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "elbow_ext_endrange_loaded",
+    "mechanism": "the joint takes the load at lockout",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "bench",
+    "substitute": "bench+lockout:soft",
+    "note": "stop a few degrees short"
+   },
+   {
+    "exercise": "ohp",
+    "substitute": "ohp+lockout:soft",
+    "note": "stop a few degrees short"
+   },
+   {
+    "exercise": "weighted_pushup",
+    "substitute": "weighted_pushup+lockout:soft",
+    "note": "stop a few degrees short"
+   },
+   {
+    "exercise": "dip",
+    "substitute": "dip+lockout:soft",
+    "note": "stop a few degrees short"
+   },
+   {
+    "exercise": "machine_press",
+    "substitute": "machine_press+lockout:soft",
+    "note": "stop a few degrees short"
+   },
+   {
+    "exercise": "pushdown",
+    "substitute": "pushdown+lockout:soft",
+    "note": "stop a few degrees short"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Soft lockout today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Stop a few degrees short of straight."
+   }
+  ],
+  "red_flags": [
+   "Tingling in ring/little fingers",
+   "Inner-elbow pain with gripping",
+   "Joint giving way or clicking under load"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [
+   {
+    "with_id": "wr_pain",
+    "change": "check pressing grip width"
+   },
+   {
+    "with_id": "sh_ant_instability",
+    "change": "both favour soft lockout; no conflict"
+   },
+   {
+    "with_id": "sys_hypermobility",
+    "change": "identical cue across all joints"
+   }
+  ],
+  "evidence_grade": "D",
+  "sources": [
+   "Engelbert RHH et al. Am J Med Genet C 2017;175C(1):158-167. doi:10.1002/ajmg.c.31545"
+  ]
+ },
+ {
+  "id": "el_fixed_flexion",
+  "chip_label": "Elbow won't fully straighten",
+  "clinical_name": "Post-fracture elbow flexion contracture",
+  "region": "elbow",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "el_pain",
+  "one_liner": "Risk lives in forcing the elbow straight against the bony block under load.",
+  "self_id_cues": [
+   "My elbow won't straighten all the way",
+   "It's been like that since I broke it",
+   "Pushing it straight under a bar feels blocked"
+  ],
+  "core_cue": "Your end range is your lockout; don't force it straight under load.",
+  "warmup": [
+   {
+    "exercise": "light_press_to_own_end_point",
+    "dose": "1x8",
+    "note": "rehearse stopping at your end-point"
+   },
+   {
+    "exercise": "active_elbow_extension",
+    "dose": "1x10",
+    "note": "gentle, no forcing"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "triceps_in_own_range",
+    "sets": "3",
+    "reps": "10-12",
+    "frequency": "2x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "grip_forearm_work",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2x/wk",
+    "placement": "finisher"
+   },
+   {
+    "exercise": "active_elbow_extension",
+    "sets": "2",
+    "reps": "10",
+    "frequency": "daily",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "elbow_ext_endrange_loaded",
+    "mechanism": "forced lockout against the bony block",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "dip",
+    "substitute": "dip+lockout:soft",
+    "note": "stop at your own end-point"
+   },
+   {
+    "exercise": "weighted_pushup",
+    "substitute": "weighted_pushup+lockout:soft",
+    "note": "stop at your own end-point"
+   },
+   {
+    "exercise": "bench",
+    "substitute": "bench+lockout:soft",
+    "note": "stop at your own end-point"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Your end range is your lockout today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Stop at your own end-point; don't force it straight."
+   }
+  ],
+  "red_flags": [
+   "New loss of range",
+   "Locking"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "wr_pain",
+  "chip_label": "Wrist pain",
+  "clinical_name": "Wrist/hand pain (umbrella)",
+  "region": "wrist_hand",
+  "category": "UMBRELLA",
+  "parent_id": null,
+  "one_liner": "Risk lives in loading the wrist bent back, or bent to the side, further than it is comfortable going.",
+  "self_id_cues": [
+   "My wrist hurts when I press or hold a bar",
+   "I'm not sure exactly what it is",
+   "Push-ups or a front rack bring it on"
+  ],
+  "core_cue": "Change the hand, not the wrist: handles, dumbbells or straps where the wrist would be forced.",
+  "warmup": [
+   {
+    "exercise": "wrist_circles",
+    "dose": "1x10 each way",
+    "note": "gentle"
+   },
+   {
+    "exercise": "light_rack_position_test",
+    "dose": "1x5",
+    "note": "check comfort before loading"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "grip_strength",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2x/wk",
+    "placement": "finisher"
+   },
+   {
+    "exercise": "active_wrist_range",
+    "sets": "2",
+    "reps": "10",
+    "frequency": "daily",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Wrist check: neutral wrist under load today."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10, or worse next morning: drop back a step."
+   }
+  ],
+  "red_flags": [
+   "New numbness in the fingers",
+   "Clicking with swelling",
+   "Tenderness at the base of the thumb after a fall"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "wr_dorsal_impingement",
+  "chip_label": "Back-of-wrist pain on push-ups/rack",
+  "clinical_name": "Dorsal wrist impingement",
+  "region": "wrist_hand",
+  "category": "CHRONIC_RECURRENT",
+  "parent_id": "wr_pain",
+  "one_liner": "Risk lives in loaded wrist extension: the wrist bent back under a bar, a push-up or a front rack.",
+  "self_id_cues": [
+   "The back of my wrist pinches in push-ups",
+   "Front rack or the bottom of bench hurts my wrist",
+   "It's fine when my wrist is straight"
+  ],
+  "core_cue": "Use handles, fists or dumbbells so the wrist stays straight under load.",
+  "warmup": [
+   {
+    "exercise": "wrist_circles",
+    "dose": "1x10 each way",
+    "note": "gentle"
+   },
+   {
+    "exercise": "light_press_neutral_wrist",
+    "dose": "1x8",
+    "note": "rehearse a stacked wrist"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "grip_strength",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2x/wk",
+    "placement": "finisher"
+   },
+   {
+    "exercise": "forearm_strength",
+    "sets": "3",
+    "reps": "12-15",
+    "frequency": "2x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "active_wrist_range",
+    "sets": "2",
+    "reps": "10",
+    "frequency": "daily",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "wrist_ext_loaded",
+    "mechanism": "back of the wrist pinched under load",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "weighted_pushup",
+    "substitute": "machine_press",
+    "note": "or push-ups on handles or fists"
+   },
+   {
+    "exercise": "front_squat",
+    "substitute": "transformer_front",
+    "note": "handles instead of a front rack"
+   },
+   {
+    "exercise": "bench",
+    "substitute": "machine_press",
+    "note": "handles keep the wrist straight"
+   },
+   {
+    "exercise": "ohp",
+    "substitute": "seated_db_press",
+    "note": "neutral-grip dumbbells keep the wrist stacked"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Straight wrists under load today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Wrist bent back here: stack it, or use the suggested swap."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10, or worse next morning: drop back a step."
+   }
+  ],
+  "red_flags": [
+   "Clicking with swelling",
+   "New numbness in the fingers"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "settle irritability"
+    ],
+    "exercises": [
+     {
+      "exercise": "wrist_isometric_neutral",
+      "sets": "4-5",
+      "reps": "30-45s",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "wrist pain <=3/10 on a light press"
+    ],
+    "duration": "0-2 wk"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "normal pain-free wrist range"
+    ],
+    "exercises": [
+     {
+      "exercise": "active_wrist_range",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "range symmetric with the other side"
+    ],
+    "duration": "1-3 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "forearm and grip strength"
+    ],
+    "exercises": [
+     {
+      "exercise": "grip_strength",
+      "sets": "3-4",
+      "reps": "8-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "forearm_strength",
+      "sets": "3",
+      "reps": "12-15",
+      "frequency": "3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "24-h rule holds at 2 load steps"
+    ],
+    "duration": "3-12 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "flat-palm pressing and front rack as tolerated"
+    ],
+    "exercises": [
+     {
+      "exercise": "push_up_flat_palm_graded",
+      "sets": "3",
+      "reps": "8-12",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "pressing pain <=3/10, no next-day flare"
+    ],
+    "duration": "4-12 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "grip_strength",
+      "sets": "2",
+      "reps": "10-15",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "wr_limited_extension",
+  "chip_label": "Wrist won't bend back fully (old break)",
+  "clinical_name": "Distal radius malunion / post-fracture wrist stiffness",
+  "region": "wrist_hand",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "wr_pain",
+  "one_liner": "Risk lives in forcing loaded wrist extension the joint no longer has: front rack, flat-palm push-ups, handstands.",
+  "self_id_cues": [
+   "My wrist won't bend back as far as the other one",
+   "I broke it and it healed stiff",
+   "A front rack or flat-palm push-up is blocked"
+  ],
+  "core_cue": "Change the hand, not the wrist: use handles, fists or straps wherever the wrist would be forced back.",
+  "warmup": [
+   {
+    "exercise": "wrist_circles",
+    "dose": "1x10 each way",
+    "note": "within range"
+   },
+   {
+    "exercise": "light_rack_position_test",
+    "dose": "1x5",
+    "note": "find today's end-point"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "grip_strength",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2x/wk",
+    "placement": "finisher"
+   },
+   {
+    "exercise": "forearm_strength",
+    "sets": "3",
+    "reps": "12-15",
+    "frequency": "2x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "active_wrist_range",
+    "sets": "2",
+    "reps": "10",
+    "frequency": "daily",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "wrist_ext_loaded",
+    "mechanism": "load forces the wrist past its available extension",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "weighted_pushup",
+    "substitute": "machine_press",
+    "note": "or push-ups on handles or fists"
+   },
+   {
+    "exercise": "front_squat",
+    "substitute": "transformer_front",
+    "note": "handles instead of a front rack; or cross-arm grip"
+   },
+   {
+    "exercise": "ohp",
+    "substitute": "db_press",
+    "note": "neutral-grip dumbbells need less wrist extension"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Change the hand, not the wrist, today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Wrist bent back here: handles or straps, or use the suggested swap."
+   }
+  ],
+  "red_flags": [
+   "New numbness in the fingers"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "th_pain",
+  "chip_label": "Upper back / rib / chest-wall pain",
+  "clinical_name": "Thoracic and chest wall pain (umbrella)",
+  "region": "thoracic_ribs",
+  "category": "UMBRELLA",
+  "parent_id": null,
+  "one_liner": "Risk lives in long stiff postures and in sudden jumps in pressing load, more than in any single lift.",
+  "self_id_cues": [
+   "My upper back, ribs or chest wall ache",
+   "I'm not sure exactly what it is",
+   "Sitting still or heavy pressing makes it worse"
+  ],
+  "core_cue": "Move and strengthen the upper back; build pressing load gradually.",
+  "warmup": [
+   {
+    "exercise": "thoracic_extension_foam_roller",
+    "dose": "1x10",
+    "note": "gentle"
+   },
+   {
+    "exercise": "band_pull_apart",
+    "dose": "1x15",
+    "note": "light"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "row",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "thoracic_mobility",
+    "sets": "2",
+    "reps": "10",
+    "frequency": "daily",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Upper back check: move it before you load it."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10, or worse next morning: drop back a step."
+   }
+  ],
+  "red_flags": [
+   "Chest pain, especially with breathlessness or on exertion",
+   "Fever",
+   "Rib pain when breathing hard after a big training increase"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "th_scoliosis",
+  "chip_label": "Scoliosis",
+  "clinical_name": "Adult idiopathic scoliosis",
+  "region": "thoracic_ribs",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "th_pain",
+  "one_liner": "Risk lives only in asymmetric loads that are painful for you; the curve itself is not a reason to avoid lifts.",
+  "self_id_cues": [
+   "I've been told I have scoliosis",
+   "One side of my back feels different",
+   "Some one-sided lifts feel uneven"
+  ],
+  "core_cue": "Train both sides with the same load; let symmetry of effort, not of shape, be the goal.",
+  "warmup": [
+   {
+    "exercise": "side_plank",
+    "dose": "1x20-30s each side",
+    "note": "both sides, same time"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "unilateral_strength_both_sides",
+    "sets": "3",
+    "reps": "8-12 each side",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "trunk_endurance",
+    "sets": "3",
+    "reps": "20-30s",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "breathing_based_bracing",
+    "sets": "2",
+    "reps": "5 breaths",
+    "frequency": "every session",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Same load both sides today."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "A one-sided lift hurts over 5/10: lighten it or swap it."
+   }
+  ],
+  "red_flags": [
+   "Rapid change in the curve",
+   "New neurological symptoms"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "th_kyphosis",
+  "chip_label": "Rounded upper back (Scheuermann's)",
+  "clinical_name": "Scheuermann's kyphosis",
+  "region": "thoracic_ribs",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "th_pain",
+  "one_liner": "Risk lives in forcing overhead lockout positions the upper back can't reach, which pushes the strain into the lower back and shoulders.",
+  "self_id_cues": [
+   "My upper back is rounded and stiff",
+   "I've been told I have Scheuermann's",
+   "I can't get my arms straight overhead without arching"
+  ],
+  "core_cue": "Open the upper back before you load overhead, and press overhead only within your available range.",
+  "warmup": [
+   {
+    "exercise": "thoracic_extension_foam_roller",
+    "dose": "1x10",
+    "note": "gentle"
+   },
+   {
+    "exercise": "wall_slide",
+    "dose": "1x10",
+    "note": "within range"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "upper_back_strength",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "thoracic_extension_mobility",
+    "sets": "2",
+    "reps": "10",
+    "frequency": "daily",
+    "placement": "warmup"
+   },
+   {
+    "exercise": "row",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "shoulder_overhead_loaded",
+    "mechanism": "forcing overhead lockout past the available upper-back range",
+    "level": "core"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "ohp",
+    "substitute": "landmine",
+    "note": "presses up and forward within your range"
+   },
+   {
+    "exercise": "z_press",
+    "substitute": "landmine",
+    "note": "seated on the floor needs the most upper-back extension"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Open the upper back before overhead work."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Overhead: press within your range, don't arch to finish."
+   }
+  ],
+  "red_flags": [
+   "New neurological symptoms"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "lb_pain",
+  "chip_label": "Low back pain",
+  "clinical_name": "Nonspecific low back pain (umbrella)",
+  "region": "lower_back",
+  "category": "UMBRELLA",
+  "parent_id": null,
+  "one_liner": "Risk lives in sudden jumps in what the back is asked to do, and in rounding the lower back under load while it is sore.",
+  "self_id_cues": [
+   "My lower back hurts when I lift or after I sit",
+   "I'm not sure exactly what it is",
+   "Heavy hinges or squats aggravate it"
+  ],
+  "core_cue": "Your back can be loaded. Progress gradually, keep moving, and go lighter on flare days.",
+  "warmup": [
+   {
+    "exercise": "cat_camel",
+    "dose": "1x10",
+    "note": "gentle, pain-free range"
+   },
+   {
+    "exercise": "bird_dog",
+    "dose": "1x6 each side",
+    "note": "slow"
+   },
+   {
+    "exercise": "hip_hinge_drill",
+    "dose": "1x10",
+    "note": "hinge from the hips"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "side_plank",
+    "sets": "3",
+    "reps": "20-30s",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "bird_dog",
+    "sets": "3",
+    "reps": "8-12 each side",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "walking",
+    "sets": "1",
+    "reps": "20-30 min",
+    "frequency": "most days",
+    "placement": "off_day"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "spine_flex_loaded",
+    "mechanism": "rounding the lower back under load while it is irritable",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "good_morning",
+    "substitute": "belt_rdl",
+    "note": "hinge without the bar on the back"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Back check 0-10. Flare day means the lighter version."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10 or worse the next day? Drop the load 20-30%."
+   }
+  ],
+  "red_flags": [
+   "Numbness in the saddle area, new bladder or bowel change, or progressive leg weakness (seek urgent care)",
+   "Fever, unexplained weight loss or a history of cancer",
+   "Severe night pain"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "A",
+  "sources": [
+   "George SZ et al. Interventions for the Management of Acute and Chronic Low Back Pain: Revision 2021. JOSPT 2021 (CPG)"
+  ]
+ },
+ {
+  "id": "lb_chronic_nonspecific",
+  "chip_label": "Back keeps flaring up",
+  "clinical_name": "Chronic/recurrent nonspecific low back pain",
+  "region": "lower_back",
+  "category": "CHRONIC_RECURRENT",
+  "parent_id": "lb_pain",
+  "one_liner": "Risk lives in sudden spikes in what the back is asked to do, more than in any single position; fatigue plus load plus a big jump in volume.",
+  "self_id_cues": [
+   "My back flares a few times a year",
+   "Stiff after sitting, better once moving",
+   "No pain down the leg"
+  ],
+  "core_cue": "Your back is strong and can be loaded. Progress gradually and keep moving through flares.",
+  "warmup": [
+   {
+    "exercise": "cat_camel",
+    "dose": "1x10",
+    "note": "gentle"
+   },
+   {
+    "exercise": "bird_dog",
+    "dose": "1x6 each side",
+    "note": "slow"
+   },
+   {
+    "exercise": "hip_hinge_drill",
+    "dose": "1x10",
+    "note": "rehearse the hinge before loading it"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "side_plank",
+    "sets": "3",
+    "reps": "20-30s",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "bird_dog",
+    "sets": "3",
+    "reps": "8-12 each side",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "back_extension",
+    "sets": "3",
+    "reps": "8-12",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "deadlift_variation_progressed_gradually",
+    "sets": "3",
+    "reps": "5-8",
+    "frequency": "2x/wk",
+    "placement": "main"
+   },
+   {
+    "exercise": "walking_or_cycling",
+    "sets": "1",
+    "reps": "20-40 min",
+    "frequency": "most days",
+    "placement": "off_day"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "hinge_heavy",
+    "mechanism": "max-effort hinging when fatigued, in a flare, or after a sudden jump in volume",
+    "level": "caution"
+   },
+   {
+    "movement": "spine_flex_loaded",
+    "mechanism": "high-volume loaded flexion when irritable",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "deadlift",
+    "substitute": "trap_bar",
+    "note": "more upright; or RDL at a tolerable range"
+   },
+   {
+    "exercise": "transformer_hinge",
+    "substitute": "trap_bar",
+    "note": "more upright pull on flare days"
+   },
+   {
+    "exercise": "tbar",
+    "substitute": "chest_row",
+    "note": "chest support takes the hinge out"
+   },
+   {
+    "exercise": "good_morning",
+    "substitute": "belt_rdl",
+    "note": "hinge without the bar on the back"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Back check 0-10. Flare day means the lighter version."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Back-loading move. Build it gradually, no big jumps."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10 or worse the next day? Drop the load 20-30%."
+   }
+  ],
+  "red_flags": [
+   "Numbness in the saddle area, new bladder or bowel change, or progressive leg weakness (seek urgent care)",
+   "Fever, unexplained weight loss or a history of cancer",
+   "Severe night pain"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "settle the flare",
+     "keep moving"
+    ],
+    "exercises": [
+     {
+      "exercise": "walking",
+      "sets": "1",
+      "reps": "10-30 min",
+      "frequency": "daily"
+     },
+     {
+      "exercise": "gentle_movement",
+      "sets": "1",
+      "reps": "5-10 min",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "pain <=3/10 on everyday movement"
+    ],
+    "duration": "days 0-7 (flare)"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "normal pain-free mobility"
+    ],
+    "exercises": [
+     {
+      "exercise": "cat_camel",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     },
+     {
+      "exercise": "hip_hinge_drill",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "bending and hinging feel close to normal"
+    ],
+    "duration": "1-2 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "trunk strength and endurance",
+     "progressive lifting strength"
+    ],
+    "exercises": [
+     {
+      "exercise": "side_plank",
+      "sets": "3",
+      "reps": "20-30s",
+      "frequency": "2-3x/wk"
+     },
+     {
+      "exercise": "bird_dog",
+      "sets": "3",
+      "reps": "8-12 each side",
+      "frequency": "2-3x/wk"
+     },
+     {
+      "exercise": "back_extension",
+      "sets": "3",
+      "reps": "8-12",
+      "frequency": "2-3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "24-h rule holds at 2 load steps"
+    ],
+    "duration": "2-12 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "full lifts"
+    ],
+    "exercises": [
+     {
+      "exercise": "deadlift_variation_progressed_gradually",
+      "sets": "3",
+      "reps": "5-8",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "no next-day flare at working loads"
+    ],
+    "duration": "4-12 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "trunk_endurance_circuit",
+      "sets": "2",
+      "reps": "8-12",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": {
+   "volume": "usually helpful; reduce volume during a flare",
+   "surface": "no restriction",
+   "pace": "easy during a flare",
+   "hills": "no restriction outside a flare",
+   "intervals": "no restriction outside a flare",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "walking, then easy runs at reduced volume during a flare",
+     "criteria": "pain <=5/10 and settles by next morning"
+    },
+    {
+     "step": 2,
+     "prescription": "usual running",
+     "criteria": "flare settled"
+    }
+   ]
+  },
+  "interactions": [
+   {
+    "with_id": "hip_fais",
+    "change": "limit deep hip flexion; hinge from the hips within range"
+   }
+  ],
+  "evidence_grade": "A",
+  "sources": [
+   "George SZ et al. Interventions for the Management of Acute and Chronic Low Back Pain: Revision 2021. JOSPT 2021 (CPG)",
+   "Fernandez-Rodriguez R et al. JOSPT 2022 network meta-analysis (Pilates highest SUCRA for pain and disability)"
+  ]
+ },
+ {
+  "id": "lb_acute_flare",
+  "chip_label": "Tweaked my back this week",
+  "clinical_name": "Acute low back pain",
+  "region": "lower_back",
+  "category": "ACUTE",
+  "parent_id": "lb_pain",
+  "one_liner": "Risk lives in sudden loaded rounding of the lower back while it is sore.",
+  "self_id_cues": [
+   "I tweaked my back in the last few days",
+   "Bending forward or getting up from a chair hurts",
+   "No pain down the leg"
+  ],
+  "core_cue": "Keep moving gently. Walk, keep hinges light, and let the back settle before heavy pulls.",
+  "warmup": [
+   {
+    "exercise": "walking",
+    "dose": "5 min",
+    "note": "easy pace"
+   },
+   {
+    "exercise": "cat_camel",
+    "dose": "1x10",
+    "note": "small, pain-free range"
+   },
+   {
+    "exercise": "bird_dog",
+    "dose": "1x6 each side",
+    "note": "trunk activation"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "walking",
+    "sets": "1",
+    "reps": "10-30 min",
+    "frequency": "daily",
+    "placement": "off_day"
+   },
+   {
+    "exercise": "bird_dog",
+    "sets": "2-3",
+    "reps": "6-10 each side",
+    "frequency": "daily",
+    "placement": "warmup"
+   },
+   {
+    "exercise": "light_hip_hinge",
+    "sets": "2-3",
+    "reps": "10",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "spine_flex_loaded",
+    "mechanism": "loaded rounding while the back is sore",
+    "level": "core"
+   },
+   {
+    "movement": "hinge_heavy",
+    "mechanism": "heavy hinging this week",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "good_morning",
+    "substitute": "belt_rdl",
+    "note": "light hinge, bar off the back"
+   },
+   {
+    "exercise": "deadlift",
+    "substitute": "belt_rdl",
+    "note": "light hinge; or walking instead this week"
+   },
+   {
+    "exercise": "transformer_hinge",
+    "substitute": "belt_rdl",
+    "note": "light hinge this week"
+   },
+   {
+    "exercise": "tbar",
+    "substitute": "chest_row",
+    "note": "chest support takes the hinge out"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Back check 0-10. Keep hinges light this week."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Back-loading move. Go light or swap it while it settles."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10 or worse the next day? Drop the load 20-30% or swap."
+   }
+  ],
+  "red_flags": [
+   "Numbness in the saddle area, new bladder or bowel change, or progressive leg weakness (seek urgent care)",
+   "Fever, unexplained weight loss or a history of cancer",
+   "Severe night pain"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "settle irritability",
+     "keep moving"
+    ],
+    "exercises": [
+     {
+      "exercise": "walking",
+      "sets": "1",
+      "reps": "10-30 min",
+      "frequency": "daily"
+     },
+     {
+      "exercise": "bird_dog",
+      "sets": "2",
+      "reps": "6 each side",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "pain <=3/10 on bending and getting up"
+    ],
+    "duration": "0-2 wk"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "normal pain-free range"
+    ],
+    "exercises": [
+     {
+      "exercise": "cat_camel",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "bending feels close to normal"
+    ],
+    "duration": "1-3 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "trunk and hinge strength"
+    ],
+    "exercises": [
+     {
+      "exercise": "light_hip_hinge",
+      "sets": "3-4",
+      "reps": "8-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "side_plank",
+      "sets": "3",
+      "reps": "20-30s",
+      "frequency": "3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "24-h rule holds at 2 load steps"
+    ],
+    "duration": "3-12 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "usual lifts"
+    ],
+    "exercises": [
+     {
+      "exercise": "deadlift_variation_progressed_gradually",
+      "sets": "3",
+      "reps": "5-8",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "working loads with no next-day flare"
+    ],
+    "duration": "4-12 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "trunk_endurance_circuit",
+      "sets": "2",
+      "reps": "8-12",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": null,
+  "interactions": [
+   {
+    "with_id": "lb_chronic_nonspecific",
+    "change": "if flares keep recurring, manage as the chronic entry"
+   }
+  ],
+  "evidence_grade": "C",
+  "sources": [
+   "George SZ et al. Interventions for the Management of Acute and Chronic Low Back Pain: Revision 2021. JOSPT 2021 (trunk activation exercise for acute LBP, grade C)"
+  ]
+ },
+ {
+  "id": "lb_spondylolisthesis",
+  "chip_label": "Spondylolysis / slipped vertebra",
+  "clinical_name": "Stable low-grade spondylolysis / spondylolisthesis",
+  "region": "lower_back",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "lb_pain",
+  "one_liner": "Risk lives in arching the lower back to end range under load, where the affected segment takes the strain.",
+  "self_id_cues": [
+   "A scan showed a spondylolysis or a slipped vertebra",
+   "Arching backwards under load aggravates my lower back",
+   "A doctor said it is stable or low grade"
+  ],
+  "core_cue": "Keep the pelvis and ribs stacked under load; don't hang into lower-back arching.",
+  "warmup": [
+   {
+    "exercise": "dead_bug",
+    "dose": "1x8 each side",
+    "note": "ribs down, rehearse the stack"
+   },
+   {
+    "exercise": "glute_bridge",
+    "dose": "1x10",
+    "note": "extend from the hips, not the lower back"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "anti_extension_core",
+    "sets": "3",
+    "reps": "8-12 or 20-30s",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "hip_strength_work",
+    "sets": "3",
+    "reps": "8-15",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "hip_flexor_mobility",
+    "sets": "2",
+    "reps": "30s each side",
+    "frequency": "most days",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "spine_ext_endrange_loaded",
+    "mechanism": "loaded lumbar hyperextension stresses the affected segment",
+    "level": "core"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "back_ext",
+    "substitute": "roman_hinge",
+    "note": "hinge from the hips and stop at a neutral spine"
+   },
+   {
+    "exercise": "ab_wheel",
+    "substitute": "cable_crunch",
+    "note": "roll-outs tend to sag into arching; keep the ribs stacked if you keep them"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Ribs over pelvis today. No hanging into the arch."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Stop at a neutral spine, not past it."
+   }
+  ],
+  "red_flags": [
+   "Progressive leg symptoms",
+   "Numbness in the saddle area or new bladder or bowel change (seek urgent care)"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "lb_fusion",
+  "chip_label": "Spinal fusion / rods",
+  "clinical_name": "Lumbar fusion with hardware",
+  "region": "lower_back",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "lb_pain",
+  "one_liner": "Risk lives in loaded end-range rounding and maximal spinal loading, where the levels next to the fusion do extra work.",
+  "self_id_cues": [
+   "I've had a lumbar fusion",
+   "I have rods or screws in my lower back",
+   "My surgeon has cleared me for general training"
+  ],
+  "core_cue": "Brace and hinge from the hips; the levels next to the fusion do extra work, so don't spike volume.",
+  "warmup": [
+   {
+    "exercise": "hip_hinge_drill",
+    "dose": "1x10",
+    "note": "rehearse the hip hinge before loading"
+   },
+   {
+    "exercise": "bird_dog",
+    "dose": "1x6 each side",
+    "note": "brace, no rotation"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "hip_strength_work",
+    "sets": "3",
+    "reps": "8-15",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "trunk_endurance",
+    "sets": "3",
+    "reps": "20-30s",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "walking",
+    "sets": "1",
+    "reps": "20-40 min",
+    "frequency": "most days",
+    "placement": "off_day"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "spine_flex_loaded",
+    "mechanism": "loaded end-range rounding stresses the levels next to the fusion",
+    "level": "core"
+   },
+   {
+    "movement": "spine_axial_heavy",
+    "mechanism": "maximal axial loads need surgeon clearance",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "good_morning",
+    "substitute": "belt_rdl",
+    "note": "hinge without the bar on the back"
+   },
+   {
+    "exercise": "squat",
+    "substitute": "belt_squat",
+    "note": "leg work without load on the spine"
+   },
+   {
+    "exercise": "deadlift",
+    "substitute": "trap_bar",
+    "note": "more upright pull; heavy work only with clearance"
+   },
+   {
+    "exercise": "ohp",
+    "substitute": "machine_ohp",
+    "note": "supported, less spinal load"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Brace and hinge from the hips. No big jumps in volume."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Heavy spinal load. Only with your surgeon's clearance."
+   }
+  ],
+  "red_flags": [
+   "Numbness in the saddle area or new bladder or bowel change (seek urgent care)",
+   "New leg weakness"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "hip_pain",
+  "chip_label": "Hip pain",
+  "clinical_name": "Hip-related pain (umbrella)",
+  "region": "hip_thigh",
+  "category": "UMBRELLA",
+  "parent_id": null,
+  "one_liner": "Risk lives in deep loaded hip bending and in squeezing the outside of the hip across the body.",
+  "self_id_cues": [
+   "My hip hurts when I squat deep or lie on it",
+   "I'm not sure exactly what it is",
+   "Front, side or groin of my hip aches with training"
+  ],
+  "core_cue": "Build hip strength and let pain set your depth. A little ache that settles by morning is fine.",
+  "warmup": [
+   {
+    "exercise": "glute_bridge",
+    "dose": "1x10",
+    "note": "controlled"
+   },
+   {
+    "exercise": "isometric_hip_abduction_wall",
+    "dose": "2x30s",
+    "note": "moderate effort"
+   },
+   {
+    "exercise": "box_squat_bodyweight",
+    "dose": "1x10",
+    "note": "comfortable depth"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "glute_bridge",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "isometric_hip_abduction",
+    "sets": "3-5",
+    "reps": "30-45s",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "step_up_level_pelvis",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "hip_flex_deep_loaded",
+    "mechanism": "deep loaded hip bending can pinch an irritable hip",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "squat",
+    "substitute": "squat+rom:pin",
+    "note": "set depth to a pain-free point"
+   },
+   {
+    "exercise": "leg_press",
+    "substitute": "leg_press+rom:partial",
+    "note": "stop before the hip pinches"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Depth is set by your hip today."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10 or worse next morning? Reduce depth or load."
+   }
+  ],
+  "red_flags": [
+   "Groin pain on weight-bearing (hip joint or femoral neck)",
+   "Locking, or groin pain at night",
+   "Fever"
+  ],
+  "rehab_phases": null,
+  "running": {
+   "volume": "hold, or cut to a level where pain settles by next morning",
+   "surface": "flat, even; avoid cambered roads",
+   "pace": "easy before fast",
+   "hills": "reduce until symptoms settle",
+   "intervals": "after easy running is comfortable",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "easy continuous runs on flat ground",
+     "criteria": "pain <=3/10 during, baseline next morning"
+    },
+    {
+     "step": 2,
+     "prescription": "add volume, then hills and intervals",
+     "criteria": "no next-day flare for 2 weeks (app default)"
+    }
+   ]
+  },
+  "interactions": [],
+  "evidence_grade": "C",
+  "sources": [
+   "Mellor R et al. BMJ 2018 (LEAP RCT, gluteal tendinopathy)",
+   "Kemp et al. 2020 consensus (FAI syndrome)"
+  ]
+ },
+ {
+  "id": "thigh_strain",
+  "chip_label": "Pulled thigh muscle",
+  "clinical_name": "Thigh muscle strain (umbrella)",
+  "region": "hip_thigh",
+  "category": "UMBRELLA",
+  "parent_id": null,
+  "one_liner": "Risk lives in fast running and kicking, and in loading the strained muscle at full length before it is ready.",
+  "self_id_cues": [
+   "I felt a grab in my thigh while sprinting or kicking",
+   "It hurts to stretch it or contract it hard",
+   "I'm not sure which muscle it is"
+  ],
+  "core_cue": "Rebuild strength gradually and in a pain-free range; sprinting comes last.",
+  "warmup": [
+   {
+    "exercise": "glute_bridge",
+    "dose": "1x10",
+    "note": "pain-free"
+   },
+   {
+    "exercise": "walking",
+    "dose": "3-5 min",
+    "note": "brisk"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "isometric_holds_pain_free",
+    "sets": "3-5",
+    "reps": "30-45s",
+    "frequency": "daily early on",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "glute_bridge",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "run_hills_sprints",
+    "mechanism": "fast running before the muscle is ready",
+    "level": "caution"
+   }
+  ],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Strain check: pain-free walking and bridge?"
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 2/10 in the strain? Back off."
+   }
+  ],
+  "red_flags": [
+   "A pop with large bruising or a palpable gap",
+   "Inability to walk normally",
+   "A large, growing swelling"
+  ],
+  "rehab_phases": null,
+  "running": {
+   "volume": "reintroduce gradually",
+   "surface": "flat first",
+   "pace": "easy first, then speed in about 10% steps (app default)",
+   "hills": "after flat running at speed is pain-free",
+   "intervals": "tempo at 60-80% before sprints",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "easy runs on flat ground",
+     "criteria": "pain-free walking and bridge"
+    },
+    {
+     "step": 2,
+     "prescription": "tempo runs at 60-80% effort",
+     "criteria": "easy runs pain-free"
+    },
+    {
+     "step": 3,
+     "prescription": "progress speed in about 10% steps to max (app default)",
+     "criteria": "no pain over 2/10 in the strain"
+    }
+   ]
+  },
+  "interactions": [],
+  "evidence_grade": "C",
+  "sources": [
+   "van Dyk N, Behan FP, Whiteley R. Br J Sports Med 2019 (meta-analysis, Nordic hamstring exercise)"
+  ]
+ },
+ {
+  "id": "hip_gluteal_tendinopathy",
+  "chip_label": "Outside-hip pain lying on it",
+  "clinical_name": "Gluteal tendinopathy / greater trochanteric pain syndrome",
+  "region": "hip_thigh",
+  "category": "CHRONIC_RECURRENT",
+  "parent_id": "hip_pain",
+  "one_liner": "Risk lives in the hip dropping across the body, as in crossed legs, side-lying or hanging on one hip, which squeezes the tendon on the bone.",
+  "self_id_cues": [
+   "Pain on the outside bony point of my hip",
+   "I can't lie on that side at night",
+   "Stairs and standing on one leg hurt"
+  ],
+  "core_cue": "Keep the knee in line with the hip and don't let it sag inwards; strength without squeeze.",
+  "warmup": [
+   {
+    "exercise": "isometric_hip_abduction_wall",
+    "dose": "3x30s",
+    "note": "moderate effort"
+   },
+   {
+    "exercise": "glute_bridge",
+    "dose": "1x10",
+    "note": "level pelvis"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "isometric_hip_abduction",
+    "sets": "3-5",
+    "reps": "30-45s",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "glute_bridge",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "squat_variation",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "main"
+   },
+   {
+    "exercise": "step_up_level_pelvis",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk for at least 8 wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "hip_adduction_compression",
+    "mechanism": "pulling the hip across the midline compresses the gluteal tendon on the bone",
+    "level": "core"
+   },
+   {
+    "movement": "run_hills_sprints",
+    "mechanism": "hills load the tendon while it is irritable",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "seated_add",
+    "substitute": "multihip_abd",
+    "note": "strengthen abduction instead; no squeeze across the midline"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "No crossed-leg stretches today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Compression position. Keep the knee in line with the hip."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10, or night pain worse? Reduce."
+   }
+  ],
+  "red_flags": [
+   "Groin pain on weight-bearing (hip joint or femoral neck)",
+   "Night pain unrelated to lying on it",
+   "Fever"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "settle pain",
+     "learn which positions compress the tendon"
+    ],
+    "exercises": [
+     {
+      "exercise": "isometric_hip_abduction",
+      "sets": "4-5",
+      "reps": "30-45s",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "pain <=3/10 on single-leg stance"
+    ],
+    "duration": "0-2 wk"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "range is rarely the issue; avoid compressive stretches"
+    ],
+    "exercises": [],
+    "progression_criteria": [
+     "comfortable walking and stairs"
+    ],
+    "duration": "0 wk (folds into protect)"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "progressive functional strength"
+    ],
+    "exercises": [
+     {
+      "exercise": "glute_bridge",
+      "sets": "3",
+      "reps": "10-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "squat_variation",
+      "sets": "3",
+      "reps": "10-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "step_up_level_pelvis",
+      "sets": "3",
+      "reps": "10-15",
+      "frequency": "3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "24-h rule holds at 2 load steps"
+    ],
+    "duration": "2-8 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "running, hills"
+    ],
+    "exercises": [
+     {
+      "exercise": "step_up_level_pelvis",
+      "sets": "3",
+      "reps": "8-12 loaded",
+      "frequency": "2-3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "running pain <=3/10, no next-day or night flare"
+    ],
+    "duration": "6-12 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "hip_abduction_strength",
+      "sets": "3",
+      "reps": "10-15",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": {
+   "volume": "hold, or cut to a level where pain settles by next morning",
+   "surface": "avoid cambered roads",
+   "pace": "easy first",
+   "hills": "reduce while irritable",
+   "intervals": "after easy running is comfortable (app default)",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "easy flat runs with a slightly wider step (avoid crossover gait)",
+     "criteria": "pain <=5/10, baseline next morning"
+    },
+    {
+     "step": 2,
+     "prescription": "add hills",
+     "criteria": "flat running settles by next morning"
+    }
+   ]
+  },
+  "interactions": [
+   {
+    "with_id": "hip_oa",
+    "change": "both like strength; OA tolerates range work, but keep the adduction cap"
+   }
+  ],
+  "evidence_grade": "A",
+  "sources": [
+   "Mellor R et al. BMJ 2018 (LEAP RCT: education plus exercise 77.3% success at 8 weeks vs 58.5% injection vs 29.4% wait-and-see)"
+  ]
+ },
+ {
+  "id": "hip_fais",
+  "chip_label": "Front-of-hip pinch in deep squats",
+  "clinical_name": "Femoroacetabular impingement syndrome (FAIS)",
+  "region": "hip_thigh",
+  "category": "CHRONIC_RECURRENT",
+  "parent_id": "hip_pain",
+  "one_liner": "Risk lives in deep hip flexion with the thigh turned in, as at the bottom of a deep squat or leg press.",
+  "self_id_cues": [
+   "I get a pinch at the front of my hip at the bottom of a squat",
+   "Sitting low or bringing my knee to my chest hurts",
+   "It sits deep in the groin rather than on the outside"
+  ],
+  "core_cue": "Build hip strength for at least 3 months and limit depth to where the pinch starts.",
+  "warmup": [
+   {
+    "exercise": "glute_bridge",
+    "dose": "1x10",
+    "note": "controlled"
+   },
+   {
+    "exercise": "box_squat_bodyweight",
+    "dose": "1x10",
+    "note": "stop above the pinch"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "hip_abduction_strength",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "glute_bridge",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "box_squat",
+    "sets": "3",
+    "reps": "8-12",
+    "frequency": "2-3x/wk",
+    "placement": "main"
+   },
+   {
+    "exercise": "trunk_strength",
+    "sets": "3",
+    "reps": "20-30s",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "hip_flex_deep_loaded",
+    "mechanism": "deep loaded hip flexion pinches the front of the joint, worse with the thigh turned in",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "squat",
+    "substitute": "squat+rom:pin",
+    "note": "box or pin height above the pinch"
+   },
+   {
+    "exercise": "transformer_high_bar",
+    "substitute": "transformer_high_bar+rom:pin",
+    "note": "set depth above the pinch"
+   },
+   {
+    "exercise": "leg_press",
+    "substitute": "leg_press+rom:partial",
+    "note": "stop before the hip pinches"
+   },
+   {
+    "exercise": "hack",
+    "substitute": "hack+rom:partial",
+    "note": "shorter range at the bottom"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Depth is set by your hip today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Stop above the pinch. Knees out, not in."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10 or worse next morning? Reduce depth or load."
+   }
+  ],
+  "red_flags": [
+   "Locking or catching in the hip",
+   "Groin pain at night",
+   "Groin pain on weight-bearing that is getting worse"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "settle irritability"
+    ],
+    "exercises": [
+     {
+      "exercise": "isometric_hip_abduction",
+      "sets": "4-5",
+      "reps": "30-45s",
+      "frequency": "daily"
+     },
+     {
+      "exercise": "walking",
+      "sets": "1",
+      "reps": "10-30 min",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "pain <=3/10 on the provoking squat depth"
+    ],
+    "duration": "0-2 wk"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "normal pain-free range short of the pinch"
+    ],
+    "exercises": [
+     {
+      "exercise": "active_hip_range",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "range comparable to the other side short of the pinch"
+    ],
+    "duration": "1-3 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "hip and trunk strength"
+    ],
+    "exercises": [
+     {
+      "exercise": "hip_abduction_strength",
+      "sets": "3-4",
+      "reps": "8-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "glute_bridge",
+      "sets": "3-4",
+      "reps": "8-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "box_squat",
+      "sets": "3-4",
+      "reps": "8-12",
+      "frequency": "3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "24-h rule holds at 2 load steps"
+    ],
+    "duration": "3-12 wk (at least 3 months of hip strength work)"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "usual lifts at a tolerated depth"
+    ],
+    "exercises": [
+     {
+      "exercise": "squat_to_tolerated_depth",
+      "sets": "3",
+      "reps": "5-8",
+      "frequency": "2-3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "pain <=3/10 at depth, no next-day flare"
+    ],
+    "duration": "4-12 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "hip_strength_circuit",
+      "sets": "2-3",
+      "reps": "10-15",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": {
+   "volume": "app default: hold, or cut to a level where pain settles by next morning",
+   "surface": "app default: no restriction",
+   "pace": "app default: easy before fast",
+   "hills": "app default: uphill raises hip flexion; add after flat running is comfortable",
+   "intervals": "app default: after easy running is comfortable",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "easy continuous runs (app default)",
+     "criteria": "pain <=5/10, baseline next morning"
+    },
+    {
+     "step": 2,
+     "prescription": "add hills and intervals, one at a time (app default)",
+     "criteria": "no next-day flare for 2 weeks"
+    }
+   ]
+  },
+  "interactions": [
+   {
+    "with_id": "kn_pfp",
+    "change": "both like hip strength; FAIS limits deep hip flexion, so take the shallower depth"
+   },
+   {
+    "with_id": "lb_chronic_nonspecific",
+    "change": "limit deep hip flexion; hinge from the hips within range"
+   }
+  ],
+  "evidence_grade": "B",
+  "sources": [
+   "Kemp et al. 2020 consensus (FAI syndrome, physiotherapist-led treatment)"
+  ]
+ },
+ {
+  "id": "thigh_hamstring_strain",
+  "chip_label": "Pulled hamstring",
+  "clinical_name": "Hamstring strain injury",
+  "region": "hip_thigh",
+  "category": "ACUTE",
+  "parent_id": "thigh_strain",
+  "one_liner": "Risk lives in fast running and long-length hamstring loading, like the late swing of a sprint or a heavy RDL at stretch.",
+  "self_id_cues": [
+   "Sharp grab at the back of my thigh while sprinting",
+   "It hurts to stretch it or bend my knee against resistance",
+   "Bruising lower down the leg"
+  ],
+  "core_cue": "Build hamstring strength at length gradually; sprinting is the final exam. No aggressive stretching early.",
+  "warmup": [
+   {
+    "exercise": "glute_bridge",
+    "dose": "1x10",
+    "note": "pain-free"
+   },
+   {
+    "exercise": "bridge_walkout",
+    "dose": "1x6",
+    "note": "only as far as pain-free"
+   },
+   {
+    "exercise": "a_skip",
+    "dose": "2x10 m",
+    "note": "once running is back"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "nordic_hamstring_curl",
+    "sets": "2-3",
+    "reps": "3-6",
+    "frequency": "2-3x/wk (prevention phase)",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "rdl_pain_free_length",
+    "sets": "3",
+    "reps": "8-10",
+    "frequency": "2x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "glute_bridge",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "hamstring_isometric",
+    "sets": "3-5",
+    "reps": "30s",
+    "frequency": "daily early on",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "hamstring_lengthened_loaded",
+    "mechanism": "heavy loading at full stretch before the strain has healed",
+    "level": "core"
+   },
+   {
+    "movement": "run_hills_sprints",
+    "mechanism": "max sprinting before pain-free progressive runs",
+    "level": "core"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "rdl",
+    "substitute": "hip_thrust",
+    "note": "early on; return to RDL at a reduced, pain-free range"
+   },
+   {
+    "exercise": "good_morning",
+    "substitute": "hip_thrust",
+    "note": "hip extension without long-length loading"
+   },
+   {
+    "exercise": "nordic",
+    "substitute": "lying_curl",
+    "note": "until a band-assisted Nordic is pain-free"
+   },
+   {
+    "exercise": "ghr",
+    "substitute": "leg_curl",
+    "note": "shorter-length hamstring work early on"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Hamstring check: pain-free bridge and walk?"
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Long-length hamstring load. Stay in your pain-free range."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 2/10 in the strain? Back off."
+   }
+  ],
+  "red_flags": [
+   "A pop with large bruising or a palpable gap (possible avulsion)",
+   "Sciatic-type tingling down the leg",
+   "Inability to walk normally"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "settle pain",
+     "normal walking"
+    ],
+    "exercises": [
+     {
+      "exercise": "walking",
+      "sets": "1",
+      "reps": "10-20 min",
+      "frequency": "daily"
+     },
+     {
+      "exercise": "hamstring_isometric",
+      "sets": "4-5",
+      "reps": "30s",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "pain-free walking and bridge"
+    ],
+    "duration": "days 0-5"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "pain-free range"
+    ],
+    "exercises": [
+     {
+      "exercise": "active_hamstring_range",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "range comparable to the other side without pain"
+    ],
+    "duration": "1-2 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "hamstring strength, progressively longer length"
+    ],
+    "exercises": [
+     {
+      "exercise": "glute_bridge",
+      "sets": "3",
+      "reps": "10-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "rdl_pain_free_length",
+      "sets": "3",
+      "reps": "8-10",
+      "frequency": "2-3x/wk"
+     },
+     {
+      "exercise": "nordic_hamstring_curl",
+      "sets": "2-3",
+      "reps": "3-6",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "pain <=2/10 in the strain, 24-h rule holds"
+    ],
+    "duration": "1-4 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "graded running to max speed"
+    ],
+    "exercises": [
+     {
+      "exercise": "tempo_run_60_80",
+      "sets": "4-6",
+      "reps": "60-100 m",
+      "frequency": "2-3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "pain-free at each speed step before the next"
+    ],
+    "duration": "3-8 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "nordic_hamstring_curl",
+      "sets": "2-3",
+      "reps": "3-6",
+      "frequency": "1-2x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": {
+   "volume": "reintroduce at easy pace",
+   "surface": "flat first",
+   "pace": "easy, then speed in about 10% steps (app default)",
+   "hills": "after flat running at speed is pain-free",
+   "intervals": "tempo at 60-80% before sprints",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "easy runs on flat ground",
+     "criteria": "pain-free walking and bridge"
+    },
+    {
+     "step": 2,
+     "prescription": "tempo runs at 60-80% effort",
+     "criteria": "easy runs pain-free"
+    },
+    {
+     "step": 3,
+     "prescription": "progress speed in about 10% steps to max sprint (app default)",
+     "criteria": "no pain over 2/10 in the strain at each step"
+    }
+   ]
+  },
+  "interactions": [
+   {
+    "with_id": "hip_proximal_hamstring",
+    "change": "limit deep hip flexion with load"
+   }
+  ],
+  "evidence_grade": "B",
+  "sources": [
+   "van Dyk N, Behan FP, Whiteley R. Br J Sports Med 2019 (meta-analysis of 8,459 athletes; Nordics cut hamstring injuries by 51%). Rehab sequence grade C."
+  ]
+ },
+ {
+  "id": "hip_dysplasia",
+  "chip_label": "Shallow hip socket",
+  "clinical_name": "Hip dysplasia (borderline/mild)",
+  "region": "hip_thigh",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "hip_pain",
+  "one_liner": "Risk lives in loaded extreme hip extension and wide external rotation, where a shallow socket gives the joint less cover.",
+  "self_id_cues": [
+   "A doctor said my hip socket is shallow",
+   "Long lunges or splits make my hip feel unsteady",
+   "My hip feels better with strength work than with stretching"
+  ],
+  "core_cue": "Keep loaded hip extension and wide external rotation controlled; strength over stretch.",
+  "warmup": [
+   {
+    "exercise": "glute_bridge",
+    "dose": "1x10",
+    "note": "stop at neutral hip extension"
+   },
+   {
+    "exercise": "split_squat_short_stride",
+    "dose": "1x8 each side",
+    "note": "rehearse the shorter stride"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "glute_strength",
+    "sets": "3",
+    "reps": "8-15",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "core_strength",
+    "sets": "3",
+    "reps": "20-30s",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Short strides and controlled hip extension today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Lunges: shorter stride, no deep stretch at the back hip."
+   }
+  ],
+  "red_flags": [
+   "Catching or locking in the hip"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "hip_replacement",
+  "chip_label": "Hip replacement",
+  "clinical_name": "Total hip arthroplasty (long-term)",
+  "region": "hip_thigh",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "hip_pain",
+  "one_liner": "Risk lives in the positions your surgeon restricted, such as deep hip bending with the knee turned in, and in high-impact running.",
+  "self_id_cues": [
+   "I've had a hip replacement",
+   "My surgeon gave me position rules",
+   "I've been cleared to train"
+  ],
+  "core_cue": "Follow your surgeon's position rules; strength, cycling and walking are the backbone.",
+  "warmup": [
+   {
+    "exercise": "stationary_bike",
+    "dose": "3 min",
+    "note": "easy"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "lower_body_strength",
+    "sets": "3",
+    "reps": "8-15",
+    "frequency": "2-3x/wk",
+    "placement": "main"
+   },
+   {
+    "exercise": "cycling",
+    "sets": "1",
+    "reps": "20-40 min",
+    "frequency": "2-3x/wk",
+    "placement": "off_day"
+   },
+   {
+    "exercise": "balance_work",
+    "sets": "3",
+    "reps": "30s each side",
+    "frequency": "3x/wk",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "hip_flex_deep_loaded",
+    "mechanism": "deep hip flexion, especially with internal rotation, is restricted after some approaches",
+    "level": "caution"
+   },
+   {
+    "movement": "run_impact",
+    "mechanism": "high-impact running unless your surgeon has cleared it",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "squat",
+    "substitute": "squat+rom:pin",
+    "note": "box-squat depth within your surgeon's rules"
+   },
+   {
+    "exercise": "leg_press",
+    "substitute": "leg_press+rom:partial",
+    "note": "stop above your restricted hip angle"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Surgeon's position rules apply today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Deep hip bend. Stay inside your surgeon's limits."
+   }
+  ],
+  "red_flags": [
+   "Sudden pain, a clunk or a sense of dislocation",
+   "Fever or redness at the wound"
+  ],
+  "rehab_phases": null,
+  "running": {
+   "volume": "replace running with cycling or elliptical unless your surgeon has cleared it",
+   "surface": "if cleared: flat, even",
+   "pace": "if cleared: easy",
+   "hills": "if cleared: add last",
+   "intervals": "if cleared: add last",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "cycling or elliptical",
+     "criteria": "default until surgeon clearance"
+    },
+    {
+     "step": 2,
+     "prescription": "easy running on flat ground, if cleared",
+     "criteria": "surgeon clearance; no pain at the hip next morning"
+    }
+   ]
+  },
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026",
+   "NICE NG226 (osteoarthritis guidance supports exercise in general)"
+  ]
+ },
+ {
+  "id": "kn_pain",
+  "chip_label": "Knee pain",
+  "clinical_name": "Knee pain (umbrella)",
+  "region": "knee",
+  "category": "UMBRELLA",
+  "parent_id": null,
+  "one_liner": "Risk lives in loading a sore knee harder, deeper or faster than it is used to. Depth, jumps and sudden volume are the usual culprits.",
+  "self_id_cues": [
+   "My knee hurts when I squat, jump or take stairs",
+   "I'm not sure exactly what it is",
+   "It is worse after more or faster running than usual"
+  ],
+  "core_cue": "Let pain set your depth and pace. A little ache (up to 3/10) that settles by next morning is fine.",
+  "warmup": [
+   {
+    "exercise": "stationary_bike",
+    "dose": "3-5 min",
+    "note": "easy"
+   },
+   {
+    "exercise": "box_squat_bodyweight",
+    "dose": "1x10",
+    "note": "to a comfortable depth"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "hip_abduction_strength",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "leg_press_tolerable_range",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "main"
+   },
+   {
+    "exercise": "leg_extension_tolerable_arc",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "knee_flex_deep_loaded",
+    "mechanism": "deep loaded knee bend past what the knee tolerates today",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "squat",
+    "substitute": "squat+rom:pin",
+    "note": "pin or box sets a depth the knee tolerates"
+   },
+   {
+    "exercise": "hack",
+    "substitute": "leg_press",
+    "note": "range you can control"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Knee day: depth is set by your knee today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Stop at the depth that stays at or under 3/10."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 3/10, or worse tomorrow morning? Reduce depth or load."
+   }
+  ],
+  "red_flags": [
+   "Locking or giving way",
+   "A hot, swollen knee or fever",
+   "Swelling within hours of a twisting injury"
+  ],
+  "rehab_phases": null,
+  "running": {
+   "volume": "reduce to a level where pain stays at or under 3/10 and settles by next morning (app default)",
+   "surface": "flat and even first",
+   "pace": "easy before fast",
+   "hills": "hold downhill running until easy flat runs are comfortable",
+   "intervals": "after easy volume is tolerated",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "easy continuous runs on the flat",
+     "criteria": "pain at or under 3/10 during, back to baseline next morning"
+    },
+    {
+     "step": 2,
+     "prescription": "build volume by small weekly steps",
+     "criteria": "24-hour rule holds for 2 weeks"
+    },
+    {
+     "step": 3,
+     "prescription": "add hills and faster running",
+     "criteria": "full usual volume tolerated"
+    }
+   ]
+  },
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (umbrella; children's sources apply), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "kn_pfp",
+  "chip_label": "Pain around/behind kneecap",
+  "clinical_name": "Patellofemoral pain",
+  "region": "knee",
+  "category": "CHRONIC_RECURRENT",
+  "parent_id": "kn_pain",
+  "one_liner": "Risk lives in loading the kneecap at depth: deep knee bend under load, stairs, and long downhills.",
+  "self_id_cues": [
+   "I ache around or behind my kneecap",
+   "Sitting with my knees bent in the cinema hurts",
+   "Going down stairs and squatting are the worst"
+  ],
+  "core_cue": "Strengthen hips and thighs and let pain set your depth. A little ache (up to 3/10) that settles is fine.",
+  "warmup": [
+   {
+    "exercise": "banded_side_step",
+    "dose": "2x10 each way",
+    "note": "knees in line with toes"
+   },
+   {
+    "exercise": "box_squat_bodyweight",
+    "dose": "1x10",
+    "note": "to a pain-free depth"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "side_lying_hip_abduction",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk, at least 6 weeks",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "clamshell",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk, at least 6 weeks",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "hip_thrust",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk, at least 6 weeks",
+    "placement": "main"
+   },
+   {
+    "exercise": "leg_press_tolerable_range",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk, at least 6 weeks",
+    "placement": "main"
+   },
+   {
+    "exercise": "leg_extension_tolerable_arc",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk, at least 6 weeks",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "run_hills_sprints",
+    "mechanism": "long or high-volume downhill running loads the kneecap repeatedly",
+    "level": "core"
+   },
+   {
+    "movement": "knee_flex_deep_loaded",
+    "mechanism": "kneecap load rises with depth; loading through a tolerable range is the treatment, so only past the pain-free depth",
+    "level": "caution"
+   },
+   {
+    "movement": "run_volume_spike",
+    "mechanism": "long runs well above usual distance",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "squat",
+    "substitute": "squat+rom:pin",
+    "note": "box or pin sets a pain-free depth"
+   },
+   {
+    "exercise": "transformer_high_bar",
+    "substitute": "transformer_high_bar+rom:pin",
+    "note": "box or pin sets a pain-free depth"
+   },
+   {
+    "exercise": "bulgarian",
+    "substitute": "bulgarian+rom:partial",
+    "note": "short stride, stop at pain-free depth"
+   },
+   {
+    "exercise": "hack",
+    "substitute": "hack+rom:partial",
+    "note": "limit to the tolerable range"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Depth is set by your knee today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Stop at your pain-free depth."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 3/10? Reduce depth or load."
+   }
+  ],
+  "red_flags": [
+   "Locking or giving way",
+   "A swollen, hot knee",
+   "Pain after a twisting injury with swelling within hours"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "calm the knee"
+    ],
+    "exercises": [
+     {
+      "exercise": "side_lying_hip_abduction",
+      "sets": "3",
+      "reps": "10-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "quad_isometric_pain_free",
+      "sets": "4-5",
+      "reps": "30-45s",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "stairs pain at or under 3/10"
+    ],
+    "duration": "0-2 wk"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "not usually needed; fold into protect"
+    ],
+    "exercises": [],
+    "progression_criteria": [
+     "full pain-free knee range"
+    ],
+    "duration": "0 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "combined hip and knee strength"
+    ],
+    "exercises": [
+     {
+      "exercise": "hip_thrust",
+      "sets": "3",
+      "reps": "10-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "leg_press_tolerable_range",
+      "sets": "3",
+      "reps": "10-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "leg_extension_tolerable_arc",
+      "sets": "3",
+      "reps": "10-15",
+      "frequency": "3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "squat depth improves without a flare",
+     "RPE 7 sets tolerated"
+    ],
+    "duration": "2-8 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "running and plyometrics"
+    ],
+    "exercises": [
+     {
+      "exercise": "easy_running",
+      "sets": "1",
+      "reps": "progress frequency, then intensity, then duration",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "low_box_jump",
+      "sets": "3",
+      "reps": "5",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "pain at or under 3/10, no next-day flare"
+    ],
+    "duration": "6-12 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "hip_and_knee_strength",
+      "sets": "3",
+      "reps": "10-15",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": {
+   "volume": "reduce to a level where pain stays at or under 3/10",
+   "surface": "flat surfaces preferred",
+   "pace": "easy; a modest step-rate increase may help (coaching default, not a CPG recommendation)",
+   "hills": "delay downhill running",
+   "intervals": "after volume is tolerated; progress frequency, then intensity, then duration",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "easy flat runs at reduced volume",
+     "criteria": "pain at or under 3/10 during, settles by next morning"
+    },
+    {
+     "step": 2,
+     "prescription": "increase frequency, then intensity, then duration",
+     "criteria": "no flare for 2 weeks (app default)"
+    },
+    {
+     "step": 3,
+     "prescription": "reintroduce downhill running",
+     "criteria": "usual flat volume pain-free"
+    }
+   ]
+  },
+  "interactions": [
+   {
+    "with_id": "kn_oa",
+    "change": "same plan, slower progression"
+   },
+   {
+    "with_id": "hip_fais",
+    "change": "both favour hip strength; FAIS limits deep hip flexion, so take the shallower depth"
+   },
+   {
+    "with_id": "kn_patellar_tendinopathy",
+    "change": "depth set by the lower pain cap"
+   }
+  ],
+  "evidence_grade": "A",
+  "sources": [
+   "Willy RW et al. Patellofemoral Pain. JOSPT 2019 CPG",
+   "JOSPT 2018 Perspectives: hip abductors, lateral rotators and extensors plus knee, 3x/wk for at least 6 weeks"
+  ]
+ },
+ {
+  "id": "kn_patellar_tendinopathy",
+  "chip_label": "Pain just below kneecap jumping",
+  "clinical_name": "Patellar tendinopathy",
+  "region": "knee",
+  "category": "CHRONIC_RECURRENT",
+  "parent_id": "kn_pain",
+  "one_liner": "Risk lives in fast, springy loading of the tendon just below the kneecap: jumps, bounds and quick changes of direction.",
+  "self_id_cues": [
+   "My pain is a pinpoint just under my kneecap",
+   "It hurts at the start of a session, eases, then is worse the next day",
+   "Jumping or a deep single-leg squat brings it on"
+  ],
+  "core_cue": "Slow and heavy is your friend; fast and springy is earned. Keep tendon pain at or under 3/10 and back to baseline by morning.",
+  "warmup": [
+   {
+    "exercise": "spanish_squat_isometric",
+    "dose": "2x30-45s",
+    "note": "or wall sit; moderate effort"
+   },
+   {
+    "exercise": "box_squat_bodyweight",
+    "dose": "1x10",
+    "note": "comfortable depth"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "spanish_squat_isometric",
+    "sets": "4-5",
+    "reps": "30-45s",
+    "frequency": "daily when irritable",
+    "placement": "warmup"
+   },
+   {
+    "exercise": "leg_extension_isometric",
+    "sets": "4-5",
+    "reps": "30-45s",
+    "frequency": "daily when irritable",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "leg_press_slow",
+    "sets": "3-4",
+    "reps": "8-15",
+    "frequency": "3x/wk",
+    "placement": "main"
+   },
+   {
+    "exercise": "split_squat_slow",
+    "sets": "3-4",
+    "reps": "8-15",
+    "frequency": "3x/wk",
+    "placement": "main"
+   },
+   {
+    "exercise": "calf_and_hip_strength",
+    "sets": "3",
+    "reps": "10-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "plyo_jump_landing",
+    "mechanism": "jumps, depth drops and bounding store and release high tendon energy",
+    "level": "core"
+   },
+   {
+    "movement": "run_speed_cutting",
+    "mechanism": "high-volume sprinting or cutting while irritable",
+    "level": "core"
+   },
+   {
+    "movement": "run_hills_sprints",
+    "mechanism": "sudden spikes in hill volume; downhill acts like a jump load",
+    "level": "caution"
+   },
+   {
+    "movement": "knee_flex_deep_loaded",
+    "mechanism": "deep loading beyond what keeps tendon pain at or under 3/10; slow heavy loading is the treatment, so only past that depth",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "squat",
+    "substitute": "squat+rom:pin",
+    "note": "depth that keeps pain at or under 3/10"
+   },
+   {
+    "exercise": "transformer_high_bar",
+    "substitute": "transformer_high_bar+rom:pin",
+    "note": "depth that keeps pain at or under 3/10"
+   },
+   {
+    "exercise": "sissy",
+    "substitute": "leg_ext",
+    "note": "slow, heavy, through a tolerable arc"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Tendon check: rate a single-leg decline squat 0-10."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Tendon-loading move. Jumps are earned at stage 3."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10, or worse next morning? Drop back one stage."
+   }
+  ],
+  "red_flags": [
+   "Sudden pop with loss of the ability to straighten the knee",
+   "Swelling with heat and fever",
+   "Night pain unrelated to activity"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "settle pain"
+    ],
+    "exercises": [
+     {
+      "exercise": "spanish_squat_isometric",
+      "sets": "5",
+      "reps": "45s at 70% effort",
+      "frequency": "daily"
+     },
+     {
+      "exercise": "leg_extension_isometric",
+      "sets": "5",
+      "reps": "45s at 70% effort",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "single-leg decline squat pain at or under 3/10"
+    ],
+    "duration": "0-2 wk"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "range is rarely lost; folds into protect"
+    ],
+    "exercises": [],
+    "progression_criteria": [
+     "full knee range"
+    ],
+    "duration": "0 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "tendon load capacity (isotonic)"
+    ],
+    "exercises": [
+     {
+      "exercise": "leg_press_slow",
+      "sets": "3-4",
+      "reps": "15 progressing to 6-8 heavy",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "split_squat_slow",
+      "sets": "3-4",
+      "reps": "15 progressing to 6-8 heavy",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "leg_extension",
+      "sets": "3-4",
+      "reps": "15 progressing to 6-8 heavy",
+      "frequency": "3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "24-hour pain stable at the higher load"
+    ],
+    "duration": "2-12 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "energy storage"
+    ],
+    "exercises": [
+     {
+      "exercise": "pogo_hop",
+      "sets": "3",
+      "reps": "10",
+      "frequency": "2-3x/wk, non-heavy days"
+     },
+     {
+      "exercise": "box_jump",
+      "sets": "3",
+      "reps": "5",
+      "frequency": "2-3x/wk, non-heavy days"
+     },
+     {
+      "exercise": "bounding",
+      "sets": "2-3",
+      "reps": "5-8",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "single-leg hop pain at or under 3/10 with no next-day flare"
+    ],
+    "duration": "8-20 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "heavy_slow_leg_work",
+      "sets": "3",
+      "reps": "6-8",
+      "frequency": "2x/wk"
+     },
+     {
+      "exercise": "sport_specific_plyometrics",
+      "sets": "2-3",
+      "reps": "5",
+      "frequency": "1-2x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": {
+   "volume": "usually tolerated; maintain if the 24-hour rule holds",
+   "surface": "flat",
+   "pace": "easy",
+   "hills": "hold until stage 3; treat downhill as a jump-like load",
+   "intervals": "hold until stage 3",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "easy continuous runs on the flat",
+     "criteria": "pain at or under 3/10 during, baseline next morning"
+    },
+    {
+     "step": 2,
+     "prescription": "add strides, then intervals and hills",
+     "criteria": "stage 3 (energy storage) reached"
+    }
+   ]
+  },
+  "interactions": [
+   {
+    "with_id": "kn_pfp",
+    "change": "both favour hip and quad strength; PFP may limit depth, so let the lower pain cap set depth"
+   },
+   {
+    "with_id": "an_achilles_mid",
+    "change": "stage plyometrics for the slower-recovering tendon"
+   }
+  ],
+  "evidence_grade": "B",
+  "sources": [
+   "Breda SJ et al. Br J Sports Med 2021;55(9):501-509",
+   "Silbernagel KG et al. Am J Sports Med 2007. doi:10.1177/0363546506298279"
+  ]
+ },
+ {
+  "id": "kn_acl_deficient",
+  "chip_label": "Torn ACL, never repaired",
+  "clinical_name": "ACL-deficient knee",
+  "region": "knee",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "kn_pain",
+  "one_liner": "Risk lives in planting and pivoting: cutting, twisting on a loaded knee and landing without control.",
+  "self_id_cues": [
+   "I tore my ACL and it was never reconstructed",
+   "My knee can feel like it shifts when I twist or change direction",
+   "I avoid sports with sudden turns"
+  ],
+  "core_cue": "Plant and cut only once strength and hop tests support it; strong hamstrings guard the knee.",
+  "warmup": [
+   {
+    "exercise": "hamstring_curl_light",
+    "dose": "1x12",
+    "note": "controlled"
+   },
+   {
+    "exercise": "single_leg_balance",
+    "dose": "2x30s each",
+    "note": "knee soft and in line with toes"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "quad_strength",
+    "sets": "3",
+    "reps": "8-12",
+    "frequency": "2-3x/wk",
+    "placement": "main"
+   },
+   {
+    "exercise": "hamstring_strength",
+    "sets": "3",
+    "reps": "8-12",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "neuromuscular_control_drills",
+    "sets": "2-3",
+    "reps": "30s",
+    "frequency": "3x/wk",
+    "placement": "warmup"
+   },
+   {
+    "exercise": "straight_line_running",
+    "sets": "1",
+    "reps": "easy",
+    "frequency": "as tolerated",
+    "placement": "off_day"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "run_speed_cutting",
+    "mechanism": "pivoting and cutting shift the tibia that the missing ACL would restrain",
+    "level": "core"
+   },
+   {
+    "movement": "plyo_jump_landing",
+    "mechanism": "uncontrolled or single-leg landings without clearance",
+    "level": "caution"
+   }
+  ],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Straight lines today; no pivots or cuts."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Land on both feet, knees in line with toes."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Any giving way? Stop the drill and note it."
+   }
+  ],
+  "red_flags": [
+   "Repeated giving way",
+   "Locking (possible meniscal tear)"
+  ],
+  "rehab_phases": null,
+  "running": {
+   "volume": "straight-line running as tolerated",
+   "surface": "even surfaces",
+   "pace": "no restriction in a straight line",
+   "hills": "no restriction",
+   "intervals": "straight-line only; no cutting or shuttle drills without clearance",
+   "return_to_running": []
+  },
+  "interactions": [
+   {
+    "with_id": "kn_meniscus_degen",
+    "change": "locking points to the meniscus; escalate"
+   }
+  ],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "kn_osgood_residual",
+  "chip_label": "Bony lump below kneecap",
+  "clinical_name": "Osgood-Schlatter residual ossicle",
+  "region": "knee",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "kn_pain",
+  "one_liner": "Risk lives in direct pressure on the bump below the kneecap, mainly from kneeling. Everything else is fair game.",
+  "self_id_cues": [
+   "I have a bony lump just below my kneecap",
+   "I had Osgood-Schlatter as a teenager",
+   "Kneeling on it hurts but squatting is fine"
+  ],
+  "core_cue": "Kneel on a pad or avoid kneeling; everything else is fair game.",
+  "warmup": [
+   {
+    "exercise": "standard_warmup",
+    "dose": "as usual",
+    "note": "no special warm-up needed"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "quad_strength",
+    "sets": "3",
+    "reps": "8-12",
+    "frequency": "2-3x/wk",
+    "placement": "main"
+   },
+   {
+    "exercise": "leg_press",
+    "sets": "3",
+    "reps": "8-12",
+    "frequency": "2-3x/wk",
+    "placement": "main"
+   }
+  ],
+  "avoid": [],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Pad under the knee for any kneeling work."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Kneeling move: use a pad or a standing version."
+   }
+  ],
+  "red_flags": [
+   "Acute pain or swelling over the bump"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "kn_replacement",
+  "chip_label": "Knee replacement",
+  "clinical_name": "Total knee arthroplasty (long-term)",
+  "region": "knee",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "kn_pain",
+  "one_liner": "Risk lives in repeated high impact on the implant and in positions your surgeon has restricted.",
+  "self_id_cues": [
+   "I have had a knee replacement",
+   "My surgeon gave me rules about certain positions",
+   "I have been told to avoid high-impact running"
+  ],
+  "core_cue": "Follow your surgeon's position rules; strength, cycling and walking are the backbone.",
+  "warmup": [
+   {
+    "exercise": "stationary_bike",
+    "dose": "3 min",
+    "note": "easy"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "progressive_strength",
+    "sets": "3",
+    "reps": "8-12",
+    "frequency": "2-3x/wk",
+    "placement": "main"
+   },
+   {
+    "exercise": "cycling",
+    "sets": "1",
+    "reps": "20-40 min",
+    "frequency": "2-3x/wk",
+    "placement": "off_day"
+   },
+   {
+    "exercise": "balance_training",
+    "sets": "3",
+    "reps": "30s",
+    "frequency": "3x/wk",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "run_impact",
+    "mechanism": "high-impact running unless your surgeon has cleared it",
+    "level": "core"
+   },
+   {
+    "movement": "knee_flex_deep_loaded",
+    "mechanism": "deep loaded knee bend beyond the range your surgeon allows",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "squat",
+    "substitute": "squat+rom:pin",
+    "note": "box squat to a set depth"
+   },
+   {
+    "exercise": "transformer_high_bar",
+    "substitute": "transformer_high_bar+rom:pin",
+    "note": "box squat to a set depth"
+   },
+   {
+    "exercise": "goblet",
+    "substitute": "goblet+rom:pin",
+    "note": "box squat to a set depth"
+   },
+   {
+    "exercise": "hack",
+    "substitute": "leg_press",
+    "note": "range your surgeon allows"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Your surgeon's position rules come first today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Squat to a box at your allowed depth."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Sudden pain or a clunk? Stop and contact your surgeon."
+   }
+  ],
+  "red_flags": [
+   "Sudden pain or a clunk",
+   "A sense of instability",
+   "Fever or wound redness"
+  ],
+  "rehab_phases": null,
+  "running": {
+   "volume": "replace running with cycling or elliptical unless your surgeon has cleared running",
+   "surface": "even and forgiving if cleared",
+   "pace": "easy if cleared",
+   "hills": "only if cleared",
+   "intervals": "only if cleared",
+   "return_to_running": []
+  },
+  "interactions": [
+   {
+    "with_id": "kn_oa",
+    "change": "general osteoarthritis exercise guidance applies to the other joints"
+   }
+  ],
+  "evidence_grade": "D",
+  "sources": [
+   "NICE NG226 Osteoarthritis (exercise supported in general)",
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "an_pain",
+  "chip_label": "Ankle pain / stiffness",
+  "clinical_name": "Ankle/foot pain (umbrella)",
+  "region": "ankle_foot_shin",
+  "category": "UMBRELLA",
+  "parent_id": null,
+  "one_liner": "Risk lives in springy, high-volume or end-range loading of the ankle and foot beyond what they have been trained for.",
+  "self_id_cues": [
+   "My ankle or foot hurts when I run, jump or squat deep",
+   "I'm not sure exactly what it is",
+   "It is stiff first thing in the morning"
+  ],
+  "core_cue": "Keep loading the calf and foot steadily; build volume before speed and springiness.",
+  "warmup": [
+   {
+    "exercise": "ankle_circles",
+    "dose": "1x10 each way",
+    "note": "easy range"
+   },
+   {
+    "exercise": "calf_raise_double",
+    "dose": "1x15",
+    "note": "slow"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "calf_raise_single",
+    "sets": "3",
+    "reps": "12-15",
+    "frequency": "every other day",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "single_leg_balance",
+    "sets": "3",
+    "reps": "30s",
+    "frequency": "daily",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "ankle_df_deep_loaded",
+    "mechanism": "shin far forward over a sore ankle under load",
+    "level": "caution"
+   },
+   {
+    "movement": "run_volume_spike",
+    "mechanism": "foot and ankle load jumps faster than tissue adapts",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "squat",
+    "substitute": "squat+rom:pin",
+    "note": "stop before the ankle runs out of range"
+   },
+   {
+    "exercise": "hack",
+    "substitute": "leg_press",
+    "note": "less ankle bend"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Ankle check: morning stiffness 0-10?"
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Ankle-loading move: keep it in a range you control."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10, or worse next morning? Step back."
+   }
+  ],
+  "red_flags": [
+   "Sudden pop or being unable to rise on tiptoe",
+   "Unable to take 4 steps",
+   "Calf swelling, warmth and redness"
+  ],
+  "rehab_phases": null,
+  "running": {
+   "volume": "hold or reduce to a level where the 24-hour rule holds",
+   "surface": "flat and even",
+   "pace": "easy before fast",
+   "hills": "last",
+   "intervals": "after easy volume is pain-free",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "easy flat runs at reduced volume",
+     "criteria": "pain at or under 3/10, back to baseline next morning"
+    },
+    {
+     "step": 2,
+     "prescription": "build volume by small weekly steps",
+     "criteria": "24-hour rule holds (app default)"
+    },
+    {
+     "step": 3,
+     "prescription": "add speed, hills and trail",
+     "criteria": "full usual volume tolerated"
+    }
+   ]
+  },
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (umbrella; children's sources apply), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "shin_pain",
+  "chip_label": "Shin pain",
+  "clinical_name": "Exercise-related leg pain (umbrella)",
+  "region": "ankle_foot_shin",
+  "category": "UMBRELLA",
+  "parent_id": null,
+  "one_liner": "Risk lives in repeated running impact, especially a sudden rise in volume.",
+  "self_id_cues": [
+   "My shins hurt when I run",
+   "I'm not sure exactly what it is",
+   "It started after I ran more than usual"
+  ],
+  "core_cue": "Cut running volume to what your shins tolerate and build back slowly. Pain at one spot on the bone needs checking.",
+  "warmup": [
+   {
+    "exercise": "brisk_walk",
+    "dose": "5 min",
+    "note": "pain-free"
+   },
+   {
+    "exercise": "calf_raise_double",
+    "dose": "1x15",
+    "note": "pain-free"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "calf_raise_single",
+    "sets": "3",
+    "reps": "12-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "cycling_or_swimming",
+    "sets": "1",
+    "reps": "20-40 min",
+    "frequency": "in place of some runs",
+    "placement": "off_day"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "run_volume_spike",
+    "mechanism": "bone and soft tissue load rise faster than they adapt",
+    "level": "caution"
+   },
+   {
+    "movement": "run_impact",
+    "mechanism": "repeated impact on sore tissue",
+    "level": "caution"
+   }
+  ],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Shin check: any pain at one spot on the bone?"
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Pain at one spot on the bone? Stop running and get it checked."
+   }
+  ],
+  "red_flags": [
+   "Pain at one spot on the bone that is tender to press",
+   "Night pain",
+   "Numbness or a weak foot during runs"
+  ],
+  "rehab_phases": null,
+  "running": {
+   "volume": "reduce, then rebuild in small steps (10-20%/wk is a convention, not a validated threshold)",
+   "surface": "even, forgiving surfaces",
+   "pace": "easy",
+   "hills": "after volume is back",
+   "intervals": "after full volume returns",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "walk-run on the flat",
+     "criteria": "pain-free walking"
+    },
+    {
+     "step": 2,
+     "prescription": "continuous easy runs, volume first",
+     "criteria": "no site pain during or next morning"
+    },
+    {
+     "step": 3,
+     "prescription": "add speed",
+     "criteria": "full usual volume tolerated"
+    }
+   ]
+  },
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (umbrella; children's sources apply), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "an_achilles_mid",
+  "chip_label": "Achilles pain mid-tendon",
+  "clinical_name": "Midportion Achilles tendinopathy",
+  "region": "ankle_foot_shin",
+  "category": "CHRONIC_RECURRENT",
+  "parent_id": "an_pain",
+  "one_liner": "Risk lives in fast, springy calf loading, such as hops, sprints and hills, when it outpaces what the tendon has been trained for.",
+  "self_id_cues": [
+   "I have pain and thickening a few centimetres above my heel",
+   "It is stiff first thing in the morning",
+   "It eases as I warm up, then is worse later"
+  ],
+  "core_cue": "Keep loading the calf. Pain up to 5/10 during and after is OK if it settles by morning.",
+  "warmup": [
+   {
+    "exercise": "calf_raise_double",
+    "dose": "2x15",
+    "note": "slow"
+   },
+   {
+    "exercise": "calf_raise_single",
+    "dose": "1x10",
+    "note": "tolerable"
+   },
+   {
+    "exercise": "ankle_pogo",
+    "dose": "1x10",
+    "note": "only once in stage 3"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "calf_raise_single_straight_knee",
+    "sets": "3",
+    "reps": "15, progressing to 8 loaded",
+    "frequency": "every other day",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "calf_raise_single_bent_knee",
+    "sets": "3",
+    "reps": "15, progressing to 8 loaded",
+    "frequency": "every other day",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "seated_soleus_raise",
+    "sets": "3",
+    "reps": "12",
+    "frequency": "every other day",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "hip_and_quad_strength",
+    "sets": "3",
+    "reps": "8-12",
+    "frequency": "2-3x/wk",
+    "placement": "main"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "calf_plyo",
+    "mechanism": "hops, pogos and jump rope store energy in the tendon before stage 3",
+    "level": "core"
+   },
+   {
+    "movement": "run_hills_sprints",
+    "mechanism": "hill repeats and sprints load the Achilles hard while irritable",
+    "level": "core"
+   },
+   {
+    "movement": "run_volume_spike",
+    "mechanism": "sudden volume spikes or a switch to minimalist shoes exceed tendon capacity",
+    "level": "caution"
+   },
+   {
+    "movement": "plyo_jump_landing",
+    "mechanism": "box jumps load the tendon before it has been trained for it",
+    "level": "caution"
+   }
+  ],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Morning Achilles stiffness 0-10?"
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Plyometrics are earned in stage 3."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10, or worse next morning? Step back."
+   }
+  ],
+  "red_flags": [
+   "Sudden 'kicked in the heel' pop, unable to rise on tiptoe",
+   "Calf swelling, warmth and redness (rule out DVT)",
+   "Symptoms after a fluoroquinolone antibiotic"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "learn the pain-monitoring model"
+    ],
+    "exercises": [
+     {
+      "exercise": "calf_raise_double",
+      "sets": "3",
+      "reps": "15",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "10 single-leg raises tolerable"
+    ],
+    "duration": "1-2 wk"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "normal pain-free dorsiflexion (template default; not a separate phase in the protocol)"
+    ],
+    "exercises": [
+     {
+      "exercise": "knee_to_wall",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "symmetric range"
+    ],
+    "duration": "0-2 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "calf strength"
+    ],
+    "exercises": [
+     {
+      "exercise": "calf_raise_single",
+      "sets": "3",
+      "reps": "15",
+      "frequency": "daily"
+     },
+     {
+      "exercise": "calf_raise_eccentric",
+      "sets": "3",
+      "reps": "15",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "pain stays within the model"
+    ],
+    "duration": "2-5 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "loaded and fast calf work"
+    ],
+    "exercises": [
+     {
+      "exercise": "calf_raise_loaded",
+      "sets": "3",
+      "reps": "8-12",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "quick_rebound_calf_raise",
+      "sets": "3",
+      "reps": "10",
+      "frequency": "2x/wk"
+     },
+     {
+      "exercise": "pogo_hop",
+      "sets": "3",
+      "reps": "10",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "25 pain-free single-leg hops"
+    ],
+    "duration": "3-12 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "calf_raise_loaded",
+      "sets": "3",
+      "reps": "8",
+      "frequency": "2-3x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "3-6 mo"
+   }
+  ],
+  "running": {
+   "volume": "hold, or cut to a level where the 24-hour rule holds",
+   "surface": "flat and firm-even",
+   "pace": "easy before fast",
+   "hills": "last",
+   "intervals": "once hops are pain-free",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "light activities (pain 1-2) daily",
+     "criteria": "next morning at baseline"
+    },
+    {
+     "step": 2,
+     "prescription": "jogging on the flat; 2 recovery days after medium sessions (pain 2-3)",
+     "criteria": "pain 2-3 and settles by next morning"
+    },
+    {
+     "step": 3,
+     "prescription": "speed and hills",
+     "criteria": "25 pain-free single-leg hops"
+    }
+   ]
+  },
+  "interactions": [
+   {
+    "with_id": "an_plantar_heel",
+    "change": "both favour calf strength; manage total foot load together"
+   },
+   {
+    "with_id": "sys_hypermobility",
+    "change": "favour slow heavy work over long stretching"
+   },
+   {
+    "with_id": "kn_patellar_tendinopathy",
+    "change": "stage plyometrics for the slower-recovering tendon"
+   }
+  ],
+  "evidence_grade": "A",
+  "sources": [
+   "Chimenti RL et al. JOSPT 2024;54(12). doi:10.2519/jospt.2024.0302",
+   "Silbernagel KG et al. Am J Sports Med 2007. doi:10.1177/0363546506298279",
+   "Silbernagel KG, Crossley KM. JOSPT 2015. doi:10.2519/jospt.2015.5885"
+  ]
+ },
+ {
+  "id": "an_plantar_heel",
+  "chip_label": "Heel pain first steps in morning",
+  "clinical_name": "Plantar heel pain / plantar fasciitis",
+  "region": "ankle_foot_shin",
+  "category": "CHRONIC_RECURRENT",
+  "parent_id": "an_pain",
+  "one_liner": "Risk lives in repeated push-off and impact through the underside of the heel, especially after rest.",
+  "self_id_cues": [
+   "The first steps out of bed are agony",
+   "My pain is on the inside of my heel, underneath",
+   "It hurts after sitting, then eases"
+  ],
+  "core_cue": "Load the foot slowly and keep the first steps gentle. Volume spikes are the enemy.",
+  "warmup": [
+   {
+    "exercise": "calf_and_plantar_fascia_stretch",
+    "dose": "2x30s",
+    "note": "gentle"
+   },
+   {
+    "exercise": "short_foot_exercise",
+    "dose": "1x10",
+    "note": "or towel curls"
+   },
+   {
+    "exercise": "calf_raise_double",
+    "dose": "1x15",
+    "note": "slow"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "calf_raise_single_towel_under_toes",
+    "sets": "3",
+    "reps": "12",
+    "frequency": "every other day",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "calf_stretch",
+    "sets": "2-3",
+    "reps": "30s",
+    "frequency": "daily",
+    "placement": "warmup"
+   },
+   {
+    "exercise": "intrinsic_foot_strength",
+    "sets": "2",
+    "reps": "10",
+    "frequency": "daily",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "run_volume_spike",
+    "mechanism": "sudden mileage increases overload the plantar fascia",
+    "level": "core"
+   },
+   {
+    "movement": "run_impact",
+    "mechanism": "repeated impact through the heel, especially after rest",
+    "level": "caution"
+   },
+   {
+    "movement": "plyo_jump_landing",
+    "mechanism": "barefoot jumping on hard floors",
+    "level": "caution"
+   },
+   {
+    "movement": "calf_plyo",
+    "mechanism": "barefoot skipping on hard floors",
+    "level": "caution"
+   }
+  ],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "First-step heel pain this morning? Wear supportive shoes to lift."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Heel-loading move: shoes on, keep it controlled."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10, or worse next morning? Cut volume."
+   }
+  ],
+  "red_flags": [
+   "Heel pain with numbness or tingling",
+   "Pain on squeezing the heel bone (possible calcaneal stress fracture)",
+   "Pain in both heels with morning stiffness elsewhere"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "settle first-step pain"
+    ],
+    "exercises": [
+     {
+      "exercise": "calf_and_plantar_fascia_stretch",
+      "sets": "3",
+      "reps": "30s",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "first-step pain at or under 3/10"
+    ],
+    "duration": "0-2 wk; night splint 1-3 months if first-step pain is consistent"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "normal pain-free ankle and toe range (template default)"
+    ],
+    "exercises": [
+     {
+      "exercise": "knee_to_wall",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "symmetric range"
+    ],
+    "duration": "1-3 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "progressive calf and foot loading"
+    ],
+    "exercises": [
+     {
+      "exercise": "calf_raise_single_towel_under_toes",
+      "sets": "3",
+      "reps": "12",
+      "frequency": "every other day"
+     },
+     {
+      "exercise": "intrinsic_foot_strength",
+      "sets": "3",
+      "reps": "10",
+      "frequency": "3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "24-hour rule holds at 2 load steps"
+    ],
+    "duration": "2-8 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "build running by volume first"
+    ],
+    "exercises": [
+     {
+      "exercise": "easy_running",
+      "sets": "1",
+      "reps": "volume first",
+      "frequency": "3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "running pain at or under 3/10, no next-day flare"
+    ],
+    "duration": "6-12 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "calf_raise_loaded",
+      "sets": "3",
+      "reps": "8-12",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": {
+   "volume": "reduce",
+   "surface": "softer, even surfaces",
+   "pace": "easy",
+   "hills": "last",
+   "intervals": "last",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "shorter or split runs, or cross-training",
+     "criteria": "first-step pain settling"
+    },
+    {
+     "step": 2,
+     "prescription": "build volume in small steps (app default)",
+     "criteria": "no next-morning flare"
+    },
+    {
+     "step": 3,
+     "prescription": "add hills and intervals",
+     "criteria": "usual volume tolerated"
+    }
+   ]
+  },
+  "interactions": [
+   {
+    "with_id": "an_achilles_mid",
+    "change": "coordinate total calf load"
+   },
+   {
+    "with_id": "an_hallux_rigidus",
+    "change": "avoid toe-extension-heavy drills"
+   }
+  ],
+  "evidence_grade": "B",
+  "sources": [
+   "Koc TA et al. Plantar Fasciitis. JOSPT 2023 CPG (manual therapy, stretching, foot orthoses; night splints 1-3 months)",
+   "High-load calf dose is a grade D app default from tendon loading"
+  ]
+ },
+ {
+  "id": "an_lateral_sprain",
+  "chip_label": "Rolled my ankle",
+  "clinical_name": "Acute lateral ankle ligament sprain",
+  "region": "ankle_foot_shin",
+  "category": "ACUTE",
+  "parent_id": "an_pain",
+  "one_liner": "Risk lives in the rolled-in, toes-down ankle on uneven ground or a landing, the exact position that sprained it.",
+  "self_id_cues": [
+   "I rolled my ankle in the last few weeks",
+   "There is swelling on the outside bone",
+   "It feels wobbly on uneven ground"
+  ],
+  "core_cue": "Move it early, load it supported, and train balance every day.",
+  "warmup": [
+   {
+    "exercise": "ankle_alphabet",
+    "dose": "1x each foot",
+    "note": "pain-free range"
+   },
+   {
+    "exercise": "calf_raise_double",
+    "dose": "1x15",
+    "note": "controlled"
+   },
+   {
+    "exercise": "single_leg_balance",
+    "dose": "3x20s",
+    "note": "near support"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "single_leg_balance_progression",
+    "sets": "3",
+    "reps": "30s",
+    "frequency": "daily",
+    "placement": "warmup"
+   },
+   {
+    "exercise": "calf_raise",
+    "sets": "3",
+    "reps": "15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "banded_eversion",
+    "sets": "3",
+    "reps": "15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "hop_and_land_drills",
+    "sets": "3",
+    "reps": "5",
+    "frequency": "2x/wk, later phase",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "run_speed_cutting",
+    "mechanism": "cutting and lateral bounding before hop tests are pain-free",
+    "level": "core"
+   },
+   {
+    "movement": "plyo_jump_landing",
+    "mechanism": "unsupported jumping and landing",
+    "level": "caution"
+   }
+  ],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Brace or tape for agility work today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Ankle-sensitive move: brace or tape, low drop."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 3/10, or swelling next day? Hold."
+   }
+  ],
+  "red_flags": [
+   "Unable to take 4 steps",
+   "Bony tenderness at the back of either ankle bone or the base of the 5th metatarsal (fracture rule-out)",
+   "Severe swelling or deformity"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "supported weight-bearing"
+    ],
+    "exercises": [
+     {
+      "exercise": "walking_in_brace",
+      "sets": "1",
+      "reps": "as tolerated",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "walking pain at or under 3/10"
+    ],
+    "duration": "0-2 wk"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "dorsiflexion range"
+    ],
+    "exercises": [
+     {
+      "exercise": "knee_to_wall",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     },
+     {
+      "exercise": "ankle_alphabet",
+      "sets": "2",
+      "reps": "1",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "symmetric range"
+    ],
+    "duration": "1-3 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "strength and balance"
+    ],
+    "exercises": [
+     {
+      "exercise": "calf_raise",
+      "sets": "3",
+      "reps": "15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "banded_eversion",
+      "sets": "3",
+      "reps": "15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "single_leg_balance_progression",
+      "sets": "3",
+      "reps": "30s",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "24-hour rule holds at 2 load steps"
+    ],
+    "duration": "2-6 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "hop and agility"
+    ],
+    "exercises": [
+     {
+      "exercise": "hop_and_land_drills",
+      "sets": "3",
+      "reps": "5",
+      "frequency": "2-3x/wk"
+     },
+     {
+      "exercise": "forward_hops",
+      "sets": "3",
+      "reps": "8",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "hop tests pain-free, no swelling next day"
+    ],
+    "duration": "4-12 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence; impairment can last up to 12 months"
+    ],
+    "exercises": [
+     {
+      "exercise": "single_leg_balance_progression",
+      "sets": "3",
+      "reps": "30s",
+      "frequency": "2-3x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": {
+   "volume": "rebuild gradually once walking is pain-free (app default)",
+   "surface": "road or treadmill first; trail last",
+   "pace": "easy",
+   "hills": "after straight-line running on even ground is comfortable",
+   "intervals": "straight-line first; cutting last",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "straight-line easy runs on even surfaces",
+     "criteria": "pain-free walking and single-leg balance"
+    },
+    {
+     "step": 2,
+     "prescription": "add pace and hills",
+     "criteria": "pain at or under 3/10, no swelling next day"
+    },
+    {
+     "step": 3,
+     "prescription": "trail running and cutting drills",
+     "criteria": "hop tests pain-free"
+    }
+   ]
+  },
+  "interactions": [
+   {
+    "with_id": "an_cai",
+    "change": "if giving way recurs, this becomes chronic ankle instability"
+   }
+  ],
+  "evidence_grade": "A",
+  "sources": [
+   "Martin RL et al. Ankle Stability and Movement Coordination Impairments: Lateral Ankle Ligament Sprains Revision. JOSPT 2021 CPG"
+  ]
+ },
+ {
+  "id": "an_limited_df_orif",
+  "chip_label": "Stiff ankle after broken ankle/plates",
+  "clinical_name": "Post-fracture ankle with hardware, fixed dorsiflexion loss",
+  "region": "ankle_foot_shin",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "an_pain",
+  "one_liner": "Risk lives in forcing the shin forward over the foot under load, into ankle range the joint no longer has.",
+  "self_id_cues": [
+   "I broke my ankle and have plates or screws",
+   "My ankle won't bend as far as the other one",
+   "My heels lift or my knees can't go forward in a deep squat"
+  ],
+  "core_cue": "Elevate your heels or widen your stance so the ankle never has to find range it doesn't have.",
+  "warmup": [
+   {
+    "exercise": "knee_to_wall",
+    "dose": "1x10 each",
+    "note": "find today's range, don't force it"
+   },
+   {
+    "exercise": "calf_raise_double",
+    "dose": "1x15",
+    "note": "controlled"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "calf_raise",
+    "sets": "3",
+    "reps": "12-15",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "single_leg_balance",
+    "sets": "3",
+    "reps": "30s",
+    "frequency": "3x/wk",
+    "placement": "warmup"
+   },
+   {
+    "exercise": "ankle_mobility_within_range",
+    "sets": "2",
+    "reps": "10",
+    "frequency": "daily",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "ankle_df_deep_loaded",
+    "mechanism": "forced deep dorsiflexion under load, knees far forward, pushes into a bony or hardware block",
+    "level": "core"
+   },
+   {
+    "movement": "plyo_jump_landing",
+    "mechanism": "landing forces dorsiflexion quickly; plyometrics without clearance",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "squat",
+    "substitute": "squat+rom:pin",
+    "note": "stop above the depth where heels lift; heel wedge if available"
+   },
+   {
+    "exercise": "transformer_high_bar",
+    "substitute": "transformer_low_bar",
+    "note": "more hip, less forward knee"
+   },
+   {
+    "exercise": "hack",
+    "substitute": "leg_press",
+    "note": "ankle stays near neutral"
+   },
+   {
+    "exercise": "goblet",
+    "substitute": "goblet+rom:pin",
+    "note": "box at a depth your ankle allows"
+   },
+   {
+    "exercise": "bulgarian",
+    "substitute": "bulgarian+rom:partial",
+    "note": "shorter stride, shin more vertical"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Heels up or stance wide on squats today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Stop before the ankle runs out of range."
+   }
+  ],
+  "red_flags": [
+   "New swelling or pain at the hardware"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [
+   {
+    "with_id": "sys_hardware",
+    "change": "avoid direct pressure over the plate"
+   }
+  ],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "an_hallux_rigidus",
+  "chip_label": "Stiff big toe",
+  "clinical_name": "Hallux rigidus / 1st MTP osteoarthritis",
+  "region": "ankle_foot_shin",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "an_pain",
+  "one_liner": "Risk lives in forcing the big toe back under load: sprinting on the toes, deep lunges on the back toe, barefoot jumps.",
+  "self_id_cues": [
+   "My big toe is stiff and won't bend back far",
+   "Pushing off or going up on my toes hurts at the base of the big toe",
+   "There is a bony bump on top of the joint"
+  ],
+  "core_cue": "Roll off the outside of the toe and stiffen the shoe; don't force the big toe back.",
+  "warmup": [
+   {
+    "exercise": "big_toe_active_range",
+    "dose": "1x10",
+    "note": "within comfort"
+   },
+   {
+    "exercise": "calf_raise_reduced_toe_angle",
+    "dose": "1x15",
+    "note": "don't rise onto the big toe"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "calf_raise_reduced_toe_angle",
+    "sets": "3",
+    "reps": "12-15",
+    "frequency": "2-3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "foot_strength",
+    "sets": "2",
+    "reps": "10",
+    "frequency": "3x/wk",
+    "placement": "warmup"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "run_hills_sprints",
+    "mechanism": "sprinting on the toes forces the big toe back; hill sprints in rigid shoes are the alternative",
+    "level": "core"
+   },
+   {
+    "movement": "plyo_jump_landing",
+    "mechanism": "burpees and jumps on bare feet load the toe at end range",
+    "level": "caution"
+   }
+  ],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Stiff-soled shoes today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Rear foot on a bench, not on the big toe."
+   }
+  ],
+  "red_flags": [
+   "Acute swelling and redness of the joint (gout rule-out)"
+  ],
+  "rehab_phases": null,
+  "running": {
+   "volume": "no restriction from this entry",
+   "surface": "no restriction",
+   "pace": "avoid forefoot sprinting; stiff or rocker-soled shoes",
+   "hills": "hill sprints in rigid shoes instead of flat sprints",
+   "intervals": "in rigid shoes",
+   "return_to_running": []
+  },
+  "interactions": [
+   {
+    "with_id": "an_plantar_heel",
+    "change": "avoid toe-extension-heavy drills"
+   }
+  ],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "shin_mtss",
+  "chip_label": "Sore along inside of shin",
+  "clinical_name": "Medial tibial stress syndrome",
+  "region": "ankle_foot_shin",
+  "category": "CHRONIC_RECURRENT",
+  "parent_id": "shin_pain",
+  "one_liner": "Risk lives in repetitive running impact volume, especially when mileage jumps faster than the shin has adapted.",
+  "self_id_cues": [
+   "My shin aches along a long stretch of the inside edge",
+   "It hurts at the start of runs and after",
+   "It came on after I ran more than usual"
+  ],
+  "core_cue": "Reduce running volume and strengthen the calf. Diffuse ache that settles is OK; one sharp spot on the bone is not.",
+  "warmup": [
+   {
+    "exercise": "brisk_walk",
+    "dose": "5 min",
+    "note": "easy"
+   },
+   {
+    "exercise": "calf_raise_double",
+    "dose": "1x15",
+    "note": "controlled"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "calf_raise_single",
+    "sets": "3",
+    "reps": "12-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "seated_soleus_raise",
+    "sets": "3",
+    "reps": "12-15",
+    "frequency": "3x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "cross_training",
+    "sets": "1",
+    "reps": "20-40 min",
+    "frequency": "in place of some runs",
+    "placement": "off_day"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "run_volume_spike",
+    "mechanism": "repeated impact volume rises faster than the bone and soft tissue adapt",
+    "level": "core"
+   },
+   {
+    "movement": "run_impact",
+    "mechanism": "repetitive impact on an irritated shin",
+    "level": "caution"
+   }
+  ],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Shin check: diffuse ache or one sharp spot?"
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10, worse next morning, or one sharp spot? Cut volume."
+   }
+  ],
+  "red_flags": [
+   "Focal tenderness at one spot on the bone (possible bone stress injury)",
+   "Pain at rest or at night"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "settle irritability"
+    ],
+    "exercises": [
+     {
+      "exercise": "calf_raise_isometric",
+      "sets": "4-5",
+      "reps": "30-45s",
+      "frequency": "daily"
+     },
+     {
+      "exercise": "walking",
+      "sets": "1",
+      "reps": "as tolerated",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "pain at or under 3/10 on hopping"
+    ],
+    "duration": "0-2 wk"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "normal pain-free ankle range"
+    ],
+    "exercises": [
+     {
+      "exercise": "knee_to_wall",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "symmetric range"
+    ],
+    "duration": "1-3 wk"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "calf strength"
+    ],
+    "exercises": [
+     {
+      "exercise": "calf_raise_single",
+      "sets": "3-4",
+      "reps": "8-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "seated_soleus_raise",
+      "sets": "3-4",
+      "reps": "8-15",
+      "frequency": "3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "24-hour rule holds at 2 load steps"
+    ],
+    "duration": "3-12 wk"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "running volume"
+    ],
+    "exercises": [
+     {
+      "exercise": "easy_running",
+      "sets": "1",
+      "reps": "volume first",
+      "frequency": "2-3x/wk, stepwise"
+     }
+    ],
+    "progression_criteria": [
+     "running pain at or under 3/10, no next-day flare"
+    ],
+    "duration": "4-12 wk"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "prevent recurrence"
+    ],
+    "exercises": [
+     {
+      "exercise": "calf_raise_loaded",
+      "sets": "3",
+      "reps": "8-12",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [],
+    "duration": "ongoing"
+   }
+  ],
+  "running": {
+   "volume": "reduce; rebuild in small weekly steps (10-20%/wk is a convention, not a validated threshold)",
+   "surface": "even, forgiving surfaces (app default)",
+   "pace": "easy",
+   "hills": "after volume is back",
+   "intervals": "after usual volume is tolerated; don't add intensity in the same week as volume",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "reduced-volume easy runs with cross-training",
+     "criteria": "diffuse ache only, settles by next morning"
+    },
+    {
+     "step": 2,
+     "prescription": "rebuild volume in small weekly steps",
+     "criteria": "24-hour rule holds"
+    },
+    {
+     "step": 3,
+     "prescription": "add intensity",
+     "criteria": "usual volume tolerated"
+    }
+   ]
+  },
+  "interactions": [
+   {
+    "with_id": "shin_bsi_lowrisk",
+    "change": "manage as bone stress injury if tenderness becomes focal"
+   }
+  ],
+  "evidence_grade": "C",
+  "sources": [
+   "Kakouris N et al. 2021 systematic review of running injuries (MTSS prevalence 9.1%)",
+   "Generic phase template A3.6 (app default within Breda 2021, Silbernagel 2007, Willy 2019 ranges)"
+  ]
+ },
+ {
+  "id": "shin_bsi_lowrisk",
+  "chip_label": "Stress fracture (shin or foot shaft)",
+  "clinical_name": "Low-risk tibial/metatarsal bone stress injury",
+  "region": "ankle_foot_shin",
+  "category": "ACUTE",
+  "parent_id": "shin_pain",
+  "one_liner": "Risk lives in repeated impact on a bone that is mid-repair; for now, pain is a stop sign, not a guide.",
+  "self_id_cues": [
+   "A doctor said I have a stress reaction or stress fracture in my shin or foot",
+   "One spot on the bone is tender to press",
+   "The pain started earlier and earlier in my runs"
+  ],
+  "core_cue": "Pain-free means go, any pain at the site means stop. Volume comes back before speed.",
+  "warmup": [
+   {
+    "exercise": "brisk_walk",
+    "dose": "5 min",
+    "note": "pain-free"
+   },
+   {
+    "exercise": "calf_raise_double",
+    "dose": "1x15",
+    "note": "pain-free"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "pain_free_limb_strength",
+    "sets": "3",
+    "reps": "8-12",
+    "frequency": "2-3x/wk",
+    "placement": "main"
+   },
+   {
+    "exercise": "cycling_swimming_or_deep_water_running",
+    "sets": "1",
+    "reps": "20-40 min",
+    "frequency": "in place of runs",
+    "placement": "off_day"
+   },
+   {
+    "exercise": "fuel_well",
+    "sets": "-",
+    "reps": "-",
+    "frequency": "daily",
+    "placement": "off_day"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "run_impact",
+    "mechanism": "any running that causes pain at the site loads a bone mid-repair",
+    "level": "core"
+   },
+   {
+    "movement": "plyo_jump_landing",
+    "mechanism": "jumping impact on a bone mid-repair",
+    "level": "core"
+   },
+   {
+    "movement": "run_hills_sprints",
+    "mechanism": "speed work before full volume returns",
+    "level": "caution"
+   },
+   {
+    "movement": "run_volume_spike",
+    "mechanism": "back-to-back run days and fast volume increases early on",
+    "level": "caution"
+   }
+  ],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Any pain at the bone today? If yes, no run."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Impact move: only if completely pain-free at the site."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Any site pain: stop the session. Repeat the previous level next time."
+   }
+  ],
+  "red_flags": [
+   "Pain at the front of the shin, top of the foot (navicular), outer foot (5th metatarsal) or groin/hip (high-risk site, see a professional)",
+   "Night pain",
+   "A second stress fracture or missed periods (energy deficiency screen)"
+  ],
+  "rehab_phases": [
+   {
+    "phase": "protect",
+    "goals": [
+     "reduce load until walking is pain-free"
+    ],
+    "exercises": [
+     {
+      "exercise": "walking",
+      "sets": "1",
+      "reps": "as tolerated, pain-free",
+      "frequency": "daily"
+     },
+     {
+      "exercise": "cycling_or_swimming",
+      "sets": "1",
+      "reps": "20-30 min",
+      "frequency": "3-5x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "pain-free walking"
+    ],
+    "duration": "per clinician"
+   },
+   {
+    "phase": "restore_range",
+    "goals": [
+     "range is rarely lost (template default); keep ankle range"
+    ],
+    "exercises": [
+     {
+      "exercise": "knee_to_wall",
+      "sets": "2",
+      "reps": "10",
+      "frequency": "daily"
+     }
+    ],
+    "progression_criteria": [
+     "symmetric range, pain-free"
+    ],
+    "duration": "alongside protect"
+   },
+   {
+    "phase": "build_capacity",
+    "goals": [
+     "pain-free strength for the whole limb"
+    ],
+    "exercises": [
+     {
+      "exercise": "pain_free_limb_strength",
+      "sets": "3-4",
+      "reps": "8-15",
+      "frequency": "3x/wk"
+     },
+     {
+      "exercise": "calf_raise_single",
+      "sets": "3",
+      "reps": "12-15",
+      "frequency": "3x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "pain-free for 5 consecutive days",
+     "repeated hopping without pain"
+    ],
+    "duration": "per clinician"
+   },
+   {
+    "phase": "return_to_load",
+    "goals": [
+     "walk-run back to full running"
+    ],
+    "exercises": [
+     {
+      "exercise": "walk_run_program",
+      "sets": "1",
+      "reps": "walk-run to 30 min at 50% pace, then 60%, 80%, 90%, full pace, then consecutive days",
+      "frequency": "every other day early"
+     }
+    ],
+    "progression_criteria": [
+     "no site pain during or after; any site pain stops the session and the next session repeats the previous level"
+    ],
+    "duration": "symptom-driven"
+   },
+   {
+    "phase": "maintain",
+    "goals": [
+     "progressive bone loading"
+    ],
+    "exercises": [
+     {
+      "exercise": "jump_training",
+      "sets": "2-3",
+      "reps": "10",
+      "frequency": "2x/wk"
+     }
+    ],
+    "progression_criteria": [
+     "only once running is restored"
+    ],
+    "duration": "ongoing"
+   }
+  ],
+  "running": {
+   "volume": "walk-run table; volume returns before speed",
+   "surface": "even, flat",
+   "pace": "start at about 50% of usual pace",
+   "hills": "after full volume at full pace",
+   "intervals": "only after full volume returns",
+   "return_to_running": [
+    {
+     "step": 1,
+     "prescription": "walk-run",
+     "criteria": "pain-free for 5 consecutive days and repeated hopping pain-free"
+    },
+    {
+     "step": 2,
+     "prescription": "30 min continuous at 50% of usual pace",
+     "criteria": "no site pain during or after"
+    },
+    {
+     "step": 3,
+     "prescription": "30 min at 60% pace",
+     "criteria": "no site pain"
+    },
+    {
+     "step": 4,
+     "prescription": "30 min at 80% pace",
+     "criteria": "no site pain"
+    },
+    {
+     "step": 5,
+     "prescription": "30 min at 90% pace",
+     "criteria": "no site pain"
+    },
+    {
+     "step": 6,
+     "prescription": "full pace",
+     "criteria": "no site pain"
+    },
+    {
+     "step": 7,
+     "prescription": "consecutive running days",
+     "criteria": "no site pain; any site pain stops the session and the next session repeats the previous level"
+    }
+   ]
+  },
+  "interactions": [
+   {
+    "with_id": "sys_reds",
+    "change": "energy deficiency flag moves the injury plan to see-a-professional"
+   },
+   {
+    "with_id": "shin_mtss",
+    "change": "manage as bone stress injury if tenderness is focal"
+   }
+  ],
+  "evidence_grade": "B",
+  "sources": [
+   "Warden SJ, Edwards WB, Willy RW. JOSPT 2021 (optimal-load model)",
+   "Warden SJ, Davis IS, Fredericson M. JOSPT 2014 (graded return table)",
+   "Hoenig T et al. 2023 meta-analysis (site-based risk)"
+  ]
+ },
+ {
+  "id": "sys_joints",
+  "chip_label": "Joints in general",
+  "clinical_name": "Systemic joint conditions (umbrella)",
+  "region": "systemic",
+  "category": "UMBRELLA",
+  "parent_id": null,
+  "one_liner": "Risk lives in whatever the specific condition is; this chip is a starting point, so pick a specific one if you can.",
+  "self_id_cues": [
+   "Several of my joints give me trouble",
+   "I have a condition that affects my joints or bones generally",
+   "I'm not sure which specific entry fits"
+  ],
+  "core_cue": "Progressive strength training suits almost every joint condition. Progress gradually and pick the specific entry if one fits.",
+  "warmup": [
+   {
+    "exercise": "general_cardio",
+    "dose": "5 min",
+    "note": "easy"
+   },
+   {
+    "exercise": "light_rehearsal_sets",
+    "dose": "1-2 sets at 50%",
+    "note": "controlled range"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "progressive_strength",
+    "sets": "3",
+    "reps": "8-12",
+    "frequency": "2-3x/wk",
+    "placement": "main"
+   },
+   {
+    "exercise": "graded_aerobic_work",
+    "sets": "1",
+    "reps": "20-30 min",
+    "frequency": "2-3x/wk",
+    "placement": "off_day"
+   }
+  ],
+  "avoid": [],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Joint check: anything new or hotter than usual?"
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Over 5/10, or worse next morning? Step back."
+   }
+  ],
+  "red_flags": [
+   "Hot, swollen joint",
+   "Fever or unexplained weight loss",
+   "Repeated dislocations"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (umbrella; children's sources apply), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "sys_hypermobility",
+  "chip_label": "Very bendy / hypermobile",
+  "clinical_name": "Generalised joint hypermobility / HSD / hEDS",
+  "region": "systemic",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "sys_joints",
+  "one_liner": "Risk lives at the end of range under load, where ligaments rather than muscles stop the joint.",
+  "self_id_cues": [
+   "I can put my palms flat on the floor and bend my thumb to my wrist",
+   "My joints click, sublux or feel unstable",
+   "Stretching feels good but never seems to help"
+  ],
+  "core_cue": "Own the middle, stop before the end; strength over stretch, on every joint, every session.",
+  "warmup": [
+   {
+    "exercise": "goblet_squat_controlled_stop",
+    "dose": "1x8 at 50%",
+    "note": "deliberate stop before end range"
+   },
+   {
+    "exercise": "press_soft_lockout",
+    "dose": "1x8 light",
+    "note": "rehearse the soft lockout"
+   },
+   {
+    "exercise": "hinge_controlled_stop",
+    "dose": "1x8 at 50%",
+    "note": "soft knees"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "progressive_strength_major_lifts",
+    "sets": "3, rising to 4",
+    "reps": "10RM, progressing to 8RM",
+    "frequency": "3x/wk",
+    "placement": "main"
+   },
+   {
+    "exercise": "isometric_near_end_range",
+    "sets": "3",
+    "reps": "20-30s",
+    "frequency": "2x/wk",
+    "placement": "accessory"
+   },
+   {
+    "exercise": "single_leg_balance",
+    "sets": "3",
+    "reps": "30s",
+    "frequency": "3x/wk",
+    "placement": "warmup"
+   },
+   {
+    "exercise": "graded_aerobic_work",
+    "sets": "1",
+    "reps": "20-30 min",
+    "frequency": "2-3x/wk",
+    "placement": "off_day"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "passive_endrange_stretch",
+    "mechanism": "splits and deep dislocates load ligaments, not muscle",
+    "level": "core"
+   },
+   {
+    "movement": "elbow_ext_endrange_loaded",
+    "mechanism": "joint takes load at a locked elbow",
+    "level": "caution"
+   },
+   {
+    "movement": "knee_ext_endrange_loaded",
+    "mechanism": "joint takes load at a locked knee",
+    "level": "caution"
+   },
+   {
+    "movement": "ballistic_endrange",
+    "mechanism": "fast movement into end range early on, without muscle control",
+    "level": "caution"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "bench",
+    "substitute": "bench+lockout:soft",
+    "note": "stop a few degrees short of straight"
+   },
+   {
+    "exercise": "ohp",
+    "substitute": "ohp+lockout:soft",
+    "note": "soft lockout"
+   },
+   {
+    "exercise": "machine_press",
+    "substitute": "machine_press+lockout:soft",
+    "note": "soft lockout"
+   },
+   {
+    "exercise": "dip",
+    "substitute": "dip+lockout:soft",
+    "note": "soft lockout"
+   },
+   {
+    "exercise": "pushdown",
+    "substitute": "pushdown+lockout:soft",
+    "note": "soft lockout"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Own the middle today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Stop before the end of range; soft lockout."
+   }
+  ],
+  "red_flags": [
+   "Repeated dislocations",
+   "New neurological symptoms",
+   "Dizziness on standing"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [
+   {
+    "with_id": "el_hyperextension",
+    "change": "identical soft-lockout cue, applied across all joints"
+   },
+   {
+    "with_id": "sh_frozen",
+    "change": "conflict: show both; regain range within control"
+   },
+   {
+    "with_id": "sh_ant_instability",
+    "change": "strength-first, avoid end-range stretching"
+   },
+   {
+    "with_id": "an_achilles_mid",
+    "change": "favour slow heavy work over long stretching"
+   }
+  ],
+  "evidence_grade": "C",
+  "sources": [
+   "Engelbert RHH et al. Am J Med Genet C 2017;175C(1):158-167. doi:10.1002/ajmg.c.31545",
+   "Liaghat B et al. Br J Sports Med 2022;56(22):1269-1276. doi:10.1136/bjsports-2021-105223",
+   "Malfait F et al. Am J Med Genet C 2017;175(1):8-26. doi:10.1002/ajmg.c.31552",
+   "House S et al. Clin Rheumatol 2021;40(3):1113-1129. doi:10.1007/s10067-020-05284-0"
+  ]
+ },
+ {
+  "id": "sys_hardware",
+  "chip_label": "Metal plates/screws/rods somewhere",
+  "clinical_name": "Prior surgery with retained hardware",
+  "region": "systemic",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "sys_joints",
+  "one_liner": "Risk lives in direct pressure on the metal, such as a bar on a plated collarbone or kneeling on a wired kneecap.",
+  "self_id_cues": [
+   "I have plates, screws or rods from an old surgery",
+   "Pressing on that spot is sore",
+   "A bar or pad sitting on it feels wrong"
+  ],
+  "core_cue": "Know where your metal is; avoid direct pressure on it and pad anything that sits on it.",
+  "warmup": [
+   {
+    "exercise": "standard_warmup",
+    "dose": "as usual",
+    "note": "check pad placement before loading"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "strength_around_the_region",
+    "sets": "3",
+    "reps": "8-12",
+    "frequency": "2-3x/wk",
+    "placement": "main"
+   }
+  ],
+  "avoid": [],
+  "modify": [],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Pad anything that sits on your hardware."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Does the bar or pad press on your metal? Use a pad."
+   }
+  ],
+  "red_flags": [
+   "New pain, swelling or redness at the hardware site"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [
+   {
+    "with_id": "an_limited_df_orif",
+    "change": "ankle hardware: also follow that entry's range rules"
+   },
+   {
+    "with_id": "kn_osgood_residual",
+    "change": "both favour padding or avoiding kneeling"
+   }
+  ],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ },
+ {
+  "id": "sys_osteoporosis",
+  "chip_label": "Low bone density",
+  "clinical_name": "Osteopenia / osteoporosis",
+  "region": "systemic",
+  "category": "STRUCTURAL_PERMANENT",
+  "parent_id": "sys_joints",
+  "one_liner": "Risk lives in rounding the spine under load, where vertebrae take compression at the front, and in tasks with a fall risk.",
+  "self_id_cues": [
+   "A scan showed low bone density",
+   "I have been told I have osteopenia or osteoporosis",
+   "I have had a fracture from a minor fall"
+  ],
+  "core_cue": "Load the bones progressively; avoid loaded spinal flexion and fall-risk tasks.",
+  "warmup": [
+   {
+    "exercise": "hip_hinge_drill",
+    "dose": "1x10",
+    "note": "neutral spine"
+   },
+   {
+    "exercise": "light_rehearsal_sets",
+    "dose": "1-2 sets at 50%",
+    "note": "neutral spine"
+   }
+  ],
+  "do_more_of": [
+   {
+    "exercise": "progressive_resistance",
+    "sets": "3",
+    "reps": "5-12",
+    "frequency": "2-3x/wk",
+    "placement": "main"
+   },
+   {
+    "exercise": "impact_as_cleared",
+    "sets": "-",
+    "reps": "per clearance",
+    "frequency": "per clearance",
+    "placement": "accessory"
+   }
+  ],
+  "avoid": [
+   {
+    "movement": "spine_flex_loaded",
+    "mechanism": "loaded spinal flexion compresses the front of the vertebrae",
+    "level": "core"
+   }
+  ],
+  "modify": [
+   {
+    "exercise": "good_morning",
+    "substitute": "rdl",
+    "note": "keep the spine neutral; hinge at the hips"
+   }
+  ],
+  "in_workout_cues": [
+   {
+    "trigger": "pre_session",
+    "message": "Neutral spine on every lift today."
+   },
+   {
+    "trigger": "per_exercise",
+    "message": "Keep the back from rounding under load."
+   },
+   {
+    "trigger": "pain_threshold",
+    "message": "Sudden back pain after a minor strain? Stop and get it checked."
+   }
+  ],
+  "red_flags": [
+   "Sudden back pain after a minor strain (possible vertebral fracture)"
+  ],
+  "rehab_phases": null,
+  "running": null,
+  "interactions": [],
+  "evidence_grade": "D",
+  "sources": [
+   "App default (anatomical reasoning), research document Oct 2026"
+  ]
+ }
+]
