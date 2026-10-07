@@ -818,7 +818,35 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.36.0';
+const APP_VERSION='1.37.0';
+/* ---------- Demo mode (open the app with ?demo) ----------
+   A full copy of the app on fake data, for trying things and edge cases.
+   ISOLATION: every read and write the app makes goes through STORE. In demo
+   mode STORE prefixes keys with 'trainlog-demo:', so the app can't see or
+   touch your real keys (which all start 'trainlog.'), and Fresh install /
+   Erase in the demo only reach demo keys. The one cross-over is a READ of
+   your real log and settings when you choose "Copy my real log" — never a
+   write. Nothing in demo mode contacts the network: sync, notes and sheet
+   restore all stop at the door, and copied settings lose their URLs.
+   The demo has its own clock (an offset kept in demo storage), so
+   fast-forward can live through future weeks; real mode never touches Date. */
+const DEMO=(()=>{ try{ return /(^|[?&])demo(=|&|$)/.test(String(location.search||'')); }catch(e){ return false; } })();
+const DEMO_PREFIX='trainlog-demo:';
+function demoStore(real){
+  const k=x=>DEMO_PREFIX+x;
+  const own=()=>{ const out=[]; for(let i=0;i<real.length;i++){ const key=real.key(i); if(key&&key.startsWith(DEMO_PREFIX)) out.push(key.slice(DEMO_PREFIX.length)); } return out; };
+  return {getItem:x=>real.getItem(k(x)), setItem:(x,v)=>real.setItem(k(x),v), removeItem:x=>real.removeItem(k(x)),
+    key:i=>own()[i]??null, get length(){ return own().length; }, clear(){ own().forEach(x=>real.removeItem(k(x))); }};
+}
+const STORE=DEMO?demoStore(localStorage):localStorage;
+let DEMO_OFF=0, DEMO_QUIET=false;
+const RealDate=Date;
+if(DEMO){
+  try{ DEMO_OFF=+(STORE.getItem('clock')||0)||0; }catch(e){}
+  class DemoDate extends RealDate{ constructor(...a){ if(a.length) super(...a); else super(RealDate.now()+DEMO_OFF); } static now(){ return RealDate.now()+DEMO_OFF; } }
+  window.Date=DemoDate;
+}
+function setDemoClock(ms){ if(!DEMO) return; DEMO_OFF=ms-RealDate.now(); try{ STORE.setItem('clock',String(DEMO_OFF)); }catch(e){} }
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1717,9 +1745,10 @@ function applySetupLink(){
 }
 
 function loadAll(){
-  try{ LOG=(localStorage.getItem(LS_KEY)||'').split('\n').filter(Boolean)
+  try{ LOG=(STORE.getItem(LS_KEY)||'').split('\n').filter(Boolean)
       .map(l=>{try{return JSON.parse(l)}catch{return null}}).filter(Boolean); }catch{ LOG=[]; }
-  try{ const c=JSON.parse(localStorage.getItem(LS_CFG)||'null'); if(c) CFG={...CFG,...c}; }catch{}
+  try{ const c=JSON.parse(STORE.getItem(LS_CFG)||'null'); if(c) CFG={...CFG,...c}; }catch{}
+  if(DEMO){ CFG.syncUrl=''; CFG.feedbackUrl=''; }
   ROADMAP = CFG.roadmap && CFG.roadmap.length ? CFG.roadmap : DEFAULT_ROADMAP.map(b=>({...b}));
   ROADMAP.forEach(b=>{ migratePeak(b); if(!b.vol||!b.vol.length) applyShape(b); });
   // The batch-B hypertrophy rules (maintenance top set, effort ramp,
@@ -1748,7 +1777,7 @@ function loadAll(){
     CFG.target=t.toISOString().slice(0,10); saveCfg();
   }
 }
-const saveCfg=()=>{try{localStorage.setItem(LS_CFG,JSON.stringify(CFG))}catch{}};
+const saveCfg=()=>{try{STORE.setItem(LS_CFG,JSON.stringify(CFG))}catch{}};
 
 /* ---------- Theme codes ----------
    Purely visual: nothing here reaches the log or the engine. A theme is one
@@ -1845,15 +1874,15 @@ function themeToast(m){
    app mid-workout loses the UI state while the set events stay in storage —
    you'd restart, see empty rows, and log everything twice. */
 function saveSession(){
-  try{ session ? localStorage.setItem(LS_SESS,JSON.stringify(session))
-              : localStorage.removeItem(LS_SESS); }catch{}
+  try{ session ? STORE.setItem(LS_SESS,JSON.stringify(session))
+              : STORE.removeItem(LS_SESS); }catch{}
 }
 function restoreSession(){
   try{
-    const s=JSON.parse(localStorage.getItem(LS_SESS)||'null');
+    const s=JSON.parse(STORE.getItem(LS_SESS)||'null');
     if(!s) return;
     // stale guard: anything older than 6 hours is almost certainly abandoned
-    if(Date.now()-(s.startedAt||0) > 6*3600e3){ localStorage.removeItem(LS_SESS); return; }
+    if(Date.now()-(s.startedAt||0) > 6*3600e3){ STORE.removeItem(LS_SESS); return; }
     session=s;
   }catch{}
 }
@@ -1877,8 +1906,8 @@ function append(ev){
   roundLoads(ev);
   ev.v=SCHEMA_V; ev.id=ulid(); ev.ts=new Date().toISOString();
   try{
-    const raw=localStorage.getItem(LS_KEY)||'';
-    localStorage.setItem(LS_KEY, raw+(raw?'\n':'')+JSON.stringify(ev));
+    const raw=STORE.getItem(LS_KEY)||'';
+    STORE.setItem(LS_KEY, raw+(raw?'\n':'')+JSON.stringify(ev));
   }catch(e){
     alert('Could not save — storage is full.\n\nExport your log from the Lifts tab, then erase and re-import it. Nothing logged so far is lost.');
     return null;
@@ -2979,6 +3008,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
    (start, finish, next exercise) move you on purpose. */
 let LAST_RENDER_TAB=null;
 function render(){
+  if(DEMO_QUIET) return;
   applyTheme();
   const keepY=(LAST_RENDER_TAB===TAB&&TAB!=='work')?window.scrollY:null;
   try{ renderInner(); }
@@ -3423,6 +3453,7 @@ function renderRehab(v){
   c.appendChild(b); v.appendChild(c);
 }
 function renderWork(){
+  if(DEMO_QUIET) return;
   const v=$('#v-work'); v.innerHTML='';
   if(!session){ renderPreview(v); return; }
 
@@ -3635,14 +3666,14 @@ function openWeekPreview(openDayId){
 
 /* Edits to today's plan live here until you start. Generated fresh otherwise. */
 let PENDING=null;
-function loadPending(){ try{ PENDING=JSON.parse(localStorage.getItem(LS_PEND)||'null'); }catch{ PENDING=null; } }
-function savePending(){ try{ PENDING?localStorage.setItem(LS_PEND,JSON.stringify(PENDING)):localStorage.removeItem(LS_PEND); }catch{} }
+function loadPending(){ try{ PENDING=JSON.parse(STORE.getItem(LS_PEND)||'null'); }catch{ PENDING=null; } }
+function savePending(){ try{ PENDING?STORE.setItem(LS_PEND,JSON.stringify(PENDING)):STORE.removeItem(LS_PEND); }catch{} }
 
 /* Edits to ANY day of the week, keyed by day id and stamped to the current
    phase/week so they expire naturally when the program moves on. */
 let WEEKEDITS={};
-function loadWeekEdits(){ try{ WEEKEDITS=JSON.parse(localStorage.getItem(LS_WEEK)||'{}')||{}; }catch{ WEEKEDITS={}; } }
-function saveWeekEdits(){ try{ localStorage.setItem(LS_WEEK,JSON.stringify(WEEKEDITS)); }catch{} }
+function loadWeekEdits(){ try{ WEEKEDITS=JSON.parse(STORE.getItem(LS_WEEK)||'{}')||{}; }catch{ WEEKEDITS={}; } }
+function saveWeekEdits(){ try{ STORE.setItem(LS_WEEK,JSON.stringify(WEEKEDITS)); }catch{} }
 function weekPlanFor(day){
   const w=WEEKEDITS[day.id];
   if(w&&w.stamp===planStamp()) return {...day,slots:w.slots,edited:true};
@@ -4229,6 +4260,7 @@ function feedbackPayload(note){
     text:note.text, app_version:note.app_version, ts:note.ts};
 }
 function sendFeedback(note){
+  if(DEMO) return;
   const url=(CFG.feedbackUrl||'').trim(); if(!url) return;
   fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
     body:JSON.stringify(feedbackPayload(note))}).catch(()=>{});
@@ -6839,7 +6871,7 @@ function renderLifts(){
   const er=el('button','btn ghost wide','Erase all data');
   er.style.cssText='margin-top:8px;color:var(--skip)';
   er.onclick=()=>{ if(confirm('Erase all logged data? Export first — this cannot be undone.')){
-    localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_SESS); localStorage.removeItem(LS_REST);
+    STORE.removeItem(LS_KEY); STORE.removeItem(LS_SESS); STORE.removeItem(LS_REST);
     LOG=[]; session=null; stopRest(); TAB='dash'; render(); toast('Log erased'); } };
   lg.appendChild(er); v.appendChild(lg);
 }
@@ -7574,11 +7606,12 @@ function openTutorial(i){
 /* Wipe everything back to a true first-run state. For testing the new-user
    flow, and for handing the app to someone else on a shared device. */
 function resetToFresh(){
+  if(DEMO){ STORE.clear(); location.reload(); return; }   // demo: its own keys only, clock included
   // the named keys, plus anything else under the trainlog. prefix — so a key
   // added later can't survive a reset just because nobody updated this list
   const keys=new Set([LS_KEY,LS_CFG,LS_SESS,LS_PEND,LS_REST,LS_WEEK,'trainlog.lastExport','trainlog.lastSync']);
-  try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.startsWith('trainlog.')) keys.add(k); } }catch{}
-  keys.forEach(k=>{ try{ localStorage.removeItem(k); }catch{} });
+  try{ for(let i=0;i<STORE.length;i++){ const k=STORE.key(i); if(k&&k.startsWith('trainlog.')) keys.add(k); } }catch{}
+  keys.forEach(k=>{ try{ STORE.removeItem(k); }catch{} });
   location.reload();
 }
 
@@ -8042,7 +8075,7 @@ async function requestPersistence(){
 }
 async function storageInfo(){
   const out={persisted:null, usage:null, quota:null,
-             logBytes:(localStorage.getItem(LS_KEY)||'').length};
+             logBytes:(STORE.getItem(LS_KEY)||'').length};
   try{
     if(navigator.storage){
       if(navigator.storage.persisted) out.persisted=await navigator.storage.persisted();
@@ -8053,7 +8086,7 @@ async function storageInfo(){
   return out;
 }
 const sessionsSinceExport=()=>{
-  const last=Number(localStorage.getItem('trainlog.lastExport')||0);
+  const last=Number(STORE.getItem('trainlog.lastExport')||0);
   return LOG.filter(e=>e.type==='session_end'&&new Date(e.ts).getTime()>last).length;
 };
 
@@ -8069,7 +8102,7 @@ function exportLog(){
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=`trainlog-backup-${new Date().toISOString().slice(0,10)}.jsonl`; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
-  localStorage.setItem('trainlog.lastExport', String(Date.now()));
+  STORE.setItem('trainlog.lastExport', String(Date.now()));
   toast('Backup downloaded'); render();
 }
 
@@ -8081,17 +8114,18 @@ function exportLog(){
    The browser sends this no-cors, so the response can't be read and delivery
    can't be confirmed from here. Check the Sheet occasionally. */
 async function syncNow(silent){
+  if(DEMO){ if(!silent) toast('Demo: nothing is sent anywhere'); return false; }
   const url=(CFG.syncUrl||'').trim();
   if(!url){ if(!silent) toast('No sync URL set'); return false; }
   try{
     await fetch(url,{method:'POST',mode:'no-cors',
       headers:{'Content-Type':'text/plain;charset=utf-8'}, body:backupText()});
-    localStorage.setItem('trainlog.lastSync', String(Date.now()));
+    STORE.setItem('trainlog.lastSync', String(Date.now()));
     if(!silent) toast('Sent to your sheet');
     return true;
   }catch(e){ if(!silent) toast('Sync failed — check the URL'); return false; }
 }
-const lastSyncAt=()=>Number(localStorage.getItem('trainlog.lastSync')||0);
+const lastSyncAt=()=>Number(STORE.getItem('trainlog.lastSync')||0);
 
 /* One tap into iCloud Drive rather than a download that lands in Downloads.
    Falls back to a normal download where sharing files isn't supported. */
@@ -8101,7 +8135,7 @@ async function shareBackup(){
     const file=new File([backupText()],name,{type:'application/json'});
     if(navigator.canShare&&navigator.canShare({files:[file]})){
       await navigator.share({files:[file],title:'Trainlog backup'});
-      localStorage.setItem('trainlog.lastExport',String(Date.now()));
+      STORE.setItem('trainlog.lastExport',String(Date.now()));
       render(); return;
     }
   }catch(e){ if(e&&e.name==='AbortError') return; }
@@ -8122,7 +8156,7 @@ function importBackup(text){
   const added=incoming.filter(e=>!have.has(e.id||JSON.stringify(e)));
   if(!added.length&&!cfgIn) return {added:0,cfg:false};
   const merged=[...LOG,...added].sort((a,b)=>(a.ts||'')<(b.ts||'')?-1:1);
-  try{ localStorage.setItem(LS_KEY, merged.map(e=>JSON.stringify(e)).join('\n')); }
+  try{ STORE.setItem(LS_KEY, merged.map(e=>JSON.stringify(e)).join('\n')); }
   catch{ alert('Not enough space to import that backup.'); return {added:0,cfg:false}; }
   LOG=merged;
   return {added:added.length, cfg:!!cfgIn, cfgData:cfgIn};
@@ -8145,6 +8179,7 @@ function finishImport(res){
    can't read the response body from these URLs, but a <script> tag isn't
    subject to CORS at all, so this works regardless. */
 function jsonpFetch(url){
+  if(DEMO) return Promise.reject(new Error('demo'));
   return new Promise((resolve,reject)=>{
     const cb='trainlogJsonp'+Date.now()+Math.floor(Math.random()*1e6);
     const script=document.createElement('script');
@@ -8163,6 +8198,7 @@ function jsonpFetch(url){
    .jsonl file. Feeds the same importBackup() merge used by the file restore
    — no separate import/merge logic. */
 async function restoreFromSheet(){
+  if(DEMO){ alert('Demo mode never contacts your sheet. Your real data is not affected.'); return; }
   const url=(CFG.syncUrl||'').trim();
   if(!url) return;
   if(session&&!confirm('You have a session in progress. Restoring now will replace your log underneath it.\n\nFinish or end that session first. Continue anyway?')) return;
@@ -8252,9 +8288,10 @@ const LS_WEEK='trainlog.weekedits.v1';
    screen locks — which is exactly when you're resting — so the remaining
    time is always derived from an end timestamp instead of counted down. */
 let rest={endsAt:0,total:0,label:'',fired:false}, restIv=null, restHide=null;
-function saveRest(){ try{ rest.endsAt?localStorage.setItem(LS_REST,JSON.stringify(rest))
-  :localStorage.removeItem(LS_REST); }catch{} }
+function saveRest(){ try{ rest.endsAt?STORE.setItem(LS_REST,JSON.stringify(rest))
+  :STORE.removeItem(LS_REST); }catch{} }
 function startRest(sec,label){
+  if(DEMO_QUIET) return;
   rest={endsAt:Date.now()+sec*1000, total:sec, label:label||'Rest', fired:false};
   saveRest(); showRest();
 }
@@ -8281,8 +8318,8 @@ function stopRest(){ clearInterval(restIv); restIv=null; clearTimeout(restHide);
   document.body.classList.remove('resting'); rest={endsAt:0,total:0,label:'',fired:false};
   saveRest(); $('#rest').classList.remove('on'); }
 function restoreRest(){
-  try{ const r=JSON.parse(localStorage.getItem(LS_REST)||'null');
-    if(r&&r.endsAt>Date.now()){ rest=r; showRest(); } else localStorage.removeItem(LS_REST);
+  try{ const r=JSON.parse(STORE.getItem(LS_REST)||'null');
+    if(r&&r.endsAt>Date.now()){ rest=r; showRest(); } else STORE.removeItem(LS_REST);
   }catch{}
 }
 $('#rest30').onclick=()=>{ clearTimeout(restHide); restHide=null;
@@ -8295,7 +8332,7 @@ document.addEventListener('visibilitychange',()=>{
   try{ render(); }catch(err){ console.error('resync render failed',err); }
 });
 
-let tT; function toast(m){ const t=$('#toast'); t.textContent=themeToast(m); t.classList.add('on');
+let tT; function toast(m){ if(DEMO_QUIET) return; const t=$('#toast'); t.textContent=themeToast(m); t.classList.add('on');
   clearTimeout(tT); tT=setTimeout(()=>t.classList.remove('on'),1500); }
 
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();});
@@ -8345,9 +8382,179 @@ $('#fileIn').onchange=e=>{
   r.readAsText(f); e.target.value='';
 };
 
+/* ---------- Demo mode: seeding and fast-forward ----------
+   Made-up lifters train through the app's real code (generation, check-in,
+   suggestions, logSet, proposals) with a modelled body behind them — the
+   same model as tests/simulate.js. The body model, personas, gain rates and
+   noise are invented and say nothing about real training. Demo only. */
+const DEMO_BASE={squat:285,hinge:335,horizontal_press:215,vertical_press:135,vertical_pull:210,horizontal_pull:190,
+  elbow_flexion:70,elbow_extension:80,abduction:45,knee_extension:150,knee_flexion:130,calf_raise:220,trunk:80,
+  shrug:250,hip_abduction:160,hip_adduction:160,wrist:50,grip:120,other:80};
+const DEMO_PERSONAS={
+  responder:{label:'Progresses well', blurb:'Steady gains on everything.', profile:'even_mix', experience:'intermediate', gain:()=>0.006, noise:0.02, rpeNoise:0.5, attend:1},
+  stall_week8:{label:'Stalls at week 8', blurb:'Gains stop partway — the stall engine takes over.', profile:'size_first', experience:'intermediate', gain:w=>w<8?0.006:0, noise:0.02, rpeNoise:0.5, attend:1},
+  non_responder:{label:'Never progresses', blurb:'Flat from day one.', profile:'even_mix', experience:'intermediate', gain:()=>0, noise:0.025, rpeNoise:0.5, attend:1},
+  fatigue:{label:'Fatigue builds', blurb:'Tiredness accumulates; takes deloads when offered.', profile:'even_mix', experience:'intermediate', gain:()=>0.004, fatiguePerWeek:0.012, noise:0.02, rpeNoise:0.5, attend:1, acceptDeload:true},
+  deficit:{label:'In a deficit', blurb:'Losing weight; strength drifts down.', profile:'size_first', experience:'intermediate', energy:'deficit', gain:()=>-0.0015, noise:0.02, rpeNoise:0.5, attend:1, bwStart:200, bwPerWeek:-0.8},
+  novice:{label:'New lifter', blurb:'Fast early gains that slow down.', profile:'size_first', experience:'novice', gain:w=>w<10?0.012:0.003, noise:0.02, rpeNoise:0.5, attend:1, base:0.6},
+  shoulder:{label:'Shoulder flare', blurb:'Shoulder instability with a flare in weeks 6–8.', profile:'size_first', experience:'intermediate', gain:()=>0.004, noise:0.02, rpeNoise:0.5, attend:1,
+    conditions:['shoulder_instability'], jointUsual:{shoulder:'mild'}, flare:{joint:'shoulder', from:6, to:8}},
+  sporadic:{label:'Trains irregularly', blurb:'Shows up about one day in five.', profile:'even_mix', experience:'intermediate', gain:()=>0.004, noise:0.02, rpeNoise:0.5, attend:0.2}
+};
+const DEMO_STICK={squat:'bottom',deadlift:'off_floor',bench:'off_chest'};
+/* weeks of training from the demo clock's now; P = persona (fast-forward uses a plain one).
+   o.answer: answer proposals like the persona would (seeding); otherwise leave them for you. */
+function demoTrain(weeks, P, o){
+  o=o||{}; const DAY=864e5, start=Date.now();
+  let seed=Math.floor(Math.random()*1e9)||1; const R=()=>{ seed^=seed<<13; seed>>>=0; seed^=seed>>17; seed^=seed<<5; seed>>>=0; return seed/4294967296; };
+  const isBody=ex=>ex.load==='bodyweight_plus'||ex.load==='bodyweight';
+  let bw=latestBodyweight()||P.bwStart||180, fatigue=0;
+  const truth={};
+  const trueOf=id=>{ if(truth[id]==null){ const ex=exById[id], b=bestE1RM(id);
+      if(b&&b.v) truth[id]=b.v*1.03;
+      else if(isBody(ex)) truth[id]=bw+40*(P.base||1);
+      else { const f=familyOf(ex); truth[id]=((f!=='isolation'?DEMO_BASE[f]:DEMO_BASE[ex.pattern])||80)*(P.base||1)*(ex.load==='machine'||ex.load==='stack'?1.1:1); } }
+    return truth[id]; };
+  DEMO_QUIET=true;
+  try{
+    for(let w=0;w<weeks;w++){
+      const weekStart=start+w*7*DAY;
+      setDemoClock(weekStart);
+      if(o.answer) activeProposals().forEach(p=>{
+        if((p.id==='deload'||p.id.endsWith(':hard'))&&P.acceptDeload){ p.accept.fn(); dismissProposal(p.id); }
+        else if(p.id.startsWith('stall:')&&!p.id.endsWith(':hard')){ p.accept.fn(); dismissProposal(p.id); }
+        else dismissProposal(p.id); });
+      const ph0=currentPhase(), dpw=sessionsPerWeek()||5;
+      for(let d=0;d<dpw;d++){
+        if(R()>P.attend) continue;
+        setDemoClock(weekStart+Math.round(d*7/dpw)*DAY+(9+Math.floor(R()*9))*3600e3);
+        const day=todayDay(); if(!day||!day.slots.length) continue;
+        const phase=currentPhase(); if(phase.onDeload) fatigue=Math.max(0,fatigue-0.03);
+        day.slots.forEach(sl=>{ if(['topback','amrap','maint'].includes(sl.structure)) ensureInitialTM(slotTrack(sl).ex); });
+        session={id:'D'+ulid(),dayId:day.id,dayName:day.name,soreGroups:soreGroupsFor(day),openIdx:0,ratings:{},adj:null,score:null,
+          slots:day.slots.map(s=>({...s,sets_target:s.sets,sets:[]})),startedAt:Date.now()};
+        const tired=fatigue>0.05;
+        const st={bodyweight:Math.round(bw*10)/10,sleep:tired?(fatigue>0.1?2:2.5):3,motivation:tired?2.5:3,recovery:3,sore:{},joints:{}};
+        session.soreGroups.forEach(g=>{ st.sore[g]=fatigue>0.12?2:3; });
+        if(P.flare){ const inF=w>=P.flare.from&&w<=P.flare.to; const v=inF?3:(R()<0.6?1:0); if(v) st.joints[P.flare.joint]=v; }
+        append({type:'readiness',bodyweight:st.bodyweight,sleep_quality:st.sleep,motivation:st.motivation,recovery:st.recovery,soreness:st.sore,joints:st.joints,joint_scale:3,demo:true});
+        session.readiness={sleep:st.sleep,motivation:st.motivation,recovery:st.recovery,sore:st.sore,joints:st.joints};
+        session.score=readinessScore(st,session.soreGroups); session.adj=physicalCut(st,session.soreGroups);
+        session.slots.forEach(sl=>{ sl.joint=jointNoteFor(exById[sl.ex].pattern); if(sl.joint&&sl.joint.level>=4&&sl.sets_target>2) sl.sets_target--; });
+        if(session.adj) session.slots.slice(0,2).forEach(s=>{ s.sets_target=Math.max(1,s.sets_target+session.adj.sets); });
+        const dayNoise=1+(R()*2-1)*P.noise;
+        session.slots.forEach((slot,i)=>{
+          session.openIdx=i; seedDraft(slot);
+          const ex=exById[slot.ex], E=trueOf(slot.ex)*(1-fatigue)*dayNoise, off=bwOffset(ex)||0;
+          let within=0;
+          for(let k=0;k<slot.sets_target&&k<12;k++){
+            if(!(draft.weight>0)||draft.suggested===false&&!slot.sets.length&&!draft.suggestedLb){
+              const p=(pct1RM(slot.reps[1]+(10-slot.rpe))||70)/100; draft.weight=loadable(slot,Math.max(0,E*p-off)); draft.unit='lb'; }
+            const L=(draft.unit==='kg'?draft.weight*2.20462:draft.weight)+off, Es=E*(1-within), rtf=rtfFromPct(L/Es*100);
+            const maxR=rtf==null?(L>Es?0:30):Math.floor(rtf), target=draft.reps||slot.reps[0];
+            let reps=Math.min(target,maxR), failed=false;
+            if(reps<target){ failed=true; if(reps<1) reps=Math.max(1,maxR); }
+            if(slot.structure==='amrap'&&k===0||draft.rpe>=10) reps=Math.max(reps,Math.min(maxR,30));
+            let rpe=rtf==null?(L>Es?10:5):10-(rtf-reps);
+            rpe=Math.round(Math.max(5,Math.min(10,rpe+(R()*2-1)*P.rpeNoise))*2)/2;
+            draft.reps=reps; draft.rpe=rpe; draft.failed=failed;
+            logSet(slot,i,'straight'); within+=0.015;
+          }
+          if(isMainLift(slot.ex)&&slot.sets.length){ const f=slot.sets[0], fam=familyOf(ex);
+            if((f.failed||f.rpe>=9.5)&&FAMILY_STICKING[fam]) append({type:'sticking_report',exercise_id:slot.ex,session_id:session.id,set_id:f.id,region:DEMO_STICK[slot.ex]||FAMILY_STICKING[fam][1]});
+            if(stallVideoWanted(slot.ex)) append({type:'video_prompt',exercise_id:slot.ex,session_id:session.id,done:true,trigger:'stall'}); }
+          truth[slot.ex]=trueOf(slot.ex)*(1+P.gain(w));
+        });
+        append({type:'session_end',session_id:session.id,day_name:session.dayName,session_rpe:7,joints:{},joint_scale:3,duration_s:3600,demo:true});
+        session=null; saveSession();
+      }
+      fatigue=Math.max(0,fatigue+(P.fatiguePerWeek||0)-(ph0.onDeload?0.06:0));
+      bw+=P.bwPerWeek||0;
+    }
+  }finally{
+    DEMO_QUIET=false; session=null; saveSession(); stopRest();
+  }
+  setDemoClock(start+weeks*7*DAY);
+}
+/* A brand-new persona lifter: the builder exactly as the app runs it, then
+   weeks of training ending today. */
+function demoSeedPersona(key, weeks){
+  const P=DEMO_PERSONAS[key]; if(!P) return;
+  setDemoClock(RealDate.now()-weeks*7*864e5);
+  CFG.units='lb'; if(P.conditions) CFG.conditions=[...P.conditions]; if(P.energy) CFG.energy=P.energy;
+  const B=builderDefaults(false); B.path='full'; B.profile=P.profile; B.experience=P.experience; B.conds=[...(P.conditions||[])];
+  B.goals=['squat','deadlift','bench']; B.est={};
+  B.goals.forEach(id=>{ const f=familyOf(exById[id]); B.est[id]=Math.round((DEMO_BASE[f]||200)*(P.base||1)*0.95/5)*5; });
+  applyBuilder(B,builderPlan(B));
+  if(P.jointUsual) CFG.jointUsual={...P.jointUsual};
+  CFG.onboarded=true; CFG.introSeen=true; CFG.demoPersona=key; saveCfg();
+  demoTrain(weeks,P,{answer:true});
+  setDemoClock(RealDate.now());
+}
+/* Actions that need a clean start run after a reload, from a note in demo storage. */
+function demoPendingRun(){
+  let p=null; try{ p=JSON.parse(STORE.getItem('demo.pending')||'null'); }catch(e){}
+  if(!p) return;
+  STORE.removeItem('demo.pending');
+  if(p.kind==='persona') demoSeedPersona(p.key,p.weeks||12);
+}
+function demoReset(next){
+  STORE.clear();
+  if(next) STORE.setItem('demo.pending',JSON.stringify(next));
+  location.reload();
+}
+/* Your real log and settings, READ only, copied into demo storage. Sync,
+   feedback and tester name are dropped so the copy can never reach a sheet. */
+function demoCopyReal(){
+  let log='', cfg=null;
+  try{ log=localStorage.getItem('trainlog.jsonl.v1')||''; cfg=JSON.parse(localStorage.getItem('trainlog.cfg.v1')||'null'); }catch(e){}
+  if(!log&&!cfg){ alert('No real data on this device to copy.'); return; }
+  STORE.clear();
+  if(log) STORE.setItem('trainlog.jsonl.v1',log);
+  if(cfg){ cfg.syncUrl=''; cfg.feedbackUrl=''; cfg.testerName=''; STORE.setItem('trainlog.cfg.v1',JSON.stringify(cfg)); }
+  location.reload();
+}
+function demoBar(){
+  if(!DEMO) return;
+  const b=document.createElement('div'); b.id='demobar';
+  b.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 14px;background:var(--warn);color:var(--bg);font-size:13px;font-weight:600';
+  const off=Math.round(DEMO_OFF/864e5);
+  b.innerHTML='<span>Demo — fake data'+(off?' · clock '+(off>0?'+':'')+off+' days':'')+'</span>';
+  const o=document.createElement('button'); o.textContent='Demo options'; o.className='btn s'; o.style.cssText='padding:4px 10px;font-size:12.5px;background:var(--bg);color:var(--ink);border-color:var(--bg)';
+  o.onclick=openDemo; b.appendChild(o);
+  document.body.insertBefore(b,document.body.firstChild);
+}
+function openDemo(){
+  const ps=Object.entries(DEMO_PERSONAS).map(([k,p])=>`<button class="btn s ghost" data-p="${k}" style="text-align:left;display:block;width:100%;margin-top:6px"><b>${esc(p.label)}</b> <span class="muted tiny">${esc(p.blurb)}</span></button>`).join('');
+  sheet(`<h2 style="font-size:20px;margin-bottom:4px">Demo</h2>
+    <div class="muted tiny" style="line-height:1.5;margin-bottom:12px">Separate storage, no network. Your real log is never written from here. The made-up lifters are a simple model, not evidence about training.</div>
+    <div class="qblock"><div class="qlab">Fast-forward</div><div class="field">The demo lifter trains the generated sessions for you, through the real engine. Proposals are left for you to answer.</div>
+      <div class="row" style="gap:6px;margin-top:8px"><button class="btn s" data-ff="1">1 week</button><button class="btn s" data-ff="4">4 weeks</button><button class="btn s" data-ff="12">12 weeks</button></div></div>
+    <div class="qblock"><div class="qlab">Start over as a made-up lifter</div><div class="field">Builds a program with the setup flow and trains it up to today.</div>
+      <div class="row" style="gap:6px;margin-top:8px" id="dwk"></div>${ps}</div>
+    <div class="qblock"><div class="qlab">Other starts</div>
+      <button class="btn s ghost wide" id="dcopy" style="margin-top:6px">Copy my real log into the demo</button>
+      <button class="btn s ghost wide" id="dfresh" style="margin-top:6px">Fresh install (new-user setup)</button></div>
+    <div class="row" style="gap:8px;margin-top:10px"><button class="btn ghost grow" id="dclose">Close</button><button class="btn grow" id="dexit">Leave demo</button></div>`);
+  let wk=12; const wb=$('#dwk');
+  const drawWk=()=>{ wb.innerHTML=''; [4,12,26].forEach(n=>{ const c=el('button','chip',n+' weeks'); c.setAttribute('aria-pressed',wk===n?'true':'false'); c.onclick=()=>{ wk=n; drawWk(); }; wb.appendChild(c); }); };
+  drawWk();
+  document.querySelectorAll('#dlg [data-p]').forEach(x=>x.onclick=()=>{ if(confirm('Replace the demo data with "'+DEMO_PERSONAS[x.dataset.p].label+'" ('+wk+' weeks)? Your real data is not affected.')) { x.textContent='Simulating…'; setTimeout(()=>demoReset({kind:'persona',key:x.dataset.p,weeks:wk}),30); } });
+  document.querySelectorAll('#dlg [data-ff]').forEach(x=>x.onclick=()=>{
+    if(session){ alert('Finish or end the session in progress first.'); return; }
+    if(!ROADMAP.length){ alert('Set up a program first.'); return; }
+    x.textContent='…'; setTimeout(()=>{ const n=+x.dataset.ff; demoTrain(n,{gain:()=>0.004,noise:0.02,rpeNoise:0.5,attend:1});
+      $('#dlg').close(); location.reload(); },30); });
+  $('#dcopy').onclick=()=>{ if(confirm('Replace the demo data with a copy of your real log and settings? Your real data is only read, never changed.')) demoCopyReal(); };
+  $('#dfresh').onclick=()=>{ if(confirm('Clear the demo and start as a brand-new user? Your real data is not affected.')) demoReset(null); };
+  $('#dclose').onclick=()=>$('#dlg').close();
+  $('#dexit').onclick=()=>{ location.href=location.pathname; };
+}
+
 loadAll(); applyTheme(); loadPending(); loadWeekEdits(); restoreSession();
+if(DEMO){ try{ demoPendingRun(); }catch(err){ console.error('demo seed failed',err); DEMO_QUIET=false; } }
 if(session&&session.slots&&session.slots[session.openIdx]) seedDraft(session.slots[session.openIdx]);
-restoreRest(); render(); initUpdates();
+restoreRest(); render(); initUpdates(); demoBar();
 if(needsOnboarding()) setTimeout(()=>{ BUILDER=null; openBuilder(false); },250);
 requestPersistence();
 </script>

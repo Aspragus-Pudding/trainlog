@@ -1702,5 +1702,46 @@ section('42. stall engine');
   console.log('  detection · exposure is not a stall · deficit/fatigue/just-deloaded first · step 1 by frequency · one active · shoulder substitutes · two failures skip · tables as data · own ratios · specialization guards · scatter · practice days');
 }
 
+/* ─── 43. demo mode never touches real data or the network ─── */
+section('43. demo isolation');
+{
+  // a device with real data on it, then the app opened as ?demo
+  const real={'trainlog.jsonl.v1':[set('deadlift','r1',315,5,8,9),set('deadlift','r2',320,5,8,5)].map(e=>JSON.stringify(e)).join('\n'),
+    'trainlog.cfg.v1':JSON.stringify({goals:['deadlift'],onboarded:true,syncUrl:'https://script.google.com/macros/s/REAL/exec',feedbackUrl:'https://x.example/fb'}),
+    'trainlog.lastSync':'111'};
+  const store={...real}; let fetches=0, scripts=0;
+  const ls={getItem:k=>k in store?store[k]:null,setItem:(k,v)=>{store[k]=String(v);},removeItem:k=>{delete store[k];},
+    key:i=>Object.keys(store)[i]??null,get length(){ return Object.keys(store).length; }};
+  const doc=stub(); const docProxy=new Proxy(doc,{get(t,k){ if(k==='createElement') return tag=>{ if(String(tag).toLowerCase()==='script') scripts++; return stub(); }; return stub(); }});
+  const loc={search:'?demo',pathname:'/',reload(){},href:''};
+  const names=['DEMO','STORE','LOG','CFG','append','saveCfg','sets','syncNow','sendFeedback','jsonpFetch','restoreFromSheet','resetToFresh',
+    'demoSeedPersona','demoTrain','demoCopyReal','importBackup','loadAll','ROADMAP'];
+  const body=src+'\n;return {'+names.map(n=>n+':(()=>{try{return '+n+'}catch(e){}})()').join(',')+',getCFG:()=>CFG,getLOG:()=>LOG,getROADMAP:()=>ROADMAP};';
+  const D=new Function('document','window','navigator','localStorage','location','history','setTimeout','setInterval',
+    'alert','confirm','fetch','Notification','matchMedia','requestAnimationFrame','console',body)
+    (docProxy,stub(),stub(),ls,loc,stub(),()=>0,()=>0,()=>{},()=>true,()=>{ fetches++; return Promise.resolve({}); },stub(),()=>stub(),()=>0,{log(){},warn(){},error(){}});
+  ok(D.DEMO===true,'?demo switches demo mode on','');
+  ok(D.getLOG().length===0,'the demo starts empty — it does not load the real log','');
+  ok(!D.getCFG().syncUrl&&!D.getCFG().feedbackUrl,'and carries no backup or feedback URL','');
+  // heavy use: seed a persona, train, log, save settings, try every network path, wipe
+  D.demoSeedPersona('responder',2);
+  ok(D.getLOG().filter(e=>e.type==='set').length>50,'a persona seed trains real sessions through the engine',String(D.getLOG().length));
+  D.demoTrain(1,{gain:()=>0.004,noise:0.02,rpeNoise:0.5,attend:1});
+  D.append({type:'set',exercise_id:'squat',session_id:'z',weight:{value:100,unit:'lb'},reps:5,rpe:8,set_kind:'straight'});
+  D.getCFG().syncUrl='https://script.google.com/macros/s/X/exec'; D.getCFG().feedbackUrl='https://x.example/fb'; D.saveCfg();
+  D.syncNow(true); D.sendFeedback({tag:'bug',text:'x',app_version:'',ts:''}); D.jsonpFetch('https://script.google.com/z').catch(()=>{}); D.restoreFromSheet();
+  ok(fetches===0&&scripts===0,'no network: sync, feedback and sheet restore never leave the device in demo mode',fetches+' fetches, '+scripts+' script tags');
+  ok(Object.keys(store).filter(k=>!(k in real)).every(k=>k.startsWith('trainlog-demo:')),'every key the demo wrote is under trainlog-demo:',Object.keys(store).filter(k=>!(k in real)&&!k.startsWith('trainlog-demo:')).join(','));
+  D.resetToFresh();
+  ok(Object.keys(real).every(k=>store[k]===real[k])&&Object.keys(store).filter(k=>!k.startsWith('trainlog-demo:')).length===Object.keys(real).length,'after all of that, the real keys are byte-identical','');
+  ok(!Object.keys(store).some(k=>k.startsWith('trainlog-demo:')),'and the demo\'s Fresh install cleared only demo keys (all of them, clock included)','');
+  // copying the real log in: a read, URLs stripped
+  D.demoCopyReal();
+  const cc=JSON.parse(store['trainlog-demo:trainlog.cfg.v1']);
+  ok(store['trainlog-demo:trainlog.jsonl.v1']===real['trainlog.jsonl.v1']&&!cc.syncUrl&&!cc.feedbackUrl,'copy-my-real-log copies the log and drops the URLs','');
+  ok(Object.keys(real).every(k=>store[k]===real[k]),'and leaves the real keys untouched','');
+  console.log('  demo store prefixed · no network · real keys byte-identical after seed/train/log/settings/wipe · copy is read-only and URL-free');
+}
+
 console.log('\n'+checks+' checks, '+failures+' failed');
 if(failures){ console.log('\n'+Object.entries(shown).map(([k,n])=>n+' x '+k).join('\n')); process.exit(1); }

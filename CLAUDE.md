@@ -184,6 +184,11 @@ never swapped out mid-workout.
 - **Rating scales are centred in one place.** `fromNeutral()` + `SCALE_SPEC`
   decide where a scale is neutral; readiness, soreness, recovery and joints
   all go through it. Never centre a rating by hand (§19 scans for it).
+- **Storage goes through `STORE`, never `localStorage` directly.** In demo
+  mode (`?demo`) `STORE` prefixes every key with `trainlog-demo:` and the
+  demo has its own clock (`DEMO_OFF`); network paths check `DEMO` and stop.
+  The only direct `localStorage` reads are `STORE`'s own definition and
+  `demoCopyReal()` (read-only). §43 checks real keys stay byte-identical.
 - **`PENDING`** holds pre-workout plan edits until the session starts.
 - **Readiness** drives load adjustment (discrete tiers) and warmup length
   (continuous score). Adjustments are downward-only by design.

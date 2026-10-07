@@ -56,6 +56,16 @@ Two honest caveats:
 - **Anyone who can unlock the phone can open the app.** Same as Notes or
   Photos. A shared device means shared data.
 
+## Demo mode (`?demo`)
+
+Open the app as `…/trainlog/?demo` for a copy of the app on fake data. It
+stores everything under `trainlog-demo:` keys (the real app's keys all start
+`trainlog.`), makes no network calls (sync, notes and sheet restore are
+switched off, and copied settings lose their URLs), and has its own clock for
+fast-forward. "Copy my real log" only reads the real keys. Fine to show a
+tester; nothing they do there reaches anyone's real data or a sheet. Checked
+by `tests/prescription-invariants.js` §43.
+
 ## Backup, without making them do Apps Script
 
 Asking a friend to deploy a Google Apps Script web app is too much. Two options:
