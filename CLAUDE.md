@@ -210,6 +210,17 @@ never swapped out mid-workout.
   run `node tools/derive-injuries.js`, then `node tests/injury-validate.js`.
   Specialty bars (`specialty:` on the Transformer entries) are never
   auto-picked until logged.
+- **Injury library part 2 (D1b).** Consent before the first pick
+  (`CFG.injuryConsent`; research A4 copy verbatim — don't reword it), red
+  flags per entry (`CFG.condRedFlags`: ticked → no phase plan, warnings stay),
+  pain during a set (`set_pain` events → `painRule()`: the research's model
+  plus its overrides; every "stop" is advice with buttons, never a lock),
+  pre-session cues (max 2, structural core cue first), and opt-in phase plans
+  (`rehab_plan` events; a card proposes the next phase, never advances on its
+  own). "Delete my conditions and pain ratings" appends `pain_data_cleared` —
+  readers skip ratings before it; the log stays append-only. New exercises
+  added for the library (jumps, Olympic lifts, flyes, behind-the-neck) are
+  `manualOnly`: never generated, always addable.
 - **Testers:** restoring a backup never imports `syncUrl`/`feedbackUrl`/
   `testerName`; setup links (`?sync=&feedback=&who=`) can also be pasted in
   Settings; `isTester()` hides owner-only copy. ALPHA.md is the setup guide.

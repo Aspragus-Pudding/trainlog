@@ -81,6 +81,18 @@ kneecap") — about 50 entries from the injury research, across every region.
   get one quick question ("how did your knee feel?"). After a few sessions an
   exercise that's been fine is marked fine for them; one that keeps hurting
   turns red and the app asks — never decides — whether to stop including it.
+- **Before the first pick** testers see the research's disclaimer and four
+  consent boxes. Each condition lists its warning signs; ticking one shows
+  "see a professional" copy and turns off that condition's phase plan (the
+  warnings and normal training stay).
+- **Pain during a set:** after a set on a relevant exercise, one tap rates
+  pain 0–10. Over the condition's limit (5/10 by default; stricter for
+  rotator cuff pain, sprains, instability, stress fractures) the app suggests
+  stopping that exercise or swapping it — advice with buttons, never a lock.
+- **Phase plans (optional):** for conditions the research gives rehab phases,
+  a tester can start a plan from the condition's card; the dashboard shows the
+  phase, its exercises and when to move on, and a card suggests the next phase
+  once it looks ready. It never moves on by itself.
 - **Over-flagging is tested:** no condition flags more than 30% of the
   library, red flags stay under 10%.
 

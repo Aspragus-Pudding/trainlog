@@ -9097,7 +9097,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.45.0';
+const APP_VERSION='1.46.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -9496,8 +9496,8 @@ const VERDICT_MIN=3, VERDICT_BAD=2, VERDICT_WINDOW=6;
 let _vCache=null, _vLen=-1;
 function jointRatings(){
   if(_vLen===LOG.length&&_vCache) return _vCache;
-  const by={};
-  LOG.forEach((e,i)=>{ if(e.type==='exercise_joint'&&e.exercise_id&&e.joint) (by[e.exercise_id]=by[e.exercise_id]||[]).push({e,i}); });
+  const by={}, cut=painClearedAt();
+  LOG.forEach((e,i)=>{ if(i>cut&&e.type==='exercise_joint'&&e.exercise_id&&e.joint) (by[e.exercise_id]=by[e.exercise_id]||[]).push({e,i}); });
   _vCache=by; _vLen=LOG.length; return by;
 }
 function nextMorningRise(idx, joint){
@@ -10254,7 +10254,7 @@ const DAYS=[
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
   profile:null,profileParams:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
-  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null};
+  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{}};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
    from the address bar so it isn't left sitting in history. Each writes
@@ -10288,6 +10288,8 @@ function loadAll(){
   try{ const c=JSON.parse(STORE.getItem(LS_CFG)||'null'); if(c) CFG={...CFG,...c}; }catch{}
   if(DEMO){ CFG.syncUrl=''; CFG.feedbackUrl=''; }
   CFG.conditions=normalizeConditions(CFG.conditions);
+  // conditions picked before the consent screen existed (v1.46) are kept; the screen shows for new picks
+  if(CFG.conditions.length&&!CFG.injuryConsent) CFG.injuryConsent={at:new Date().toISOString(), v:1, grandfathered:true};
   // Until v1.44 flags steered generation on their own (red: never picked if anything
   // else fitted; amber: picked last). Now only YOUR exclusions do — so an existing setup
   // starts with everything its flags were steering away from, and its program doesn't
@@ -11692,6 +11694,7 @@ function renderDash(){
   const v=$('#v-dash'); v.innerHTML='';
   autoApplyInterventions();
   v.appendChild(proposalCards());
+  activeRehabPlans().forEach(({e,plan})=>v.appendChild(rehabPlanCard(e,plan,true)));
   const p=currentPhase(), proj=programProjection();
   const longDate=dt=>dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const tgtDate=CFG.target?new Date(CFG.target+'T12:00'):null;
@@ -12040,6 +12043,7 @@ function renderWork(){
     v.appendChild(a);
   }
 
+  preSessionBanner(v);
   if(session.prep&&session.prep.length){
     const done=session.prep.filter(m=>m.done).length;
     const c=el('div','ex');
@@ -12132,6 +12136,7 @@ function renderWork(){
   const addEx=el('button','btn ghost wide','Add an exercise'); addEx.style.marginTop='8px';
   addEx.onclick=openSessionAdd; v.appendChild(addEx);
   renderRehab(v);
+  renderRehabPlan(v);
   const fin=el('button','btn go wide','Finish session'); fin.onclick=openPost; v.appendChild(fin);
   const ee=el('button','btn ghost wide','End early'); ee.style.marginTop='8px';
   ee.onclick=openEndEarly; v.appendChild(ee);
@@ -13312,7 +13317,8 @@ function entryPanel(slot,idx){
   p.appendChild(el('div','hr'));
   { const fl=flagLine(slot, slot.sets.length?null:sw=>{ slot.ex=sw.ex; if(sw.modifiers) slot.modifiers=sw.modifiers; else delete slot.modifiers;
       slot.swapped=true; seedDraft(slot); saveSession(); renderWork(); toast('Swapped to '+sw.name); });
-    if(fl) p.appendChild(fl); }
+    if(fl) p.appendChild(fl);
+    const pr=painReportEl(slot,idx); if(pr) p.appendChild(pr); }
   p.appendChild(techniqueBlock(slot));
   if(!lastPerformance(slotTrack(slot).ex,slotTrack(slot).sig))
     p.appendChild(el('div','muted sm',slotTrack(slot).sig
@@ -14844,6 +14850,7 @@ function stalledByFatigue(){
    confirmation card in "sounds like you if…" wording — never "you have". */
 let INJ_OPEN_REGION=null;
 function conditionPicker(sel, onChange){
+  if(!injConsented()) return consentGate(()=>onChange(sel.slice(),true));
   const box=el('div','');
   const has=id=>sel.includes(id);
   INJ_REGIONS.forEach(([reg,label])=>{
@@ -14872,6 +14879,13 @@ function conditionPicker(sel, onChange){
         card.innerHTML=`<b>${esc(e.chip_label)}</b> <span class="dim tiny">${esc(e.clinical_name||'')}</span><br>${esc(e.one_liner||'')}`
           +(e.category!=='UMBRELLA'&&(e.self_id_cues||[]).length?`<br><span class="dim">Sounds like you if: ${e.self_id_cues.map(s=>esc(s)).join(' · ')}</span>`:'')
           +(e.core_cue?`<br><span style="color:var(--accent)">${esc(e.core_cue)}</span>`:'');
+        card.appendChild(redFlagChecklist(e,()=>onChange(sel.slice(),true)));
+        if(Array.isArray(e.rehab_phases)&&!redFlagged(e.id)){
+          const pl=rehabPlan(e.id), pb=el('button','btn s ghost',pl?'Phase plan: '+(PHASE_LABEL[pl.phase]||pl.phase)+' — on your dashboard':'Start the phase plan (optional)');
+          pb.style.cssText='margin-top:6px;font-size:12px;padding:4px 9px';
+          if(!pl) pb.onclick=()=>{ if(startRehabPlan(e)){ toast('Phase plan started — it\'s on your dashboard'); onChange(sel.slice(),true); } };
+          card.appendChild(pb);
+        }
         w.appendChild(card);
       });
       box.appendChild(w);
@@ -14917,6 +14931,8 @@ function flagLine(slot, onSwap){
   if(f.level==='note'){ w.appendChild(el('div','tiny','ⓘ '+esc(f.why)+(f.cond?' <span class="dim">· '+esc(condName(f.cond))+'</span>':''))).style.color='var(--muted)'; return w; }
   const col=f.level==='red'?'var(--danger)':'var(--warn)';
   w.appendChild(el('div','tiny',(f.level==='red'?'▲ ':'● ')+esc(f.why)+(f.cond?' <span class="dim">· '+esc(condName(f.cond))+'</span>':''))).style.color=col;
+  const pc=f.cond&&INJ_BY[f.cond]&&(INJ_BY[f.cond].in_workout_cues||[]).find(x=>x.trigger==='per_exercise');
+  if(pc) w.appendChild(el('div','dim tiny',esc(pc.message)));
   if(f.swap&&onSwap){
     const b=el('button','btn s ghost','Swap for '+f.swap.name); b.style.cssText='margin-top:5px;font-size:12px;padding:4px 9px';
     b.onclick=()=>onSwap(f.swap); w.appendChild(b);
@@ -14936,6 +14952,193 @@ PROPOSAL_SOURCES.push(()=>{
   });
   return out;
 });
+
+/* ---------- Injury library, part 2 (batch D1b) ----------
+   Consent, red flags, pain rules, pre-session cues and the opt-in rehab
+   phase plan. Same rule as everything else: the app warns and suggests,
+   never stops you — every "stop" below is advice with a button, never a lock.
+   Safety copy is the research's (docs/research/injury-library.md §A4), verbatim. */
+const INJ_DISCLAIMER="This app gives training guidance, not medical advice. It can't diagnose you, and picking a condition here doesn't mean you have it. Flags and suggestions are based on published guidelines and research for common training-related conditions, but they can't account for your individual history. If you've had surgery, a recent injury, or any symptom on our 'see a professional' list, check with a physiotherapist or doctor before following an injury plan. You're always in control: we'll warn you and suggest alternatives, but we'll never stop you choosing an exercise.";
+const INJ_CONSENT=["I understand this is training guidance, not medical advice or treatment.",
+  "I'll stop and seek professional advice if I notice any warning sign the app shows me.",
+  "I understand this is an alpha version, and the injury library is still being reviewed by clinicians.",
+  "I consent to the app storing my selected conditions and pain ratings to tailor my training (you can delete these anytime in Settings)."];
+const INJ_REDFLAG_COPY="This is one we don't want to train around. What you've described can sometimes signal something that needs a professional to look at it. We're not saying something is wrong, but please get it checked by a doctor or physiotherapist before loading it. Your normal workouts are still available. If you have numbness in your groin or inner thighs, new problems controlling your bladder or bowel, chest pain, or sudden severe weakness, seek urgent medical care now.";
+/* Clearance before a phase plan (research A3.3, T2), for the entries in this build that have one. */
+const INJ_T2=['shin_bsi_lowrisk','neck_fusion','lb_fusion','lb_spondylolisthesis','hip_dysplasia','hip_replacement','kn_replacement','kn_acl_deficient','sys_osteoporosis'];
+const injConsented=()=>!!CFG.injuryConsent;
+/* The consent gate, shown before the first pick. */
+function consentGate(onDone){
+  const box=el('div','');
+  box.appendChild(el('div','field',esc(INJ_DISCLAIMER))).style.lineHeight='1.5';
+  const ticks=INJ_CONSENT.map(()=>false);
+  const go=el('button','btn pri wide','Agree and continue'); go.disabled=true; go.style.marginTop='10px';
+  INJ_CONSENT.forEach((t,i)=>{ const r=el('label',''); r.style.cssText='display:flex;gap:9px;align-items:flex-start;padding:6px 0;cursor:pointer';
+    r.innerHTML='<input type="checkbox" style="margin-top:3px"><span class="sm">'+esc(t)+'</span>';
+    r.querySelector('input').onchange=e=>{ ticks[i]=e.target.checked; go.disabled=!ticks.every(Boolean); };
+    box.appendChild(r); });
+  go.onclick=()=>{ CFG.injuryConsent={at:new Date().toISOString(), v:1}; saveCfg(); onDone(); };
+  box.appendChild(go);
+  return box;
+}
+/* Red flags ticked for an entry: CFG.condRedFlags {entryId:[flag text]}. Any ticked →
+   the red-flag copy and no phase plan for it. Flags, cues and normal training stay. */
+const redFlagged=id=>((CFG.condRedFlags||{})[id]||[]).length>0;
+function redFlagChecklist(e, onChange){
+  const box=el('div',''); box.style.marginTop='8px';
+  box.appendChild(el('div','dim tiny','Any of these? (see a professional first if so)'));
+  const cur=new Set((CFG.condRedFlags||{})[e.id]||[]);
+  (e.red_flags||[]).forEach(t=>{ const r=el('label',''); r.style.cssText='display:flex;gap:8px;align-items:flex-start;padding:3px 0;cursor:pointer';
+    r.innerHTML='<input type="checkbox"'+(cur.has(t)?' checked':'')+' style="margin-top:3px"><span class="tiny">'+esc(t)+'</span>';
+    r.querySelector('input').onchange=ev=>{ if(ev.target.checked) cur.add(t); else cur.delete(t);
+      CFG.condRedFlags={...(CFG.condRedFlags||{}),[e.id]:[...cur]}; if(!cur.size) delete CFG.condRedFlags[e.id]; saveCfg(); onChange(); };
+    box.appendChild(r); });
+  if(cur.size){ const w=el('div','anchor',esc(INJ_REDFLAG_COPY)); w.style.cssText='border-left:3px solid var(--danger);margin-top:6px'; box.appendChild(w); }
+  return box;
+}
+
+/* ---- pain during a set: the research's model, with its stricter overrides ----
+   Default (Silbernagel): 0–2 fine, 3–5 tolerable if it settles by tomorrow,
+   over 5 stop this exercise for today. Overrides: instability → any
+   apprehension stops the set; rotator cuff pain → cap 4; an acute sprain →
+   cap 3; outside-elbow pain over 7 → isometrics only; a stress fracture →
+   any pain at the site ends the session. Advice with buttons, never a lock.
+   Logged as set_pain {set_id, joint, nprs, kind}. */
+const PAIN_BUCKETS=[[0,'None'],[2,'1–3'],[5,'4–5'],[7,'6–7'],[9,'8+']];
+const PAIN_INSTABILITY=['sh_ant_instability','sh_mdi_hypermobile','sh_unstable'];
+function painRule(nprs, kind, conds){
+  const has=id=>conds.includes(id);
+  if(kind==='apprehension') return {level:'stop', text:'Any apprehension: stop the set. Choose a position where the shoulder feels secure, or swap the exercise.'};
+  if(kind==='site'&&has('shin_bsi_lowrisk')) return {level:'end', text:'Pain at the stress-fracture site: stop the session (Warden 2021). Running and impact wait until you\'re pain-free for 5 days.'};
+  if(has('el_lateral_tendinopathy')&&nprs>7) return {level:'stop', text:'Over 7/10: the elbow is highly irritable. Isometrics only for it today.'};
+  const cap=has('an_lateral_sprain')?3:has('sh_rcrsp')?4:5;
+  if(nprs>cap) return {level:'stop', text:'Over '+cap+'/10'+(cap<5?' (the limit for this condition)':'')+': stop this exercise for today and swap it, or move on.'};
+  if(nprs>=3) return {level:'amber', text:'Tolerable — carry on if it settles by tomorrow morning. Your next check-in looks at it.'};
+  return {level:'ok', text:'Fine — carry on.'};
+}
+function painKinds(){
+  const c=CFG.conditions||[], out=[];
+  if(c.some(x=>PAIN_INSTABILITY.includes(x))) out.push(['apprehension','Apprehension']);
+  if(c.includes('shin_bsi_lowrisk')) out.push(['site','Pain at the site']);
+  return out;
+}
+function painReportEl(slot, idx){
+  const joint=jointQuestionFor(slot.ex); if(!joint||!slot.sets.length||!(CFG.conditions||[]).length) return null;
+  const last=slot.sets[slot.sets.length-1];
+  session.pain=session.pain||{};
+  const got=session.pain[last.id];
+  const box=el('div',''); box.style.marginTop='8px';
+  if(got){
+    const r=painRule(got.nprs,got.kind,CFG.conditions||[]);
+    const col=r.level==='ok'?'var(--ok)':r.level==='amber'?'var(--warn)':'var(--danger)';
+    box.appendChild(el('div','tiny',esc(r.text))).style.color=col;
+    const cue=(CFG.conditions||[]).map(c=>INJ_BY[c]).filter(Boolean).flatMap(e=>(e.in_workout_cues||[]).filter(x=>x.trigger==='pain_threshold').map(x=>x.message))[0];
+    if(cue&&r.level!=='ok') box.appendChild(el('div','dim tiny',esc(cue)));
+    if(r.level==='stop'||r.level==='end'){
+      const row=el('div','row'); row.style.cssText='gap:6px;margin-top:6px;flex-wrap:wrap';
+      const sw=el('button','btn s','Swap exercise'); sw.onclick=()=>openSwap(slot,idx);
+      const mv=el('button','btn s ghost','Done with this one'); mv.onclick=()=>{ slot.sets_target=slot.sets.length; saveSession(); advanceIfDone(slot,idx); renderWork(); };
+      row.append(sw,mv);
+      if(r.level==='end'){ const en=el('button','btn s ghost','Finish the session'); en.onclick=()=>openPost(); row.appendChild(en); }
+      box.appendChild(row);
+    }
+    return box;
+  }
+  box.appendChild(el('div','dim tiny','Any '+esc(joint)+' pain in that set? (0–10)'));
+  const c=el('div','chips'); c.style.marginTop='4px';
+  const rec=(nprs,kind)=>{ append({type:'set_pain',set_id:last.id,exercise_id:slot.ex,session_id:session.id,joint,nprs,...(kind?{kind}:{})});
+    session.pain[last.id]={nprs,kind}; saveSession(); renderWork(); };
+  PAIN_BUCKETS.forEach(([v,l])=>{ const b=el('button','chip',l); b.style.cssText='font-size:12px;padding:5px 9px'; b.onclick=()=>rec(v,null); c.appendChild(b); });
+  painKinds().forEach(([k,l])=>{ const b=el('button','chip',l); b.style.cssText='font-size:12px;padding:5px 9px;color:var(--danger)'; b.onclick=()=>rec(k==='site'?5:0,k); c.appendChild(b); });
+  box.appendChild(c);
+  return box;
+}
+
+/* ---- pre-session cues: at most 2, structural first (their core cue is permanent) ---- */
+function preSessionCues(slots){
+  const rank={STRUCTURAL_PERMANENT:0,POST_SURGICAL:1};
+  const relevant=e=>slots.some(sl=>{ const ex=exById[sl.ex]; if(!ex) return false;
+    const j=REGION_JOINT[e.region]; if(j&&(JOINT_PATTERNS[j]||[]).includes(ex.pattern)) return true;
+    const tags=exTags(sl.ex,sl.modifiers); return (e.avoid||[]).some(a=>tags.includes(a.movement)); });
+  return (CFG.conditions||[]).map(c=>INJ_BY[c]).filter(e=>e&&(e.category==='STRUCTURAL_PERMANENT'||relevant(e)))
+    .sort((a,b)=>(rank[a.category]??2)-(rank[b.category]??2))
+    .map(e=>({e, text:e.category==='STRUCTURAL_PERMANENT'?e.core_cue:((e.in_workout_cues||[]).find(x=>x.trigger==='pre_session')||{}).message||e.core_cue}))
+    .filter(x=>x.text).slice(0,2);
+}
+function preSessionBanner(v){
+  const cs=preSessionCues(session.slots); if(!cs.length) return;
+  const c=el('div','card pad'); c.style.cssText='border-left:3px solid var(--accent)';
+  cs.forEach(x=>c.appendChild(el('div','sm','<b>'+esc(x.text)+'</b> <span class="dim tiny">· '+esc(x.e.chip_label)+'</span>')).style.padding='2px 0');
+  v.appendChild(c);
+}
+
+/* ---- rehab phase plan: opt-in, advanced only by you ----
+   Events rehab_plan {entry_id, action: start|advance|stop, phase}. The phase
+   you're on is derived from them. A card proposes the next phase once the
+   current one has run its minimum length with nothing flaring (no "not for
+   you" verdict, no next-morning rise on that joint in 2 weeks) — and shows
+   the research's progression criteria so you decide. Never auto-advances. */
+const PHASE_LABEL={protect:'Protect',restore_range:'Restore range',build_capacity:'Build capacity',return_to_load:'Return to load',maintain:'Maintain'};
+function rehabPlan(entryId){
+  let st=null;
+  LOG.forEach(e=>{ if(e.type!=='rehab_plan'||e.entry_id!==entryId) return;
+    if(e.action==='stop') st=null; else st={phase:e.phase, since:e.ts}; });
+  return st;
+}
+const activeRehabPlans=()=>(CFG.conditions||[]).map(c=>INJ_BY[c]).filter(e=>e&&Array.isArray(e.rehab_phases)&&rehabPlan(e.id)).map(e=>({e, plan:rehabPlan(e.id)}));
+function phaseOf(e, name){ return (e.rehab_phases||[]).find(p=>p.phase===name)||null; }
+function startRehabPlan(e){
+  if(INJ_T2.includes(e.id)&&!confirm('Has a clinician cleared you to train this?\n\nOK = yes. Cancel = not yet: flags and cues still apply, and the phase plan waits until you\'re cleared.')) return false;
+  append({type:'rehab_plan',entry_id:e.id,action:'start',phase:e.rehab_phases[0].phase}); return true;
+}
+const humanEx=s=>String(s||'').replace(/_/g,' ');
+function rehabPlanCard(e, plan, withButtons){
+  const ph=phaseOf(e,plan.phase), i=e.rehab_phases.findIndex(p=>p.phase===plan.phase);
+  const c=el('div','card pad'); c.style.cssText='border-left:3px solid var(--accent)';
+  c.innerHTML=`<div class="row between"><span style="font-weight:650">${esc(e.chip_label)}</span><span class="dim tiny">phase ${i+1} of ${e.rehab_phases.length}</span></div>
+    <div class="sm" style="margin-top:4px"><b>${esc(PHASE_LABEL[plan.phase]||plan.phase)}</b>${ph&&ph.duration?' <span class="dim tiny">· typically '+esc(ph.duration)+'</span>':''}</div>
+    ${ph&&ph.goals&&ph.goals.length?'<div class="muted tiny" style="margin-top:3px">Goal: '+ph.goals.map(esc).join('; ')+'</div>':''}
+    ${ph&&ph.exercises&&ph.exercises.length?'<div class="tiny" style="margin-top:6px">'+ph.exercises.map(x=>esc(humanEx(x.exercise))+' <span class="dim">'+esc(x.sets)+' × '+esc(x.reps)+', '+esc(x.frequency)+'</span>').join('<br>')+'</div>':''}
+    ${ph&&ph.progression_criteria&&ph.progression_criteria.length?'<div class="dim tiny" style="margin-top:6px">Move on when: '+ph.progression_criteria.map(esc).join('; ')+'</div>':''}
+    <div class="dim tiny" style="margin-top:4px">Doses are app defaults within the ranges the trials used (${esc(e.evidence_grade)}). Not counted as training volume.</div>`;
+  if(withButtons){
+    const row=el('div','row'); row.style.cssText='gap:6px;margin-top:8px;flex-wrap:wrap';
+    if(i<e.rehab_phases.length-1){ const nx=el('button','btn s','I\'ve met these — next phase');
+      nx.onclick=()=>{ append({type:'rehab_plan',entry_id:e.id,action:'advance',phase:e.rehab_phases[i+1].phase}); render(); toast(PHASE_LABEL[e.rehab_phases[i+1].phase]); }; row.appendChild(nx); }
+    const sp=el('button','btn s ghost','Stop the plan'); sp.onclick=()=>{ if(confirm('Stop the '+e.chip_label+' phase plan? Flags and cues stay.')){ append({type:'rehab_plan',entry_id:e.id,action:'stop'}); render(); } };
+    row.appendChild(sp); c.appendChild(row);
+  }
+  return c;
+}
+/* A phase's minimum length from its "duration" text ("2-12 wk" → 2 weeks; "0 wk" → none). */
+const phaseMinWeeks=d=>{ const m=String(d||'').match(/(\d+)\s*(?:[-–]\s*\d+)?\s*(wk|week|mo)/i); return m?(+m[1])*(/mo/i.test(m[2])?4:1):1; };
+PROPOSAL_SOURCES.push(()=>activeRehabPlans().map(({e,plan})=>{
+  const i=e.rehab_phases.findIndex(p=>p.phase===plan.phase); if(i<0||i>=e.rehab_phases.length-1) return null;
+  const ph=e.rehab_phases[i], weeks=(Date.now()-new Date(plan.since))/(7*864e5);
+  // at least a week in any phase before suggesting the next (a "0–2 wk" phase can be short, not skipped). Judgement default.
+  if(weeks<Math.max(1,phaseMinWeeks(ph.duration))) return null;
+  const j=REGION_JOINT[e.region];
+  const flaring=Object.keys(jointRatings()).some(id=>{ const v=exerciseVerdict(id); return v&&v.verdict==='bad'&&(!j||v.joint===j); });
+  if(flaring) return null;
+  const next=e.rehab_phases[i+1];
+  return {id:'rehabnext:'+e.id+':'+plan.phase, snoozeDays:7, title:e.chip_label+': ready for '+(PHASE_LABEL[next.phase]||next.phase).toLowerCase()+'?',
+    body:'You\'ve been in '+(PHASE_LABEL[plan.phase]||plan.phase).toLowerCase()+' for '+Math.floor(weeks)+' week'+(Math.floor(weeks)===1?'':'s')+' and nothing has flared. Move on only if these hold for you: '+(ph.progression_criteria||[]).join('; ')+'.',
+    accept:{label:'Next phase', fn:()=>append({type:'rehab_plan',entry_id:e.id,action:'advance',phase:next.phase})}, decline:{label:'Not yet'}};
+}).filter(Boolean));
+/* In the workout: the current phase's exercises, as a labelled block. */
+function renderRehabPlan(v){
+  const ps=activeRehabPlans(); if(!ps.length) return;
+  ps.forEach(({e,plan})=>v.appendChild(rehabPlanCard(e,plan,false)));
+}
+/* Delete my conditions and pain ratings (the consent promises it). Conditions go
+   from settings; pain ratings stop being read from the moment of a
+   pain_data_cleared event (the log is append-only, so the old lines stay
+   underneath, as they do for every edit). */
+function clearPainData(){
+  append({type:'pain_data_cleared'});
+  CFG.conditions=[]; CFG.condRedFlags={}; saveCfg();
+}
+const painClearedAt=()=>{ let i=-1; LOG.forEach((e,k)=>{ if(e.type==='pain_data_cleared') i=k; }); return i; };
 
 /* ---------- Training max and realization (spec §2.3–2.4) ----------
    The training max (TM) is a PLANNING number per main lift, separate from the
@@ -16642,6 +16845,12 @@ function openSettings(){
     cd.innerHTML=`<div class="qlab">What you're working around</div>
       <div class="field">Flags exercises that load the at-risk position. It only ever warns — it never removes an option or decides for you.</div>`;
     cd.appendChild(conditionPicker(S.conds,n=>{ S.conds=n; draw(); }));
+    if(injConsented()&&(S.conds.length||Object.keys(jointRatings()).length)){
+      const del=el('button','btn s ghost','Delete my conditions and pain ratings'); del.style.marginTop='10px';
+      del.onclick=()=>{ if(!confirm('Remove your conditions and stop using every pain rating so far? Your training log itself is untouched; the old ratings stay in it underneath, as every edit does, but nothing reads them.')) return;
+        clearPainData(); S.conds=[]; draw(); toast('Conditions and pain ratings cleared'); };
+      cd.appendChild(del);
+    }
     host.appendChild(cd);
     if(S.conds.length||S.excluded.length){
       const xb=el('div','qblock');

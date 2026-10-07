@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','activeProposals','generatedDays'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -1941,6 +1941,55 @@ section('47. injury library: warn, never decide');
     ok(JSON.stringify(G.getCFG().conditions)==='["lb_pain"]','previewing other picks restores your real ones','');
     const lf=G.likelyFlaggedFor(['kn_pfp']); ok(lf.every(x=>x.f.level==='red'||x.f.level==='yellow'),'the "don\'t include" list shows only real warnings',''); }
   console.log('  owner unchanged · conditions never change the workout · only your exclusions do · amber/red/note · tags inherit · verdicts suggest, never decide');
+}
+
+/* ─── 48. injury library part 2: consent, red flags, pain rules, phase plans (D1b) ─── */
+section('48. pain rules, phase plans, consent');
+{
+  const D=c=>{ const A=load([],true); A.getCFG().conditions=c; return A; };
+  const A=D([]);
+  // pain rules: the research's model and its overrides
+  ok(A.painRule(2,null,[]).level==='ok'&&A.painRule(4,null,[]).level==='amber'&&A.painRule(6,null,[]).level==='stop','default: ≤2 fine, 3–5 tolerable if it settles, over 5 stop the exercise','');
+  ok(A.painRule(5,null,['sh_rcrsp']).level==='stop'&&A.painRule(4,null,['sh_rcrsp']).level==='amber','rotator cuff pain: capped at 4/10','');
+  ok(A.painRule(4,null,['an_lateral_sprain']).level==='stop','an acute ankle sprain: capped at 3/10','');
+  ok(/apprehension/i.test(A.painRule(0,'apprehension',['sh_ant_instability']).text)&&A.painRule(0,'apprehension',['sh_ant_instability']).level==='stop','instability: any apprehension stops the set','');
+  ok(A.painRule(5,'site',['shin_bsi_lowrisk']).level==='end','stress fracture: pain at the site ends the session','');
+  ok(/isometric/i.test(A.painRule(9,null,['el_lateral_tendinopathy']).text),'outside-elbow pain over 7: isometrics only','');
+  ok(JSON.stringify(D(['sh_ant_instability']).painKinds().map(x=>x[0]))==='["apprehension"]','an apprehension button only for instability','');
+  // phase plans: opt-in, start at phase 1, never advance on their own
+  { const P=D(['kn_patellar_tendinopathy']), e=P.INJ_BY.kn_patellar_tendinopathy;
+    ok(P.activeRehabPlans().length===0,'no phase plan unless you start one','');
+    P.startRehabPlan(e);
+    ok(P.rehabPlan(e.id).phase==='protect','starting begins at the first phase',JSON.stringify(P.rehabPlan(e.id)));
+    ok(!P.activeProposals().some(x=>x.id.startsWith('rehabnext:')),'no "next phase" card before the phase has run its minimum length','');
+    P.append({type:'rehab_plan',entry_id:e.id,action:'advance',phase:'restore_range'});
+    ok(P.rehabPlan(e.id).phase==='restore_range','you advance it','');
+    P.append({type:'rehab_plan',entry_id:e.id,action:'stop'}); ok(!P.rehabPlan(e.id),'and you can stop it',''); }
+  { // after the minimum length with nothing flaring: a card proposes — it does not advance
+    const ev=[{type:'rehab_plan',id:'rp1',ts:day(20),entry_id:'kn_patellar_tendinopathy',action:'start',phase:'protect'}];
+    const P=load(ev,true); P.getCFG().conditions=['kn_patellar_tendinopathy'];
+    const card=P.activeProposals().find(x=>x.id.startsWith('rehabnext:'));
+    ok(!!card&&P.rehabPlan('kn_patellar_tendinopathy').phase==='protect','after the minimum length, a card proposes the next phase — still on protect until you accept',card&&card.id);
+    if(card) card.accept.fn(); ok(P.rehabPlan('kn_patellar_tendinopathy').phase==='restore_range','accepting moves you on',''); }
+  ok(A.phaseMinWeeks('2-12 wk')===2&&A.phaseMinWeeks('0 wk')===0&&A.phaseMinWeeks('3-6 mo')===12,'a phase\'s minimum length is read from its duration','');
+  ok(A.INJ.filter(e=>e.category==='STRUCTURAL_PERMANENT').every(e=>e.rehab_phases===null),'structural conditions have no phase plan','');
+  // consent: required before the first pick; existing picks are kept
+  { const F=load([],true); F.getCFG().injuryConsent=null; ok(!F.injConsented(),'a new user sees the consent screen before picking',''); }
+  ok(A.INJ_CONSENT.length===4&&/never stop you choosing an exercise/.test(A.INJ_DISCLAIMER),'the research\'s disclaimer and four consent boxes, verbatim','');
+  // red flags: ticked → no phase plan, flags still apply
+  { const R=D(['kn_patellar_tendinopathy']); R.getCFG().condRedFlags={kn_patellar_tendinopathy:['x']};
+    ok(R.redFlagged('kn_patellar_tendinopathy')&&R.isWarning(R.flagFor('box_jump')),'a ticked red flag blocks only the phase plan — the warnings stay',''); }
+  // clearing pain data stops it being read; the log keeps its lines
+  { const ev=[]; for(let i=0;i<4;i++) ev.push({type:'exercise_joint',id:'xj'+i,ts:day(10-i),exercise_id:'squat',session_id:'s'+i,joint:'knee',severity:3});
+    const Cl=load(ev,true); Cl.getCFG().conditions=['kn_pfp'];
+    ok(Cl.exerciseVerdict('squat').verdict==='bad','(precondition) bad ratings make a verdict','');
+    const n=Cl.LOG.length; Cl.clearPainData();
+    ok(!Cl.exerciseVerdict('squat')&&Cl.getCFG().conditions.length===0&&Cl.LOG.length===n+1,'delete my conditions and pain ratings: nothing reads them after, and only one line is appended',''); }
+  // pre-session cues: structural core cue always, at most two
+  { const Q=D(['el_hyperextension','kn_pfp','sh_rcrsp']);
+    const cs=Q.preSessionCues([{ex:'bench'},{ex:'squat'},{ex:'ohp'}]);
+    ok(cs.length<=2&&cs[0].e.id==='el_hyperextension'&&cs[0].text===Q.INJ_BY.el_hyperextension.core_cue,'pre-session: at most 2 cues, structural first with its permanent core cue',JSON.stringify(cs.map(x=>x.e.id))); }
+  console.log('  pain model + overrides · phase plan opt-in, proposed not automatic · consent · red flags gate only the plan · clearing works append-only');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
