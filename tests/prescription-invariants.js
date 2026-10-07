@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','noviceSignal','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -1170,30 +1170,14 @@ section('32. technique: checklist, video prompt, sticking question');
 }
 
 /* ─── 33. profiles, experience signal, proposals (spec §3.1–3.2) ─── */
-section('33. profiles and the novice signal');
+section('33. profiles');
 {
   const A=load([]), C=A.getCFG();
   Object.entries(A.PROFILES).forEach(([k,p])=>ok(p.ratio>=0&&p.ratio<=1&&p.testEvery>=0&&['yes','before_tests','no'].includes(p.peaks)&&['high','medium','low'].includes(p.specificity),'profile '+k+' has its four parameters',''));
   ok(!JSON.stringify(A.PROFILES).match(/5\/3\/1|Juggernaut|Smolov|Sheiko|Westside|Starting Strength/i),'no brand names in profiles','');
   C.profile='size_first'; ok(A.profileParams().ratio===0.25&&A.profileParams().testEvery===3,'profile parameters','');
   C.profileParams={testEvery:2}; ok(A.profileParams().testEvery===2&&A.profileParams().ratio===0.25,'"customise" overrides one parameter, keeps the rest','');
-  // novice signal: load up every session for 3+ sessions over 21+ days, on a main lift
-  const up=[set('deadlift','N1',225,5,8,30),set('deadlift','N2',235,5,8,23),set('deadlift','N3',245,5,8,15),set('deadlift','N4',255,5,8,7)];
-  const B=load(up); B.getCFG().goals=['deadlift'];
-  ok(B.noviceSignal().novice&&B.noviceSignal().lifts[0].sessions===4,'four straight increases over 23 days: novice progress',JSON.stringify(B.noviceSignal()));
-  const flat=load([set('deadlift','F1',225,5,8,30),set('deadlift','F2',225,5,8,23),set('deadlift','F3',245,5,8,15)]); flat.getCFG().goals=['deadlift'];
-  ok(!flat.noviceSignal().novice,'a repeated load breaks the run','');
-  const quick=load([set('deadlift','Q1',225,5,8,9),set('deadlift','Q2',235,5,8,6),set('deadlift','Q3',245,5,8,2)]); quick.getCFG().goals=['deadlift'];
-  ok(!quick.noviceSignal().novice,'three increases inside a week is not 3+ weeks','');
-  // it proposes, never switches
-  const P=B.activeProposals();
-  ok(P.some(p=>p.id==='novice_model')&&B.getCFG().experience==null,'novice progress makes a proposal; experience is unchanged until accepted','');
-  B.getCFG().proposalsDismissed={novice_model:new Date().toISOString()};
-  ok(!B.activeProposals().some(p=>p.id==='novice_model'),'declined: hidden while snoozed','');
-  B.getCFG().proposalsDismissed={novice_model:new Date(Date.now()-30*864e5).toISOString()};
-  ok(B.activeProposals().some(p=>p.id==='novice_model'),'and back after the snooze if it still applies','');
-  B.getCFG().experience='novice'; ok(!B.activeProposals().some(p=>p.id==='novice_model'),'no proposal once you are on the novice model','');
-  console.log('  five profiles, no brands · customise overrides · novice = 3+ straight increases over 21+ days · proposes, never switches · snooze');
+  console.log('  five profiles, no brands · customise overrides');
 }
 
 /* ─── 34. block sequencer (spec §3.3) ─── */
@@ -1240,18 +1224,17 @@ section('34. block sequencer');
   ok(tt.blocks[i20-1].type==='str','and a strength block comes right before it','');
   ok(A.sequenceBlocks({params:A.PROFILES.pure_strength,experience:'intermediate',weeks:24,targetFixed:true,goals}).blocks.slice(-1)[0].taper,'pure strength + fixed target: ends on a taper','');
   ok(!A.sequenceBlocks({params:A.PROFILES.even_mix,experience:'intermediate',weeks:24,targetFixed:true,goals}).blocks.some(b=>b.taper),'even mix peaks only before tests, not a target','');
-  // novice: one ongoing block
-  const nv=A.sequenceBlocks({params:A.PROFILES.even_mix,experience:'novice',weeks:24,goals});
-  ok(nv.blocks.length===1&&nv.blocks[0].linear&&nv.blocks[0].weeks===24,'novice: one ongoing block','');
+  // the experience answer no longer changes the roadmap: same blocks for every answer
+  ['novice','intermediate','advanced'].forEach(x=>ok(JSON.stringify(A.sequenceBlocks({params:A.PROFILES.even_mix,experience:x,weeks:24,goals}).blocks)===JSON.stringify(A.sequenceBlocks({params:A.PROFILES.even_mix,weeks:24,goals}).blocks),'experience '+x+': same roadmap',''));
   // old peak blocks become tapered strength blocks
   const pb=A.migratePeak({type:'peak',label:'Peaking',weeks:3});
   ok(pb.type==='str'&&pb.taper===true,'an existing peak block reads as a tapered strength block','');
   ok(!A.isRealizationWeek({type:'str',taper:true,week:3,weeks:3})&&!A.isRealizationWeek({type:'str',realize:false,week:3,weeks:3})&&A.isRealizationWeek({type:'str',week:3,weeks:3}),'realization only in strength blocks meant to test (older blocks: every one)','');
-  console.log('  blocks in limits, no stubs, no peaks · ends per profile · interleaved · test frequency · tapers only before dates · novice · peak migration');
+  console.log('  blocks in limits, no stubs, no peaks · ends per profile · interleaved · test frequency · tapers only before dates · experience never changes the roadmap · peak migration');
 }
 
 /* ─── 35. maintenance top set + novice linear model (spec §3.2, 3.4) ─── */
-section('35. maintenance top set and novice linear');
+section('35. maintenance top set');
 {
   const A=load([]), C=A.getCFG(); C.goals=['deadlift','incline_machine'];
   const days=()=>[{name:'A',slots:[{ex:'deadlift',role:'primary',sets:3,reps:[6,8],rpe:8},{ex:'leg_ext',role:'accessory',sets:3,reps:[10,15],rpe:9}]},
@@ -1275,23 +1258,7 @@ section('35. maintenance top set and novice linear');
   const work=B.suggestFor(slot);
   ok(work.lb<300&&work.pr.reps>=8,'after it, the hypertrophy sets price from your working sets (245 × 10), not the top set',JSON.stringify({lb:work.lb,reps:work.pr.reps}));
   ok(B.lastSetFor('deadlift','', 'top').role==='top'&&B.lastSetFor('deadlift','','work').role==='straight','role classes keep the two histories apart','');
-  // novice linear: the first set adds a step when last session was done
-  const N=load([set('deadlift','L1',225,5,8,3,{target:{reps:[5,5],rpe:8}})]), NC=N.getCFG(); NC.goals=['deadlift'];
-  N.setRoadmap([N.applyShape({type:'hyp',label:'Novice',weeks:20,deload:false,hyp:[],linear:true})]);
-  const ns={ex:'deadlift',role:'primary',reps:[5,5],rpe:8,sets_target:3,sets:[]};
-  N.setSession({id:'NS',slots:[ns],openIdx:0,adj:null,ratings:{},startedAt:Date.now()});
-  const nr=N.suggestFor(ns);
-  ok(nr.lb>225&&nr.pr.reps===5&&/novice/.test(nr.pr.src),'novice: last session done → one step up, same reps',JSON.stringify({lb:nr.lb,r:nr.pr.reps,src:nr.pr.src}));
-  const N2=load([set('deadlift','L1',225,4,9.5,3,{target:{reps:[5,5],rpe:8}})]); N2.getCFG().goals=['deadlift'];
-  N2.setRoadmap([N2.applyShape({type:'hyp',label:'Novice',weeks:20,deload:false,hyp:[],linear:true})]);
-  N2.setSession({id:'NS2',slots:[{...ns}],openIdx:0,adj:null,ratings:{},startedAt:Date.now()});
-  ok(N2.suggestFor(N2.getSession().slots[0]).lb<=225,'a missed session does not add load','');
-  // two stalls → a proposal to move to blocks
-  const S=load([set('deadlift','X1',245,4,9.5,9,{target:{reps:[5,5],rpe:8}}),set('deadlift','X2',245,3,10,5,{target:{reps:[5,5],rpe:8}})]); S.getCFG().goals=['deadlift'];
-  S.setRoadmap([S.applyShape({type:'hyp',label:'Novice',weeks:20,deload:false,hyp:[],linear:true})]);
-  ok(S.activeProposals().some(p=>p.id==='novice_done'),'two stalled sessions propose switching to blocks','');
-  ok(S.getCFG().experience==null||S.getCFG().experience!=='intermediate','and nothing switches until you accept','');
-  console.log('  weekly top set placed once, gated to new blocks · top and working sets price separately · novice adds a step, stalls propose blocks');
+  console.log('  weekly top set placed once, gated to new blocks · top and working sets price separately');
 }
 
 /* ─── 36. hypertrophy refinements (spec §3.5) ─── */
@@ -1415,6 +1382,74 @@ section('38. program builder');
     ok(pl.blocks.every(b=>Array.isArray(b.vol)&&b.vol.length===A.blockLen(b)&&b.vol.length>0),pf+' / '+ex+(rr?' rerun':'')+': every block has its weekly shape',JSON.stringify(pl.blocks.map(b=>[b.type,b.weeks,b.vol&&b.vol.length])));
   })));
   console.log('  quick setup works blank · accept saves settings + estimates · rerun keeps history, kept blocks and position, pins their week · every profile × experience drawable');
+}
+
+/* ─── 39. progression rate per main lift (fast / standard) ─── */
+section('39. progression rate');
+{
+  // a session = its sets + a session_end, days back
+  const sess=(ex,sid,lb,reps,rpe,d,target,extra)=>[set(ex,sid,lb,reps,rpe,d,{target,...(extra||{})}),{type:'session_end',id:'se'+sid,ts:day(d-0.01),session_id:sid,joints:{}}];
+  const T={reps:[5,5],rpe:8};
+  const mk=(sessions,seed,goals)=>{ let ev=[]; sessions.forEach(x=>ev=ev.concat(x)); const A=load(ev), C=A.getCFG();
+    C.start=new Date(Date.now()-90*864e5).toISOString().slice(0,10); C.goals=goals||['deadlift']; C.rateSeed=seed; C.onboarded=true;
+    A.setRoadmap([A.applyShape({type:'hyp',label:'H',weeks:30,deload:false,hyp:[]})]); return A; };
+  const slot=()=>({ex:'deadlift',role:'primary',reps:[5,5],rpe:8,sets_target:3,sets:[]});
+  const rx=(A,sl)=>{ A.setSession({id:'NOW',slots:[sl],openIdx:0,adj:null,ratings:{},startedAt:Date.now()}); return A.suggestFor(sl); };
+  const FAST={at:0,dflt:'fast',lifts:{}}, STD={at:0,dflt:'standard',lifts:{}};
+  // fast: last exposure hit target → one step up, same reps
+  let A=mk([sess('deadlift','a',225,5,8,6,T),sess('deadlift','b',235,5,8,3,T)],FAST);
+  ok(A.rateOf('deadlift')==='fast','a new setup that said "still adding weight" starts fast','');
+  let r=rx(A,slot());
+  ok(r.pr.fast&&r.lb>235&&r.pr.reps===5,'fast: last session plus one step',JSON.stringify({lb:r.lb,src:r.pr.src}));
+  // one miss: the normal engine decides; two in a row: standard, on its own
+  A=mk([sess('deadlift','a',225,5,8,9,T),sess('deadlift','b',235,4,9.5,6,T)],FAST);
+  ok(A.rateOf('deadlift')==='fast'&&!rx(A,slot()).pr.fast,'one miss: still fast, but this session follows the normal engine','');
+  A=mk([sess('deadlift','a',225,5,8,9,T),sess('deadlift','b',235,4,9.5,6,T),sess('deadlift','c',235,4,9,3,T)],FAST);
+  ok(A.rateOf('deadlift')==='standard','two misses in a row: moves to standard on its own','');
+  A=mk([sess('deadlift','a',225,5,8,12,T),sess('deadlift','b',235,4,9.5,9,T),sess('deadlift','c',235,5,8,6,T),sess('deadlift','d',245,4,9.5,3,T)],FAST);
+  ok(A.rateOf('deadlift')==='fast','misses that are not consecutive do not demote','');
+  // block boundaries: 3 of the last 4 exposures added load → fast for the new block
+  const climb=[225,235,245,255,265].map((lb,i)=>sess('deadlift','k'+i,lb,5,8,40-i*3,T));
+  A=mk(climb,STD); A.setRoadmap([A.applyShape({type:'hyp',label:'H',weeks:1,deload:false,hyp:[]}),A.applyShape({type:'str',label:'S',weeks:20,deload:false,hyp:[]})]);
+  ok(A.rateOf('deadlift')==='fast','standard lift that added load on 4 of its last 4 exposures: fast from the next block','');
+  const flat=[225,225,235,235,235].map((lb,i)=>sess('deadlift','f'+i,lb,5,8,40-i*3,T));
+  A=mk(flat,FAST); A.setRoadmap([A.applyShape({type:'hyp',label:'H',weeks:1,deload:false,hyp:[]}),A.applyShape({type:'str',label:'S',weeks:20,deload:false,hyp:[]})]);
+  ok(A.rateOf('deadlift')==='standard','a lift that added load on only 1 of 4: standard from the next block','');
+  // an existing program: each main lift classified from its log once
+  A=mk(climb,{at:5,dflt:'standard',classify:true,lifts:{}});
+  ok(A.rateOf('deadlift')==='fast','existing program: 3+ of the last 4 added load → fast','');
+  A=mk(flat,{at:5,dflt:'standard',classify:true,lifts:{}});
+  ok(A.rateOf('deadlift')==='standard','existing program: otherwise standard','');
+  // not a main lift: always standard, the fast code never runs
+  A=mk(climb,FAST,['incline_machine']);
+  ok(A.rateOf('deadlift')==='standard','a lift that is not a main lift is never fast','');
+  // training max: tracks behind a fast lift, uncapped; capped once standard
+  A=mk(climb,FAST);
+  const tmF=A.tmFor('deadlift');
+  ok(tmF.src==='fast'&&Math.abs(tmF.tm-A.setE1RM(A.sets().filter(x=>x.exercise_id==='deadlift').pop())*0.9)<0.5,'fast: TM = 90% of the latest top set\'s e1RM',JSON.stringify(tmF));
+  // INVARIANT: for a lift on standard, nothing in this change alters its prescriptions
+  const hists=[
+    [sess('deadlift','i1',225,5,8,6,T),sess('deadlift','i2',235,5,8,3,T)],
+    [sess('deadlift','i1',225,5,7,6,T),sess('deadlift','i2',225,5,9,3,T)],
+    climb, flat,
+    [sess('incline_machine','m1',150,10,8,6,{reps:[8,12],rpe:8}),sess('incline_machine','m2',160,9,8.5,3,{reps:[8,12],rpe:8})]];
+  const slots=[
+    ex=>({ex,role:'primary',reps:[5,5],rpe:8,sets_target:3,sets:[]}),
+    ex=>({ex,role:'primary',reps:[3,5],rpe:8,sets_target:4,sets:[],structure:'topback',backoff:{n:3}}),
+    ex=>({ex,role:'primary',reps:[8,12],rpe:8,sets_target:4,sets:[],structure:'maint'}),
+    ex=>({ex,role:'accessory',reps:[8,12],rpe:9,sets_target:3,sets:[]})];
+  let compared=0;
+  hists.forEach((h,hi)=>['deadlift','incline_machine'].forEach(ex=>slots.forEach((mkSlot,si)=>{
+    const asMain=mk(h,STD,[ex]); asMain.getCFG().rateSeed={at:0,dflt:'standard',lifts:{[ex]:'standard'}};
+    if(asMain.rateOf(ex)!=='standard') return;            // promoted by the 3-of-4 rule: covered above
+    const notMain=mk(h,STD,['ssb_squat']);
+    const a=rx(asMain,mkSlot(ex)), b=rx(notMain,mkSlot(ex));
+    ok(a.lb===b.lb&&a.pr.reps===b.pr.reps&&a.pr.src===b.pr.src,'standard '+ex+' (history '+hi+', slot '+si+'): prescription identical to the same lift as a non-main lift',JSON.stringify([a.lb,a.pr.reps,a.pr.src,b.lb,b.pr.reps,b.pr.src]));
+    compared++;
+  })));
+  ok(compared>=20,'the standard-lift invariant was actually exercised',String(compared));
+  ok(A.RATE_LABEL.fast==='adding load each session'&&A.RATE_LABEL.standard==='building reps, then load','dashboard wording, no mode labels','');
+  console.log('  fast = last + one step · one miss defers, two demote · block boundary 3-of-4 promotes/demotes · existing programs classified · TM tracks a fast lift · standard lifts untouched ('+compared+' cases)');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

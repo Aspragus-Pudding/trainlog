@@ -818,7 +818,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.34.2';
+const APP_VERSION='1.35.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1627,7 +1627,7 @@ function buildDay(tpl, phase){
     if(!ex) return;
     used.add(ex.id);
     const sc=schemeFor(role,phase.type,phase.week,phase.weeks,ex,phase.taper);
-    const refinedHyp=phase.refined&&phase.type==='hyp'&&!phase.onDeload&&!phase.linear;
+    const refinedHyp=phase.refined&&phase.type==='hyp'&&!phase.onDeload;
     if(refinedHyp){
       sc.rpe=effortRamp(role,phase.week,trainingWeeksOf(phase)); sc.ramp=true;
       const m=primaryMuscle(ex);
@@ -1724,6 +1724,13 @@ function loadAll(){
   // The batch-B hypertrophy rules (maintenance top set, effort ramp,
   // calibration AMRAPs, set cap) start with the NEXT block for a program
   // already under way — never mid-block (decided Oct 2026). Marked once.
+  // progression rate: an existing program classifies its main lifts from the
+  // log once, at today's session count (see rateState); new setups seed in applyBuilder
+  if(!CFG.rateSeed&&(CFG.onboarded||LOG.some(e=>e.type==='set'))){
+    try{ CFG.rateSeed={at:sessionOrdinals().size, dflt:'standard', classify:true, lifts:{}};
+      [...new Set(CFG.goals||[])].forEach(id=>{ if(exById[id]) CFG.rateSeed.lifts[id]=rateFromLog(rateExposures(id),CFG.rateSeed.at); });
+      saveCfg(); }catch(err){ console.error('rate seed failed',err); CFG.rateSeed=null; }
+  }
   if(!CFG.rulesV){
     try{ const pos=ROADMAP.length?programPosition():null;
       ROADMAP.forEach((b,i)=>{ if(!pos||i>pos.idx) b.refined=true; }); }catch{}
@@ -3046,6 +3053,30 @@ function blockProgress(p){
   let acc=0; for(const b of ROADMAP.slice(0,p.idx)) acc+=blockLen(b);
   return {done:p.week, total:p.weeks, weeksIn:acc+p.week};
 }
+/* "Adding load each session" / "building reps, then load", per main lift —
+   plus "no new best in N weeks" once a standard lift passes its stall window. */
+function mainLiftRateCard(){
+  const ids=[...new Set(CFG.goals||[])].filter(id=>exById[id]&&mainEligible(exById[id]));
+  if(!ids.length) return null;
+  const c=el('div','card pad');
+  c.appendChild(el('div','',`<span style="font-weight:650">Main lifts</span>`));
+  ids.forEach(id=>{
+    const r=rateOf(id); let extra='';
+    if(r==='standard'){
+      // the date of the most recent new high (oldest first), and only while the
+      // lift is still being trained — a lift you've stopped doing isn't stalled
+      const bests=sessionBests(id,'').filter(b=>b.e1!=null).reverse();
+      let max=-1, peakTs=null; bests.forEach(b=>{ if(b.e1>max+0.5){ max=b.e1; peakTs=b.ts; } });
+      const recent=bests.length&&(Date.now()-new Date(bests[bests.length-1].ts))/864e5<=10;
+      if(peakTs&&recent){ const wks=Math.floor((Date.now()-new Date(peakTs))/864e5/7), lim=CFG.stallWeeks||4;
+        if(wks>=lim) extra=' · no new best in '+wks+' weeks'; }
+    }
+    const row=el('div','row between sm'); row.style.cssText='padding:7px 0;border-top:1px solid var(--line);margin-top:6px';
+    row.innerHTML=`<span>${esc(exById[id].name)}</span><span class="muted tiny" style="text-align:right">${esc(RATE_LABEL[r]+extra)}</span>`;
+    c.appendChild(row);
+  });
+  return c;
+}
 function renderDash(){
   const v=$('#v-dash'); v.innerHTML='';
   v.appendChild(proposalCards());
@@ -3053,6 +3084,7 @@ function renderDash(){
   const longDate=dt=>dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const tgtDate=CFG.target?new Date(CFG.target+'T12:00'):null;
   // countdown follows the projection; the original target is secondary when they differ
+  const _mlc=mainLiftRateCard();
   const differs=proj&&tgtDate&&Math.abs(proj.behindDays)>=1;
 
   const hero=el('div','card pad');
@@ -3069,6 +3101,7 @@ function renderDash(){
       <span><i class="sw" style="background:var(--muted);height:2px;border-radius:0"></i>Intensity</span>
     </div>`;
   v.appendChild(hero);
+  if(_mlc) v.appendChild(_mlc);
   $('#chart').appendChild(phaseChart(p));
   if(proj&&proj.behindDays!=null&&proj.behindDays>DRIFT_DAYS) v.appendChild(driftCard(proj,p));
 
@@ -5058,24 +5091,11 @@ function suggestFor(slot){
     return {pr, lb:pr.lb, why:explainRx(slot,pr,o), o};
   }
   if(isMaint(slot)&&!topSetOf(slot)){
-    const v=maintTopView(slot), m=nextPrescription(v);
+    const v=maintTopView(slot), m=fastRx(v, nextPrescription(v), o);
     const pr={...m, maint:true};
     return {pr, lb:pr.lb, why:explainRx(v,pr,o), o};
   }
-  let pr=nextPrescription(slot);
-  // novice linear progression: a main lift's first set of the session adds
-  // one step whenever last session's work was done (reps at or above the
-  // range floor, not harder than aimed). Every later set follows the normal
-  // engine. Spec §3.2: add load every session until progress stalls twice.
-  const ph=currentPhase();
-  if(ph&&ph.linear&&o.fresh&&isMainLift(slot.ex)&&pr.lb!=null){
-    const tr=slotTrack(slot), last=lastSetFor(tr.ex,tr.sig);
-    if(last&&last.rpe!=null&&last.reps>=slot.reps[0]&&last.rpe<=slot.rpe+RPE_HOLD_TOL){
-      const L0=toLb(last.weight);
-      pr={...pr, lb:stepUp(slot,L0), reps:Math.min(last.reps,slot.reps[1]), src:'novice · add load every session',
-        note:'Novice model: last session you did '+fmt(L0,0)+' × '+last.reps+' @ RPE '+last.rpe+', so the load goes up one step at the same reps. This continues until progress stalls twice.'};
-    }
-  }
+  let pr=fastRx(slot, nextPrescription(slot), o);
   // Stagnation probe only on the first set of a session, and only on the
   // chart-free path — the chart path already has its own override-damping
   // and probe logic (overrideStreak/lastWasProbe), and layering both would
@@ -5168,7 +5188,7 @@ const MAINT_TOP={reps:[3,5], rpe:7.5};
 const isMaint=slot=>!!slot&&slot.structure==='maint';
 const maintTopView=slot=>({...slot, reps:MAINT_TOP.reps.slice(), rpe:MAINT_TOP.rpe, _cls:'top'});
 function addMaintenance(days, phase){
-  if(!phase||phase.type!=='hyp'||phase.onDeload||!phase.refined||phase.linear) return days;
+  if(!phase||phase.type!=='hyp'||phase.onDeload||!phase.refined) return days;
   [...new Set(CFG.goals||[])].filter(id=>exById[id]&&mainEligible(exById[id])).forEach(id=>{
     let placed=false;
     for(const d of days){
@@ -5227,23 +5247,81 @@ const EXPERIENCE={
   advanced:{label:'Progress takes months', short:'Advanced'}
 };
 const EQUIPMENT={barbell:'Barbell gym',machine:'Machine-heavy',dumbbell:'Dumbbells only',mixed:'A bit of everything'};
-/* The data side of experience (spec §3.2): a lifter adding load every session
-   on a main lift for 3+ weeks is progressing like a novice. Per main lift:
-   at least 3 sessions spanning 21+ days, each session's top set heavier than
-   the one before. Judgement default thresholds (the spec's 3 weeks). */
-function noviceSignal(){
-  const lifts=[];
-  [...new Set(CFG.goals||[])].forEach(id=>{
-    if(!exById[id]) return;
-    const h=exerciseSessionHistory(id,'').filter(x=>x.topLb>0);
-    // the most recent unbroken run of session-to-session load increases
-    let run=[h[h.length-1]];
-    for(let i=h.length-2;i>=0;i--){ if(h[i].topLb<run[0].topLb-1e-6) run.unshift(h[i]); else break; }
-    const days=run.length>1?(new Date(run[run.length-1].ts)-new Date(run[0].ts))/864e5:0;
-    if(run.length>=3&&days>=21) lifts.push({id, sessions:run.length, days:Math.round(days)});
+/* ---------- Progression rate, per main lift ----------
+   Replaces the novice / intermediate / advanced program models (Oct 2026).
+   Each main lift is either FAST — the top set goes up one step every
+   exposure while the previous one hit its target (reps at or above the
+   floor, RPE at or under target) — or STANDARD, the normal engine (double
+   progression, blocks, the stall window). Profiles, the block sequencer and
+   accessory work are the same either way.
+   - Demotion: two consecutive misses while fast → standard, on its own (the
+     one automatic program change — it only ever slows a lift down).
+   - Block boundaries: a lift that added load on at least 3 of its last 4
+     exposures is fast for the new block, otherwise standard (so a lift that
+     starts moving quickly again goes back to fast).
+   - Starting point (CFG.rateSeed {at, dflt, lifts}): a new setup seeds from
+     its experience answer ("still adding weight", or skipped → fast;
+     slower answers → standard). An existing program classifies each main
+     lift from its log once, by the same 3-of-4 rule, at the session count
+     it was first seen.
+   DERIVED ON READ from the log + that seed — never stored per session.
+   JUDGEMENT DEFAULTS, GRADE D: 3 of 4, two misses, one step. */
+const RATE_LOOK=4, RATE_FAST_MIN=3, RATE_MISSES=2;
+const RATE_LABEL={fast:'adding load each session', standard:'building reps, then load'};
+/* One exposure per session: its top set (top / AMRAP) if it had one, else
+   its heaviest working set; unmodified track, never a back-off. */
+function rateExposures(exId){
+  const by=new Map();
+  for(const st of sets()){
+    if(st.set_kind==='warmup'||!onTrack(st,exId,'')) continue;
+    const cur=by.get(st.session_id), top=TOP_ROLES.includes(st.role), L=toLb(st.weight);
+    if(!cur||(top&&!cur.top)||(top===cur.top&&L>cur.load)) by.set(st.session_id,{set:st, load:L, top, ts:st.ts});
+  }
+  const ord=sessionOrdinals();
+  return [...by.values()].sort((a,b)=>new Date(a.ts)-new Date(b.ts)).map(e=>{
+    const t=e.set.target;
+    return {...e, ord:ord.has(e.set.session_id)?ord.get(e.set.session_id):ord.size,
+      miss:!!e.set.failed||!!(t&&((e.set.reps<t.reps[0])||(e.set.rpe!=null&&e.set.rpe>t.rpe+RPE_HOLD_TOL)))};
   });
-  return {novice:lifts.length>0, lifts};
 }
+/* Trained-session number for each session id (counted from the program start). */
+let _ordCache=null, _ordLen=-1;
+function sessionOrdinals(){
+  if(_ordLen===LOG.length&&_ordCache) return _ordCache;
+  const from=CFG.start?new Date(CFG.start+'T00:00').getTime():0, m=new Map(); let n=0;
+  for(const e of LOG) if(countsAsTrained(e)&&new Date(e.ts).getTime()>=from) m.set(e.session_id,n++);
+  _ordCache=m; _ordLen=LOG.length; return m;
+}
+/* Session numbers at which each roadmap block starts (after the first). */
+function blockStartOrdinals(){
+  const out=[]; let acc=0;
+  ROADMAP.forEach((b,i)=>{ if(i) out.push(acc); acc+=blockLen(b)*(splitFor(b).days||5); });
+  return out;
+}
+/* 3 of the last 4 exposures before a session number added load. */
+function rateFromLog(exs, beforeOrd){
+  const h=exs.filter(e=>e.ord<beforeOrd).slice(-(RATE_LOOK+1));
+  if(h.length<RATE_LOOK+1) return 'standard';
+  let up=0; for(let i=1;i<h.length;i++) if(h[i].load>h[i-1].load+1e-6) up++;
+  return up>=RATE_FAST_MIN?'fast':'standard';
+}
+function rateState(exId){
+  const exs=rateExposures(exId), seed=CFG.rateSeed||{at:0,dflt:'standard',lifts:{}};
+  const at=seed.at||0;
+  let rate=(seed.lifts&&seed.lifts[exId])||(seed.classify?rateFromLog(exs,at):seed.dflt)||'standard';
+  let misses=0, demoted=null, last=null;
+  const bounds=blockStartOrdinals().filter(b=>b>at); let bi=0;
+  const crossTo=ord=>{ while(bi<bounds.length&&bounds[bi]<=ord){ rate=rateFromLog(exs,bounds[bi]); misses=0; if(rate==='fast') demoted=null; bi++; } };
+  exs.filter(e=>e.ord>=at).forEach(e=>{
+    crossTo(e.ord);
+    if(rate==='fast'){ misses=e.miss?misses+1:0; if(misses>=RATE_MISSES){ rate='standard'; demoted=e; } }
+    last=e;
+  });
+  crossTo(sessionOrdinals().size);
+  return {rate, demoted, last, exs};
+}
+const rateOf=exId=>isMainLift(exId)?rateState(exId).rate:'standard';
+
 /* ---------- Block sequencer (spec §3.3) ----------
    Pure: from profile parameters, experience, weeks available and an optional
    test week, a block list plus a one-line reason per block. Never touches
@@ -5277,11 +5355,6 @@ function sequenceBlocks(o){
   const wantsPR=P.testEvery>0, out=[];
   const mk=(type,weeks,extra)=>({type,label:TYPE_NAME[type],weeks,deload:false,hyp:[],emphasis:'moderate',refined:true,...extra});
   if(!W) return {blocks:out, reasons:[]};
-  if(o.experience==='novice'){
-    // shaped like every other block — the review counts weeks from its volume shape
-    return {blocks:[applyShape(mk('hyp',W,{linear:true,label:'Novice'}))], leftover:0,
-      reasons:['One ongoing block: add a little load every session on your main lifts until progress stalls twice, then switch to blocks. Periodization adds nothing yet at this stage.']};
-  }
   const cyc=chooseCycle(P.ratio);
   // a test week splits the plan: the part before it ends strength → taper
   const testAt=o.testWeek!=null&&o.testWeek>SEQ.hyp[0]+SEQ.str[0]&&o.testWeek<=W?Math.round(o.testWeek):null;
@@ -5383,15 +5456,6 @@ function activeProposals(){
   PROPOSAL_SOURCES.forEach(fn=>{ try{ const p=fn(); if(p&&!proposalDismissedRecently(p.id,p.snoozeDays)) out.push(p); }catch(err){ console.error('proposal failed',err); } });
   return out;
 }
-PROPOSAL_SOURCES.push(()=>{
-  if(CFG.experience==='novice') return null;
-  const sig=noviceSignal(); if(!sig.novice) return null;
-  const names=sig.lifts.map(l=>exById[l.id].name+' ('+l.sessions+' sessions in a row, '+l.days+' days)').join(', ');
-  return {id:'novice_model', snoozeDays:28, title:'Your log looks like novice progress',
-    body:'You\'ve added load every session on '+names+'. Lifters progressing like that usually do best adding a little every session on one simple ongoing block, rather than periodized blocks. You can switch, or keep your current plan — this comes back in four weeks if it still applies.',
-    accept:{label:'Use the novice model', fn:()=>{ CFG.experience='novice'; saveCfg(); toast('Novice model on — rebuild your program from Edit program to apply it'); }},
-    decline:{label:'Keep my plan'}};
-});
 function proposalCards(){
   const ps=activeProposals(), box=el('div','');
   ps.forEach(p=>{
@@ -5405,25 +5469,19 @@ function proposalCards(){
   return box;
 }
 
-/* Novice stalls: a session in the novice block where a main lift's first set
-   fell short (reps below the floor, or harder than aimed by more than the
-   tolerance). Two on any main lift → propose moving to blocks. */
-function noviceStalls(exId){
-  // each session's first working set, against the target it was logged with
-  const first=new Map();
-  for(const st of sets()){ if(st.set_kind==='warmup'||!onTrack(st,exId,'')) continue; if(!first.has(st.session_id)) first.set(st.session_id,st); }
-  return [...first.values()].filter(x=>x.target&&x.rpe!=null&&
-    (x.failed||x.reps<x.target.reps[0]||x.rpe>x.target.rpe+RPE_HOLD_TOL)).length;
+/* FAST progression for a main lift's first set of the session (the top set
+   where there is one): last exposure's load plus one step, same reps — as
+   long as that exposure hit its target. After a miss the normal engine
+   decides; a second miss in a row demotes the lift (rateState). Any lift on
+   standard never reaches the override: its prescription is untouched. */
+function fastRx(slot, pr, o){
+  if(!o||!o.fresh||pr.lb==null||!isMainLift(slot.ex)||slotTrack(slot).sig) return pr;
+  const rs=rateState(slotTrack(slot).ex);
+  if(rs.rate!=='fast'||!rs.last||rs.last.miss) return pr;
+  const L0=rs.last.load, lo=slot.reps[0], hi=slot.reps[1], R=Math.max(lo,Math.min(hi,rs.last.set.reps));
+  return {...pr, lb:stepUp(slot,L0), reps:R, src:'adding load each session', fast:true,
+    note:'Last time '+fmt(L0,0)+' × '+rs.last.set.reps+(rs.last.set.rpe!=null?' @ RPE '+rs.last.set.rpe:'')+' hit its target, so the load goes up one step at '+R+' reps. This lift keeps adding load each session until it misses twice in a row, then it moves to the normal progression on its own. (Judgement default: one step, two misses.)'};
 }
-PROPOSAL_SOURCES.push(()=>{
-  const ph=currentPhase(); if(!ph||!ph.linear) return null;
-  const stalled=[...new Set(CFG.goals||[])].filter(id=>exById[id]&&noviceStalls(id)>=2);
-  if(!stalled.length) return null;
-  return {id:'novice_done', snoozeDays:14, title:'Progress has stalled twice',
-    body:'On '+stalled.map(id=>exById[id].name).join(' and ')+', adding load every session has stopped working twice. That is the usual point to move to hypertrophy and strength blocks. Rebuild your program from Edit program to switch.',
-    accept:{label:'Switch to blocks', fn:()=>{ CFG.experience='intermediate'; saveCfg(); toast('Set to intermediate — rebuild your program from Edit program to apply it'); }},
-    decline:{label:'Keep going'}};
-});
 
 /* ---------- Fatigue-triggered deloads (spec §3.6) ----------
    Proposed as a card, never imposed (B against fixed deloads as a growth
@@ -5522,6 +5580,20 @@ PROPOSAL_SOURCES.push(()=>{
    AMRAP loads by rep focus (8+ reps 75%, 5–7 85%, ≤4 90% of TM). */
 const TM_OF_E1=0.9, TM_CAP_UP=1.05, TM_SHORT=0.95;
 function tmFor(exId){
+  // fast lift: the TM tracks behind the latest top set — 90% of what it shows, no cap
+  if(isMainLift(exId)){
+    const rs=rateState(exId);
+    const e1At=e=>e?(setE1RM(e.set)||(e.set.rpe!=null?impliedE1(e.load+bwOffset(exById[exId]),e.set.reps,e.set.rpe):null)):null;
+    if(rs.rate==='fast'){ const v=e1At(rs.last); if(v) return {tm:v*TM_OF_E1, src:'fast'}; }
+    else if(rs.demoted){
+      // demoted: the TM at that moment is the base the normal caps work from,
+      // until a recorded update comes after it
+      const di=LOG.findIndex(e=>e.id===rs.demoted.set.id);
+      let after=null; for(let i=LOG.length-1;i>di;i--){ const e=LOG[i]; if(e.type==='tm_update'&&e.exercise_id===exId&&e.tm_lb>0){ after=e; break; } }
+      if(after) return {tm:after.tm_lb, src:'logged', ev:after};
+      const v=e1At(rs.demoted); if(v) return {tm:v*TM_OF_E1, src:'demoted'};
+    }
+  }
   for(let i=LOG.length-1;i>=0;i--){ const e=LOG[i]; if(e.type==='tm_update'&&e.exercise_id===exId&&e.tm_lb>0) return {tm:e.tm_lb, src:'logged', ev:e}; }
   const b=bestE1RM(exId);
   return b?{tm:b.v*TM_OF_E1, src:'initial'}:null;
@@ -5529,7 +5601,7 @@ function tmFor(exId){
 /* Recorded at a deliberate moment (session start), so it can't drift with every set. */
 function ensureInitialTM(exId){
   const t=tmFor(exId);
-  if(!t||t.src==='logged') return null;
+  if(!t||t.src==='logged'||t.src==='fast'||t.src==='demoted') return null;
   return append({type:'tm_update',exercise_id:exId,tm_lb:t.tm,prev_lb:null,reason:'initial'});
 }
 const amrapPct=reps=>reps[1]>=8?0.75:reps[1]>=5?0.85:0.90;
@@ -5551,7 +5623,9 @@ function tmFromAmrap(slot, ev){
   if(ev.reps<target){ tm=prev*TM_SHORT; reason='short'; }
   else{
     const e1=impliedE1(L,ev.reps,ev.rpe!=null?ev.rpe:10)||e1rm(L,ev.reps);
-    tm=e1?Math.min(e1*TM_OF_E1,prev*TM_CAP_UP):prev*TM_CAP_UP; reason='realization';
+    // the +5% cap applies once the lift is on standard progression
+    const capped=rateOf(exId)!=='fast';
+    tm=e1?(capped?Math.min(e1*TM_OF_E1,prev*TM_CAP_UP):e1*TM_OF_E1):prev*TM_CAP_UP; reason='realization';
   }
   return append({type:'tm_update',exercise_id:exId,tm_lb:tm,prev_lb:prev,reason,set_id:ev.id,target_reps:target});
 }
@@ -6681,7 +6755,7 @@ const BUILDER_DEFAULT_WEEKS=24;   // when there's no target date — judgement d
 function builderDefaults(rerun){
   return {rerun:!!rerun, path:rerun?'full':null, i:0, units:CFG.units||'lb',
     profile:CFG.profile||'even_mix', params:{...(CFG.profileParams||{})}, customise:false,
-    experience:CFG.experience||'intermediate', week:splitOf(programSplitSpec()).week, sessionLen:CFG.sessionLen||60,
+    experience:rerun?(CFG.experience||null):null, week:splitOf(programSplitSpec()).week, sessionLen:CFG.sessionLen||60,
     goals:[...new Set(CFG.goals||[])].filter(id=>exById[id]), est:{}, equipment:CFG.equipment||'mixed',
     // a fresh install's target is a placeholder made at load, not a date you chose
     target:CFG.onboarded?(CFG.target||''):'', targetFixed:CFG.onboarded&&!!CFG.targetFixed, testDate:CFG.testDate||'', conds:[...(CFG.conditions||[])],
@@ -6714,6 +6788,11 @@ function builderPlan(B){
 /* Accept: settings from the draft, roadmap from the plan. History untouched. */
 function applyBuilder(B, plan){
   CFG.units=B.units; CFG.profile=B.profile; CFG.profileParams={...(B.params||{})}; CFG.experience=B.experience;
+  // the experience answer only seeds each main lift's starting progression rate,
+  // and only for a new setup — a rerun leaves rates to the log (rateState)
+  if(!B.rerun) CFG.rateSeed={at:0, dflt:(B.experience==='intermediate'||B.experience==='advanced')?'standard':'fast', lifts:{}};
+  // how long without a new best counts as a stall on standard progression
+  CFG.stallWeeks=B.experience==='advanced'?6:4;
   // only when it actually changed — rewriting the same days as a list changes the
   // program's key and would drop pre-workout edits for nothing
   if(splitOf(programSplitSpec()).week.join()!==B.week.join()) CFG.week=[...B.week];
@@ -6745,11 +6824,11 @@ function drawBuilder(rerun){
   const B=BUILDER, steps=builderSteps(B), step=B.path?steps[B.i]:'path';
   const N=steps.length, n=Math.max(1,B.i+1);
   const go=d=>{ B.i=Math.max(0,Math.min(steps.length-1,B.i+d)); openBuilder(); };
-  const titles={path:B.rerun?'Rebuild your program':'Set up your program', goal:'What are you training for?', experience:'How fast do you progress?',
+  const titles={path:B.rerun?'Rebuild your program':'Set up your program', goal:'What are you training for?', experience:'How are your lifts going?',
     schedule:'How do you train?', lifts:'Your main lifts', equipment:'What equipment do you have?', dates:'Any dates?',
     constraints:'Anything you\'re working around?', review:B.rerun?'Before and after':'Your program'};
   const subs={path:B.rerun?'Builds the rest of your program from where you are. Finished blocks and the one you\'re in stay as they are. Nothing changes until you accept.':'About a minute. Every step can be skipped and changed later.',
-    goal:'Sets the balance of strength and size blocks, and how often you test.', experience:'Decides how the program is structured.',
+    goal:'Sets the balance of strength and size blocks, and how often you test.', experience:'Sets how fast your main lifts start progressing. The program itself is the same either way.',
     schedule:'Days per week and the kind of days.', lifts:'Up to three. They get priority and their own strength tracking.',
     equipment:'Picks exercises you can actually do.', dates:'Optional. A fixed date or a test date shapes the end of the plan.',
     constraints:'Flags exercises that load an at-risk position. It warns, never blocks.', review:'One line per block on why it\'s there.'};
@@ -6787,7 +6866,16 @@ function drawBuilder(rerun){
       chipsRow([['high','High'],['medium','Medium'],['low','Low']],v=>P.specificity===v,v=>{ B.params.specificity=v; },'How much to favour the main lifts themselves');
     }
   }
-  if(step==='experience') Object.entries(EXPERIENCE).forEach(([k,e])=>card(B.experience===k,e.short,e.label,()=>{ B.experience=k; openBuilder(); }));
+  if(step==='experience'){
+    Object.entries(EXPERIENCE).forEach(([k,e])=>card(B.experience===k,e.label,null,()=>{ B.experience=k; openBuilder(); }));
+    if(B.experience){
+      const wk=B.experience==='advanced'?6:4;
+      const why=B.experience==='novice'
+        ?'You\'ll likely keep adding weight almost every session for a while. Each main lift stays on this faster progression until it stalls two sessions in a row, then it switches to the normal block progression on its own. You don\'t need to do anything.'
+        :'Your main lifts start on the normal progression: reps build up across each lift\'s range, then the load goes up. If a lift goes about '+wk+' weeks without a new best while you\'re training it every week, that\'s a stall — the dashboard will say so, and the program will need changing. If a lift starts climbing quickly again, it moves to adding load each session on its own at the start of the next block.';
+      host.appendChild(el('div','qblock','<div class="sm" style="line-height:1.55">'+esc(why)+'</div>'));
+    }
+  }
   if(step==='schedule'){
     host.appendChild(weekPicker(B.week,w=>{ B.week=w; openBuilder(); }));
     if(B.path==='full') chipsRow([[45,'45 min'],[60,'1 hour'],[75,'75 min'],[90,'90 min']],v=>B.sessionLen===v,v=>{ B.sessionLen=v; },'Rough session length');
@@ -6829,7 +6917,7 @@ function drawBuilder(rerun){
   if(step==='review'){
     const plan=builderPlan(B), list=el('div','qblock');
     const row=(b,i,dim)=>`<div style="padding:7px 0;border-top:1px solid var(--line);${dim?'opacity:.6':''}">
-      <div class="row between sm"><span style="font-weight:650;color:${blockColor(b)}">${i+1}. ${esc(b.linear?'Novice':blockName(b))}</span><span class="dim tiny">${b.weeks} week${b.weeks>1?'s':''}${b.realize?' · tests':''}${b.deload?' + deload':''}</span></div>
+      <div class="row between sm"><span style="font-weight:650;color:${blockColor(b)}">${i+1}. ${esc(blockName(b))}</span><span class="dim tiny">${b.weeks} week${b.weeks>1?'s':''}${b.realize?' · tests':''}${b.deload?' + deload':''}</span></div>
       <div class="muted tiny" style="margin-top:2px">${esc(plan.reasons[i]||'')}</div></div>`;
     list.innerHTML=`<div class="qlab">${B.rerun?'New':'Your blocks'} · ${plan.blocks.reduce((a,b)=>a+blockLen(b),0)} weeks</div>`+plan.blocks.map((b,i)=>row(b,i,i<plan.kept)).join('');
     if(B.rerun){
@@ -6840,7 +6928,7 @@ function drawBuilder(rerun){
     host.appendChild(list);
     if(plan.leftover) host.appendChild(el('div','anchor',plan.leftover+' week'+(plan.leftover>1?'s':'')+' left over at the end. Move the target date, or the last block runs a little long.')).style.color='var(--warn)';
     const P=builderParams(B);
-    host.appendChild(el('div','dim tiny',PROFILES[B.profile].label+' · '+EXPERIENCE[B.experience].short+' · '+splitOf(B.week).name+' '+B.week.length+' days · '
+    host.appendChild(el('div','dim tiny',PROFILES[B.profile].label+' · '+splitOf(B.week).name+' '+B.week.length+' days · '
       +(B.goals.map(id=>exById[id]&&exById[id].name).filter(Boolean).join(', ')||'no main lifts')+(P.ratio>0.55?' · strength-heavy profiles repeat strength blocks to reach their share':''))).style.marginTop='6px';
     if((CFG.feedbackUrl||'').trim()&&!CFG.testerName){
       const nm=el('div','qblock'); nm.innerHTML='<div class="qlab">What should we call you?</div><div class="field">Notes you write go to the person who set this up, signed with this name.</div><input type="text" id="bnm" placeholder="First name is fine" style="width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit">';

@@ -141,8 +141,17 @@ never swapped out mid-workout.
   rules (maintenance top set, effort ramp, calibration AMRAP, set cap); a
   program already under way only gets them from its next block.
 - **The app proposes, you decide.** Program changes the app suggests
-  (novice model, deloads, stall interventions) go through
-  `PROPOSAL_SOURCES` → cards on the dashboard. Never switch silently.
+  (deloads, stall interventions) go through `PROPOSAL_SOURCES` → cards on
+  the dashboard. Never switch silently. The one exception, decided Oct 2026:
+  a main lift's progression rate demotes from fast to standard on its own
+  (it only ever slows a lift down).
+- **Progression rate is per main lift, not a program model.** `rateState()`
+  derives fast / standard from the log plus `CFG.rateSeed` (new setups seed
+  from the experience answer; existing programs were classified once from
+  the log). Fast = last top set + one step while it hits target; two
+  consecutive misses → standard; at each block boundary 3 of the last 4
+  exposures adding load → fast. Profiles, sequencer and accessories ignore
+  it. A lift on standard must never reach `fastRx()` — §39 checks this.
 - **A week is a list of day types** (`CFG.week`, or `b.week` per block; 2–6
   of full/upper/lower/push/pull/legs). `splitOf()` turns any spec — a week,
   or an old preset name in `CFG.split`/`b.split` — into one shape. Presets
