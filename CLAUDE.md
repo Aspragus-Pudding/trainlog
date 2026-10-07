@@ -204,7 +204,7 @@ never swapped out mid-workout.
   modifiers add/remove) meet a selected entry's avoid tags: umbrella → amber,
   specific core → red, structural non-core → a note. The hand-made `FLAGS`
   table is an authored layer that decides where it has an opinion — never
-  soften the shoulder_instability rows. Rows added after v1.44 go in 
+  soften the shoulder_instability rows. Rows added after v1.44 go in `FLAGS_ADDED`
   (yellow, with a swap and an optional modifier that clears them) so the
   one-time exclusion seed never picks them up. Your own ratings (`exercise_joint`
   events → `exerciseVerdict()`) outrank both. **Flags never steer
