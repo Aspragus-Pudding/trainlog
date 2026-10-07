@@ -22,6 +22,8 @@ manifest.webmanifest    PWA manifest
 icon-192.png/512.png    icons
 AppsScript.gs           Google Sheets backup receiver (lives in Apps Script, not deployed here)
 FeedbackScript.gs       append-only receiver for testers' notes (CFG.feedbackUrl), never readable back
+CHANGELOG.md            what changed per version, newest first; the top entry is embedded as the in-app "What's new" card
+tools/embed-changelog.js   copies CHANGELOG.md's top entry into index.html
 ALPHA.md                tester plan, incl. what a tester's data touches — keep it true when changing network/storage code
 shoulder-protocol.md    reference doc, not used by the app
 tests/prescription-invariants.js   prescription direction/pairing tests, run with node
@@ -233,7 +235,11 @@ never swapped out mid-workout.
   `trace[]` (stored in the suggestion log, shown as "Why these numbers").
   Never add a new adjustment outside this pipeline. Global signals (sleep,
   motivation, rest of life) never cut load except a 1 (sick day, one step,
-  today only); soreness is local; nothing persists without an expiry. Focused
+  today only); soreness is local; nothing persists without an expiry.
+  Cuts never add up: sick day, soreness and the ladder's −10% on one
+  exercise → the largest applies, the rest are traced as superseded (sets
+  too). A coarse step (≥7% of the load) isn't spent on a small overshoot:
+  `coarseHold()` holds the load unless RPE ≥ target + 1.5, RPE 10 or a miss. Focused
   deload = `focused_deload_*` events (one window; adding joins it; ramp-back
   is proposed, never automatic). The dial = `dial_set`/`dial_reset` events
   plus revealed overrides; it replaced override damping. Program changes
@@ -289,7 +295,11 @@ progression the old one never surfaced) is expected, not automatically a
 regression — use judgement, don't just read the overall percentage.
 
 **Bump `APP_VERSION` in `index.html` on every meaningful change.** It's displayed
-on the Lifts tab so the user can confirm which build is running.
+on the Lifts tab so the user can confirm which build is running. **Every bump
+adds a `CHANGELOG.md` entry** (newest first, 3–5 plain lines on what a user
+would notice), then `node tools/embed-changelog.js` copies it into the app's
+"What's new" card. §54 fails if the entry, the embedded copy and `APP_VERSION`
+disagree.
 
 ## User context
 
@@ -332,7 +342,7 @@ decision.
 **Always, before committing:**
 1. Syntax-check: extract the `<script>` block and `new Function(src)` it. A
    syntax error ships a completely blank app.
-2. Bump `APP_VERSION`.
+2. Bump `APP_VERSION`, add the `CHANGELOG.md` entry, run `node tools/embed-changelog.js`.
 3. Say what changed and why, briefly.
 
 **Don't refactor for its own sake.** This is a single-file app on purpose. It

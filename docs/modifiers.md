@@ -8,7 +8,12 @@ in `index.html`. **This table and that block list the same ids** —
 low: `condition_flag` → `focused_deload` → `joint_ladder` → `local_soreness` →
 `global_readiness` / `sick_day` → `dial` → `phase_ramp` → `progression`.
 Applied low to high: after the dial, a step can only make the number more
-conservative. Guards (`calibrating`, `ceiling`, `one_step`, `floor`,
+conservative. **Cuts never add up (v1.49):** `sick_day`, `local_soreness` and
+the `joint_ladder` −10% are each priced from the same starting load; the
+largest applies and the others are traced "superseded by <id>". Set cuts
+follow the same rule (ladder −1 and soreness −2 → −2 in all).
+`focused_deload` (a pin) and `condition_flag` (a note) sit outside it.
+§52 asserts it across the randomised stacks. Guards (`calibrating`, `ceiling`, `one_step`, `floor`,
 `both_up`) run last. Every suggestion's chain is stored as `trace[]` in the
 suggestion log and shown as "Why these numbers" on the Progress tab.
 

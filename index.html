@@ -8531,6 +8531,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
   }
 }
 </script>
+<script type="application/json" id="whats-new">{"version":"1.49.0","lines":["Cuts no longer add up. If you're run down, sore and a joint is flagged on the same day, an exercise gets the largest single cut, not all of them. \"Why these numbers\" shows which one applied.","A small overshoot on a machine with big jumps no longer drops a whole step. If one step down is 7% of the load or more, the load holds and you aim one rep fewer, never below your range. A load cut needs RPE 1.5 over target or a missed rep.","The dashboard bands now match what the app does. Readiness uses sleep, motivation and rest of life only, the same inputs as the suggestions. Joints are compared with your usual. Fatigue has a band too. Each line says what the app is doing about it.","Progress → Suggestions charts how often you landed on target, next to how often you lifted as suggested.","When the dial has moved from your setting because of what you've been lifting, the explanation says so every time."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9097,7 +9098,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.48.0';
+const APP_VERSION='1.49.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -10308,7 +10309,7 @@ const DAYS=[
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
   profile:null,profileParams:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
-  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{}};
+  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
    from the address bar so it isn't left sitting in history. Each writes
@@ -11207,7 +11208,27 @@ const RPE_HOLD_TOL=0.5;
    top of the rep range before adding load. Grade C (strongest support from
    stalled overhead pressers); the 5% line is the spec's. */
 const REP_FIRST_STEP=0.05;
-function rpeDeltaStep(slot, L0, R0, RPE0, T){
+/* A coarse step doesn't get spent on a small overshoot (7 Oct incline: 70 × 10
+   @ 8.5 against 8 suggested 60 — a 14% cut for half a point). When one step down
+   is 7% of the load or more, a set within +1.5 of the TARGET (not the
+   fatigue-adjusted aim) and with no missed rep holds the load and aims one rep
+   fewer, never below the range (at the bottom of the range: the load and reps
+   hold). A load cut needs RPE ≥ target + 1.5, RPE 10 or a missed rep. Both
+   pricing paths call this before cutting. Judgement defaults, Grade D: the 7%
+   and the 1.5. */
+const COARSE_STEP=0.07, CUT_NEEDS_RPE=1.5;
+function coarseHold(slot, L0, R0, RPE0, failed){
+  const lo=slot.reps[0], hi=slot.reps[1];
+  // RPE 10 is no reps left — it counts as a miss, or a target of 9 could never cut
+  if(failed||RPE0>=10||!(L0>0)||R0<lo||RPE0-slot.rpe>=CUT_NEEDS_RPE) return null;
+  const dn=stepDown(slot,L0), frac=(L0-dn)/L0;
+  if(frac<COARSE_STEP) return null;
+  const reps=Math.max(lo,Math.min(hi,R0-1));
+  return {lb:L0, reps, src:'harder than aimed · step too coarse to cut',
+    note:`Last set ${fmt(L0,0)} × ${R0} @ RPE ${RPE0} was a little over target RPE ${slot.rpe}. One step down (${fmt(L0,0)} → ${fmt(dn,0)}) is ${Math.round(frac*100)}% of the load — too big a cut for that, so the load holds`
+      +(reps<R0?` and reps drop to ${reps}`:` at ${reps} reps, the bottom of your range`)+`. A load cut needs RPE ${Math.min(10,slot.rpe+CUT_NEEDS_RPE)} or more, or a missed rep.`};
+}
+function rpeDeltaStep(slot, L0, R0, RPE0, T, failed){
   const lo=slot.reps[0], hi=slot.reps[1];
   const lastTxt=`${fmt(L0,0)} × ${R0} @ RPE ${RPE0}`;
   const delta=T-RPE0;                          // >0 easier than aimed, <0 harder
@@ -11237,6 +11258,7 @@ function rpeDeltaStep(slot, L0, R0, RPE0, T){
   const g=Math.max(1,Math.round(-delta)), proposed=R0-g;
   if(proposed>=lo) return {lb:L0, reps:proposed, src:'harder than aimed',
     note:`Last set ${lastTxt} was harder than target RPE ${T}, so same load, ${proposed} reps.`};
+  const ch=coarseHold(slot,L0,R0,RPE0,failed); if(ch) return ch;
   return {lb:stepDown(slot,L0), reps:lo, src:'harder than aimed · load down',
     note:`Last set ${lastTxt} was harder than target RPE ${T}, and ${lo} is already the floor of the range, so load drops one step and reps reset to ${lo}.`};
 }
@@ -11454,7 +11476,7 @@ function nextPrescriptionCore(slot){
 
   if(RPE0==null) return hold('last session',`Last set ${lastTxt} had no RPE, so it repeats.`);
 
-  if(isChartFree(ex)) return done(rpeDeltaStep(slot,L0,R0,RPE0,T));
+  if(isChartFree(ex)) return done(rpeDeltaStep(slot,L0,R0,RPE0,T,!!last.failed));
 
   const e1=impliedE1(L0+off,R0,RPE0);            // null = this set is off the chart
   const offChart=e1==null;
@@ -11476,6 +11498,7 @@ function nextPrescriptionCore(slot){
       cands.forEach(c=>{ c.p=predictedRpe(e1,c.lb+off,c.reps); c.gap=c.p==null?99:Math.abs(c.p-T); });
       cands.sort((a,b)=>a.gap-b.gap||(a.kind===b.kind?0:a.kind==='load'?-1:1));
       const c=cands[0];
+      if(c&&c.kind==='load'){ const ch=coarseHold(slot,L0,R0,RPE0,!!last.failed); if(ch) return done(ch); }
       if(c) return done({lb:c.lb,reps:c.reps,src:'from e1RM',
         note:`Last set ${lastTxt} was harder than RPE ${T}, so ${c.kind==='load'?`load drops to ${fmt(c.lb,0)} for the same ${c.reps} reps`:`the load holds at ${fmt(L0,0)} and reps drop to ${c.reps}, because one step down (${fmt(stepDown(slot,L0),0)}) would be far too light`}.`});
     }
@@ -11674,7 +11697,11 @@ function adjHits(adj, exId){
 /* Fewer sets on the main work the cut reaches: the first two such exercises. */
 function applyReadinessSets(sess){
   if(!sess||!sess.adj||!sess.adj.sets) return;
-  sess.slots.filter(sl=>adjHits(sess.adj,sl.ex)).slice(0,2).forEach(sl=>{ sl.sets_target=Math.max(1,sl.sets_target+sess.adj.sets); });
+  // set cuts don't add up either: a joint at ladder level 4+ has already taken one set off
+  // this exercise, so soreness only takes what's left of its own cut (the larger one wins)
+  sess.slots.filter(sl=>adjHits(sess.adj,sl.ex)).slice(0,2).forEach(sl=>{
+    const had=sl.joint&&sl.joint.level>=4?1:0, more=Math.max(0,-sess.adj.sets-had);
+    sl.sets_target=Math.max(1,sl.sets_target-more); });
 }
 
 let TAB='dash', session=null, draft={weight:135,reps:5,rpe:8,unit:'lb',tech:'straight',group:null,alt:null};
@@ -11797,9 +11824,27 @@ function mainLiftRateCard(){
   });
   return c;
 }
+/* What's new: CHANGELOG.md's top entry (embedded by tools/embed-changelog.js),
+   shown once after an update — only to someone who has trained before, and
+   gone for good once dismissed (CFG.seenVersion, so it rides in backups). */
+const WHATS_NEW=(()=>{ try{ return JSON.parse(document.getElementById('whats-new').textContent); }catch{ return null; } })();
+function whatsNewCard(){
+  if(!WHATS_NEW||WHATS_NEW.version!==APP_VERSION||CFG.seenVersion===APP_VERSION||DEMO) return null;
+  if(!LOG.some(e=>e.type==='set')){ CFG.seenVersion=APP_VERSION; saveCfg(); return null; }   // a new install has nothing to compare against
+  const c=el('div','card pad');
+  c.appendChild(el('div','row between','<span style="font-weight:650">What\'s new in '+esc(APP_VERSION)+'</span>'));
+  const ul=el('ul','sm'); ul.style.cssText='margin:8px 0 0;padding-left:18px;line-height:1.5';
+  (WHATS_NEW.lines||[]).forEach(t=>ul.appendChild(el('li','',esc(t))));
+  c.appendChild(ul);
+  const b=el('button','btn s','Got it'); b.style.marginTop='10px';
+  b.onclick=()=>{ CFG.seenVersion=APP_VERSION; saveCfg(); render(); };
+  c.appendChild(b);
+  return c;
+}
 function renderDash(){
   const v=$('#v-dash'); v.innerHTML='';
   autoApplyInterventions();
+  { const wn=whatsNewCard(); if(wn) v.appendChild(wn); }
   v.appendChild(proposalCards());
   activeRehabPlans().forEach(({e,plan})=>v.appendChild(rehabPlanCard(e,plan,true)));
   const p=currentPhase(), proj=programProjection();
@@ -11861,19 +11906,24 @@ function renderDash(){
     const cols=[];
     if(lastReadiness){
       const score=readinessScoreFromEvent(lastReadiness);
-      cols.push(`<span class="grow"><div class="row between"><span style="font-weight:650">Readiness</span>
+      cols.push(`<span class="grow"><div class="row between"><span style="font-weight:650">Readiness score</span>
           <span class="dim tiny">${new Date(lastReadiness.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></div>
         <div style="margin-top:6px"><span class="rscore" style="font-size:27px;font-weight:790;letter-spacing:-.03em">${Math.round(score*100)}</span>
           <span class="muted sm"> / 100 · ${esc(readinessLabel(score))}</span></div>
-        <div class="dim tiny" style="margin-top:2px">${bandOf(Math.round(score*100))}: ${esc(BAND_DOES[bandOf(Math.round(score*100))])}</div></span>`);
+        <div class="dim tiny" style="margin-top:2px">Sets your warm-up length</div></span>`);
     }
     if(jointScore!=null){
-      cols.push(`<span class="grow"><div style="font-weight:650">Joints</div>
+      cols.push(`<span class="grow"><div style="font-weight:650">Joint comfort</div>
         <div style="margin-top:6px"><span style="font-size:27px;font-weight:790;letter-spacing:-.03em">${jointScore}</span>
           <span class="muted sm"> / 100 · ${esc(jointScoreLabel(jointScore))}</span></div>
-        <div class="dim tiny" style="margin-top:2px">${bandOf(jointScore)} · relative to your usual</div></span>`);
+        <div class="dim tiny" style="margin-top:2px">Last 6 sessions, all joints</div></span>`);
     }
-    rc.innerHTML=`<div class="row" style="align-items:flex-start;gap:16px">${cols.join('')}</div>`;
+    // the bands: the same four words, each computed from what the engine actually reads
+    const rows=dashBands(lastReadiness).map(b=>`<div class="row" style="gap:9px;align-items:baseline;margin-top:7px">
+        <span class="tiny" style="flex:none;width:52px;font-weight:700;color:${BAND_COLOR[b.band]}">${b.band}</span>
+        <span class="sm grow"><b>${esc(b.what)}</b> <span class="dim">· ${esc(b.does)}</span></span></div>`).join('');
+    rc.innerHTML=`<div class="row" style="align-items:flex-start;gap:16px">${cols.join('')}</div>`
+      +(rows?`<div style="margin-top:10px;padding-top:4px;border-top:1px solid var(--line)">${rows}</div>`:'');
     v.appendChild(rc);
   }
 
@@ -13856,9 +13906,11 @@ function explainRx(slot, pr, o){
   // 3. readiness
   if(o.adj){
     const cut=Math.round((1-o.adj.load)*100), sc=Math.round(session.score*100), got=o.adjApplied||0;
-    parts.push('readiness '+sc+' · '+(got>0?'load −'+got+'%':'no load change'));
+    const over=o.cutBy&&o.cutBy!=='local_soreness'?CUT_NAME[o.cutBy]:null;
+    parts.push('readiness '+sc+' · '+(got>0?'load −'+got+'%':over?'covered by the '+over+' cut':'no load change'));
     detail.push('Readiness '+sc+' out of 100 ('+o.adj.label.toLowerCase()+'): today\'s starting loads are cut '+cut+'%'+(session.adjReason?', driven by '+session.adjReason:'')+'. '
-      +(got===cut?'':got>0?'Rounded to this machine\'s '+exById[slot.ex].inc+' lb steps, the actual change is −'+got+'%.'
+      +(over?'The '+over+' cut is larger, so it applies instead — cuts never add up on one exercise.'
+        :got===cut?'':got>0?'Rounded to this machine\'s '+exById[slot.ex].inc+' lb steps, the actual change is −'+got+'%.'
         :'That rounds back to the same load on this machine ('+exById[slot.ex].inc+' lb steps), so the load does not change.'));
   }
   if(session&&session.adj&&session.adj.sets&&o.idx!=null&&o.idx>=0&&o.fresh!==false&&session.slots.filter(sl=>adjHits(session.adj,sl.ex)).slice(0,2).includes(session.slots[o.idx])){
@@ -13886,10 +13938,10 @@ function explainRx(slot, pr, o){
         :'Above your usual in '+pick('above')+' of your last '+t.n+' sessions.')
       +' (Ladder level '+lv+'; its thresholds are judgement defaults.)';
     if(o.jointCut){
-      const gj=o.jointApplied||0;
-      parts.push(jn+': '+(gj>0?'load −'+gj+'%':'load reduced')+' — '+short);
+      const gj=o.jointApplied||0, over=o.cutBy&&o.cutBy!=='joint_ladder'?CUT_NAME[o.cutBy]:null;
+      parts.push(jn+': '+(gj>0?'load −'+gj+'%':over?'covered by the '+over+' cut':'load reduced')+' — '+short);
       detail.push(why+' So the starting load on this pattern is cut 10%'
-        +(gj===10?'':gj>0?' — rounded to this exercise\'s steps the actual change is −'+gj+'%':', which rounds back to the same load on this exercise\'s '+exById[slot.ex].inc+' lb steps')
+        +(over?' — but the '+over+' cut is larger and applies instead (cuts never add up)':gj===10?'':gj>0?' — rounded to this exercise\'s steps the actual change is −'+gj+'%':', which rounds back to the same load on this exercise\'s '+exById[slot.ex].inc+' lb steps')
         +', and there is one set fewer.');
     }else{
       parts.push(jn+': '+(lv>=3?(lv>=5?'no progression':'load held'):'longer warmup')+' — '+short);
@@ -15303,12 +15355,58 @@ const ENGINE={
   weeklySets:muscle=>{ const l=LANDMARKS[muscle]; return l?[l.MEV,l.MRV]:null; }
 };
 const ENGINE_IDS=Object.keys(ENGINE.modifiers);
+const CUT_NAME={sick_day:'sick-day',local_soreness:'soreness',joint_ladder:'joint'};
 
 /* ---- score bands: the same four words everywhere (spec §5) ---- */
-const BAND_DOES={Green:'Full plan', Yellow:'Hold the top of the range; longer warm-up', Orange:'Scoped cut, one step — only where it hurts', Red:'Swap or skip — your call'};
 function bandOf(score100){ for(const [min,name] of ENGINE.BAND) if(score100>=min) return name; return 'Red'; }
-/* Joint bands are relative to your own baseline: the ladder level is the band. */
+const BAND_ORDER=['Green','Yellow','Orange','Red'];
+const worseBand=(a,b)=>BAND_ORDER[Math.max(BAND_ORDER.indexOf(a),BAND_ORDER.indexOf(b))];
+const BAND_COLOR={Green:'var(--ok)', Yellow:'var(--warn)', Orange:'color-mix(in srgb, var(--warn), var(--danger))', Red:'var(--danger)'};
+/* What the ladder does at each level — the bands' action line for joints. */
 const JOINT_BAND={1:'Green',2:'Yellow',3:'Orange',4:'Red',5:'Red'};
+const JOINT_DOES={1:'No change', 2:'Longer warm-up; loads unchanged', 3:'Load held on these movements', 4:'Load −10% and one set fewer on these movements', 5:'No progression on these movements'};
+/* Joint band: your latest rating against your usual (the baseline the ladder
+   already uses — jointUsual, else the rolling median), in rating steps (none,
+   mild, moderate, bad): at or under it Green, one over Yellow, two Orange, more
+   Red. Once the ladder is holding or cutting (level 3+), the band is never
+   milder than the ladder's (JOINT_BAND), so the band can't say Green while load
+   is held. */
+const wStep=w=>w>=2?3:w>=1?2:w>0?1:0;
+function jointBand(joint){
+  const t=jointTrend(joint,6); if(!t.n) return null;
+  const over=wStep(t.last||0)-wStep(t.base||0);
+  const byRating=over<=0?'Green':over===1?'Yellow':over===2?'Orange':'Red';
+  const level=jointLevel(t);
+  return {joint, level, over, band:level>=3?worseBand(byRating,JOINT_BAND[level]):byRating};
+}
+/* Readiness band: from the three global items only (sleep, motivation, rest of
+   life) — exactly what the engine's global_readiness / sick_day read, so the
+   dashboard and the suggestions can't disagree. Soreness is local, not banded. */
+const READY_DOES={Green:'Full plan', Yellow:'No step up today — loads hold where they would have gone up', Red:'Sick day: one step lighter on everything, today only'};
+/* Fatigue band: how many of the deload signals are showing (readiness falling,
+   same weights feeling harder, a joint at ladder level 3+). Judgement default,
+   Grade D: 1 / 2 / 3 signals → Yellow / Orange / Red. */
+function fatigueBand(){
+  const n=fatigueSignals().length;
+  return {band:BAND_ORDER[Math.min(3,n)], n};
+}
+function dashBands(lastReadiness){
+  const out=[];
+  if(lastReadiness){
+    const g=globalReadiness({sleep:lastReadiness.sleep_quality, motivation:lastReadiness.motivation, recovery:lastReadiness.recovery});
+    out.push({what:'Readiness', band:g.band, does:READY_DOES[g.band]});
+  }
+  const js=JOINTS.map(jointBand).filter(Boolean);
+  if(js.length){
+    const worst=js.reduce((a,b)=>BAND_ORDER.indexOf(b.band)>BAND_ORDER.indexOf(a.band)||(b.band===a.band&&b.level>a.level)?b:a);
+    const name=worst.joint.charAt(0).toUpperCase()+worst.joint.slice(1);
+    out.push({what:worst.band==='Green'?'Joints':name, band:worst.band,
+      does:worst.band==='Green'?'At or under your usual — no change':(worst.over>0?(worst.over===1?'one':worst.over===2?'two':'three')+' step'+(worst.over>1?'s':'')+' over your usual. ':'')+JOINT_DOES[worst.level]});
+  }
+  const f=fatigueBand(), onDeload=(currentPhase()||{}).onDeload;
+  out.push({what:'Fatigue', band:f.band, does:f.n?(onDeload?'Deload in progress':'A deload is suggested — your call. Stall fixes add no work while this shows'):'No signs — full plan'});
+  return out;
+}
 /* Global readiness from the global items only (sleep, motivation, rest of
    life): a 1 on any of them is the sick-day signal; 2 on any is yellow;
    otherwise green. Soreness and joints are local and handled per exercise. */
@@ -15484,31 +15582,46 @@ function runModifiers(slot, base, o){
   // dial (lowest of the modifiers): a bias of one step, either way
   if(fresh&&last&&last.rpe!=null){
     const d=dialEffective(slot.ex);
+    // a drift is always named, even when it changes nothing today
+    const dTxt=d.drift?' (moved one notch '+(d.drift>0?'up':'down')+' from your "'+DIAL_LABEL[String(d.stated)]+'" setting, because you\'ve been lifting '+(d.drift>0?'heavier':'lighter')+' than suggested — reset it on the info sheet)':'';
     if(d.bias>0&&!up()&&pr.reps<=R0&&last.rpe<=T){
       const nx=R0<hi?{lb:L0,reps:R0+1}:{lb:stepUp(slot,L0),reps:lo};
-      pr={...pr,...nx}; rec('dial',true,'Your setting is "'+DIAL_LABEL[String(d.bias)]+'", so it takes the next step'+(d.drift?' (stepped up from what you\'ve been lifting)':''),pr);
+      pr={...pr,...nx}; rec('dial',true,'Your setting is "'+DIAL_LABEL[String(d.bias)]+'", so it takes the next step'+dTxt,pr);
     }else if(d.bias<0&&(up()||pr.reps>R0)&&last.rpe>=T-0.5*Math.abs(d.bias)){
-      pr={...pr,lb:L0,reps:R0}; rec('dial',true,'Your setting is "'+DIAL_LABEL[String(d.bias)]+'", so it holds instead of stepping up'+(d.drift?' (stepped down from what you\'ve been lifting)':''),pr);
-    }else if(d.bias) rec('dial',false,'Setting "'+DIAL_LABEL[String(d.bias)]+'" — no change needed here',pr);
+      pr={...pr,lb:L0,reps:R0}; rec('dial',true,'Your setting is "'+DIAL_LABEL[String(d.bias)]+'", so it holds instead of stepping up'+dTxt,pr);
+    }else if(d.bias||d.drift) rec('dial',false,'Setting "'+DIAL_LABEL[String(d.bias)]+'" — no change needed here'+dTxt,pr);
   }
-  // global readiness / sick day — not on top of a focused deload
-  if(fresh&&session&&session.readiness&&!pinned){
-    const g=globalReadiness(session.readiness);
-    if(g.sick&&!soreCutLastTime(slot)){ const b=pr.lb; pr={...pr,lb:stepDown(slot,pr.lb)}; rec('sick_day',pr.lb<b-1e-6,'A 1 on today\'s check-in: one step lighter, today only',pr); }
-    else if(g.band!=='Green'&&L0!=null&&(up()||pr.reps>R0)){ pr={...pr,lb:Math.min(pr.lb,L0),reps:Math.min(pr.reps,R0)}; rec('global_readiness',true,'Low sleep or motivation: no step up today (it never cuts load on its own)',pr); }
-  }
-  // local soreness — only the sore muscles' exercises, never two sessions running without a miss
-  if(fresh&&session&&session.adj&&adjHits(session.adj,slot.ex)&&!pinned){
-    if(soreCutLastTime(slot)) rec('local_soreness',false,'Sore today, but it cut last session without a miss in between, so not again',pr);
-    else{ const b=pr.lb; pr={...pr,lb:loadable(slot,pr.lb*session.adj.load)}; o.adj=session.adj; o.adjApplied=b>0?Math.round((1-pr.lb/b)*100):0;
-      rec('local_soreness',pr.lb<b-1e-6,'Sore '+((session.adj.groups||[]).map(g=>(GROUP_LABEL[g]||g).toLowerCase()).join(' and ')||'muscles')+': load ×'+session.adj.load,pr); }
-  }
-  // joint ladder
+  // global readiness — not on top of a focused deload. A 2 only stops a step up (a cap, not a cut).
+  const g=fresh&&session&&session.readiness&&!pinned?globalReadiness(session.readiness):null;
+  if(g&&g.band!=='Green'&&L0!=null&&(up()||pr.reps>R0)){ pr={...pr,lb:Math.min(pr.lb,L0),reps:Math.min(pr.reps,R0)}; rec('global_readiness',true,'Low sleep, motivation or rest of life: no step up today (on its own it never cuts load)',pr); }
+  // joint ladder caps: L3 holds load, L5 stops progression (caps, not cuts)
   const j=slot.joint;
   if(j&&j.level>=3&&L0!=null){
     if(pr.lb>L0+1e-6){ pr={...pr,lb:L0,reps:R0}; o.jointHeld=true; rec('joint_ladder',true,j.joint+' at level '+j.level+': load held',pr); }
     if(j.level>=5&&pr.lb>=L0-1e-6&&pr.reps>R0){ pr={...pr,reps:R0}; o.jointHeld=true; rec('joint_ladder',true,j.joint+' at level 5: no progression',pr); }
-    if(fresh&&j.level>=4){ const b=pr.lb; pr={...pr,lb:loadable(slot,pr.lb*0.9)}; o.jointCut=true; o.jointApplied=b>0?Math.round((1-pr.lb/b)*100):0; rec('joint_ladder',pr.lb<b-1e-6,j.joint+' at level '+j.level+': −10%',pr); }
+  }
+  // cuts — sick day, local soreness, joint ladder L4 — never add up on one exercise. Each is
+  // priced from the same starting load, the largest applies, the others are traced as
+  // superseded. Focused deload (a pin) and condition flags (a note) sit outside this rule.
+  { const from=pr.lb, cuts=[];
+    if(g&&g.sick&&!soreCutLastTime(slot)) cuts.push({id:'sick_day',lb:stepDown(slot,from),reason:'A 1 on today\'s check-in: one step lighter, today only'});
+    if(fresh&&session&&session.adj&&adjHits(session.adj,slot.ex)&&!pinned){
+      if(soreCutLastTime(slot)) rec('local_soreness',false,'Sore today, but it cut last session without a miss in between, so not again',pr);
+      else cuts.push({id:'local_soreness',lb:loadable(slot,from*session.adj.load),reason:'Sore '+((session.adj.groups||[]).map(g=>(GROUP_LABEL[g]||g).toLowerCase()).join(' and ')||'muscles')+': load ×'+session.adj.load});
+    }
+    if(fresh&&j&&j.level>=4&&L0!=null) cuts.push({id:'joint_ladder',lb:loadable(slot,from*0.9),reason:j.joint+' at level '+j.level+': −10%'});
+    const prec=['joint_ladder','local_soreness','sick_day'];
+    const win=cuts.filter(c=>c.lb<from-1e-6).sort((a,b)=>a.lb-b.lb||prec.indexOf(a.id)-prec.indexOf(b.id))[0]||null;
+    const pct=v=>from>0?Math.round((1-v/from)*100):0;
+    if(win){ pr={...pr,lb:win.lb}; o.cutBy=win.id; }
+    cuts.forEach(c=>{
+      const mine=win&&c.id===win.id;
+      if(c.id==='local_soreness'){ o.adj=session.adj; o.adjApplied=mine?pct(c.lb):0; }
+      if(c.id==='joint_ladder'){ o.jointCut=true; o.jointApplied=mine?pct(c.lb):0; }
+      if(mine) trace.push({id:c.id,changed:true,reason:c.reason,lb:pr.lb,reps:pr.reps,from});
+      else if(win) trace.push({id:c.id,changed:false,reason:c.reason+' — superseded by '+win.id+' (cuts don\'t add up)',lb:c.lb,reps:pr.reps,from,superseded:win.id});
+      else rec(c.id,false,c.reason,pr);
+    });
   }
   // focused deload: never above the pin
   if(pinned){
@@ -16440,6 +16553,19 @@ function sparkline(series, color){
   return box;
 }
 
+/* Several weekly percentage lines on one fixed 0–100 scale (so two lines can be
+   compared); a null point breaks its line. */
+function pctLines(lines){
+  const n=Math.max(0,...lines.map(l=>l.pts.length)); if(n<2) return null;
+  const W=600,H=90,pad=6, x=i=>pad+(i/(n-1))*(W-pad*2), y=v=>pad+(1-v/100)*(H-pad*2);
+  const paths=lines.map(l=>{ let d='', pen=false;
+    l.pts.forEach((v,i)=>{ if(v==null){ pen=false; return; } d+=(pen?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)+' '; pen=true; });
+    return d?`<path d="${d}" fill="none" stroke="${l.color}" stroke-width="2" ${l.dash?'stroke-dasharray="6 5"':''} stroke-linejoin="round" stroke-linecap="round"/>`:''; }).join('');
+  const box=el('div','');
+  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:90px;display:block" aria-hidden="true">
+    <line x1="0" x2="${W}" y1="${y(50)}" y2="${y(50)}" stroke="var(--line)" stroke-dasharray="2 6"/>${paths}</svg>`;
+  return box;
+}
 function renderHist(){
   const v=$('#v-hist'); v.innerHTML='';
 
@@ -16518,8 +16644,12 @@ function renderHist(){
     else{
       const p=(a,b)=>b?Math.round(a/b*100)+'%':'—';
       ca.appendChild(el('div','sm',`Lifted as suggested <b>${p(tot.taken,tot.n)}</b> of ${tot.n} sets · on target (RPE within 1) when you did: <b>${p(tot.on,tot.rated)}</b>`)).style.marginTop='6px';
-      const ser=acc.filter(w=>w.n>=3).map(w=>({v:Math.round(w.taken/w.n*100)}));
-      const sp=sparkline(ser,'var(--accent)'); if(sp){ sp.style.marginTop='6px'; ca.appendChild(sp); ca.appendChild(el('div','dim tiny','Weekly share of sets lifted as suggested. Rising means the suggestions are matching what you can do more often.')); }
+      const wks=acc.filter(w=>w.n>=3);
+      const ch=pctLines([
+        {color:'var(--accent)', pts:wks.map(w=>Math.round(w.taken/w.n*100))},
+        {color:'var(--ok)', dash:true, pts:wks.map(w=>w.rated>=2?Math.round(w.on/w.rated*100):null)}]);
+      if(ch){ ch.style.marginTop='6px'; ca.appendChild(ch);
+        ca.appendChild(el('div','dim tiny',`<span style="color:var(--accent)">━</span> lifted as suggested · <span style="color:var(--ok)">╍</span> on target when you did (weeks with 2+ rated sets). Both out of 100%, by week.`)); }
       ca.appendChild(el('div','dim tiny','Going lighter than suggested on a bad day is fine — this measures fit, not obedience.')).style.marginTop='4px';
     }
     v.appendChild(ca);

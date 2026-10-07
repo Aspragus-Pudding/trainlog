@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -112,7 +112,11 @@ for(const [R0,RPE0] of LASTS) for(const [hn,hcount] of Object.entries(HISTORIES)
     }else ok(up,'easy at range top: no load increase',tag);
   }else if(!atTarget&&dir<0){
     ok(!up,'hard set got more load',tag);
-    ok(down||(same&&p.reps<R0),'hard set not made easier',tag);
+    // the coarse-step rule (v1.49): a small overshoot on a big step holds the load, one rep
+    // fewer — at the bottom of the range that's a straight hold
+    const coarse=/step too coarse/.test(p.src);
+    ok(down||(same&&p.reps<R0)||(coarse&&same&&p.reps===R0&&R0===lo),'hard set not made easier',tag);
+    if(coarse){ const dn=A.stepDown(slot,L0); ok(RPE0-T<1.5&&RPE0<10&&(L0-dn)/L0>=0.07,'coarse hold only for a small overshoot on a step of 7%+',tag); }
   }else{
     // on target inside the range: hold exactly
     if(!chartFree||R0<=hi) ok(same&&p.reps===R0,'on target: not held exactly',tag);
@@ -2071,7 +2075,7 @@ section('52. modifiers: bounded, scoped, traced, never sticky');
   const pick=a=>a[Math.floor(R()*a.length)];
   const EXS=[['bench',185],['incline_machine',80],['preacher',35],['leg_press',360],['squat',245],['pulldown',150],['machine_raise',50]];
   const RANGES=[[3,5],[6,8],[8,12],[10,15],[12,20]];
-  let runs=0, viol={oneStep:0,bothUp:0,floor:0,ceiling:0,calib:0,twice:0,sticky:0,ids:0,sets:0};
+  let runs=0, stacked=0, viol={oneStep:0,bothUp:0,floor:0,ceiling:0,calib:0,twice:0,sticky:0,stack:0};
   const show={};
   const bad=(k,msg)=>{ viol[k]++; if(!show[k]){ show[k]=1; console.log('    e.g. '+k+': '+msg); } };
   for(let run=0;run<1200;run++){
@@ -2108,6 +2112,17 @@ section('52. modifiers: bounded, scoped, traced, never sticky');
     const ce=A.ceilingFor(slot,r.pr.reps,Math.min(10,T+1));
     if(ce!=null&&r.lb>Math.max(ce,0)+1e-6&&r.lb>A.loadable(slot,0)+1e-6) bad('ceiling',tag+' ceiling '+ce.toFixed(1));
     if(calib&&r.lb>L0+1e-6) bad('calib',tag);
+    // cuts never add up: at most one of sick_day / local_soreness / joint_ladder −10% applies,
+    // it's the largest, and the total is within the largest single modifier's max
+    { const cuts=tr.filter(x=>x.from!=null&&['sick_day','local_soreness','joint_ladder'].includes(x.id));
+      const won=cuts.filter(x=>x.changed);
+      if(won.length>1) bad('stack',tag);
+      else if(won.length===1){ const w=won[0], from=w.from;
+        const maxCut=Math.min(A.stepDown(slot,from),A.loadable(slot,from*0.9));
+        if(w.lb<maxCut-1e-6) bad('stack',tag+' cut to '+w.lb+' from '+from+', largest single allows '+maxCut);
+        if(cuts.some(x=>!x.changed&&x.lb<w.lb-1e-6)) bad('stack',tag+' a larger cut was superseded by a smaller one');
+        if(cuts.some(x=>!x.changed&&x.superseded!==w.id)) bad('stack',tag+' superseded cut not traced as superseded');
+        if(cuts.length>1) stacked++; } }
     // a soreness/readiness cut never two sessions running without a miss in between
     const lastCut=last.suggestion&&(last.suggestion.trace||[]).some(x=>x.id==='local_soreness'&&x.changed);
     const missed=h.filter(x=>x.session_id===last.session_id).some(x=>x.failed||(x.rpe!=null&&x.rpe>=T+1));
@@ -2118,7 +2133,8 @@ section('52. modifiers: bounded, scoped, traced, never sticky');
     if(tr2.some(x=>['local_soreness','sick_day','global_readiness','joint_ladder'].includes(x.id)&&x.changed)) bad('sticky',ex+' '+JSON.stringify(tr2.filter(x=>x.changed).map(x=>x.id)));
   }
   ok(runs>=1000,'1000+ randomised modifier stacks ran',String(runs));
-  Object.entries(viol).forEach(([k,n])=>ok(n===0,{oneStep:'load moves at most one step per session',bothUp:'load and reps never both rise',floor:'never below 85% of the recent best (unless a deload/ladder/range fit/ceiling says so)',ceiling:'never above what recent sets support',calib:'calibrating session: no step up',twice:'a soreness/readiness cut never two sessions running without a miss',sticky:'every modifier disappears when its input does',ids:'',sets:''}[k]||k,n+' of '+runs));
+  ok(stacked>=50,'the random stacks really do put two or more cuts on one exercise',String(stacked));
+  Object.entries(viol).forEach(([k,n])=>ok(n===0,{oneStep:'load moves at most one step per session',bothUp:'load and reps never both rise',floor:'never below 85% of the recent best (unless a deload/ladder/range fit/ceiling says so)',ceiling:'never above what recent sets support',calib:'calibrating session: no step up',twice:'a soreness/readiness cut never two sessions running without a miss',sticky:'every modifier disappears when its input does',stack:'cuts never add up: one applies, the largest, the rest traced as superseded'}[k]||k,n+' of '+runs));
   // modifiers never change the exercise list, and never add sets
   { const base=load([]); const days=d=>d.map(x=>x.slots.map(s=>s.ex).join(',')).join('|');
     const w0=days(base.generatedDays());
@@ -2206,6 +2222,122 @@ section('53. focused deload: incline −10%, pulldown joins, ramp-back');
   ok(A.focusedDeload()&&A.focusedDeload().len===len0+1,'a ramp session with the shoulder above its usual extends the window one session',JSON.stringify({len0,len:A.focusedDeload()&&A.focusedDeload().len}));
   ok(props().length===0,'and no step-up is proposed that session','');
   console.log('  incline pinned · pulldown joins one window · bench/rows untouched · sick day not stacked · ramp-back proposed only at the end, extends on a bad day');
+}
+
+/* ─── 54. v1.49: cuts don't stack, the dial's revealed side, bands, coarse steps, changelog ─── */
+section('54. cut stacking · dial drift · bands · coarse-step hold · changelog');
+{
+  // ── cuts don't add up: sick + very sore + ladder 4 on one exercise → one cut, the largest
+  { const ev=[set('leg_press','a',400,10,8,3,{target:{reps:[8,12],rpe:8}}),{type:'session_end',id:'ea',ts:day(2.99),session_id:'a',joints:{}}];
+    const A=load(ev), sl={ex:'leg_press',role:'primary',reps:[8,12],rpe:8,sets:[],sets_target:4,joint:{joint:'knee',level:4}};
+    const groups=A.soreGroupsFor({slots:[sl]}), rd={sleep:3,motivation:3,recovery:1,sore:Object.fromEntries(groups.map(g=>[g,1])),joints:{}};
+    const S={id:'ST',slots:[sl],openIdx:0,readiness:rd,adj:A.physicalCut(rd,groups),score:0.4,ratings:{},startedAt:Date.now()};
+    A.setSession(S); const r=A.suggestFor(sl), tr=r.trace||[];
+    const cuts=tr.filter(x=>x.from!=null), won=cuts.filter(x=>x.changed);
+    ok(cuts.length===3&&won.length===1,'sick day + soreness + joint level 4 on one exercise: three cuts priced, one applied',JSON.stringify(tr));
+    ok(r.lb===Math.min(...cuts.map(x=>x.lb))&&r.lb>=Math.min(A.stepDown(sl,400),A.loadable(sl,360))-1e-6,'the one applied is the largest, and no more than the largest single cut',JSON.stringify({lb:r.lb,cuts:cuts.map(x=>x.id+':'+x.lb)}));
+    ok(cuts.filter(x=>!x.changed).every(x=>/superseded by/.test(x.reason)&&x.superseded===won[0].id),'the others are traced "superseded by <id>"',JSON.stringify(cuts));
+    // sets: ladder 4 already took one off, soreness −2 takes only one more (−2 in all, not −3)
+    const S2={slots:[{ex:'leg_press',sets_target:3,joint:{joint:'knee',level:4}},{ex:'leg_press',sets_target:4}],adj:{...S.adj,sets:-2}};
+    A.applyReadinessSets(S2);
+    ok(S2.slots[0].sets_target===2&&S2.slots[1].sets_target===2,'set cuts don\'t add up either: ladder −1 and soreness −2 → −2 in all',JSON.stringify(S2.slots.map(x=>x.sets_target))); }
+
+  // ── dial: revealed intent and the drift, randomised
+  { let seed=7102026; const R=()=>{ seed^=seed<<13; seed>>>=0; seed^=seed>>17; seed^=seed<<5; seed>>>=0; return seed/4294967296; };
+    const pick=a=>a[Math.floor(R()*a.length)], sign=Math.sign;
+    let runs=0, drifted=0, v={notch:0,match:0,trace:0,reset:0};
+    for(let run=0;run<300;run++){
+      const ex=pick(['incline_machine','bench','preacher','leg_press']), T=pick([7,8,9]);
+      const sStated=pick([-2,-1,0,0,1,2]), dir=pick([-1,1]), perEx=R()<0.5;
+      const dis=2+Math.floor(R()*6), neu=Math.floor(R()*(9-dis)), off=Math.floor(R()*3);
+      const ev=[]; let t=60;
+      ev.push(perEx?{type:'dial_set',id:'d'+run,ts:day(70),exercise_id:ex,value:sStated}:{type:'dial_set',id:'d'+run,ts:day(70),value:sStated});
+      const A0=load([]), inc=Math.max(2.5,A0.exById[ex].inc||5), S0=ex==='leg_press'?300:ex==='bench'?185:ex==='preacher'?40:80;
+      const kinds=[...Array(dis).fill('dis'),...Array(neu).fill('neu'),...Array(off).fill('off')].sort(()=>R()-0.5);
+      kinds.forEach((k,i)=>{ const sid='s'+run+'_'+i, m=1+Math.floor(R()*2);
+        const w=k==='dis'?S0+dir*m*inc:S0, rpe=k==='off'?(T>=9?T-2:T+2):T+pick([-1,-0.5,0,0.5,1]);
+        ev.push(set(ex,sid,w,10,rpe,t,{target:{reps:[8,12],rpe:T},suggestion:{lb:S0,reps:10,target_rpe:T}}),{type:'session_end',id:'e'+sid,ts:day(t-0.01),session_id:sid,joints:{}}); t-=2; });
+      ev.sort((a,b)=>a.ts<b.ts?-1:1);
+      const A=load(ev), d=A.dialEffective(ex); runs++;
+      // the spec, written out independently: overrides in steps over the last 8 sessions' first
+      // sets within ±1 RPE; disagreeing = a whole-step override against the stated direction,
+      // in the direction the revealed notch lies; 4+ of them (from 4+ rows) → one notch toward it
+      const win=kinds.slice(-8), rows=win.filter(k=>k!=='off').length, disW=win.filter(k=>k==='dis').length;   // the window is the last 8 sessions, then filtered
+      const rv=A.dialRevealed(ex), notch=rv.notch;
+      const nDis=(rv.ov||[]).filter(x=>Math.round(x)!==0&&sign(Math.round(x))!==sign(sStated)&&sign(notch-sStated)===sign(Math.round(x))).length;
+      const want=rv.n>=4&&nDis>=4?sign(notch-sStated):0;
+      if(rv.n!==rows) v.match++;
+      if(d.drift!==want||Math.abs(d.drift)>1||d.bias!==Math.max(-2,Math.min(2,sStated+d.drift))) v.notch++;
+      if(disW>=4&&dir!==sign(sStated)&&notch!==0&&d.drift===0) v.notch++;     // enough disagreement and it didn't move
+      if(d.drift){ drifted++;
+        const sl={ex,role:'primary',reps:[8,12],rpe:T,sets:[],sets_target:3};
+        A.setSession({id:'NOW'+run,slots:[sl],openIdx:0,adj:null,score:0.7,ratings:{},startedAt:Date.now()});
+        const tr=A.suggestFor(sl).trace||[];
+        if(!tr.some(x=>x.id==='dial'&&/moved one notch (up|down)/.test(x.reason))) v.trace++;
+        A.append({type:'dial_reset',exercise_id:ex});
+        const d2=A.dialEffective(ex), tr2=A.suggestFor(sl).trace||[];
+        if(d2.drift!==0||d2.revealed.n!==0||tr2.some(x=>/moved one notch/.test(x.reason))) v.reset++; }
+    }
+    ok(runs===300&&drifted>=40,'300 randomised dial histories, '+drifted+' of them drift',String(drifted));
+    ok(v.match===0,'revealed intent counts only first sets within ±1 RPE of target',v.match+' of '+runs);
+    ok(v.notch===0,'4+ disagreeing sessions move the dial exactly one notch toward what you lift — never more, never without them',v.notch+' of '+runs);
+    ok(v.trace===0,'a drift is always named in the suggestion\'s trace',v.trace+' of '+drifted);
+    ok(v.reset===0,'reset clears the drift and the revealed history, and the trace line goes',v.reset+' of '+drifted); }
+
+  // ── bands
+  { const ck=(j,usual,rating)=>{ const ev=[{type:'readiness',id:'r1',ts:day(1),sleep_quality:3,motivation:3,recovery:3,soreness:{},joints:rating?{[j]:rating}:{},joint_scale:3},{type:'session_end',id:'e1',ts:day(0.9),session_id:'x',joints:{}}];
+      const A=load(ev); if(usual) A.getCFG().jointUsual={[j]:usual}; return A.jointBand(j); };
+    ok(ck('shoulder','mild',1).band==='Green','joint at your usual (mild) → Green','');
+    ok(ck('shoulder','mild',2).band==='Yellow','one step over your usual → Yellow',JSON.stringify(ck('shoulder','mild',2)));
+    ok(ck('shoulder','mild',3).band==='Orange','two over → Orange',JSON.stringify(ck('shoulder','mild',3)));
+    ok(ck('shoulder','none',3).band==='Red','three over → Red',JSON.stringify(ck('shoulder','none',3)));
+    ok(ck('knee','moderate',2).band==='Green','a moderate usual rated moderate → Green (not an absolute scale)',JSON.stringify(ck('knee','moderate',2)));
+    // readiness: the dashboard band is the engine's band, item for item
+    let seed=99; const R=()=>{ seed^=seed<<13; seed>>>=0; seed^=seed>>17; seed^=seed<<5; seed>>>=0; return seed/4294967296; };
+    let mism=0;
+    for(let i=0;i<200;i++){
+      const g={sleep:1+Math.floor(R()*5),motivation:1+Math.floor(R()*5),recovery:1+Math.floor(R()*5)};
+      const re={type:'readiness',id:'rr',ts:day(0.5),sleep_quality:g.sleep,motivation:g.motivation,recovery:g.recovery,soreness:{},joints:{},joint_scale:3};
+      const A=load([set('incline_machine','a',80,10,8,3,{target:{reps:[8,12],rpe:8}}),{type:'session_end',id:'ea',ts:day(2.99),session_id:'a',joints:{}},re]);
+      const dash=A.dashBands(re).find(b=>b.what==='Readiness');
+      const sl={ex:'incline_machine',role:'primary',reps:[8,12],rpe:8,sets:[],sets_target:3};
+      A.setSession({id:'B'+i,slots:[sl],openIdx:0,readiness:{...g,sore:{},joints:{}},adj:null,score:0.6,ratings:{},startedAt:Date.now()});
+      const sick=(A.suggestFor(sl).trace||[]).some(x=>x.id==='sick_day');
+      if(dash.band!==A.globalReadiness(g).band||(dash.band==='Red')!==sick) mism++;
+    }
+    ok(mism===0,'dashboard readiness band = the engine\'s band (Red exactly when the sick day applies), 200 random check-ins',String(mism));
+    const F=load([]).dashBands(null);
+    ok(F.some(b=>b.what==='Fatigue'&&b.band==='Green'&&b.does),'fatigue has a band and an action line','');
+    ok(F.every(b=>b.does&&b.does.length>3),'every band says what the app does',''); }
+
+  // ── coarse steps: the 7 Oct incline press, set 4
+  { const ev=[]; let t=20;
+    for(let k=0;k<5;k++){ const sid='h'+k; [7,7.5,8].forEach((rp,i)=>ev.push(set('incline_machine',sid,80,10,rp,t-i*0.001,{target:{reps:[8,12],rpe:8}}))); ev.push({type:'session_end',id:'e'+sid,ts:day(t-0.01),session_id:sid,joints:{}}); t-=3; }
+    const today=[[80,10,8],[80,10,10],[70,10,8.5]].map(([w,r,rp],i)=>set('incline_machine','OCT7',w,r,rp,0.1-i*0.001,{target:{reps:[10,15],rpe:8}}));
+    const sl={ex:'incline_machine',role:'primary',reps:[10,15],rpe:8,sets:[],sets_target:4};
+    const at=n=>{ const A=load([...ev,...today.slice(0,n)]); sl.sets=today.slice(0,n); A.setSession({id:'OCT7',slots:[sl],openIdx:0,adj:null,score:0.6,ratings:{},startedAt:Date.now()}); return A.nextPrescription(sl); };
+    const s3=at(2), s4=at(3);
+    ok(s3.lb===70,'7 Oct set 3: after 80 × 10 @ 10 (no reps left) the load still drops a step',JSON.stringify(s3));
+    ok(s4.lb===70&&s4.reps===10&&/step too coarse/.test(s4.src),'7 Oct set 4: after 70 × 10 @ 8.5 (target 8) on a 10 lb machine it holds 70 × 10 — was 60',JSON.stringify(s4));
+    const one=(ex,w,r,rp,T,rng,extra)=>{ const A=load([set(ex,'l',w,r,rp,1,{target:{reps:rng,rpe:T},...extra})]); return A.nextPrescription({ex,role:'primary',reps:rng,rpe:T,sets:[],sets_target:3}); };
+    let q=one('incline_machine',70,12,9,8,[10,15]);   ok(q.lb===70&&q.reps<12,'mid-range, +1: same load, fewer reps',JSON.stringify(q));
+    q=one('incline_machine',70,10,9.5,8,[10,15]);     ok(q.lb<70,'+1.5 over target: the load cut stands',JSON.stringify(q));
+    q=one('incline_machine',70,10,8.5,8,[10,15],{failed:true}); ok(q.lb<70||!/step too coarse/.test(q.src),'a missed rep: the coarse hold does not apply',JSON.stringify(q));
+    q=one('bench',225,5,9,8,[3,5]);                    ok(!/step too coarse/.test(q.src),'a fine step (5 lb on 225, 2%) cuts as before',JSON.stringify(q));
+    const hold=load([]).coarseHold({ex:'incline_machine',reps:[10,15],rpe:8},70,10,8.5,false);
+    ok(hold&&hold.lb===70&&hold.reps===10&&hold.reps>=10,'never below the range: at the bottom it holds load and reps',JSON.stringify(hold)); }
+
+  // ── changelog: newest entry = embedded "what's new" = APP_VERSION
+  { const md=fs.readFileSync(path.join(__dirname,'..','CHANGELOG.md'),'utf8');
+    const i=md.indexOf('\n## '), j=md.indexOf('\n## ',i+1), sec=md.slice(i+1,j<0?undefined:j);
+    const ver=(sec.match(/^## (\d+\.\d+\.\d+)/)||[])[1], lines=sec.split('\n').filter(l=>l.startsWith('- ')).map(l=>l.slice(2).trim());
+    const m=html.match(/<script type="application\/json" id="whats-new">([\s\S]*?)<\/script>/);
+    let emb=null; try{ emb=JSON.parse(m[1]); }catch(e){}
+    const A=load([]);
+    ok(ver===A.APP_VERSION,'CHANGELOG.md\'s newest entry is for APP_VERSION — every bump adds an entry',ver+' vs '+A.APP_VERSION);
+    ok(lines.length>=3&&lines.length<=5,'3–5 lines per entry',String(lines.length));
+    ok(emb&&emb.version===ver&&JSON.stringify(emb.lines)===JSON.stringify(lines),'the embedded "what\'s new" matches CHANGELOG.md — run node tools/embed-changelog.js',JSON.stringify(emb&&emb.version)); }
+  console.log('  cuts: one applies, the largest, sets too · dial: revealed + drift (300 random), traced, reset · bands = engine inputs · 7 Oct set 4 holds 70 × 10 · changelog in sync');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
