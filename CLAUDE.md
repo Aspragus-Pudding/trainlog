@@ -145,7 +145,19 @@ never swapped out mid-workout.
   (deloads, stall interventions) go through `PROPOSAL_SOURCES` → cards on
   the dashboard. Never switch silently. The one exception, decided Oct 2026:
   a main lift's progression rate demotes from fast to standard on its own
-  (it only ever slows a lift down).
+  (it only ever slows a lift down). Stall interventions can auto-start only
+  if `CFG.autoIntervene` is on (opt-in), and always with an undo card.
+- **Stall engine (spec §5).** `stallState()` → `stallPlan()` → `stallCard()`.
+  Step 0 always comes first: exposure (trained less than weekly is not a
+  stall), deficit, fatigue (incl. the lift's own sets running over target
+  and a deload in the last two weeks); nothing adds work while fatigue is
+  showing, and taking a deload stops added practice volume. Interventions are
+  `intervention_start`/`intervention_end` events; status and outcome are
+  derived (`interventions()`, `ivOutcome()`), never stored. They act on the
+  week only through `applyInterventions()` in `generatedDays()`. Decision
+  tables are data (`STALL_TABLES`). With `shoulder_instability`, anything an
+  intervention ADDS to a barbell press goes to `addedExposureFor()`'s
+  substitute — don't route added pressing around it.
 - **Progression rate is per main lift, not a program model.** `rateState()`
   derives fast / standard from the log plus `CFG.rateSeed` (new setups seed
   from the experience answer; existing programs were classified once from

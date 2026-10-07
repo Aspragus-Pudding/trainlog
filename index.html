@@ -818,7 +818,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.35.4';
+const APP_VERSION='1.36.0';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -1269,7 +1269,8 @@ function modLabel(m){
 }
 const mergeMods=(a,b)=>cleanMods({...(cleanMods(a)||{}),...(cleanMods(b)||{})});
 /* A signature back to words, for history headings. */
-function modLabelFromSig(sig){
+function modLabelFromSig(sig){ return modLabel(sigMods(sig))||sig; }
+function sigMods(sig){
   const m={};
   String(sig||'').split(',').filter(Boolean).forEach(p=>{
     const [k,v]=p.split(':');
@@ -1278,7 +1279,7 @@ function modLabelFromSig(sig){
     else if(k==='rom'){ const r=v.match(/^([a-z]+)(\d*\.?\d+)?(in|cm)?$/); if(r) m.rom={kind:r[1],...(r[2]?{amount:+r[2],unit:r[3]||'in'}:{})}; }
     else if(k==='grip') m.grip=v;
   });
-  return modLabel(m)||sig;
+  return m;
 }
 /* Which track a logged set belongs to, and which track a slot prescribes for. */
 function setTrack(st){
@@ -1673,7 +1674,7 @@ const splitFor=b=>splitOf(blockSplitSpec(b));
 function activeSplit(){ return splitFor(ROADMAP.length?ROADMAP[programPosition().idx]:null); }
 function generatedDays(){
   const phase=currentPhase();
-  const days=addMaintenance(activeSplit().template.map(t=>buildDay(t,phase)), phase);
+  const days=applyInterventions(addPracticeDays(addMaintenance(activeSplit().template.map(t=>buildDay(t,phase)), phase), phase), phase);
   if(phase&&phase.refined&&phase.type==='hyp'&&!phase.onDeload) days.forEach(capSessionVolume);
   return days;
 }
@@ -1689,7 +1690,7 @@ const DAYS=[
 
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
-  goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},checklistOff:{},sessionLen:null,
+  goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
   profile:null,profileParams:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
   feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{}};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
@@ -3074,11 +3075,19 @@ function mainLiftRateCard(){
     const row=el('div','row between sm'); row.style.cssText='padding:7px 0;border-top:1px solid var(--line);margin-top:6px';
     row.innerHTML=`<span>${esc(exById[id].name)}</span><span class="muted tiny" style="text-align:right">${esc(RATE_LABEL[r]+extra)}</span>`;
     c.appendChild(row);
+    const act=activeIntervention(id);
+    if(act){ const a=el('div','dim tiny',esc(ivDescribe(act))+' '); a.style.cssText='margin-top:-3px;padding-bottom:4px';
+      const stop=el('button','btn s ghost','Stop'); stop.style.cssText='padding:2px 8px;font-size:11.5px';
+      stop.onclick=()=>{ if(confirm('Stop this intervention? Nothing logged changes.')){ stopIntervention(act,'stopped'); render(); } };
+      a.appendChild(stop); c.appendChild(a); }
+    const sc=rpeScatter(id);
+    if(sc) c.appendChild(el('div','dim tiny','Same weight is feeling quite different session to session (RPE '+sc.spread+' apart at '+fmt(sc.lb,0)+') — worth some lighter practice sets and a video. A rough heuristic, not a measurement.')).style.cssText='margin-top:-3px;padding-bottom:4px';
   });
   return c;
 }
 function renderDash(){
   const v=$('#v-dash'); v.innerHTML='';
+  autoApplyInterventions();
   v.appendChild(proposalCards());
   const p=currentPhase(), proj=programProjection();
   const longDate=dt=>dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
@@ -5046,6 +5055,8 @@ function explainRx(slot, pr, o){
   if(slot.ramp&&!pr.maint){ const tw=trainingWeeksOf(p);
     detail.push('Effort ramps across the block: week '+p.week+' of '+tw+' is RPE '+slot.rpe+' ('+(10-slot.rpe)+' reps in reserve). Compounds go from 3 in reserve to 1, isolations from 3 to 0 — closer to failure as the block goes on.'); }
   if(slot.frozen) detail.push('Sets held at last week\'s count: your '+(ML[slot.frozen]||slot.frozen).toLowerCase()+' work dropped in performance two sessions running, so more sets would likely add fatigue, not growth.');
+  if(slot.ivNote) detail.push(slot.ivNote+'.');
+  if(slot.structure==='practice') parts.push('practice · RPE '+slot.rpe);
   if(slot.capped) detail.push('One or more sets removed to keep '+(ML[slot.capped.muscle]||slot.capped.muscle).toLowerCase()+' at about '+slot.capped.cap+' sets this session — past that, extra sets in one session add little (judgement default).');
   if(pr.calibAmrap) parts.push('last set: as many reps as you can (calibration)');
   if(pr.maint){ parts.unshift('strength upkeep: 1 top set this week @ RPE '+MAINT_TOP.rpe);
@@ -5508,7 +5519,7 @@ function dismissProposal(id){ CFG.proposalsDismissed={...(CFG.proposalsDismissed
 const PROPOSAL_SOURCES=[];
 function activeProposals(){
   const out=[];
-  PROPOSAL_SOURCES.forEach(fn=>{ try{ const p=fn(); if(p&&!proposalDismissedRecently(p.id,p.snoozeDays)) out.push(p); }catch(err){ console.error('proposal failed',err); } });
+  PROPOSAL_SOURCES.forEach(fn=>{ try{ [].concat(fn()||[]).forEach(p=>{ if(p&&!proposalDismissedRecently(p.id,p.snoozeDays)) out.push(p); }); }catch(err){ console.error('proposal failed',err); } });
   return out;
 }
 function proposalCards(){
@@ -5530,7 +5541,7 @@ function proposalCards(){
    decides; a second miss in a row demotes the lift (rateState). Any lift on
    standard never reaches the override: its prescription is untouched. */
 function fastRx(slot, pr, o){
-  if(!o||!o.fresh||pr.lb==null||!isMainLift(slot.ex)||slotTrack(slot).sig) return pr;
+  if(!o||!o.fresh||pr.lb==null||!isMainLift(slot.ex)||slotTrack(slot).sig||slot.structure==='practice') return pr;
   const rs=rateState(slotTrack(slot).ex);
   if(rs.rate!=='fast') return pr;
   // like with like: the last exposure of the same kind of set (top vs working)
@@ -5644,11 +5655,510 @@ PROPOSAL_SOURCES.push(()=>{
   const strong=sig.some(x=>x.strong);
   const dpw=sessionsPerWeek()||5;
   return {id:'deload', snoozeDays:strong?7:14, title:strong?'Take a deload week?':'Due for a deload?',
-    body:'Because '+sig.map(x=>x.text).join('; ')+'. A deload is '+dpw+' lighter sessions — fewer sets, easier loads — in place of a normal week, then the block carries on. '
+    body:'Because '+sig.map(x=>x.text).join('; ')+'. '+stalledByFatigue()+'A deload is '+dpw+' lighter sessions — fewer sets, easier loads — in place of a normal week, then the block carries on. '
       +(strong?'':'This one is just the calendar, so skip it if you feel fine. ')+'The thresholds are judgement defaults.',
-    accept:{label:'Deload this week', fn:()=>{ append({type:'deload_start',sessions:dpw,reasons:sig.map(x=>x.k)}); toast('Deload week on — the next '+dpw+' sessions are lighter'); }},
+    accept:{label:'Deload this week', fn:()=>{ append({type:'deload_start',sessions:dpw,reasons:sig.map(x=>x.k)}); deloadStopsVolume(); toast('Deload week on — the next '+dpw+' sessions are lighter'); }},
     decline:{label:'Not now'}};
 });
+
+/* ---------- Stall engine (spec §5) ----------
+   DETECTION (§5.1): a main lift on standard progression with no new best
+   e1RM (1% or more over the last best) for its stall window — CFG.stallWeeks, 4 weeks, or 6
+   for advanced (D: coach operational definitions). A lift on fast
+   progression stalls by missing twice, which already moves it to standard
+   (rateState); the window applies from there. Only while the lift is being
+   trained (a session in the last 14 days) and only with at least a window of
+   history. It must have been trained in every week of the window, or it's an
+   EXPOSURE problem, not a stall — the answer to that is training it, not a
+   change of program.
+   THE LADDER (§5.2), one card at a time per lift, each saying what changes,
+   why and for how long; one active intervention per lift:
+   - step 0, before anything: a deficit (the explanation, not a change),
+     then fatigue — falling readiness, RPE drift, a joint at 3+ — which is the
+     deload card's job, and nothing here adds work while it's showing;
+   - step 1, more of the lift: +40% sets as practice sets (RPE 6.5), or one
+     more day a week if it's trained under twice a week, for 6 weeks;
+   - step 2, diagnose: film the next top set, read back where it slows down,
+     and the lift's own variant ratios (§5.4);
+   - step 3, a targeted variant from the decision tables (§5.3) for the
+     region it slows at, replacing about 40% of the lift's weekly sets, 6
+     weeks — a modifier on the lift itself first, a different exercise only
+     after;
+   - step 4, specialization (§5.6), advanced only, with every guard.
+   Interventions are events (intervention_start / intervention_end); whether
+   one is running, when it ended and how it went are all DERIVED ON READ —
+   the outcome is never stored (invariant 2).
+   JUDGEMENT DEFAULTS, GRADE D: 14 days, 40%, RPE 6.5, 6 weeks, +1% for "it
+   worked", two failures to skip a type, 3% for a falling ratio. */
+const STALL_RECENT_DAYS=14, IV_SHARE=0.4, IV_PRACTICE_RPE=6.5, IV_WEEKS=6, IV_WORKED=0.01, IV_FAIL_SKIP=2,
+  IV_OUTCOME_WEEKS=4, RATIO_FALL=0.03, RATIO_WEEKS=8, DIAGNOSE_WAIT_DAYS=10;
+const WEEK_MS=7*864e5;
+/* Per-session best e1RM on the lift's unmodified track, oldest first. */
+const liftBests=exId=>sessionBests(exId,'').filter(b=>b.e1!=null).reverse();
+function stallState(exId){
+  if(!exById[exId]||!isMainLift(exId)||!mainEligible(exById[exId])) return null;
+  if(rateOf(exId)==='fast') return null;
+  const W=CFG.stallWeeks||4, now=Date.now(), t=x=>new Date(x.ts).getTime();
+  const b=liftBests(exId); if(b.length<3) return null;
+  if(now-t(b[b.length-1])>STALL_RECENT_DAYS*864e5) return null;
+  if(now-t(b[0])<W*WEEK_MS) return null;
+  // a new best beats the last by 1% or more (the same bar as "it worked"):
+  // with day-to-day noise a flat lifter edges past an old best by a pound now
+  // and then, and that kept restarting the ladder at step 1 (tests/simulate.js)
+  let max=-1, peak=null; b.forEach(x=>{ if(max<0||x.e1>=max*(1+IV_WORKED)){ max=x.e1; peak=x; } });
+  const weeks=(now-t(peak))/WEEK_MS; if(weeks<W) return null;
+  let missing=0; for(let i=0;i<W;i++){ const hi=now-i*WEEK_MS, lo=hi-WEEK_MS; if(!b.some(x=>t(x)>lo&&t(x)<=hi)) missing++; }
+  const perWeek=b.filter(x=>t(x)>now-W*WEEK_MS).length/W;
+  return {exId, kind:missing?'exposure':'stall', weeks:Math.floor(weeks), W, peak, peakE1:max, perWeek, missing};
+}
+/* Energy balance set to deficit, or bodyweight down 1%+ against 3–5 weeks ago. */
+function inDeficit(){
+  if(CFG.energy==='deficit') return true;
+  const s=bwSeries(), now=Date.now(); if(s.length<4) return false;
+  const mean=a=>a.reduce((t,x)=>t+x.bw,0)/a.length;
+  const recent=s.filter(x=>now-x.t<=WEEK_MS), old=s.filter(x=>now-x.t>=3*WEEK_MS&&now-x.t<=5*WEEK_MS);
+  return recent.length>0&&old.length>0&&mean(recent)<=mean(old)*0.99;
+}
+/* Taking a deload stops any running practice-volume or extra-day
+   intervention — fatigue means less work, not more. Variants and
+   specialization pause through the deload (applyInterventions) and resume. */
+function deloadStopsVolume(){
+  interventions().filter(s=>s.active&&(s.ev.kind==='volume'||s.ev.kind==='frequency')).forEach(s=>stopIntervention(s,'deload'));
+}
+/* A deload taken in the last two weeks of sessions: give it time to show
+   before calling the lift stalled — the stall was likely fatigue, and adding
+   work straight after recovering from it would undo the deload
+   (tests/simulate.js). Two weeks is a judgement default. */
+function recentDeload(){
+  for(let i=LOG.length-1;i>=0;i--){ const e=LOG[i]; if(e.type==='deload_start') return trainedAfterIndex(i)<(e.sessions||5)+2*(sessionsPerWeek()||5); }
+  return false;
+}
+/* This lift's own fatigue check: its last 3 sessions' first working sets
+   averaging 1+ RPE above what they were prescribed. A stalled lift whose sets
+   come in harder than planned is more likely tired than under-dosed — the
+   broad drift check can miss it when loads keep changing (tests/simulate.js).
+   Judgement default: 3 sessions, 1 RPE. */
+function effortOverTarget(exId){
+  const firsts=new Map();
+  for(const st of sets()){ if(st.set_kind==='warmup'||st.rpe==null||!st.target||st.target.rpe==null||!onTrack(st,exId,'')) continue; if(!firsts.has(st.session_id)) firsts.set(st.session_id,st); }
+  const last=[...firsts.values()].slice(-3); if(last.length<3) return null;
+  const d=last.reduce((a,x)=>a+(x.rpe-x.target.rpe),0)/last.length;
+  return d>=1?d:null;
+}
+/* Readiness down 5+ points on average this week against the 4 weeks before
+   — the spec's "readiness trending down", gentler than the deload card's
+   three-falls-in-a-row. Judgement default: 5 points of the 0–100 score. */
+function readinessDrop(){
+  const now=Date.now(), r=readinessSeries().map(x=>({t:new Date(x.d+'T12:00').getTime(), v:x.v}));
+  const recent=r.filter(x=>now-x.t<=WEEK_MS), before=r.filter(x=>now-x.t>WEEK_MS&&now-x.t<=5*WEEK_MS);
+  if(recent.length<2||before.length<4) return null;
+  const mean=a=>a.reduce((t,x)=>t+x.v,0)/a.length, d=mean(before)-mean(recent);
+  return d>=5?d:null;
+}
+/* Fatigue as the deload card sees it: the signals that say recovery, not work. */
+const fatigueSignals=()=>deloadSignals().filter(x=>x.k==='readiness'||x.k==='rpe'||x.k==='joint');
+
+/* ---------- Decision tables (§5.3), ported from docs/research/lift-specific.md ----------
+   Keyed by family and sticking region. Options are tried in order — a
+   modifier on the main lift first (works for custom and machine lifts too),
+   a different exercise after; anything flagged red for your conditions, or
+   not suited to your equipment, is skipped. Rows with sticking:null and a
+   'handled' key are causes the app already acts on elsewhere (step 0, the
+   joint ladder, total-load e1RM), kept so the table stays complete. Grades
+   are the research's; none of these are better than C. */
+const STALL_TABLES=[
+  {family:'squat', sticking:'bottom', cause:'Low leg strength at depth, or losing tightness out of the hole', grade:'C/D',
+    signal:{log:'paused squat falling against your squat', ask:'Did it stop right out of the bottom?'},
+    recommendation:'Paused squat in place of about a third of your squat sets',
+    options:[{modifiers:{pause:{seconds:2,at:'bottom'}}, reps:[3,5], rpe:7.5}]},
+  {family:'squat', sticking:'mid', cause:'Normal mechanics at the knee-to-hip hand-off; quads or adductors limiting', grade:'B/D',
+    signal:{log:'front squat falling against your squat', ask:'Did it slow a few inches above parallel?'},
+    recommendation:'A quad-biased variant — front squat, or hack or pendulum squat on machines',
+    options:[{ex:'front_squat', reps:[4,6], rpe:7.5},{ex:'transformer_front', reps:[4,6], rpe:7.5},{ex:'hack', reps:[8,12], rpe:8},{ex:'pendulum', reps:[8,12], rpe:8}]},
+  {family:'squat', sticking:null, cause:'Hips shoot up first — quad weakness or technique', grade:'D',
+    signal:{video:'Did your hips rise before the bar?'},
+    recommendation:'Tempo squat (3 seconds down) and a technique check on video',
+    options:[{modifiers:{tempo:'3-1-0'}, reps:[5,5], rpe:7}]},
+  {family:'squat', sticking:null, handled:'step0', cause:'Fails only in late sets, RPE rising at the same load — fatigue', recommendation:'Deload, then resume'},
+  {family:'squat', sticking:null, handled:'joint', cause:'Pain-limited', recommendation:'Box, tempo, belt squat or leg press while under the pain threshold'},
+  {family:'hinge', sticking:'off_floor', cause:'Leg drive at the start, or the set-up position', grade:'C',
+    signal:{log:'deficit deadlift falling against your deadlift', ask:'Couldn\'t break the floor?'},
+    recommendation:'Deficit deadlift (1–2 in), or a pause just below the knee',
+    options:[{modifiers:{rom:{kind:'deficit',amount:1.5,unit:'in'}}, reps:[3,5], rpe:7.5, barbell:true},{modifiers:{pause:{seconds:2,at:'below_knee'}}, reps:[3,5], rpe:7.5}]},
+  {family:'hinge', sticking:'below_knee', cause:'Normal mechanics at the knee; back position lost, or a slow start', grade:'D',
+    signal:{ask:'Did it slow at the knees?', video:'Do your hips shoot up?'},
+    recommendation:'Paused deadlift at the knee, or Romanian deadlifts',
+    options:[{modifiers:{pause:{seconds:2,at:'below_knee'}}, reps:[3,5], rpe:7.5},{ex:'rdl', reps:[6,8], rpe:7.5}]},
+  {family:'hinge', sticking:'lockout', cause:'Glutes or upper back; sometimes grip', grade:'D',
+    signal:{ask:'Did it fail above the knees, or did your grip fail?'},
+    recommendation:'Romanian deadlift or hip thrust (rack pulls are popular but have little transfer evidence)',
+    options:[{ex:'rdl', reps:[6,8], rpe:7.5},{ex:'hip_thrust', reps:[6,10], rpe:8}]},
+  {family:'hinge', sticking:null, handled:'step0', cause:'Test-day misses with gym PRs fine — fatigue and peaking', recommendation:'Fatigue management; taper'},
+  {family:'horizontal_press', sticking:'off_chest', cause:'Relying on the bounce; tightness or strength at the bottom', grade:'C',
+    signal:{log:'paused bench falling against your bench', ask:'Did it stall right off your chest?'},
+    recommendation:'Long-pause bench (3 seconds on the chest)',
+    options:[{modifiers:{pause:{seconds:3,at:'chest'}}, reps:[3,5], rpe:7.5}]},
+  {family:'horizontal_press', sticking:'mid', cause:'The normal mechanical disadvantage a few inches up; grip and elbow path', grade:'C/D',
+    signal:{ask:'Did it slow mid-way?', video:'Bar path'},
+    recommendation:'More frequency first; then pin press at the sticking height',
+    options:[{modifiers:{rom:{kind:'pin',amount:3,unit:'in'}}, reps:[3,3], rpe:8, barbell:true},{modifiers:{pause:{seconds:2,at:'chest'}}, reps:[3,5], rpe:7.5}]},
+  {family:'horizontal_press', sticking:'lockout', cause:'Triceps', grade:'B',
+    signal:{log:'close-grip bench falling against your bench', ask:'Did it stop in the last third?'},
+    recommendation:'Close-grip bench; board press for at most 4 weeks',
+    options:[{ex:'cg_bench', reps:[4,8], rpe:7.5},{modifiers:{rom:{kind:'board',amount:2,unit:'in'}}, reps:[3,5], rpe:8, barbell:true}]},
+  {family:'horizontal_press', sticking:null, handled:'joint', cause:'Shoulder pain', recommendation:'Floor press, narrower grip, neutral-grip dumbbells'},
+  {family:'vertical_press', sticking:'start', cause:'Delt and upper-chest strength; the rack position', grade:'D',
+    signal:{ask:'Did it stall right off your shoulders?'},
+    recommendation:'Pause press off the shoulders',
+    options:[{modifiers:{pause:{seconds:2,at:'start'}}, reps:[3,5], rpe:7.5}]},
+  {family:'vertical_press', sticking:'mid', cause:'Bar path around the head; triceps; delts at end range', grade:'D',
+    signal:{video:'Head and bar path', ask:'Did it stop at forehead height?'},
+    recommendation:'Pin press from forehead height, plus triceps work',
+    options:[{modifiers:{rom:{kind:'pin',amount:6,unit:'in'}}, reps:[3,3], rpe:8, barbell:true}]},
+  {family:'vertical_press', sticking:null, handled:'step0', cause:'Stuck at small loads — the jumps are too big', recommendation:'Reps first, then load (built into the engine)'},
+  {family:'vertical_press', sticking:null, handled:'step0', cause:'Press drops with bodyweight', recommendation:'Expect it; keep the volume'},
+  {family:'vertical_pull', sticking:'start', cause:'Scapular depression and lat strength at length', grade:'D',
+    signal:{ask:'Couldn\'t start the pull?'},
+    recommendation:'Paused-start pull-ups (2 seconds in a dead hang)',
+    options:[{modifiers:{pause:{seconds:2,at:'start'}}, reps:[3,5], rpe:7.5}]},
+  {family:'vertical_pull', sticking:'top', cause:'Elbow flexors and upper back', grade:'D',
+    signal:{ask:'Couldn\'t get your chin over?', log:'chin-up against pull-up'},
+    recommendation:'Top holds (3 seconds) and heavy rows',
+    options:[{modifiers:{pause:{seconds:3,at:'top'}}, reps:[3,5], rpe:7.5}]},
+  {family:'vertical_pull', sticking:null, handled:'bodyweight', cause:'Load stalls while bodyweight rises', recommendation:'Track total load (bodyweight plus plate) — the e1RM already does'},
+  {family:'vertical_pull', sticking:null, handled:'joint', cause:'Elbow pain at high frequency', recommendation:'Cut frequency'}
+];
+/* Where a reported region puts a pause (the fallback for families with no table). */
+const PAUSE_FOR_REGION={bottom:'bottom', off_chest:'chest', off_floor:'below_knee', below_knee:'below_knee', start:'start', top:'top', lockout:'top'};
+const REGION_FOR_PAUSE={bottom:'bottom', chest:'off_chest', below_knee:'below_knee', start:'start', top:'top'};
+const variantType=o=>o.ex?'exercise':o.modifiers.rom?'rom':o.modifiers.pause?'pause':'tempo';
+const variantKey=o=>o.ex?o.ex:modSig(o.modifiers);
+function variantName(exId, o){
+  if(o.ex) return (exById[o.ex]||{name:o.ex}).name;
+  return exById[exId].name+' — '+modLabel(o.modifiers);
+}
+function variantUsable(exId, o){
+  const ex=exById[exId];
+  if(o.barbell&&ex.load!=='barbell') return false;
+  if(o.modifiers){ const fam=familyOf(ex), m=cleanMods(o.modifiers); if(!m) return false;
+    if(m.pause&&!(PAUSE_AT[fam]||[]).includes(m.pause.at)) return false; return true; }
+  const v=exById[o.ex]; if(!v||v.folded||v.rehab||v.id===exId) return false;
+  const f=flagFor(v.id); if(f&&f.level==='red') return false;
+  return equipmentScore(v)>-1000;
+}
+/* The options for a lift and region, most specific first, then the fallback:
+   a pause at the region, then a tempo. */
+function variantOptions(exId, region){
+  const ex=exById[exId], fam=familyOf(ex), out=[];
+  const rows=STALL_TABLES.filter(r=>r.family===fam&&r.options);
+  rows.filter(r=>region&&r.sticking===region).forEach(r=>r.options.forEach(o=>out.push({...o,row:r})));
+  if(!region||region==='top') rows.filter(r=>r.sticking==null).forEach(r=>r.options.forEach(o=>out.push({...o,row:r})));
+  const at=region&&PAUSE_FOR_REGION[region];
+  if(at) out.push({modifiers:{pause:{seconds:2,at}}, reps:[3,5], rpe:7.5, row:null});
+  out.push({modifiers:{tempo:'3-1-0'}, reps:[4,6], rpe:7, row:null});
+  const seen=new Set();
+  return out.filter(o=>{ if(!variantUsable(exId,o)) return false; const k=variantKey(o); if(seen.has(k)) return false; seen.add(k); return true; });
+}
+
+/* ---------- Interventions as events (§5.5) ---------- */
+function trainedTsAfter(i, n){
+  let k=0; for(let j=i+1;j<LOG.length;j++) if(countsAsTrained(LOG[j])&&++k===n) return LOG[j].ts;
+  return null;
+}
+function interventions(exId){
+  const out=[];
+  LOG.forEach((e,i)=>{
+    if(e.type!=='intervention_start'||(exId&&e.exercise_id!==exId)) return;
+    const end=LOG.find(x=>x.type==='intervention_end'&&x.start_id===e.id);
+    const total=Math.round((e.weeks||0)*(e.dpw||5)), done=trainedAfterIndex(i);
+    const active=!end&&e.weeks>0&&done<total;
+    const endTs=end?end.ts:active?null:e.weeks>0?trainedTsAfter(i,total):e.ts;
+    out.push({ev:e, i, active, endTs, stopped:!!end, done, total});
+  });
+  return out;
+}
+const activeIntervention=exId=>interventions(exId).find(s=>s.active)||null;
+/* The best e1RM over the intervention and the 4 weeks after it, against the
+   best before it began. Pending until those 4 weeks have passed. */
+function ivOutcome(s){
+  if(s.active||!s.ev.weeks||!s.endTs) return null;
+  const start=new Date(s.ev.ts).getTime(), until=new Date(s.endTs).getTime()+IV_OUTCOME_WEEKS*WEEK_MS;
+  if(Date.now()<until) return {pending:true};
+  const b=liftBests(s.ev.exercise_id), t=x=>new Date(x.ts).getTime();
+  const before=b.filter(x=>t(x)<start), after=b.filter(x=>t(x)>=start&&t(x)<=until);
+  if(!before.length||!after.length) return null;
+  const base=Math.max(...before.map(x=>x.e1)), best=Math.max(...after.map(x=>x.e1)), change=best/base-1;
+  return {change, worked:change>=IV_WORKED};
+}
+/* Finished interventions of one type on a family, with outcomes. */
+function ivFailures(family, type){
+  return interventions().filter(s=>s.ev.family===family&&(s.ev.variant?variantType(s.ev.variant):s.ev.kind)===type)
+    .map(ivOutcome).filter(o=>o&&!o.pending&&!o.worked).length;
+}
+function ivWorkedBefore(family, kind){
+  return interventions().some(s=>s.ev.family===family&&s.ev.kind===kind&&(o=>o&&o.worked)(ivOutcome(s)));
+}
+
+/* ---------- Own ratios (§5.4) ----------
+   For each variant of a main lift — child exercises and modifier tracks —
+   logged in 3+ sessions over 8 weeks: its e1RM over the main lift's (the
+   main lift's latest best on or before that day). Falling 3% or more from
+   the first two sessions to the last two is a signal (Grade D). Population
+   norms are deliberately not used: the research found them unreliable. */
+function ownRatios(exId){
+  const now=Date.now(), from=now-RATIO_WEEKS*WEEK_MS, main=liftBests(exId), t=x=>new Date(x.ts).getTime();
+  if(!main.length) return [];
+  const mainAt=ts=>{ let v=null; for(const m of main){ if(t(m)<=ts) v=m.e1; else break; } return v==null?main[0].e1:v; };
+  const tracks=EX.filter(e=>e.parent===exId&&!e.folded).map(e=>({ex:e.id,sig:'',label:e.name,region:(e.sticking||[])[0]||null}))
+    .concat(tracksFor(exId).filter(Boolean).map(sig=>{ const m=sigMods(sig);
+      return {ex:exId,sig,label:exById[exId].name+' — '+(modLabel(m)||sig),region:m&&m.pause?REGION_FOR_PAUSE[m.pause.at]||null:null}; }));
+  const out=[];
+  tracks.forEach(tr=>{
+    const bs=sessionBests(tr.ex,tr.sig).filter(b=>b.e1!=null&&t(b)>=from).reverse();
+    if(bs.length<3) return;
+    const r=bs.map(b=>b.e1/mainAt(t(b))).filter(x=>isFinite(x)&&x>0); if(r.length<3) return;
+    const a=(r[0]+r[1])/2, z=(r[r.length-1]+r[r.length-2])/2, change=z/a-1;
+    out.push({...tr, n:bs.length, ratio:r[r.length-1], change, falling:change<=-RATIO_FALL});
+  });
+  return out;
+}
+/* The research's "typical sticking region" per family, used when there are
+   no answers and no ratio to go on: squat a few inches above parallel, the
+   deadlift at the knee, the bench mid-range. Other families have none. */
+const TYPICAL_STICKING={squat:'mid', hinge:'below_knee', horizontal_press:'mid'};
+/* Where the lift slows: the most-reported region over 12 weeks; failing
+   that, the region a falling own ratio points at; failing that, the typical one. */
+function stickingDiagnosis(exId){
+  const since=Date.now()-12*WEEK_MS, c={}; let total=0;
+  LOG.forEach(e=>{ if(e.type==='sticking_report'&&e.exercise_id===exId&&!e.signature&&new Date(e.ts).getTime()>=since){ total++; if(e.region!=='nowhere') c[e.region]=(c[e.region]||0)+1; } });
+  const top=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];
+  if(top) return {region:top[0], n:top[1], total, src:'reports'};
+  const fall=ownRatios(exId).filter(r=>r.falling&&r.region).sort((a,b)=>a.change-b.change)[0];
+  if(fall) return {region:fall.region, n:0, total, src:'ratio', ratio:fall};
+  const typ=TYPICAL_STICKING[familyOf(exById[exId])];
+  return {region:typ||null, n:0, total, src:typ?'typical':null};
+}
+
+/* ---------- Shoulder gating (§5.6) ----------
+   With shoulder_instability, anything an intervention ADDS to a barbell
+   press — an extra day, specialization frequency — goes to a substitute
+   from the research's list instead (machine press with the hands in front,
+   landmine); nothing here ever raises barbell pressing frequency. No usable
+   substitute: the exposure isn't added at all. */
+const SHOULDER_SUBS={horizontal_press:['machine_press','pin_chest_press','ln_pl_press'], vertical_press:['machine_ohp','landmine']};
+function addedExposureFor(exId){
+  const ex=exById[exId], fam=familyOf(ex);
+  if(!(CFG.conditions||[]).includes('shoulder_instability')||!SHOULDER_SUBS[fam]||ex.load!=='barbell') return exId;
+  return SHOULDER_SUBS[fam].find(id=>exById[id]&&!exById[id].folded&&!(flagFor(id)&&flagFor(id).level==='red'))||null;
+}
+
+/* ---------- Specialization (§5.6) ---------- */
+function specializationCheck(exId, episode){
+  const why=[];
+  if(CFG.experience!=='advanced') why.push('it is for advanced lifters only');
+  if(inDeficit()) why.push('not while in a deficit');
+  if(JOINTS.some(j=>jointLevel(jointTrend(j,6))>=2)) why.push('not with a joint at level 2 or higher');
+  if(CFG.testDate){ const d=(new Date(CFG.testDate+'T12:00')-Date.now())/864e5; if(d>=-1&&d<28) why.push('not with a test within 4 weeks'); }
+  if(!(episode||[]).some(s=>s.ev.kind==='variant')) why.push('a targeted variant comes first');
+  if(addedExposureFor(exId)==null) why.push('no shoulder-safe substitute for the extra days');
+  return {ok:!why.length, why};
+}
+
+/* What the ladder proposes next for a main lift, or null. */
+function stallPlan(exId){
+  const st=stallState(exId); if(!st) return null;
+  const ex=exById[exId], fam=familyOf(ex), all=interventions(exId);
+  const act=all.find(s=>s.active); if(act) return {st, active:act};
+  if(st.kind==='exposure') return {st, step:0, kind:'exposure'};
+  if(inDeficit()) return {st, step:0, kind:'deficit'};
+  const ph=currentPhase(); if(ph&&ph.onDeload) return {st, step:0, kind:'recovering'};
+  if(recentDeload()) return {st, step:0, kind:'recovering'};
+  if(fatigueSignals().length) return {st, step:0, kind:'fatigue'};
+  const over=effortOverTarget(exId), rdrop=readinessDrop();
+  if(over!=null||rdrop!=null) return {st, step:0, kind:'hard', over, rdrop};
+  // this stall's episode: what's been tried since its last new best
+  const ep=all.filter(s=>new Date(s.ev.ts)>new Date(st.peak.ts)), has=k=>ep.some(s=>s.ev.kind===k);
+  const s1=st.perWeek<2?'frequency':'volume';
+  const s1ok=!(s1==='frequency'&&addedExposureFor(exId)==null)&&ivFailures(fam,s1)<IV_FAIL_SKIP;
+  if(!has('volume')&&!has('frequency')&&s1ok) return {st, step:1, kind:s1, worked:ivWorkedBefore(fam,s1)};
+  const dg=ep.find(s=>s.ev.kind==='diagnose');
+  if(!dg) return {st, step:2, kind:'diagnose', dx:stickingDiagnosis(exId), ratios:ownRatios(exId)};
+  // after diagnosing: wait for the filmed set or a sticking answer, at most 10 days
+  const evidence=LOG.slice(dg.i+1).some(e=>(e.type==='video_prompt'||e.type==='sticking_report')&&e.exercise_id===exId);
+  if(!evidence&&(Date.now()-new Date(dg.ev.ts))/864e5<DIAGNOSE_WAIT_DAYS) return {st, step:2, waiting:true};
+  const dx=stickingDiagnosis(exId), tried=new Set(ep.filter(s=>s.ev.variant).map(s=>variantKey(s.ev.variant)));
+  const opt=variantOptions(exId,dx.region).find(o=>!tried.has(variantKey(o))&&ivFailures(fam,variantType(o))<IV_FAIL_SKIP);
+  if(opt&&!has('variant')) return {st, step:3, kind:'variant', variant:opt, dx};
+  if(CFG.experience==='advanced'&&!has('specialization')){ const c=specializationCheck(exId,ep); if(c.ok) return {st, step:4, kind:'specialization'}; }
+  if(opt) return {st, step:3, kind:'variant', variant:opt, dx};
+  return {st, step:null};
+}
+function startIntervention(exId, plan, auto){
+  const v=plan.variant?{...(plan.variant.ex?{ex:plan.variant.ex}:{modifiers:cleanMods(plan.variant.modifiers)}),reps:plan.variant.reps,rpe:plan.variant.rpe}:undefined;
+  return append({type:'intervention_start', exercise_id:exId, family:familyOf(exById[exId]), step:plan.step, kind:plan.kind,
+    weeks:plan.kind==='diagnose'?0:IV_WEEKS, dpw:sessionsPerWeek()||5, ...(v?{variant:v}:{}), ...(plan.dx&&plan.dx.region?{region:plan.dx.region}:{}), ...(auto?{auto:true}:{})});
+}
+function stopIntervention(s, reason){
+  return append({type:'intervention_end', start_id:s.ev.id, exercise_id:s.ev.exercise_id, reason:reason||'stopped'});
+}
+const IV_TEXT={
+  volume:'Practice sets on this lift: about 40% more sets, at RPE 6.5',
+  frequency:'One more day a week of this lift, as practice sets at RPE 6.5',
+  variant:'A targeted variant in place of about 40% of this lift\'s sets',
+  specialization:'Specialization: this lift on up to 4 days a week, your other main lifts at about a third of their sets'
+};
+function ivDescribe(s){
+  const e=s.ev, nm=(exById[e.exercise_id]||{name:e.exercise_id}).name;
+  const what=e.kind==='variant'&&e.variant?variantName(e.exercise_id,e.variant)+' in place of about 40% of '+nm+' sets':IV_TEXT[e.kind]||e.kind;
+  return what+(s.active?' — week '+Math.min(e.weeks,Math.floor(s.done/(e.dpw||5))+1)+' of '+e.weeks:'');
+}
+
+/* The card for one lift. */
+function stallCard(exId){
+  const plan=stallPlan(exId); if(!plan||plan.active||plan.waiting||plan.step==null) return null;
+  const ex=exById[exId], nm=ex.name, st=plan.st, base='stall:'+exId+':';
+  const since='no new best in '+st.weeks+' weeks (your window is '+st.W+')';
+  if(plan.kind==='exposure') return {id:base+'exposure', snoozeDays:21, title:nm+': trained less than weekly',
+    body:nm+' has had '+since+', but it missed '+st.missing+' of the last '+st.W+' weeks. That is an exposure problem, not a stall — train it every week for a few weeks before reading anything into it. Nothing in the program changes.',
+    accept:{label:'Got it', fn:()=>{}}, decline:{label:'Hide'}};
+  if(plan.kind==='deficit') return {id:base+'deficit', snoozeDays:28, title:nm+': expected in a deficit',
+    body:nm+' has had '+since+'. You are eating in a deficit'+(CFG.energy==='deficit'?'':' (bodyweight is falling)')+', and strength stalls are expected there. Hold the load and keep the volume; it is not a sign the program needs changing. Interventions resume once you are back at maintenance.',
+    accept:{label:'Got it', fn:()=>{}}, decline:{label:'Hide'}};
+  if(plan.kind==='fatigue'||plan.kind==='recovering') return null;   // the deload card says it, with the stall named
+  if(plan.kind==='hard'){ const dpw=sessionsPerWeek()||5; return {id:base+'hard', snoozeDays:7, title:nm+': tired, not stuck?',
+    body:nm+' has had '+since+', and '+[plan.over!=null?'its last three sessions came in about '+(Math.round(plan.over*2)/2)+' RPE harder than planned':'',plan.rdrop!=null?'your readiness this week is about '+Math.round(plan.rdrop)+' points under the month before':''].filter(Boolean).join(', and ')+'. That points to fatigue, so the first step is recovery, not more work: a deload is '+dpw+' lighter sessions, then the block carries on. If it still has not moved after that, the app suggests more practice. The thresholds are judgement defaults.',
+    accept:{label:'Deload this week', fn:()=>{ append({type:'deload_start',sessions:dpw,reasons:['stall_effort']}); deloadStopsVolume(); toast('Deload week on — the next '+dpw+' sessions are lighter'); }},
+    decline:{label:'Not now'}}; }
+  const dpw=sessionsPerWeek()||5, start=()=>{ startIntervention(exId,plan); toast('Started — '+nm); };
+  if(plan.step===1) return {id:base+'1', snoozeDays:14, title:nm+' has stalled — more practice?',
+    body:nm+' has had '+since+'. Step 1 is more of the lift itself: '+(plan.kind==='frequency'?'it is trained under twice a week, so one more day a week of it':'about 40% more sets')+' as practice sets at RPE 6.5, for '+IV_WEEKS+' weeks. Frequency and volume have the best evidence of anything for a stalled lift (A–B).'
+      +(plan.worked?' This has worked for you on this lift type before.':'')+' The 40%, RPE and length are judgement defaults.',
+    accept:{label:'Start for '+IV_WEEKS+' weeks', fn:start}, decline:{label:'Not now'}};
+  if(plan.step===2){
+    const dx=plan.dx, rs=(plan.ratios||[]);
+    const where=dx.src==='reports'?'Your answers say it slows '+(STICK_LABEL[dx.region]||dx.region).toLowerCase()+' ('+dx.n+' of '+dx.total+').':dx.total?'Your answers so far say "nowhere specific".':'There are no answers yet on where it slows down.';
+    const rt=rs.length?' Your own ratios: '+rs.slice(0,3).map(r=>r.label+' '+Math.round(r.ratio*100)+'% of '+nm+(r.falling?', down '+Math.abs(Math.round(r.change*100))+'% in 8 weeks':'')).join('; ')+'.':'';
+    return {id:base+'2', snoozeDays:10, title:nm+': find where it slows',
+      body:nm+' still has '+since+' after more practice. Step 2 is a diagnosis: film your next top set, and answer where it slowed. '+where+rt+' Then the app proposes a variant aimed at that point.',
+      accept:{label:'Film the next top set', fn:()=>{ startIntervention(exId,plan); }}, decline:{label:'Not now'}};
+  }
+  if(plan.step===3){
+    const o=plan.variant, row=o.row, dx=plan.dx;
+    return {id:base+'3:'+variantKey(o), snoozeDays:14, title:nm+': try a targeted variant',
+      body:(dx.src==='reports'?'It slows '+(STICK_LABEL[dx.region]||dx.region).toLowerCase()+' ('+dx.n+' of your '+dx.total+' answers). '
+          :dx.src==='ratio'?dx.ratio.label+' has fallen '+Math.abs(Math.round(dx.ratio.change*100))+'% against '+nm+' in 8 weeks. '
+          :dx.src==='typical'?'No answers yet on where it slows, so this aims at the usual sticking region for this lift ('+(STICK_LABEL[dx.region]||dx.region).toLowerCase()+'). '
+          :'No clear sticking point, so this is the general option. ')
+        +(row?row.recommendation+'. Likely cause: '+row.cause.charAt(0).toLowerCase()+row.cause.slice(1)+'. ':'')
+        +variantName(exId,o)+' replaces about 40% of your '+nm+' sets for '+IV_WEEKS+' weeks, '+o.reps[0]+(o.reps[1]!==o.reps[0]?'–'+o.reps[1]:'')+' reps at RPE '+o.rpe+'. '
+        +'Evidence for targeting a sticking point is weak ('+(row&&row.grade||'D')+'); the 40% and length are judgement defaults.',
+      accept:{label:'Start for '+IV_WEEKS+' weeks', fn:start}, decline:{label:'Not now'}};
+  }
+  if(plan.step===4){
+    const sub=addedExposureFor(exId);
+    return {id:base+'4', snoozeDays:28, title:nm+': a specialization block?',
+      body:'Practice and a targeted variant have not moved '+nm+'. A specialization block trains it on up to 4 days a week, mostly 4–6 reps at RPE 7.5, with your other main lifts at about a third of their sets, for '+IV_WEEKS+' weeks.'
+        +(sub!==exId?' Because of your shoulder, the extra days use '+exById[sub].name+', not more barbell pressing.':'')
+        +' Retest 4–8 weeks after — specialization gains are often temporary. Grade C/D.',
+      accept:{label:'Start for '+IV_WEEKS+' weeks', fn:start}, decline:{label:'Not now'}};
+  }
+  return null;
+}
+/* Opt-in auto-apply (CFG.autoIntervene): steps 1 and 3 start on their own and
+   the card becomes a notice with an undo. Deloads, diagnosis and
+   specialization always ask. */
+function autoApplyInterventions(){
+  if(!CFG.autoIntervene) return;
+  [...new Set(CFG.goals||[])].forEach(id=>{
+    const plan=stallPlan(id);
+    if(plan&&!plan.active&&(plan.step===1||plan.step===3)) startIntervention(id,plan,true);
+  });
+}
+PROPOSAL_SOURCES.push(()=>[...new Set(CFG.goals||[])].filter(id=>exById[id]).map(stallCard).filter(Boolean));
+/* An intervention that started on its own says so, with an undo. */
+PROPOSAL_SOURCES.push(()=>interventions().filter(s=>s.active&&s.ev.auto).map(s=>({id:'ivauto:'+s.ev.id, snoozeDays:9999,
+  title:'Started: '+(exById[s.ev.exercise_id]||{name:''}).name, body:ivDescribe(s)+'. It started on its own because auto-apply is on in Edit program. Undo stops it now; nothing logged is changed.',
+  accept:{label:'OK', fn:()=>{}}, decline:{label:'Undo', fn:()=>{ stopIntervention(s,'undone'); toast('Stopped'); }}})));
+
+/* ---------- Interventions in the generated week ----------
+   Applied after maintenance and before the per-session cap, on the days the
+   generator built. Added slots carry iv (the intervention's id) and ivNote,
+   so the card can say why they're there. Never stored. */
+function applyInterventions(days, phase){
+  if(!phase||phase.onDeload||!days.length) return days;
+  const ivs=interventions().filter(s=>s.active&&s.ev.weeks>0&&exById[s.ev.exercise_id]);
+  const occ=id=>days.map(d=>({d, sl:d.slots.find(x=>x.ex===id&&!x.iv)})).filter(x=>x.sl);
+  const trim=(sl,n)=>{ const keep=Math.max(isMaint(sl)||isTopBack(sl)?2:1, sl.sets-n), cut=sl.sets-keep; sl.sets=keep;
+    if(sl.backoff) sl.backoff={...sl.backoff, n:Math.max(1,keep-1)}; return cut; };
+  ivs.forEach(s=>{
+    const e=s.ev, id=e.exercise_id, ex=exById[id], note=ivDescribe(s), base={iv:e.id, ivNote:note};
+    const sc=schemeFor('secondary',phase.type,phase.week,phase.weeks,ex,phase.taper);
+    const at=occ(id);
+    if(e.kind==='volume'||(e.kind==='frequency'&&at.length>=days.length)){
+      at.forEach(({d,sl})=>{ const n=Math.max(1,Math.round(sl.sets*IV_SHARE));
+        d.slots.splice(d.slots.indexOf(sl)+1,0,{...base, ex:id, role:'secondary', structure:'practice', sets:n, reps:sl.reps.slice(), rpe:IV_PRACTICE_RPE, joint:sl.joint}); });
+    }else if(e.kind==='frequency'){
+      const sub=addedExposureFor(id); if(!sub) return;
+      const free=days.filter(d=>!d.slots.some(x=>x.ex===id||x.ex===sub)); if(!free.length) return;
+      const d=free.reduce((a,b)=>b.slots.length<a.slots.length?b:a,free[0]);
+      d.slots.push({...base, ivDay:true, ex:sub, role:'secondary', structure:'practice', sets:3, reps:sc.reps.slice(), rpe:IV_PRACTICE_RPE, joint:jointNoteFor(exById[sub].pattern)});
+    }else if(e.kind==='variant'&&e.variant){
+      const v=e.variant, total=at.reduce((a,x)=>a+x.sl.sets,0); if(!total) return;
+      const want=Math.max(1,Math.round(total*IV_SHARE));
+      const mk=(sets,joint)=>({...base, ex:v.ex||id, role:'secondary', sets, reps:(v.reps||sc.reps).slice(), rpe:v.rpe||7.5, joint,
+        ...(v.modifiers?{modifiers:cleanMods(v.modifiers)}:{})});
+      // the lift on 2+ days: its last plain day becomes the variant; else part of its one day
+      const plain=at.filter(x=>!x.sl.structure).pop();
+      if(at.length>=2&&plain){ const i=plain.d.slots.indexOf(plain.sl); plain.d.slots[i]=mk(plain.sl.sets,plain.sl.joint); }
+      else{ const x=at[at.length-1], cut=trim(x.sl,want); if(cut>0) x.d.slots.splice(x.d.slots.indexOf(x.sl)+1,0,mk(cut,x.sl.joint)); }
+    }else if(e.kind==='specialization'){
+      const sub=addedExposureFor(id); if(!sub) return;
+      // other main lifts at about a third of their sets
+      [...new Set(CFG.goals||[])].filter(g=>g!==id).forEach(g=>occ(g).forEach(({sl})=>{ trim(sl,Math.round(sl.sets*2/3)); sl.ivNote='Specialization on '+ex.name+': about a third of the usual sets'; }));
+      // the target lift on up to 4 days
+      let have=occ(id).length;
+      days.filter(d=>!d.slots.some(x=>x.ex===id||x.ex===sub)).sort((a,b)=>a.slots.length-b.slots.length).forEach(d=>{
+        if(have>=4) return; have++;
+        d.slots.unshift({...base, ivDay:true, ex:sub, role:'secondary', sets:3, reps:[4,6], rpe:7.5, joint:jointNoteFor(exById[sub].pattern)}); });
+    }
+  });
+  return days;
+}
+/* §6.5 practice sets in (refined) hypertrophy blocks: a main lift trained on
+   3+ days a week has its last plain day of the week as practice, RPE 6.5 —
+   repetition that grooves the movement, at less cost. Judgement default:
+   which share, and the RPE. */
+function addPracticeDays(days, phase){
+  if(!phase||phase.type!=='hyp'||phase.onDeload||!phase.refined) return days;
+  [...new Set(CFG.goals||[])].filter(id=>exById[id]&&mainEligible(exById[id])).forEach(id=>{
+    const at=days.map(d=>d.slots.find(x=>x.ex===id&&!x.iv)).filter(Boolean);
+    const last=at.filter(sl=>!sl.structure).pop();
+    if(at.length>=3&&last){ last.structure='practice'; last.rpe=IV_PRACTICE_RPE; last.ivNote='Practice day: the same lift at RPE 6.5, to groove it without the fatigue of a hard session'; }
+  });
+  return days;
+}
+
+/* ---------- RPE scatter (§6.4) ----------
+   The same load (±2.5%) rated 1.5+ RPE apart across the last 4 exposures
+   while readiness was steady (within 10 points): the effort isn't consistent
+   yet. GRADE D HEURISTIC — the 1.5 and the 10 points are judgement defaults. */
+function rpeScatter(exId){
+  const firsts=new Map();
+  for(const st of sets()){ if(st.set_kind==='warmup'||st.rpe==null||!onTrack(st,exId,'')) continue; if(!firsts.has(st.session_id)) firsts.set(st.session_id,st); }
+  const ss=[...firsts.values()].reverse(); if(ss.length<4) return null;
+  const L=toLb(ss[0].weight); if(!L) return null;
+  const m=ss.filter(x=>Math.abs(toLb(x.weight)-L)/L<=0.025).slice(0,4); if(m.length<4) return null;
+  const r=m.map(x=>x.rpe), spread=Math.max(...r)-Math.min(...r); if(spread<1.5) return null;
+  const rd=readinessSeries(), days=new Set(m.map(x=>x.ts.slice(0,10))), v=rd.filter(x=>days.has(x.d)).map(x=>x.v);
+  if(v.length&&Math.max(...v)-Math.min(...v)>10) return null;
+  return {spread, n:m.length, lb:L};
+}
+
+/* Stalled main lifts whose next step is "recover first" (stallPlan step 0). */
+function stalledByFatigue(){
+  const n=[...new Set(CFG.goals||[])].filter(id=>exById[id]&&(p=>p&&p.kind==='fatigue')(stallPlan(id))).map(id=>exById[id].name);
+  return n.length?'It is also the likely reason '+n.join(' and ')+(n.length>1?' have':' has')+' stopped improving — recovery first, not more work. ':'';
+}
 
 /* ---------- Training max and realization (spec §2.3–2.4) ----------
    The training max (TM) is a PLANNING number per main lift, separate from the
@@ -5736,12 +6246,20 @@ function checklistItems(exId){
 /* §6.2 — every 3–4 weeks per main lift (21 days; judgement default, Grade D).
    The app never stores video: it records that the prompt was done or skipped. */
 const VIDEO_EVERY_DAYS=21;
+/* Stall step 2 asks for the next top set on video: due until a prompt is answered after it. */
+function stallVideoWanted(exId){
+  let dg=-1; LOG.forEach((e,i)=>{ if(e.type==='intervention_start'&&e.kind==='diagnose'&&e.exercise_id===exId) dg=i; });
+  if(dg<0) return false;
+  for(let i=dg+1;i<LOG.length;i++) if(LOG[i].type==='video_prompt'&&LOG[i].exercise_id===exId) return false;
+  return true;
+}
 function lastVideoPrompt(exId){
   for(let i=LOG.length-1;i>=0;i--){ const e=LOG[i]; if(e.type==='video_prompt'&&e.exercise_id===exId) return e; }
   return null;
 }
 function videoDue(exId, now){
   const last=lastVideoPrompt(exId);
+  if(stallVideoWanted(exId)) return true;
   return !last||((now||Date.now())-new Date(last.ts).getTime())/864e5>=VIDEO_EVERY_DAYS;
 }
 /* §6.3 — after a main lift's top set / AMRAP (or first set, see above) that
@@ -5785,7 +6303,7 @@ function techniqueBlock(slot){
     v.innerHTML='<div class="qlab">Film this set</div><div class="muted sm">Side view, whole body in frame. The app doesn\'t keep the video — it just reminds you.'
       +(lastDone?' Compare with the one from '+esc(new Date(lastDone.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'}))+'.':'')+'</div>';
     const row=el('div','row'); row.style.cssText='gap:6px;margin-top:8px';
-    const rec=done=>{ append({type:'video_prompt',exercise_id:slot.ex,session_id:session.id,done,trigger:'scheduled'}); session.video[slot.ex]=true; saveSession(); renderWork(); };
+    const rec=done=>{ append({type:'video_prompt',exercise_id:slot.ex,session_id:session.id,done,trigger:stallVideoWanted(slot.ex)?'stall':'scheduled'}); session.video[slot.ex]=true; saveSession(); renderWork(); };
     const y=el('button','btn s','I\'ll film it'); y.onclick=()=>rec(true);
     const n=el('button','btn s ghost','Skip this time'); n.onclick=()=>rec(false);
     row.append(y,n); v.appendChild(row); box.appendChild(v);
@@ -5890,7 +6408,7 @@ function logSet(slot,idx,kind,extend,over){
     weight:{value:W.weight,unit:W.unit}, bar:ex.bar?{value:ex.bar,unit:'lb'}:null,
     reps:W.reps, rpe:kind==='warmup'?null:draft.rpe, set_kind:setKind, group,
     ...(kind!=='warmup'&&cleanMods(slot.modifiers)?{modifiers:cleanMods(slot.modifiers)}:{}),
-    ...(kind!=='warmup'?{role:group?'straight':(slot.structure==='amrap'&&!slot.sets.length)||(slot.calib&&slot.sets.length===slot.sets_target-1&&slot.sets.length>0)?'amrap':isTopBack(slot)?(topSetOf(slot)?'backoff':'top'):isMaint(slot)&&!topSetOf(slot)?'top':'straight'}:{}),
+    ...(kind!=='warmup'?{role:group?'straight':(slot.structure==='amrap'&&!slot.sets.length)||(slot.calib&&slot.sets.length===slot.sets_target-1&&slot.sets.length>0)?'amrap':isTopBack(slot)?(topSetOf(slot)?'backoff':'top'):isMaint(slot)&&!topSetOf(slot)?'top':slot.structure==='practice'?'practice':'straight'}:{}),
     ...(kind!=='warmup'&&draft.failed?{failed:true}:{}),
     // the target this set was actually prescribed against: a maintenance slot's
     // weekly top set is 3–5 @ RPE 7.5, not the slot's hypertrophy range
@@ -7073,7 +7591,7 @@ function openSettings(){
       split: (s=>Array.isArray(s)?[...s]:s)(programSplitSpec()), syncUrl: CFG.syncUrl||'', feedbackUrl: CFG.feedbackUrl||'', testerName: CFG.testerName||'',
       energy: CFG.energy||'maintenance', conds: [...(CFG.conditions||[])],
       jointUsual: {...(CFG.jointUsual||{})},
-      backoff: {...backoffCfg()}
+      backoff: {...backoffCfg()}, autoIntervene: !!CFG.autoIntervene
     };
   }
   const S=SETTINGS_DRAFT;
@@ -7357,6 +7875,17 @@ function openSettings(){
       if(S.backoff.mode==='fatigue') bo.appendChild(el('div','anchor','Keeps adding back-offs at the same load until one feels as hard as the top set — at most two more than the plan.'));
       host.appendChild(bo);
     }
+    // stall interventions: proposed by default; opt in to starting them automatically
+    {
+      const ai=el('div','qblock');
+      ai.innerHTML=`<div class="qlab">When a main lift stalls</div>
+        <div class="field">The app proposes a change as a card on the dashboard. With auto-apply on, more practice and targeted variants start on their own, with an undo. Deloads, diagnosis and specialization always ask.</div>`;
+      const mc=el('div','chips'); mc.style.marginTop='8px';
+      [[false,'Ask me first'],[true,'Start them automatically']].forEach(([v,l])=>{
+        const c=el('button','chip',l); c.setAttribute('aria-pressed',S.autoIntervene===v?'true':'false');
+        c.onclick=()=>{ S.autoIntervene=v; draw(); }; mc.appendChild(c); });
+      ai.appendChild(mc); host.appendChild(ai);
+    }
     const off=Object.keys(CFG.checklistOff||{}).filter(id=>CFG.checklistOff[id]&&exById[id]);
     if(off.length){
       const cb=el('div','qblock'); cb.innerHTML='<div class="qlab">Setup checklists you\'ve hidden</div>';
@@ -7413,7 +7942,7 @@ function openSettings(){
     if(splitOf(S.split).key!==splitOf(programSplitSpec()).key){
       if(Array.isArray(S.split)) CFG.week=[...S.split]; else { CFG.split=S.split; CFG.week=null; }
     }
-    CFG.syncUrl=S.syncUrl; CFG.energy=S.energy; CFG.conditions=S.conds; CFG.jointUsual=S.jointUsual; CFG.backoff=S.backoff;
+    CFG.syncUrl=S.syncUrl; CFG.energy=S.energy; CFG.conditions=S.conds; CFG.jointUsual=S.jointUsual; CFG.backoff=S.backoff; CFG.autoIntervene=!!S.autoIntervene;
     CFG.feedbackUrl=S.feedbackUrl; CFG.testerName=S.testerName;
     ROADMAP=S.draft; saveCfg(); SETTINGS_DRAFT=null;
     $('#dlg').close(); render(); toast('Program saved');

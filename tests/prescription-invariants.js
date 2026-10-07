@@ -43,7 +43,10 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
+  'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
+  'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -1514,6 +1517,189 @@ section('41. maintenance top set target');
   ok(JSON.stringify(slot.sets[1].target)==='{"reps":[6,8],"rpe":8}','the hypertrophy sets after it keep the slot\'s target','');
   ok(!A.rateState('deadlift').last.miss,'so 5 reps at RPE 7.5 is a hit, not a miss — a fast lift is not demoted by its own top set','');
   console.log('  top set target stored as prescribed · not counted as a miss');
+}
+
+/* ─── 42. stall engine (spec §5, §6.4–6.5) ─── */
+section('42. stall engine');
+{
+  // a lift trained perWeek times a week for `weeks` weeks, flat (or rising), ending lastDaysAgo
+  const hist=(ex,{weeks=6,perWeek=2,lb=315,rise=0,rpe=8,skipWeek=-1,lastDaysAgo=1,target={reps:[5,5],rpe:8}}={})=>{
+    const ev=[]; let k=0;
+    for(let w=weeks-1;w>=0;w--){ if(w===skipWeek) continue;
+      for(let j=0;j<perWeek;j++){ const d=lastDaysAgo+w*7+j*Math.floor(7/perWeek), sid=ex+'s'+(k++)+'_'+(uid++), L=Math.round((lb*(1+rise*(weeks-1-w)))/5)*5;
+        ev.push(set(ex,sid,L,5,rpe,d,{target,role:'straight'}),{type:'session_end',id:'se'+sid,ts:day(d-0.01),session_id:sid,joints:{}}); } }
+    return ev.sort((a,b)=>a.ts<b.ts?-1:1); };
+  const mk=(ev,o={})=>{ const A=load(ev.slice().sort((a,b)=>a.ts<b.ts?-1:1)), C=A.getCFG();
+    C.start=new Date(Date.now()-400*864e5).toISOString().slice(0,10); C.goals=o.goals||['squat']; C.onboarded=true;
+    C.rateSeed={at:0,dflt:'standard',lifts:{}}; C.stallWeeks=o.stallWeeks||4; C.experience=o.experience||'intermediate';
+    C.conditions=o.conditions||[]; C.energy=o.energy||'maintenance'; C.equipment=null;
+    A.setRoadmap([A.applyShape({type:'hyp',label:'H',weeks:200,deload:false,hyp:[]})]); return A; };
+  // detection
+  let A=mk(hist('squat'));
+  let st=A.stallState('squat');
+  ok(st&&st.kind==='stall'&&st.weeks>=4,'flat for 6 weeks, trained twice a week: a stall',JSON.stringify(st&&{k:st.kind,w:st.weeks}));
+  A=mk(hist('squat',{rise:0.02}));
+  ok(!A.stallState('squat'),'rising 2% a week: no stall','');
+  A=mk(hist('squat',{skipWeek:1}));
+  st=A.stallState('squat');
+  ok(st&&st.kind==='exposure','a week with no squat in the window: an exposure problem, not a stall',JSON.stringify(st&&st.kind));
+  let card=A.stallCard('squat');
+  ok(card&&card.id.endsWith(':exposure')&&/exposure problem, not a stall/.test(card.body),'its card says so and changes nothing',card&&card.id);
+  if(card) card.accept.fn(); ok(!A.LOG.some(e=>e.type==='intervention_start'),'accepting it starts no intervention','');
+  A=mk(hist('squat',{lastDaysAgo:20}));
+  ok(!A.stallState('squat'),'not trained in the last 14 days: not judged','');
+  A=mk(hist('squat',{weeks:3}));
+  ok(!A.stallState('squat'),'less history than the window: not judged','');
+  A=mk(hist('squat')); A.getCFG().rateSeed={at:0,dflt:'fast',lifts:{}};
+  ok(A.rateOf('squat')!=='fast'||!A.stallState('squat'),'a lift on fast progression is never called stalled (two misses demote it instead)','');
+  A=mk(hist('squat'),{goals:['deadlift']});
+  ok(!A.stallState('squat'),'not a main lift: not judged','');
+  // step 0
+  A=mk(hist('squat'),{energy:'deficit'});
+  let p=A.stallPlan('squat');
+  ok(p&&p.kind==='deficit','in a deficit: the explanation, not an intervention',JSON.stringify(p&&p.kind));
+  card=A.stallCard('squat'); ok(card&&/expected in a deficit/i.test(card.title)&&/Hold the load and keep the volume/.test(card.body),'the deficit card says hold load, keep volume','');
+  if(card) card.accept.fn(); ok(!A.LOG.some(e=>e.type==='intervention_start'),'and accepting it changes nothing','');
+  A=mk(hist('squat',{rpe:9.5}));
+  p=A.stallPlan('squat');
+  ok(p&&(p.kind==='hard'||p.kind==='fatigue'),'sets coming in 1.5 RPE over target: recovery first',JSON.stringify(p&&p.kind));
+  card=A.stallCard('squat');
+  ok(!card||/deload/i.test(card.accept.label),'and the only thing offered is a deload',card&&card.accept.label);
+  {
+    const ev=hist('squat'); for(let i=0;i<4;i++) ev.push({type:'readiness',id:'jr'+i,ts:day(6-i),sleep_quality:3,motivation:3,recovery:3,soreness:{},joints:{knee:3},joint_scale:3});
+    A=mk(ev); p=A.stallPlan('squat');
+    ok(!p||p.step===0,'a joint flaring: no step that adds work',JSON.stringify(p&&{s:p.step,k:p.kind}));
+  }
+  A=mk(hist('squat').concat([{type:'deload_start',id:'dl1',ts:day(3),sessions:5}]));
+  p=A.stallPlan('squat'); ok(p&&p.kind==='recovering'&&!A.stallCard('squat'),'mid-deload: no stall card',JSON.stringify(p&&p.kind));
+  A=mk(hist('squat').concat([{type:'deload_start',id:'dl2',ts:day(10.5),sessions:1}]));
+  p=A.stallPlan('squat'); ok(A.currentPhase().onDeload!==true&&p&&p.kind==='recovering'&&!A.stallCard('squat'),'deload just finished: give it two weeks before calling it a stall',JSON.stringify(p&&p.kind));
+  // step 1
+  A=mk(hist('squat'));
+  p=A.stallPlan('squat');
+  ok(p&&p.step===1&&p.kind==='volume','trained twice a week: step 1 is more sets',JSON.stringify(p&&{s:p.step,k:p.kind}));
+  card=A.stallCard('squat'); ok(card&&/RPE 6.5/.test(card.body)&&/judgement defaults/.test(card.body),'the card says what, why, how long, and that the numbers are judgement defaults','');
+  A=mk(hist('squat',{perWeek:1}));
+  p=A.stallPlan('squat'); ok(p&&p.kind==='frequency','trained once a week: step 1 adds a day',JSON.stringify(p&&p.kind));
+  // one active intervention per lift; derived, never stored
+  A=mk(hist('squat')); A.startIntervention('squat',A.stallPlan('squat'));
+  ok(A.activeIntervention('squat')&&A.stallPlan('squat').active&&!A.stallCard('squat'),'once started: no second card for the same lift','');
+  const evS=A.LOG.find(e=>e.type==='intervention_start');
+  ok(!('outcome' in evS)&&!('active' in evS)&&!('baseline_e1' in evS),'the start event carries no derived state (outcome, status, baseline)',JSON.stringify(Object.keys(evS)));
+  // what it does to the week
+  {
+    const ph=A.currentPhase(), days=[{id:'a',name:'A',slots:[{ex:'squat',role:'primary',sets:5,reps:[6,8],rpe:8}]},{id:'b',name:'B',slots:[{ex:'bench',role:'primary',sets:4,reps:[6,8],rpe:8}]}];
+    A.applyInterventions(days,ph);
+    const pr=days[0].slots.find(x=>x.structure==='practice');
+    ok(pr&&pr.ex==='squat'&&pr.sets===2&&pr.rpe===6.5,'volume: 40% more sets as practice sets at RPE 6.5',JSON.stringify(pr));
+    // a practice set is logged as practice and never feeds the lift's history
+    A.setSession({id:'PS',slots:[{...pr,sets_target:pr.sets,sets:[]}],openIdx:0,adj:null,ratings:{},startedAt:Date.now()});
+    const sl=A.getSession().slots[0]; A.seedDraft(sl); const d=A.getDraft(); d.weight=275; d.reps=7; d.rpe=6.5; A.logSet(sl,0,'straight');
+    ok(sl.sets[0]&&sl.sets[0].role==='practice'&&!A.onTrack(sl.sets[0],'squat',''),'practice sets are logged as practice and kept off the lift\'s track',JSON.stringify(sl.sets[0]&&sl.sets[0].role));
+    const dd=[{id:'a',name:'A',slots:[{ex:'squat',role:'primary',sets:5,reps:[6,8],rpe:8}]}];
+    A.applyInterventions(dd,{...ph,onDeload:true}); ok(dd[0].slots.length===1,'nothing is added during a deload','');
+    A.deloadStopsVolume(); ok(!A.activeIntervention('squat')&&A.LOG.some(e=>e.type==='intervention_end'&&e.reason==='deload'),'taking a deload ends a practice-volume intervention','');
+  }
+  // shoulder gating: an added day of a barbell press goes to a substitute
+  {
+    A=mk(hist('bench',{perWeek:1,lb:225}),{goals:['bench'],conditions:['shoulder_instability']});
+    p=A.stallPlan('bench'); ok(p&&p.kind==='frequency','bench once a week: step 1 adds a day',JSON.stringify(p&&p.kind));
+    if(p) A.startIntervention('bench',p);
+    const days=[{id:'a',name:'A',slots:[{ex:'bench',role:'primary',sets:4,reps:[6,8],rpe:8}]},{id:'b',name:'B',slots:[{ex:'squat',role:'primary',sets:4,reps:[6,8],rpe:8}]}];
+    A.applyInterventions(days,A.currentPhase());
+    const add=days[1].slots.find(x=>x.iv);
+    ok(add&&add.ex!=='bench'&&A.exById[add.ex].load!=='barbell'&&!(A.flagFor(add.ex)&&A.flagFor(add.ex).level==='red'),'shoulder instability: the extra day is a shoulder-safe substitute, not barbell bench',JSON.stringify(add&&add.ex));
+    ok(A.addedExposureFor('ohp')!=='ohp'&&A.addedExposureFor('squat')==='squat','the substitution applies only to barbell pressing','');
+    const B=mk(hist('bench',{perWeek:1,lb:225}),{goals:['bench']});
+    ok(B.addedExposureFor('bench')==='bench','without the condition, bench stays bench','');
+    let redOk=true; ['bench','ohp','chinup','squat','deadlift'].forEach(id=>[null,...(A.FAMILY_STICKING[A.familyOf(A.exById[id])]||[])].forEach(r=>A.variantOptions(id,r).forEach(o=>{ if(o.ex&&A.flagFor(o.ex)&&A.flagFor(o.ex).level==='red') redOk=false; })));
+    ok(redOk,'no targeted variant is ever a red-flagged exercise','');
+  }
+  // two failures of a type on a family: skipped
+  {
+    // two volume interventions in an earlier stall, then a new best 9 weeks ago, flat since
+    const ev=hist('squat',{weeks:30}); ev.push(set('squat','nb1',330,5,8,63,{role:'straight',target:{reps:[5,5],rpe:8}}),{type:'session_end',id:'senb1',ts:day(62.99),session_id:'nb1',joints:{}});
+    ev.push({type:'intervention_start',id:'iv1',ts:day(180),exercise_id:'squat',family:'squat',step:1,kind:'volume',weeks:1,dpw:2});
+    ev.push({type:'intervention_start',id:'iv2',ts:day(150),exercise_id:'squat',family:'squat',step:1,kind:'volume',weeks:1,dpw:2});
+    A=mk(ev);
+    ok(A.ivFailures('squat','volume')===2,'two volume interventions without a 1% gain count as two failures',String(A.ivFailures('squat','volume')));
+    p=A.stallPlan('squat'); ok(p&&p.step===2,'so step 1 is skipped and the ladder goes to diagnosis',JSON.stringify(p&&{s:p.step,k:p.kind}));
+  }
+  // diagnosis → targeted variant from the tables
+  {
+    const ev=hist('bench',{lb:225}); for(let i=0;i<3;i++) ev.push({type:'sticking_report',id:'sr'+i,ts:day(2+i),exercise_id:'bench',session_id:'x'+i,region:'lockout'});
+    A=mk(ev,{goals:['bench']});
+    ok(A.stickingDiagnosis('bench').region==='lockout','the most-reported region is the diagnosis','');
+    const o=A.variantOptions('bench','lockout')[0];
+    ok(o&&o.ex==='cg_bench','bench slowing at lockout: close-grip bench (the research table)',JSON.stringify(o));
+    const m=A.variantOptions('incline_machine','off_chest')[0];
+    ok(m&&m.modifiers&&m.modifiers.pause,'a machine press slowing off the chest: a paused rep on the same machine (modifiers work for any lift)',JSON.stringify(m));
+    const fb=A.variantOptions('pulldown','mid').map(x=>Object.keys(x.modifiers||{})[0]||x.ex);
+    ok(fb[fb.length-1]==='tempo','families without a row fall back to a tempo modifier last',fb.join(','));
+    ok(['mid','lockout'].every(r=>A.variantOptions('incline_machine',r).every(x=>!x.modifiers||!x.modifiers.rom)),'range-of-motion variants (deficit, pin, board) only for barbell lifts','');
+    ok(A.variantOptions('bench','mid').some(x=>x.modifiers&&x.modifiers.rom),'and they are offered on the barbell lift','');
+  }
+  // the tables as data
+  {
+    let good=true, why='';
+    A.STALL_TABLES.forEach(r=>{ if(!A.TRACKED_FAMILIES.includes(r.family)){ good=false; why='family '+r.family; }
+      if(r.sticking!=null&&!(A.FAMILY_STICKING[r.family]||[]).includes(r.sticking)){ good=false; why='region '+r.family+'/'+r.sticking; }
+      (r.options||[]).forEach(o=>{ if(o.ex&&!A.exById[o.ex]){ good=false; why='missing '+o.ex; } if(o.modifiers&&!A.cleanMods(o.modifiers)){ good=false; why='bad mods'; }
+        if(!o.reps||!(o.rpe>0)){ good=false; why='no programming'; } });
+      if(!r.handled&&!r.options){ good=false; why='row with no options and no handler'; } });
+    ok(good,'every table row is keyed by a real family and region, with real exercises and valid modifiers',why);
+  }
+  // own ratios
+  {
+    const ev=hist('bench',{lb:225,weeks:8});
+    [50,36,22,8].forEach((dd,i)=>{ const sid='pz'+i; ev.push(set('bench',sid,205-i*5,5,8,dd,{modifiers:{pause:{seconds:3,at:'chest'}},role:'straight'}),{type:'session_end',id:'pe'+i,ts:day(dd-0.01),session_id:sid,joints:{}}); });
+    A=mk(ev,{goals:['bench']});
+    const r=A.ownRatios('bench').find(x=>x.sig);
+    ok(r&&r.falling&&r.region==='off_chest','paused bench falling 3%+ against bench over 8 weeks: a signal pointing at off the chest',JSON.stringify(r&&{c:r.change,reg:r.region}));
+    ok(A.stickingDiagnosis('bench').src==='ratio','with no answers, the ratio supplies the diagnosis',JSON.stringify(A.stickingDiagnosis('bench')));
+  }
+  // specialization guards, one at a time
+  {
+    const base=()=>hist('squat').concat([{type:'intervention_start',id:'v1',ts:day(1.5),exercise_id:'squat',family:'squat',step:3,kind:'variant',weeks:0,dpw:2,variant:{modifiers:{pause:{seconds:2,at:'bottom'}}}}]);
+    const ep=X=>X.interventions('squat');
+    let S=mk(base(),{experience:'advanced'});
+    ok(S.specializationCheck('squat',ep(S)).ok,'advanced, maintenance, no joints, no test, variant tried: specialization allowed',JSON.stringify(S.specializationCheck('squat',ep(S)).why));
+    S=mk(base(),{experience:'intermediate'}); ok(!S.specializationCheck('squat',ep(S)).ok,'not advanced: blocked','');
+    S=mk(base(),{experience:'advanced',energy:'deficit'}); ok(!S.specializationCheck('squat',ep(S)).ok,'in a deficit: blocked','');
+    S=mk(base(),{experience:'advanced'}); S.getCFG().testDate=new Date(Date.now()+20*864e5).toISOString().slice(0,10); ok(!S.specializationCheck('squat',ep(S)).ok,'a test within 4 weeks: blocked','');
+    S=mk(hist('squat'),{experience:'advanced'}); ok(!S.specializationCheck('squat',S.interventions('squat')).ok,'no targeted variant tried yet: blocked','');
+    { const ev=base(); for(let i=0;i<6;i++) ev.push({type:'readiness',id:'kj'+i,ts:day(10-i),sleep_quality:3,motivation:3,recovery:3,soreness:{},joints:{knee:2},joint_scale:3});
+      S=mk(ev,{experience:'advanced'}); const c=S.specializationCheck('squat',ep(S));
+      ok(!c.ok,'a joint at level 2+: blocked',JSON.stringify(c)); }
+    // shoulder: specialization days on a barbell press use the substitute
+    S=mk(hist('bench',{lb:225}),{goals:['bench','squat'],experience:'advanced',conditions:['shoulder_instability']});
+    S.append({type:'intervention_start',exercise_id:'bench',family:'horizontal_press',step:4,kind:'specialization',weeks:6,dpw:4});
+    const days=['a','b','c','d'].map(k=>({id:k,name:k,slots:k==='a'?[{ex:'bench',role:'primary',sets:4,reps:[6,8],rpe:8}]:[{ex:'squat',role:'primary',sets:6,reps:[6,8],rpe:8}]}));
+    S.applyInterventions(days,S.currentPhase());
+    const added=days.flatMap(d=>d.slots.filter(x=>x.iv&&x.ivDay));
+    ok(added.length===3&&added.every(x=>x.ex!=='bench'&&S.exById[x.ex].load!=='barbell'),'shoulder: specialization adds its days as a substitute, never barbell bench',JSON.stringify(added.map(x=>x.ex)));
+    ok(days.slice(1).every(d=>d.slots.find(x=>x.ex==='squat').sets===2),'other main lifts drop to about a third of their sets',JSON.stringify(days.map(d=>d.slots.map(x=>x.ex+x.sets))));
+  }
+  // RPE scatter (§6.4)
+  {
+    const ev=[]; [7,8.5,7,8.5].forEach((r,i)=>{ const sid='sc'+i; ev.push(set('squat',sid,275,5,r,12-i*3,{role:'straight'}),{type:'session_end',id:'sce'+i,ts:day(12-i*3-0.01),session_id:sid,joints:{}}); });
+    A=mk(ev); ok(A.rpeScatter('squat')&&A.rpeScatter('squat').spread===1.5,'the same load rated 7 to 8.5 across four sessions: scatter flagged',JSON.stringify(A.rpeScatter('squat')));
+    const ev2=[]; [7.5,8,7.5,8].forEach((r,i)=>{ const sid='sd'+i; ev2.push(set('squat',sid,275,5,r,12-i*3,{role:'straight'}),{type:'session_end',id:'sde'+i,ts:day(12-i*3-0.01),session_id:sid,joints:{}}); });
+    A=mk(ev2); ok(!A.rpeScatter('squat'),'half a point apart: no flag','');
+  }
+  // practice days in refined hypertrophy blocks (§6.5)
+  {
+    A=mk([],{goals:['squat']});
+    const mkDays=()=>['a','b','c'].map(k=>({id:k,name:k,slots:[{ex:'squat',role:'primary',sets:4,reps:[6,8],rpe:8}]}));
+    let days=A.addPracticeDays(mkDays(),{type:'hyp',refined:true,week:2,weeks:6});
+    ok(days[2].slots[0].structure==='practice'&&days[0].slots[0].structure!=='practice','refined hypertrophy, a main lift 3 days a week: its last day is practice','');
+    days=A.addPracticeDays(mkDays(),{type:'hyp',refined:false,week:2,weeks:6});
+    ok(days.every(d=>d.slots[0].structure!=='practice'),'not in a block that has not opted into the refined rules','');
+    days=A.addPracticeDays(mkDays().slice(0,2),{type:'hyp',refined:true,week:2,weeks:6});
+    ok(days.every(d=>d.slots[0].structure!=='practice'),'twice a week: both days stay normal','');
+  }
+  ok(load([]).getCFG().autoIntervene===false,'auto-apply is opt-in (off by default)','');
+  console.log('  detection · exposure is not a stall · deficit/fatigue/just-deloaded first · step 1 by frequency · one active · shoulder substitutes · two failures skip · tables as data · own ratios · specialization guards · scatter · practice days');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

@@ -47,7 +47,8 @@ function boot(clock){
   const names=['CFG','LOG','EX','exById','sets','append','generatedDays','todayDay','programPosition','currentPhase','seedDraft','suggestFor',
     'logSet','soreGroupsFor','readinessScore','physicalCut','jointNoteFor','ensureInitialTM','slotTrack','activeProposals','builderDefaults',
     'builderPlan','applyBuilder','rateOf','tmFor','toLb','loadable','rtfFromPct','pct1RM','bwOffset','isBW','JOINTS','jointLevel','jointTrend',
-    'familyOf','splitFor','blockLen','stepUp','deloadSignals','mainEligible','dismissProposal','rateState'];
+    'familyOf','splitFor','blockLen','stepUp','deloadSignals','mainEligible','dismissProposal','rateState','stallPlan','stallState','interventions',
+    'stallVideoWanted','FAMILY_STICKING','fatigueSignals'];
   const pick=names.map(n=>n+':(()=>{try{return '+n+'}catch(e){}})()').join(',');
   const body=src+'\n;return {'+pick+',getDraft:()=>draft,setSession:x=>{session=x},getSession:()=>session,getROADMAP:()=>ROADMAP,'+
     'setROADMAP:r=>{ROADMAP=r},getCFG:()=>CFG};';
@@ -62,6 +63,7 @@ function boot(clock){
 const BASE={squat:285,hinge:335,horizontal_press:215,vertical_press:135,vertical_pull:210,horizontal_pull:190,
   elbow_flexion:70,elbow_extension:80,abduction:45,knee_extension:150,knee_flexion:130,calf_raise:220,trunk:80,
   shrug:250,hip_abduction:160,hip_adduction:160,wrist:50,grip:120,other:80};
+const STICK={squat:'bottom',deadlift:'off_floor',bench:'off_chest'};
 const PERSONAS={
   responder:{label:'Responder', profile:'even_mix', experience:'intermediate', gain:()=>0.006, noise:0.02, rpeNoise:0.5, attend:1},
   non_responder:{label:'Non-responder', profile:'even_mix', experience:'intermediate', gain:()=>0.0, noise:0.025, rpeNoise:0.5, attend:1},
@@ -71,6 +73,8 @@ const PERSONAS={
   novice:{label:'New lifter (fast)', profile:'size_first', experience:'novice', gain:w=>w<10?0.012:0.003, noise:0.02, rpeNoise:0.5, attend:1, base:0.6},
   shoulder:{label:'Shoulder instability', profile:'size_first', experience:'intermediate', gain:()=>0.004, noise:0.02, rpeNoise:0.5, attend:1,
     conditions:['shoulder_instability'], jointUsual:{shoulder:'mild'}, flare:{joint:'shoulder', from:6, to:8}},
+  advanced:{label:'Advanced, flat, shoulder', profile:'even_mix', experience:'advanced', gain:()=>0.0, noise:0.02, rpeNoise:0.5, attend:1,
+    conditions:['shoulder_instability']},
   sporadic:{label:'Trains less than weekly', profile:'even_mix', experience:'intermediate', gain:()=>0.004, noise:0.02, rpeNoise:0.5, attend:0.18}
 };
 
@@ -94,15 +98,24 @@ function simulate(key){
   B.est={}; B.goals.forEach(id=>{ B.est[id]=Math.round(trueOf(id)*0.95/5)*5; });
   const plan=A.builderPlan(B); A.applyBuilder(B,plan);
   if(P.jointUsual) C.jointUsual={...P.jointUsual};
-  const trace=[], issues=[], weekly=[];
+  const trace=[], issues=[], weekly=[], ivLog=[], ivSlots=[];
   let fatigue=0, bw=P.bwStart||180, deloads=0;
   for(let w=0;w<WEEKS;w++){
     const weekStart=start+w*7*DAY;
     const dpw=(A.splitFor(A.getROADMAP()[A.programPosition().idx])||{days:5}).days;
     // proposals at the start of the week
     const props=A.activeProposals();
-    // accept a deload only if this persona would; otherwise decline it like a user would
-    props.forEach(p=>{ clock.set(weekStart); if(p.id==='deload'&&P.acceptDeload){ p.accept.fn(); A.dismissProposal(p.id); deloads++; } else A.dismissProposal(p.id); });
+    // accept a deload only if this persona would; stall cards are accepted (a
+    // lifter following the app's advice) unless the persona says otherwise;
+    // everything else is declined like a user would
+    const tiredAtStart=A.fatigueSignals().length>0;
+    const ivBefore=A.interventions().length;
+    props.forEach(p=>{ clock.set(weekStart);
+      if((p.id==='deload'||p.id.endsWith(':hard'))&&P.acceptDeload){ p.accept.fn(); A.dismissProposal(p.id); deloads++; }
+      else if(p.id.startsWith('stall:')&&!p.id.endsWith(':hard')&&P.acceptStall!==false){ p.accept.fn(); A.dismissProposal(p.id); }
+      else A.dismissProposal(p.id); });
+    A.interventions().slice(ivBefore).forEach(s=>ivLog.push({w:w+1, ex:s.ev.exercise_id, step:s.ev.step, kind:s.ev.kind,
+      variant:s.ev.variant?(s.ev.variant.ex||JSON.stringify(s.ev.variant.modifiers)):null}));
     const ph0=A.currentPhase();
     for(let d=0;d<dpw;d++){
       if(R()>P.attend) continue;
@@ -112,6 +125,7 @@ function simulate(key){
       if(phase.onDeload) fatigue=Math.max(0,fatigue-0.03);
       // the check-in, exactly as the app's #ckgo handler does it
       (day.slots||[]).forEach(sl=>{ if(['topback','amrap','maint'].includes(sl.structure)) A.ensureInitialTM(A.slotTrack(sl).ex); });
+      day.slots.filter(sl=>sl.iv).forEach(sl=>ivSlots.push({w:w+1, ex:sl.ex, structure:sl.structure||'', sets:sl.sets, addedDay:!!sl.ivDay}));
       const sess={id:'S'+w+'_'+d,dayId:day.id,dayName:day.name,soreGroups:A.soreGroupsFor(day),openIdx:0,ratings:{},adj:null,score:null,
         slots:day.slots.map(s=>({...s,sets_target:s.sets,sets:[]})),startedAt:clock.get()};
       A.setSession(sess);
@@ -154,6 +168,11 @@ function simulate(key){
           trace.push({w,d,ex:slot.ex,role:slot.role,structure:slot.structure||'',L:Math.round(L-off),reps,rpe,failed,E:Math.round(Eset),
             sug:dr.suggestedLb!=null?Math.round(dr.suggestedLb):null});
         }
+        // the lifter answers "where did it slow down?" after a hard or missed first set, and films when asked
+        if(B.goals.includes(slot.ex)&&slot.sets.length){ const f=slot.sets[0];
+          if((f.failed||f.rpe>=9.5)&&STICK[slot.ex]&&!A.LOG.some(e=>e.type==='sticking_report'&&e.session_id===sess.id&&e.exercise_id===slot.ex))
+            A.append({type:'sticking_report',exercise_id:slot.ex,session_id:sess.id,set_id:f.id,region:STICK[slot.ex]});
+          if(A.stallVideoWanted(slot.ex)) A.append({type:'video_prompt',exercise_id:slot.ex,session_id:sess.id,done:true,trigger:'stall'}); }
         // the body adapts: a gain per exposure (persona-specific)
         truth[slot.ex]=added(slot.ex)*(1+P.gain(w));
       });
@@ -164,16 +183,18 @@ function simulate(key){
     if(bw!=null) bw+=P.bwPerWeek||0;
     // weekly snapshot of the main lifts
     const sigFull=A.deloadSignals()||[], sig=sigFull.map(x=>x.k);
-    const snap={signals:sig, w:w+1, phase:(()=>{ const p=A.currentPhase(); return (p.onDeload?'deload':p.type)+(p.week?' w'+p.week:''); })(), proposals:props.map(p=>p.id), lifts:{}};
+    const activeCount={}; A.interventions().filter(s=>s.active).forEach(s=>{ activeCount[s.ev.exercise_id]=(activeCount[s.ev.exercise_id]||0)+1; });
+    const snap={tiredAtStart, activeMax:Math.max(0,...Object.values(activeCount)), signals:sig, w:w+1, phase:(()=>{ const p=A.currentPhase(); return (p.onDeload?'deload':p.type)+(p.week?' w'+p.week:''); })(), proposals:props.map(p=>p.id), lifts:{}};
     B.goals.forEach(id=>{
       const top=trace.filter(t=>t.ex===id&&t.w===w).sort((a,b)=>b.L-a.L)[0];
       const tm=A.tmFor(id);
       const j=A.jointNoteFor(A.exById[id].pattern);
-      snap.lifts[id]={top:top?top.L+'×'+top.reps+'@'+top.rpe+(top.failed?'✕':''):'—', truth:Math.round(trueOf(id)*(1-fatigue)), rate:A.rateOf(id), tm:tm?Math.round(tm.tm):null, joint:j?j.level:1};
+      const sp=A.stallPlan(id);
+      snap.lifts[id]={stall:sp?(sp.active?'active:'+sp.active.ev.kind:sp.st.kind+(sp.kind?':'+sp.kind:'')):null, top:top?top.L+'×'+top.reps+'@'+top.rpe+(top.failed?'✕':''):'—', truth:Math.round(trueOf(id)*(1-fatigue)), rate:A.rateOf(id), tm:tm?Math.round(tm.tm):null, joint:j?j.level:1};
     });
     weekly.push(snap);
   }
-  return {key,P,trace,issues,weekly,truth,deloads,A};
+  return {key,P,trace,issues,weekly,truth,deloads,A,ivLog,ivSlots};
 }
 
 /* ---------- checks (generic now; batch C adds the stall-engine ones) ---------- */
@@ -210,6 +231,29 @@ function checks(run){
     ok(during.some(l=>l>=3),'shoulder: the ladder responds to the flare (level 3+ on pressing)',during.join(','));
     ok(after.length===0||after.every(l=>l<=2),'shoulder: and comes back down once the flare has passed',after.join(','));
   }
+  /* ---- stall engine (batch C) ---- */
+  const {ivLog,ivSlots}=run;
+  ok(weekly.every(w=>w.activeMax<=1),'stall engine: never more than one active intervention per lift',weekly.map(w=>w.activeMax).join(''));
+  // the ladder climbs in order: step 2 only after a step 1 on that lift, step 3 only after a step 2
+  const order=main.every(id=>{ const st=ivLog.filter(x=>x.ex===id).map(x=>x.step);
+    return st.every((v,i)=>v<=1||st.slice(0,i).includes(v-1)||v===4&&st.slice(0,i).includes(3)); });
+  ok(order,'stall engine: the ladder goes in order (more practice, then diagnose, then a variant)',ivLog.map(x=>x.ex+':'+x.step).join(' '));
+  // nothing adds work while fatigue is showing
+  const pushedTired=weekly.filter(w=>w.tiredAtStart&&w.proposals.some(id=>/^stall:[^:]+:(1|3)/.test(id)));
+  ok(pushedTired.length===0,'stall engine: no more-work card while a fatigue signal is showing',pushedTired.map(w=>'wk'+w.w).join(','));
+  // a deload ends added volume
+  const L=A.LOG, starts=L.map((e,i)=>({e,i})).filter(x=>x.e.type==='intervention_start'&&(x.e.kind==='volume'||x.e.kind==='frequency'));
+  const dl=L.map((e,i)=>({e,i})).filter(x=>x.e.type==='deload_start');
+  const leak=starts.filter(x=>{ const end=L.findIndex(e=>e.type==='intervention_end'&&e.start_id===x.e.id);
+    const d=dl.find(y=>y.i>x.i); return d&&(end<0||end>d.i)&&A.interventions().find(s=>s.ev.id===x.e.id&&(s.active||new Date(s.endTs)>new Date(d.e.ts))); });
+  ok(leak.length===0,'stall engine: taking a deload stops added practice volume',leak.map(x=>x.e.exercise_id).join(','));
+  if(key==='fatigue') ok(!weekly.some(w=>w.tiredAtStart&&w.proposals.some(id=>/^stall:[^:]+:1$/.test(id))),'fatigue: gets a deload, not more volume, whenever fatigue is showing',weekly.map(w=>(w.tiredAtStart?'T':'-')+(w.proposals.join('+'))).join(' '));
+  if(key==='deficit'){ ok(weekly.some(w=>w.proposals.some(id=>id.endsWith(':deficit'))),'deficit: stalls get the deficit explanation',weekly.map(w=>w.proposals.join('+')||'-').join(' '));
+    ok(ivLog.length===0,'deficit: and no intervention',JSON.stringify(ivLog)); }
+  if((P.conditions||[]).includes('shoulder_instability')){ const addedDays=ivSlots.filter(x=>x.addedDay).map(x=>x.ex), press=id=>A.exById[id].load==='barbell'&&['horizontal_press','vertical_press'].includes(A.familyOf(A.exById[id]));
+    ok(!addedDays.some(press),'shoulder: no intervention adds a day of barbell pressing (added days used: '+([...new Set(addedDays)].join(', ')||'none')+')',addedDays.join(',')); }
+  if(key==='sporadic'){ ok(weekly.some(w=>w.proposals.some(id=>id.endsWith(':exposure'))),'less than weekly: flagged as an exposure problem',weekly.map(w=>w.proposals.join('+')||'-').join(' '));
+    ok(!weekly.some(w=>w.proposals.some(id=>/^stall:[^:]+:d/.test(id))),'less than weekly: and never treated as a stall',weekly.map(w=>w.proposals.join('+')||'-').join(' ')); }
   if(key==='novice'){ const r=weekly.map(w=>w.lifts.squat.rate);
     ok(r[0]==='fast','new lifter: main lifts start fast',r.join(','));
     ok(r.some(x=>x==='standard')||WEEKS<16,'new lifter: and demote once gains slow',r.join(',')); }
@@ -225,6 +269,9 @@ for(const key of Object.keys(PERSONAS)){
   const show=VERBOSE?run.weekly:run.weekly.filter((w,i)=>i%4===0||i===run.weekly.length-1);
   show.forEach(w=>console.log('  wk '+String(w.w).padStart(2)+'  '+w.phase.padEnd(11)+' '+['squat','deadlift','bench'].map(id=>{ const l=w.lifts[id];
     return id.slice(0,5)+' '+String(l.top).padEnd(13)+' true '+String(l.truth).padEnd(4)+' '+(l.rate==='fast'?'F':'s')+(l.joint>1?' j'+l.joint:''); }).join(' | ')+(w.proposals.length?'  ['+w.proposals.join(',')+(w.signals&&w.signals.length?': '+w.signals.join('+'):'')+']':'')));
+  const firstStall={}; run.weekly.forEach(w=>Object.entries(w.lifts).forEach(([id,l])=>{ if(l.stall&&!firstStall[id]) firstStall[id]='wk '+w.w+' ('+l.stall+')'; }));
+  console.log('  stalls first seen: '+(Object.entries(firstStall).map(([id,v])=>id+' '+v).join(', ')||'none'));
+  console.log('  interventions: '+(run.ivLog.map(x=>'wk '+x.w+' '+x.ex+' '+x.step+':'+x.kind+(x.variant?'('+x.variant+')':'')).join(' → ')||'none'));
   res.forEach(r=>{ if(!r.pass) failed++; console.log('  '+(r.pass?'✓':'✗ FAIL')+' '+r.msg+(r.pass?'':'  '+r.detail)); });
 }
 console.log('\n'+(failed?failed+' check(s) failed':'all checks passed'));
