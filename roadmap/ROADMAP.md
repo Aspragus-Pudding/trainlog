@@ -27,7 +27,7 @@ Batches A, B and C come after batch 8. They're specced in
 |---|---|---|
 | **A** | Foundation (spec §1, §2, §6.1–6.3) | After batch 8 |
 | **B** | Program builder | After batch A and the engine phase 2 checkpoint |
-| **C** | Stall engine | After batch B; needs the persona simulator (spec §8) |
+| **C** | Stall engine | After batch B; validated with the persona simulator (`tests/simulate.js`, built Oct 2026) |
 
 The evidence behind the spec is in `docs/research/`:
 `strength-programming.md` (programs, plateaus, periodization, goal
