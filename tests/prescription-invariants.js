@@ -1325,10 +1325,18 @@ section('37. deload proposals');
   t0=40; ev=[].concat(sess(4),sess(3),sess(3.5),sess(2)); A=load(ev);
   ok(!A.deloadSignals().some(x=>x.k==='readiness'),'a bounce breaks the trend','');
   // RPE drift at a matched load
-  const D=load([set('deadlift','R1',315,5,7,20),set('deadlift','R2',315,5,8.5,2)]); D.getCFG().goals=['deadlift'];
-  ok(D.deloadSignals().some(x=>x.k==='rpe'),'the same 315 × 5 at RPE 8.5 vs 7 three weeks ago: drift ≥1 on a main lift','');
-  const D2=load([set('deadlift','R1',315,5,7,20),set('deadlift','R2',345,5,8.5,2)]); D2.getCFG().goals=['deadlift'];
+  const D=load([set('deadlift','R1',315,5,7,21),set('deadlift','R0',315,5,7,18),set('deadlift','R2',315,5,8.5,4),set('deadlift','R3',315,5,8.5,2)]); D.getCFG().goals=['deadlift'];
+  ok(D.deloadSignals().some(x=>x.k==='rpe'),'the same 315 × 5 averaging RPE 8.5 vs 7 three weeks ago: drift ≥1 on a main lift','');
+  const D2=load([set('deadlift','R1',315,5,7,21),set('deadlift','R0',315,5,7,18),set('deadlift','R2',345,5,8.5,4),set('deadlift','R3',345,5,8.5,2)]); D2.getCFG().goals=['deadlift'];
   ok(!D2.deloadSignals().some(x=>x.k==='rpe'),'heavier load is not a matched load','');
+  // rating wobble is not fatigue: one high set among normal ones averages out
+  const D3=load([set('deadlift','R1',315,5,7.5,21),set('deadlift','R0',315,5,7,18),set('deadlift','R2',315,5,8,4),set('deadlift','R3',315,5,7.5,2)]);
+  // a tired later set at a load that matches an earlier fresh first set is not drift
+  const D5=load([set('deadlift','R1',315,5,7,21),set('deadlift','R0',315,5,7,18),set('deadlift','R2',335,5,8,4),set('deadlift','R2',315,5,9,4),set('deadlift','R3',335,5,8,2),set('deadlift','R3',315,5,9,2)]); D5.getCFG().goals=['deadlift'];
+  ok(!D5.deloadSignals().some(x=>x.k==='rpe'),'only the first set of each session counts: a tired back-down set is not fatigue',''); D3.getCFG().goals=['deadlift'];
+  ok(!D3.deloadSignals().some(x=>x.k==='rpe'),'half-point wobble (7–7.5 then 7.5–8) does not propose a deload','');
+  const D4=load([set('deadlift','R1',315,5,7,20),set('deadlift','R2',315,5,8.5,2)]); D4.getCFG().goals=['deadlift'];
+  ok(!D4.deloadSignals().some(x=>x.k==='rpe'),'a single set on each side is not enough to call it','');
   // accepting: the next week of sessions is a deload, then it ends
   t0=40; ev=[].concat(sess(4),sess(3.5),sess(3),sess(2)); const B=load(ev);
   B.setRoadmap([B.applyShape({type:'hyp',label:'H',weeks:8,deload:false,hyp:[]})]); B.getCFG().start=new Date(Date.now()-60*864e5).toISOString().slice(0,10);

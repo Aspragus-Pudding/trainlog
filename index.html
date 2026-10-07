@@ -818,7 +818,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.35.2';
+const APP_VERSION='1.35.3';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -5565,17 +5565,33 @@ function readinessFalling(){
   const r=readinessSeries().slice(-4).map(x=>x.v);
   return r.length===4&&r[1]<r[0]&&r[2]<r[1]&&r[3]<r[2];
 }
-/* RPE at a matched load now vs 14–28 days ago, per exercise (working sets). */
+/* RPE at a matched load now vs 14–28 days ago, per exercise (working sets):
+   the AVERAGE RPE at a load (±2.5%) over the last week against the average
+   at that load back then, at least two sessions on each side. Comparing single
+   sets picked out reporting wobble — RPE is rated in half points, so two
+   honest ratings of the same effort can differ by 1 — and the simulator
+   showed the deload card on almost every week of every persona. Reps must
+   match too (±1), and only each session's first set counts. */
+const DRIFT_MIN_SETS=2;
 function rpeDrift(exId){
-  const ss=sets().filter(st=>st.set_kind!=='warmup'&&st.rpe!=null&&onTrack(st,exId,'')&&inClass(st,'work'));
-  if(ss.length<2) return null;
-  const now=Date.now(), recent=ss.filter(st=>(now-new Date(st.ts))/864e5<=7);
+  // each session's FIRST working set only: later sets are tired by design, and
+  // when a hard set drops the load, a tired third set lands on the same weight
+  // as a fresh first set from weeks before — that read as "feels harder"
+  const firsts=new Map();
+  for(const st of sets()){ if(st.set_kind==='warmup'||st.rpe==null||!onTrack(st,exId,'')||!inClass(st,'work')) continue; if(!firsts.has(st.session_id)) firsts.set(st.session_id,st); }
+  const ss=[...firsts.values()];
+  if(ss.length<2*DRIFT_MIN_SETS) return null;
+  const now=Date.now(), age=st=>(now-new Date(st.ts))/864e5;
+  const recent=ss.filter(st=>age(st)<=7), old=ss.filter(st=>age(st)>=14&&age(st)<=28);
+  const mean=a=>a.reduce((t,x)=>t+x.rpe,0)/a.length;
   let best=null;
-  recent.forEach(r=>{ const L=toLb(r.weight);
-    ss.forEach(o=>{ const age=(new Date(r.ts)-new Date(o.ts))/864e5;
-      if(age<14||age>28) return;
-      const Lo=toLb(o.weight); if(!L||Math.abs(Lo-L)/L>0.025) return;
-      const d=r.rpe-o.rpe; if(best==null||d>best) best=d; }); });
+  recent.forEach(r=>{ const L=toLb(r.weight); if(!L) return;
+    // matched load AND matched reps (±1): the effort ramp asks for more reps at a
+    // load later in a block, and that higher RPE is the plan, not fatigue
+    const near=x=>Math.abs(toLb(x.weight)-L)/L<=0.025&&Math.abs(x.reps-r.reps)<=1;
+    const rn=recent.filter(near), on=old.filter(near);
+    if(rn.length<DRIFT_MIN_SETS||on.length<DRIFT_MIN_SETS) return;
+    const d=mean(rn)-mean(on); if(best==null||d>best) best=d; });
   return best;
 }
 function weeksWithoutDeload(){
@@ -5603,8 +5619,12 @@ function deloadSignals(){
   const out=[];
   if(readinessFalling()) out.push({k:'readiness', strong:true, text:'your readiness has dropped three sessions running'});
   const goals=[...new Set(CFG.goals||[])].filter(id=>exById[id]);
-  const drifted=EX.filter(ex=>!ex.rehab).map(ex=>({ex, d:rpeDrift(ex.id)})).filter(x=>x.d!=null&&x.d>=1);
-  if(drifted.some(x=>goals.includes(x.ex.id))||drifted.length>=2)
+  // a main lift drifting, or at least a third of the exercises that have enough
+  // data: real fatigue shows up broadly; with ~15 accessories, two drifting by
+  // chance in a normal week was routine (tests/simulate.js). Judgement default.
+  const measured=EX.filter(ex=>!ex.rehab).map(ex=>({ex, d:rpeDrift(ex.id)})).filter(x=>x.d!=null);
+  const drifted=measured.filter(x=>x.d>=1);
+  if(drifted.some(x=>goals.includes(x.ex.id))||(drifted.length>=2&&drifted.length>=Math.ceil(measured.length/3)))
     out.push({k:'rpe', strong:true, text:'the same weights feel at least 1 RPE harder than 2–3 weeks ago ('+drifted.slice(0,3).map(x=>x.ex.name).join(', ')+')'});
   const hot=JOINTS.filter(j=>jointLevel(jointTrend(j,6))>=3);
   if(hot.length) out.push({k:'joint', strong:true, text:'your '+hot.join(' and ')+' '+(hot.length>1?'are':'is')+' at ladder level 3 or higher'});
