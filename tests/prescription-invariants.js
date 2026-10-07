@@ -1757,32 +1757,29 @@ section('44. suggestion accuracy');
   console.log('  taken / on-target counted from the recorded suggestion · automation sessions excluded');
 }
 
-/* ─── 45. on-demand all-out last set ─── */
-section('45. all-out (AMRAP) last set on demand');
+/* ─── 45. All-out set type ─── */
+section('45. all-out (AMRAP) set type');
 {
   const hist=[set('preacher','h1',60,10,8,6),set('preacher','h1',60,10,8.5,6),{type:'session_end',id:'eh1',ts:day(5.9),session_id:'h1',joints:{}}];
   const A=load(hist); A.getCFG().goals=['deadlift'];
-  const slot={ex:'preacher',role:'accessory',reps:[8,12],rpe:8,sets:[],sets_target:3,amrapLast:true};
+  const slot={ex:'preacher',role:'accessory',reps:[8,12],rpe:8,sets:[],sets_target:3};
   A.setSession({id:'AM',slots:[slot],openIdx:0,adj:null,ratings:{},startedAt:Date.now()});
-  A.seedDraft(slot); let d=A.getDraft();
-  ok(!A.suggestFor(slot).pr.calibAmrap&&d.rpe!==10,'switched on: the first sets are normal','');
-  for(let i=0;i<2;i++){ A.seedDraft(slot); d=A.getDraft(); d.reps=10; d.rpe=8; A.logSet(slot,0,'straight'); }
-  A.seedDraft(slot); d=A.getDraft();
-  const r=A.suggestFor(slot);
-  ok(r.pr.calibAmrap&&d.rpe===10,'the last set is all-out: priced like a normal set, logged at RPE 10',JSON.stringify({c:r.pr.calibAmrap,rpe:d.rpe}));
-  d.reps=14; A.logSet(slot,0,'straight');
-  const last=slot.sets[slot.sets.length-1];
-  ok(last.role==='amrap'&&last.rpe===10,'it is stored as role amrap at RPE 10 (a reps-to-failure anchor)',JSON.stringify({role:last.role,rpe:last.rpe}));
-  ok(!A.LOG.some(e=>e.type==='tm_update'),'an on-demand all-out set never moves a training max','');
-  // it does not drive the next session's working-set pricing
-  const B=load(hist.concat(A.LOG.filter(e=>e.session_id==='AM'&&e.role!=='amrap')));
-  const next=sl=>{ const x=load(sl); const s2={ex:'preacher',role:'accessory',reps:[8,12],rpe:8,sets:[],sets_target:3};
-    x.setSession({id:'N',slots:[s2],openIdx:0,adj:null,ratings:{},startedAt:Date.now()}); return x.suggestFor(s2); };
-  const withA=next(A.LOG.filter(e=>e.type==='set'||e.type==='session_end')), without=next(B.LOG.filter(e=>e.type==='set'||e.type==='session_end'));
+  A.seedDraft(slot); let d=A.getDraft(); d.reps=10; d.rpe=8; A.logSet(slot,0,'straight');
+  ok(slot.sets[0].role!=='amrap','a normal set is not all-out','');
+  d=A.getDraft(); d.tech='amrap'; d.rpe=10; d.reps=15; A.logSet(slot,0,'straight');
+  const s2=slot.sets[1];
+  ok(s2.role==='amrap'&&s2.rpe===10&&!s2.group&&s2.set_kind==='straight','All-out logs one set: role amrap, RPE 10, no cluster group',JSON.stringify({role:s2.role,rpe:s2.rpe,g:s2.group,k:s2.set_kind}));
+  d=A.getDraft();
+  ok(d.tech==='straight'&&d.rpe===8,'then the set type goes back to straight and RPE to the target',JSON.stringify({t:d.tech,r:d.rpe}));
+  ok(!A.LOG.some(e=>e.type==='tm_update'),'an all-out set never moves a training max','');
+  // it does not change the next session's working-set suggestion
+  const next=evs=>{ const x=load(evs); const s3={ex:'preacher',role:'accessory',reps:[8,12],rpe:8,sets:[],sets_target:3};
+    x.setSession({id:'N',slots:[s3],openIdx:0,adj:null,ratings:{},startedAt:Date.now()}); return x.suggestFor(s3); };
+  const logged=A.LOG.filter(e=>e.type==='set'||e.type==='session_end');
+  const withA=next(logged), without=next(logged.filter(e=>e.role!=='amrap'));
   ok(withA.lb===without.lb&&withA.pr.reps===without.pr.reps,'the all-out set does not change the next session\'s working-set suggestion',JSON.stringify([withA.lb,withA.pr.reps,without.lb,without.pr.reps]));
-  // a realization AMRAP still moves the TM
-  ok(A.allOutNext({structure:'amrap',sets:[],sets_target:1,amrapLast:true})===false,'a realization AMRAP slot is not treated as an on-demand one','');
-  console.log('  off by default · last set only · role amrap @ RPE 10 · no TM change · next session unaffected');
+  ok(A.allOutNext({calib:true,sets:[{}],sets_target:2})===true&&A.allOutNext({structure:'amrap',calib:true,sets:[{}],sets_target:2})===false,'week-1 calibration AMRAPs still work; realization AMRAPs are separate','');
+  console.log('  one set · role amrap @ RPE 10 · resets to straight · no TM change · next session unaffected');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

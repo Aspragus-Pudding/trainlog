@@ -818,7 +818,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.39.0';
+const APP_VERSION='1.40.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -904,7 +904,10 @@ const TECHNIQUES={
   straight:{name:'Straight', extend:null},
   myo:     {name:'Myo-reps', extend:'Mini-set',  repHint:s=>Math.max(3,Math.round(s*0.33)), loadMul:1},
   rest_pause:{name:'Rest-pause', extend:'Burst', repHint:s=>Math.max(2,Math.round(s*0.4)), loadMul:1},
-  drop:    {name:'Drop set', extend:'Drop', repHint:s=>s, loadMul:0.8}
+  drop:    {name:'Drop set', extend:'Drop', repHint:s=>s, loadMul:0.8},
+  // one set, as many reps as you can: logged as role amrap at RPE 10 — a
+  // reps-to-failure reading for engine phase 2. Not a cluster.
+  amrap:   {name:'All-out', extend:null, single:true}
 };
 /* Volume: the top set counts 1.0, each extension 0.5. Grade D — no study
    establishes an equivalence for cluster work. Exposed so it can change. */
@@ -3539,7 +3542,7 @@ function renderWork(){
         load:s?fmt(s.weight.value)+' '+s.weight.unit+' × '+s.reps+(s.failed?' · missed':''):'—',
         pr:s&&isPRSet(s.id),
         badge:s?(s.group&&s.group.pos>0?TECHNIQUES[s.group.kind].extend:(s.role==='backoff'?'back-off':s.role==='top'?'top · RPE '+s.rpe:(s.rpe?'RPE '+s.rpe:'warmup')))
-          :(isTopBack(slot)?(j===0?'top · RPE '+slot.rpe:'back-off'):isMaint(slot)&&j===0?'top · RPE '+MAINT_TOP.rpe:(slot.calib||slot.amrapLast)&&j===slot.sets_target-1?'AMRAP':'RPE '+slot.rpe),
+          :(isTopBack(slot)?(j===0?'top · RPE '+slot.rpe:'back-off'):isMaint(slot)&&j===0?'top · RPE '+MAINT_TOP.rpe:slot.calib&&j===slot.sets_target-1?'AMRAP':'RPE '+slot.rpe),
         badgeOn:!!s, chev:!!s,
         onclick:s?()=>openEditSet(slot,j):null, aria:s?'Edit set '+(j+1):null}));
     }
@@ -4733,18 +4736,6 @@ function entryPanel(slot,idx){
     }, ()=>{ $('#dlg').close(); renderWork(); });
     p.appendChild(mb);
   }
-  if(slot.structure!=='amrap'&&!slot.calib&&slot.sets.length<slot.sets_target){
-    const ex=exById[slot.ex], on=!!slot.amrapLast;
-    const ab=el('button','warmtog',on?'Last set: all-out (AMRAP) — on ▾':'Make the last set all-out (AMRAP) ▸');
-    ab.onclick=()=>{ if(on) delete slot.amrapLast; else slot.amrapLast=true; seedDraft(slot); saveSession(); renderWork(); };
-    p.appendChild(ab);
-    if(on){
-      const f=flagFor(slot.ex), heavyBar=ex.load==='barbell'&&familyOf(ex)!=='isolation';
-      p.appendChild(el('div','dim tiny','Your last set of '+esc(ex.name)+' goes as many reps as you can at the suggested load, logged at RPE 10. It gives the engine a real "reps left" reading to check your RPE against.'
-        +(heavyBar?' <span style="color:var(--warn)">All-out sets on a heavy barbell lift carry more risk — machines and isolation work are the safer place for these.</span>':'')
-        +(f?' <span style="color:var(--warn)">'+esc(f.why)+'.</span>':''))).style.marginBottom='4px';
-    }
-  }
   if(draftLocked()){
     const r=draft.rebal, rng=fmtRange(slot.reps);
     let msg;
@@ -4803,10 +4794,16 @@ function entryPanel(slot,idx){
     const c=el('button','chip',t.name);
     c.style.cssText='font-size:12.5px;padding:6px 11px';
     c.setAttribute('aria-pressed',draft.tech===k?'true':'false');
-    c.onclick=()=>{ draft.tech=k; draft.group=null; renderWork(); };
+    c.onclick=()=>{ if(draft.tech==='amrap'&&k!=='amrap') draft.rpe=slot.rpe; draft.tech=k; draft.group=null; if(k==='amrap') draft.rpe=10; renderWork(); };
     tp.appendChild(c);
   });
   p.appendChild(tp);
+  if(draft.tech==='amrap'){
+    const f=flagFor(slot.ex), heavyBar=ex.load==='barbell'&&familyOf(ex)!=='isolation';
+    p.appendChild(el('div','dim tiny','All-out: as many reps as you can at this weight, stopping when the next rep would break form. Logged at RPE 10 — it shows the app how your RPE ratings line up with reps actually left. It doesn\'t change your training max or push up your next sets.'
+      +(heavyBar?' <span style="color:var(--warn)">On a heavy barbell lift this carries more risk — machines and isolation work are the safer place for it.</span>':'')
+      +(f?' <span style="color:var(--warn)">'+esc(f.why)+'.</span>':''))).style.marginTop='6px';
+  }
 
   const T=TECHNIQUES[draft.tech];
   if(draft.group&&T.extend){
@@ -5197,9 +5194,7 @@ function suggestFor(slot){
   }
   if(allOutNext(slot)){
     const base=nextPrescription(slot);
-    const pr={...base, calibAmrap:true, note:(base.note||'')+(slot.amrapLast
-      ?' Last set: as many reps as you can at this load. You switched this on — it shows the app how your RPE ratings line up with reps actually left. Stop when the next rep would break form.'
-      :' Last set: as many reps as you can at this load — a calibration set, so the app learns how your RPE ratings line up with reps left. Week 1 only.')};
+    const pr={...base, calibAmrap:true, note:(base.note||'')+' Last set: as many reps as you can at this load — a calibration set, so the app learns how your RPE ratings line up with reps left. Week 1 only.'};
     return {pr, lb:pr.lb, why:explainRx(slot,pr,o), o};
   }
   if(isMaint(slot)&&!topSetOf(slot)){
@@ -5244,12 +5239,10 @@ const isTopBack=slot=>!!slot&&slot.structure==='topback';
 /* Which history a slot's next set prices from: a top set (topback / amrap /
    a maintenance slot before its top set) or ordinary working sets. A slot
    can force it with _cls (the maintenance view below). */
-/* The next set is an all-out (AMRAP) one: week 1 calibration sets
-   (slot.calib), or one you switched on for this exercise today
-   (slot.amrapLast). Either way it's the slot's last set, as many reps as you
-   can at the suggested load, logged as role 'amrap' at RPE 10 — a true
-   reps-to-failure anchor for engine phase 2. */
-const allOutNext=slot=>!!slot&&(slot.calib&&slot.sets.length>0||slot.amrapLast)&&slot.structure!=='amrap'&&slot.sets.length===slot.sets_target-1;
+/* The next set is a week 1 calibration AMRAP (slot.calib): the slot's last
+   set, as many reps as you can at the suggested load, logged as role 'amrap'
+   at RPE 10. (Any set can also be made all-out by hand: the All-out set type.) */
+const allOutNext=slot=>!!slot&&slot.calib&&slot.sets.length>0&&slot.structure!=='amrap'&&slot.sets.length===slot.sets_target-1;
 function priceClass(slot){
   if(slot._cls) return slot._cls;
   if(slot.structure==='amrap'||isTopBack(slot)) return 'top';
@@ -6438,7 +6431,8 @@ function logSet(slot,idx,kind,extend,over){
   const W=over||draft;
   const T=TECHNIQUES[draft.tech];
   let group=null, setKind=kind;
-  if(kind!=='warmup'&&draft.tech!=='straight'){
+  const allOut=kind!=='warmup'&&draft.tech==='amrap';
+  if(kind!=='warmup'&&draft.tech!=='straight'&&!allOut){
     if(extend&&draft.group){
       const n=slot.sets.filter(x=>x.group&&x.group.id===draft.group).length;
       group={id:draft.group,kind:draft.tech,pos:n};
@@ -6460,7 +6454,7 @@ function logSet(slot,idx,kind,extend,over){
     weight:{value:W.weight,unit:W.unit}, bar:ex.bar?{value:ex.bar,unit:'lb'}:null,
     reps:W.reps, rpe:kind==='warmup'?null:draft.rpe, set_kind:setKind, group,
     ...(kind!=='warmup'&&cleanMods(slot.modifiers)?{modifiers:cleanMods(slot.modifiers)}:{}),
-    ...(kind!=='warmup'?{role:group?'straight':(slot.structure==='amrap'&&!slot.sets.length)||allOutNext(slot)?'amrap':isTopBack(slot)?(topSetOf(slot)?'backoff':'top'):isMaint(slot)&&!topSetOf(slot)?'top':slot.structure==='practice'?'practice':'straight'}:{}),
+    ...(kind!=='warmup'?{role:group?'straight':allOut||(slot.structure==='amrap'&&!slot.sets.length)||allOutNext(slot)?'amrap':isTopBack(slot)?(topSetOf(slot)?'backoff':'top'):isMaint(slot)&&!topSetOf(slot)?'top':slot.structure==='practice'?'practice':'straight'}:{}),
     ...(kind!=='warmup'&&draft.failed?{failed:true}:{}),
     // the target this set was actually prescribed against: a maintenance slot's
     // weekly top set is 3–5 @ RPE 7.5, not the slot's hypertrophy range
@@ -6505,11 +6499,12 @@ function logSet(slot,idx,kind,extend,over){
   saveSession();
   if(tmMsg) toast(tmMsg);
   else if(pr){ toast(`New best on ${ex.name} · +${fmt(pr.gain,0)} lb`); if(navigator.vibrate) navigator.vibrate(80); }
-  else toast(kind==='warmup'?'Warmup logged':group?`${group.pos===0?'Top set':TECHNIQUES[draft.tech].extend} logged`:`Set ${slot.sets.length} logged`);
+  else toast(kind==='warmup'?'Warmup logged':allOut?'All-out set logged':group?`${group.pos===0?'Top set':TECHNIQUES[draft.tech].extend} logged`:`Set ${slot.sets.length} logged`);
   if(kind!=='warmup'){
     const rest=draft.group?45:(REST_BY_ROLE[slot.role]||120);
     startRest(rest, draft.group?'Cluster rest':`Rest · ${exById[slot.ex].name}`);
   }
+  if(allOut){ draft.tech='straight'; draft.rpe=slot.rpe; }   // one all-out set, then back to normal
   advanceIfDone(slot,idx);
   renderWork();
 }
