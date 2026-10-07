@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.54.0 — 2026-10-07
+- Back squat has a new "Bar position" option (high or low bar) under Modify. Like other modifiers, low-bar squats get their own history and suggestions.
+- With anterior shoulder instability picked, marking a squat as low bar shows the amber warning, with high bar as the suggested swap. An unmarked back squat stays unflagged.
+- The option only appears on barbell squats. The Transformer bar positions are already separate exercises.
+
 ## 1.53.0 — 2026-10-07
 - After a load step, the suggested reps are now worked out from your last set instead of dropping to the bottom of the range. 60 × 15 used to become 70 × 8; now it becomes 70 × 12.
 - If one step would put you below your rep range, the app says the jump is too big and holds the load. It suggests a smaller step (on the info sheet) or a lower range instead.

@@ -2387,6 +2387,10 @@ section('56. shoulder instability: three yellows, no reds, face pulls left alone
     ok(idb&&idb.level==='yellow'&&/elbows tucked/.test(idb.why)&&/stop short/.test(idb.why),'['+cond+'] incline DB: yellow, cue elbows tucked and a shorter range',JSON.stringify(idb));
     ok(!fp,'['+cond+'] face pulls: no warning — they are the standard prescription for this condition',JSON.stringify(fp));
     ok([lb,pu,idb].every(f=>f.level!=='red'),'['+cond+'] none of the three is red','');
+    // back squat: unflagged as it stands; the flag follows a low-bar modifier (v1.54)
+    { const plain=A.flagFor('squat'), low=A.flagFor('squat',{barpos:'low'}), high=A.flagFor('squat',{barpos:'high'});
+      ok(!plain&&!high&&low&&low.level==='yellow'&&low.swap&&low.swap.ex==='squat'&&low.swap.modifiers.barpos==='high'&&A.modSig({barpos:'low'})==='barpos:low'&&A.modSig({grip:'wide'})==='grip:wide',
+        '['+cond+'] back squat: no flag, unless marked low bar — then yellow, swap to high bar (existing modifier signatures unchanged)',JSON.stringify({plain,low,high})); }
     // the one-time v1.44 exclusion seed never picks the new rows up
     ok(['transformer_low_bar','pullup','incline_db'].every(id=>!A.authoredFlag(id,null,{legacyOnly:true})),'['+cond+'] the v1.44 exclusion seed ignores the added rows','');
   }

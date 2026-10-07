@@ -8531,7 +8531,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
   }
 }
 </script>
-<script type="application/json" id="whats-new">{"version":"1.53.0","lines":["After a load step, the suggested reps are now worked out from your last set instead of dropping to the bottom of the range. 60 × 15 used to become 70 × 8; now it becomes 70 × 12.","If one step would put you below your rep range, the app says the jump is too big and holds the load. It suggests a smaller step (on the info sheet) or a lower range instead.","Progress → Suggestions has a new line: reps within 2 of suggested. Matching the load alone hid how far off the reps were."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.54.0","lines":["Back squat has a new \"Bar position\" option (high or low bar) under Modify. Like other modifiers, low-bar squats get their own history and suggestions.","With anterior shoulder instability picked, marking a squat as low bar shows the amber warning, with high bar as the suggested swap. An unmarked back squat stays unflagged.","The option only appears on barbell squats. The Transformer bar positions are already separate exercises."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9098,7 +9098,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.53.0';
+const APP_VERSION='1.54.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -9416,7 +9416,7 @@ function resolveSubstitute(s){
   const [id,mod]=String(s).split('+'); if(!exById[id]) return null;
   let modifiers;
   if(mod){ const [k,v]=mod.split(':');
-    modifiers=cleanMods(k==='rom'?{rom:{kind:v}}:k==='grip'?{grip:v}:k==='lockout'?{lockout:v}:k==='pause'?{pause:{seconds:2,at:v}}:{}); }
+    modifiers=cleanMods(k==='rom'?{rom:{kind:v}}:k==='grip'?{grip:v}:k==='lockout'?{lockout:v}:k==='pause'?{pause:{seconds:2,at:v}}:k==='barpos'?{barpos:v}:{}); }
   return {ex:id, modifiers, name:exById[id].name+(modifiers?' — '+modLabel(modifiers):'')};
 }
 
@@ -9447,10 +9447,12 @@ function libraryFlag(exId, mods){
 /* Added after the v1.44 migration (Oct 2026, v1.52), yellow only, each with
    its own swap. Kept apart from FLAGS so the one-time exclusion seed (which
    reproduces what flags steered away from before v1.44) never picks them up.
-   unless: a modifier that takes the exercise out of the at-risk position. */
+   unless: a modifier that takes the exercise out of the at-risk position;
+   when: the flag applies only with this modifier (back squat marked low bar). */
 const FLAGS_ADDED={
   shoulder_instability:{
     transformer_low_bar:{why:'the low-bar position needs the shoulder rotated back under load', swap:'transformer_high_bar', note:'or the safety squat bar'},
+    squat:{why:'the low-bar position needs the shoulder rotated back under load', swap:'squat+barpos:high', note:'or the safety squat bar', when:m=>!!m&&m.barpos==='low'},
     pullup:{why:'a wide overhand grip moves toward the at-risk position — shoulder width or narrower', swap:'pullup+grip:neutral', note:'parallel handles', unless:m=>!!m&&['neutral','close'].includes(m.grip)},
     incline_db:{why:'loaded abduction with the shoulder rotated back at the bottom — keep the elbows tucked and stop short of a deep stretch'}}
 };
@@ -9467,7 +9469,7 @@ function authoredFlag(exId, mods, o){
   }
   if(!best&&!(o&&o.legacyOnly)) for(const c of legacyConds()){
     const a=(FLAGS_ADDED[c]||{})[exId];
-    if(a&&!(a.unless&&a.unless(mods))){ best={level:'yellow',cond:LEGACY_COND[c]||c,why:a.why,authored:true,swap:a.swap?resolveSubstitute(a.swap):null,swapNote:a.note||null}; break; }
+    if(a&&(!a.when||a.when(mods))&&!(a.unless&&a.unless(mods))){ best={level:'yellow',cond:LEGACY_COND[c]||c,why:a.why,authored:true,swap:a.swap?resolveSubstitute(a.swap):null,swapNote:a.note||null}; break; }
   }
   return best;
 }
@@ -9808,6 +9810,12 @@ const PAUSE_AT={squat:['bottom'],hinge:['below_knee','start'],horizontal_press:[
 const PAUSE_AT_LABEL={bottom:'at the bottom',chest:'on the chest',below_knee:'below the knee',start:'off the start',top:'at the top'};
 const ROM_KINDS={deficit:'deficit',pin:'pin',board:'board',partial:'partial'};
 const GRIPS={standard:'standard grip',close:'close grip',wide:'wide grip',neutral:'neutral grip'};
+/* Bar position on a barbell squat (v1.54). Not marked = whatever you do; low bar
+   matters for anterior shoulder instability (the shoulder is rotated back under
+   load), so a flag can follow it. Offered only on barbell squats; the
+   Transformer bar's positions are separate exercises. */
+const BAR_POS={high:'high bar',low:'low bar'};
+const barPosApplies=ex=>!!ex&&ex.load==='barbell'&&familyOf(ex)==='squat'&&!ex.specialty;
 function cleanMods(m){
   if(!m||typeof m!=='object') return undefined;
   const o={};
@@ -9816,6 +9824,7 @@ function cleanMods(m){
   if(m.rom&&ROM_KINDS[m.rom.kind]) o.rom={kind:m.rom.kind, ...(+m.rom.amount>0?{amount:+m.rom.amount, unit:m.rom.unit||'in'}:{})};
   if(m.grip&&GRIPS[m.grip]&&m.grip!=='standard') o.grip=m.grip;
   if(m.lockout==='soft') o.lockout='soft';
+  if(m.barpos&&BAR_POS[m.barpos]) o.barpos=m.barpos;
   return Object.keys(o).length?o:undefined;
 }
 /* Stable signature: fixed part order, so the same modifiers always give the same string. '' = unmodified. */
@@ -9827,6 +9836,7 @@ function modSig(m){
   if(c.rom) p.push('rom:'+c.rom.kind+(c.rom.amount?c.rom.amount+c.rom.unit:''));
   if(c.grip) p.push('grip:'+c.grip);
   if(c.lockout) p.push('lockout:'+c.lockout);
+  if(c.barpos) p.push('barpos:'+c.barpos);   // last, so every existing signature is unchanged
   return p.join(',');
 }
 function modLabel(m){
@@ -9837,6 +9847,7 @@ function modLabel(m){
   if(c.rom) p.push((c.rom.amount?c.rom.amount+(c.rom.unit==='cm'?' cm ':'″ '):'')+ROM_KINDS[c.rom.kind]+(c.rom.kind==='partial'?' range':''));
   if(c.grip) p.push(GRIPS[c.grip]);
   if(c.lockout) p.push('soft lockout');
+  if(c.barpos) p.push(BAR_POS[c.barpos]);
   return p.join(' · ');
 }
 const mergeMods=(a,b)=>cleanMods({...(cleanMods(a)||{}),...(cleanMods(b)||{})});
@@ -9851,6 +9862,7 @@ function sigMods(sig){
     else if(k==='rom'){ const r=v.match(/^([a-z]+)(\d*\.?\d+)?(in|cm)?$/); if(r) m.rom={kind:r[1],...(r[2]?{amount:+r[2],unit:r[3]||'in'}:{})}; }
     else if(k==='grip') m.grip=v;
     else if(k==='lockout') m.lockout=v;
+    else if(k==='barpos') m.barpos=v;
   });
   return m;
 }
@@ -9929,6 +9941,7 @@ function openModifierEditor(exId, cur, onSave, onCancel){
       <div class="qblock" id="mdr"><div class="qlab">Range of motion</div></div>
       <div class="qblock" id="mdg"><div class="qlab">Grip</div></div>
       <div class="qblock" id="mdl"><div class="qlab">Lockout</div></div>
+      ${barPosApplies(ex)?'<div class="qblock" id="mdb"><div class="qlab">Bar position</div></div>':''}
       <div class="anchor" id="mdsum" style="margin-bottom:10px"></div>
       <div class="row" style="gap:8px"><button class="btn ghost grow" id="mdcancel">Cancel</button><button class="btn pri grow" id="mdsave">Save</button></div>`);
     const chips=(host,opts,on,fn)=>{ const c=el('div','chips'); opts.forEach(([v,l])=>{ const b=el('button','chip',esc(l));
@@ -9945,6 +9958,7 @@ function openModifierEditor(exId, cur, onSave, onCancel){
       $('#mdr').appendChild(g); }
     chips('#mdg',Object.entries(GRIPS),v=>(m.grip||'standard')===v,v=>{ if(v==='standard') delete m.grip; else m.grip=v; });
     chips('#mdl',[['','Full'],['soft','Soft — stop just short of straight']],v=>(m.lockout||'')===v,v=>{ if(v) m.lockout=v; else delete m.lockout; });
+    if(barPosApplies(ex)) chips('#mdb',[['','Not marked'],['high','High bar'],['low','Low bar']],v=>(m.barpos||'')===v,v=>{ if(v) m.barpos=v; else delete m.barpos; });
     $('#mdsum').textContent=modLabel(m)?'Will log as: '+modLabel(m):'No modifier — the normal exercise.';
     $('#mdcancel').onclick=()=>{ if(onCancel) onCancel(); else $('#dlg').close(); };
     $('#mdsave').onclick=()=>onSave(cleanMods(m));
