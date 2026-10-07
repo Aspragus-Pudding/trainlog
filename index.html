@@ -8531,7 +8531,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
   }
 }
 </script>
-<script type="application/json" id="whats-new">{"version":"1.49.1","lines":["The dashboard no longer shows an all-joints comfort average. It could read 98 next to a shoulder rated Red.","Joints now lead with the worst one, for example \"Shoulder: Red, load held\", and list the others under it.","Wording tidy-up on the readiness and fatigue lines."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.50.0","lines":["\"Your usual\" for a joint is now set on its condition card in Edit program, next to the condition it belongs to.","Each condition you picked now has its own card at the top of the list: what it is, the red-flag checks, the phase plan and your usual.","If you rate a joint that has no condition picked, its usual is listed separately under \"Joints without a condition\"."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9098,7 +9098,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.49.1';
+const APP_VERSION='1.50.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -14996,10 +14996,52 @@ function stalledByFatigue(){
    chip IS "not sure": it uses that region's umbrella. A specific shows a
    confirmation card in "sounds like you if…" wording — never "you have". */
 let INJ_OPEN_REGION=null;
-function conditionPicker(sel, onChange){
+const entryJoint=id=>{ const e=INJ_BY[id]; return (e&&REGION_JOINT[e.region])||(CONDITIONS[id]&&CONDITIONS[id].joint)||null; };
+/* "Your usual" for a joint — how it normally feels, which the joint ladder
+   measures change from. Lives on the condition card (and, for a joint with
+   no condition, in its own short list). usual = {map, set(joint, value)}. */
+function usualChips(j, usual){
+  const r=el('div',''); r.style.marginTop='8px';
+  r.appendChild(el('div','tiny','<b>Your usual for '+esc(j)+'</b> <span class="dim">· how it normally feels. Only ratings above this change your loads; a bad rating always counts. Not set: worked out from your recent sessions.</span>'));
+  const seg=el('div','chips'); seg.style.marginTop='5px';
+  [['','Not set'],['none','None'],['mild','Mild'],['moderate','Moderate']].forEach(([v,lab])=>{
+    const c=el('button','chip',lab); c.style.cssText='font-size:12.5px;padding:6px 10px';
+    c.setAttribute('aria-pressed',(usual.map[j]||'')===v?'true':'false');
+    c.onclick=()=>usual.set(j,v); seg.appendChild(c); });
+  r.appendChild(seg);
+  const dn=jointDriftNote(j); if(dn) r.appendChild(el('div','dim tiny',esc(dn))).style.marginTop='4px';
+  return r;
+}
+function conditionPicker(sel, onChange, usual){
   if(!injConsented()) return consentGate(()=>onChange(sel.slice(),true));
   const box=el('div','');
   const has=id=>sel.includes(id);
+  // one card per chosen condition, always visible: what it is, red flags, phase plan, your usual
+  const chosen=sel.filter(id=>INJ_BY[id]);
+  if(chosen.length){
+    const seenJ=new Set();
+    chosen.forEach(id=>{ const e=INJ_BY[id];
+      const card=el('div','anchor'); card.style.margin='0 0 10px';
+      const top=el('div','row between'); top.style.alignItems='flex-start';
+      top.innerHTML=`<span class="grow"><b>${esc(e.chip_label)}</b> <span class="dim tiny">${esc(e.clinical_name||'')}</span></span>`;
+      const rm=el('button','btn s ghost','Remove'); rm.style.cssText='font-size:12px;padding:3px 9px;flex:none';
+      rm.onclick=()=>onChange(sel.filter(x=>x!==id)); top.appendChild(rm); card.appendChild(top);
+      card.appendChild(el('div','',esc(e.one_liner||'')
+        +(e.category!=='UMBRELLA'&&(e.self_id_cues||[]).length?`<br><span class="dim">Sounds like you if: ${e.self_id_cues.map(s=>esc(s)).join(' · ')}</span>`:'')
+        +(e.core_cue?`<br><span style="color:var(--accent)">${esc(e.core_cue)}</span>`:'')));
+      card.appendChild(redFlagChecklist(e,()=>onChange(sel.slice(),true)));
+      if(Array.isArray(e.rehab_phases)&&!redFlagged(e.id)){
+        const pl=rehabPlan(e.id), pb=el('button','btn s ghost',pl?'Phase plan: '+(PHASE_LABEL[pl.phase]||pl.phase)+' — on your dashboard':'Start the phase plan (optional)');
+        pb.style.cssText='margin-top:6px;font-size:12px;padding:4px 9px';
+        if(!pl) pb.onclick=()=>{ if(startRehabPlan(e)){ toast('Phase plan started — it\'s on your dashboard'); onChange(sel.slice(),true); } };
+        card.appendChild(pb);
+      }
+      const j=entryJoint(id);
+      if(usual&&j&&!seenJ.has(j)){ seenJ.add(j); card.appendChild(usualChips(j,usual)); }
+      box.appendChild(card);
+    });
+    box.appendChild(el('div','dim tiny','Add another, or change one, below.')).style.margin='2px 0 4px';
+  }
   INJ_REGIONS.forEach(([reg,label])=>{
     const ents=INJ.filter(e=>e.region===reg); if(!ents.length) return;
     const n=ents.filter(e=>has(e.id)).length, open=INJ_OPEN_REGION===reg;
@@ -15020,21 +15062,9 @@ function conditionPicker(sel, onChange){
       kids.forEach(k=>chip(k,true));
       w.appendChild(c);
       if(kids.length) w.appendChild(el('div','dim tiny',`"${esc(u.chip_label)}" if you're not sure; one of the others if it sounds like you.`)).style.marginTop='4px';
-      // confirmation cards for what's chosen here
-      [u,...kids].filter(e=>has(e.id)).forEach(e=>{
-        const card=el('div','anchor'); card.style.marginTop='8px';
-        card.innerHTML=`<b>${esc(e.chip_label)}</b> <span class="dim tiny">${esc(e.clinical_name||'')}</span><br>${esc(e.one_liner||'')}`
-          +(e.category!=='UMBRELLA'&&(e.self_id_cues||[]).length?`<br><span class="dim">Sounds like you if: ${e.self_id_cues.map(s=>esc(s)).join(' · ')}</span>`:'')
-          +(e.core_cue?`<br><span style="color:var(--accent)">${esc(e.core_cue)}</span>`:'');
-        card.appendChild(redFlagChecklist(e,()=>onChange(sel.slice(),true)));
-        if(Array.isArray(e.rehab_phases)&&!redFlagged(e.id)){
-          const pl=rehabPlan(e.id), pb=el('button','btn s ghost',pl?'Phase plan: '+(PHASE_LABEL[pl.phase]||pl.phase)+' — on your dashboard':'Start the phase plan (optional)');
-          pb.style.cssText='margin-top:6px;font-size:12px;padding:4px 9px';
-          if(!pl) pb.onclick=()=>{ if(startRehabPlan(e)){ toast('Phase plan started — it\'s on your dashboard'); onChange(sel.slice(),true); } };
-          card.appendChild(pb);
-        }
-        w.appendChild(card);
-      });
+      // the card for what's chosen here is at the top of the list
+      const here=[u,...kids].filter(e=>has(e.id));
+      if(here.length) w.appendChild(el('div','tiny','↑ '+here.map(e=>esc(e.chip_label)).join(', ')+' — card at the top')).style.cssText='margin-top:5px;color:var(--accent)';
       box.appendChild(w);
     });
   });
@@ -17463,7 +17493,8 @@ function openSettings(){
     const cd=el('div','qblock');
     cd.innerHTML=`<div class="qlab">What you're working around</div>
       <div class="field">Flags exercises that load the at-risk position. It only ever warns — it never removes an option or decides for you.</div>`;
-    cd.appendChild(conditionPicker(S.conds,n=>{ S.conds=n; draw(); }));
+    const usual={map:S.jointUsual, set:(j,v)=>{ if(v) S.jointUsual[j]=v; else delete S.jointUsual[j]; draw(); }};
+    cd.appendChild(conditionPicker(S.conds,n=>{ S.conds=n; draw(); },usual));
     if(injConsented()&&(S.conds.length||Object.keys(jointRatings()).length)){
       const del=el('button','btn s ghost','Delete my conditions and pain ratings'); del.style.marginTop='10px';
       del.onclick=()=>{ if(!confirm('Remove your conditions and stop using every pain rating so far? Your training log itself is untouched; the old ratings stay in it underneath, as every edit does, but nothing reads them.')) return;
@@ -17483,28 +17514,19 @@ function openSettings(){
       host.appendChild(xb);
     }
 
-    // your usual, for joints you've declared or ever flagged
-    const sj=likelyJointsFor(S.conds);
-    const ujs=JOINTS.filter(j=>sj.includes(j)||S.jointUsual[j]
-      ||jointSessions().some(x=>sessJointWeight(x,j)>0));
+    // your usual lives on each condition's card; joints you've rated with no condition
+    // picked (or with a usual already set) get it here instead
+    // (before the consent screen is accepted the cards aren't shown, so every joint lands here)
+    const cardsOn=injConsented();
+    const onCard=new Set(cardsOn?S.conds.filter(id=>INJ_BY[id]).map(entryJoint).filter(Boolean):[]);
+    const sj=cardsOn?[]:likelyJointsFor(S.conds);
+    const ujs=JOINTS.filter(j=>!onCard.has(j)&&(sj.includes(j)||S.jointUsual[j]||jointSessions().some(x=>sessJointWeight(x,j)>0)));
     if(ujs.length){
       const ub=el('div','qblock');
-      ub.innerHTML=`<div class="qlab">Your usual</div>
-        <div class="field">How a joint normally feels for you. The joint ladder reacts to ratings above this, so a long-standing niggle doesn't hold your lifts back for good. A bad rating always counts. Not set: worked out from your recent sessions.</div>`;
-      ujs.forEach(j=>{
-        const r=el('div',''); r.style.cssText='margin-top:9px';
-        r.appendChild(el('div','sm',esc(j.charAt(0).toUpperCase()+j.slice(1)))).style.marginBottom='5px';
-        const seg=el('div','chips');
-        [['','Not set'],['none','None'],['mild','Mild'],['moderate','Moderate']].forEach(([v,lab])=>{
-          const c=el('button','chip',lab); const cur=S.jointUsual[j]||'';
-          c.setAttribute('aria-pressed',cur===v?'true':'false');
-          c.onclick=()=>{ if(v) S.jointUsual[j]=v; else delete S.jointUsual[j]; draw(); };
-          seg.appendChild(c);
-        });
-        r.appendChild(seg);
-        const dn=jointDriftNote(j); if(dn) r.appendChild(el('div','anchor',esc(dn)));
-        ub.appendChild(r);
-      });
+      ub.innerHTML=cardsOn?`<div class="qlab">Joints without a condition</div>
+        <div class="field">You've rated these after sessions, but haven't picked a condition for them.</div>`
+        :`<div class="qlab">Your usual</div>`;
+      ujs.forEach(j=>ub.appendChild(usualChips(j,usual)));
       host.appendChild(ub);
     }
 

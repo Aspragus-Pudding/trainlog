@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.50.0 — 2026-10-07
+- "Your usual" for a joint is now set on its condition card in Edit program, next to the condition it belongs to.
+- Each condition you picked now has its own card at the top of the list: what it is, the red-flag checks, the phase plan and your usual.
+- If you rate a joint that has no condition picked, its usual is listed separately under "Joints without a condition".
+
 ## 1.49.1 — 2026-10-07
 - The dashboard no longer shows an all-joints comfort average. It could read 98 next to a shoulder rated Red.
 - Joints now lead with the worst one, for example "Shoulder: Red, load held", and list the others under it.
