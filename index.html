@@ -818,7 +818,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.40.0';
+const APP_VERSION='1.41.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -2859,6 +2859,8 @@ function nextPrescription(slot){
   const capLb=capLimit(slot,L0);
   const capTxt=exposureCount(slot.ex)<UNFAMILIAR_EXPOSURE?'2.5%':'10%';
   let lb, forced=false;
+  // why a forced single step: the cap is under one step, or the move itself was (a slow recent rate)
+  const capBinds=raw!=null&&capLb<raw&&gridFloor(slot,capLb)<=L0+1e-6;
   if(raw==null){ lb=stepUp(slot,L0); forced=true; }
   else{
     lb=gridFloor(slot,Math.min(raw,capLb));
@@ -2875,9 +2877,11 @@ function nextPrescription(slot){
     ?`Last set ${lastTxt} was too light to price: ${fmt(rtf,0)} reps-to-failure is past the ${CHART_MAX_RTF} the chart covers. Load goes up one step (${stepTxt}) and reps restart at ${reps}.`
     :`Last set ${lastTxt} was easier than RPE ${T} at the top of the range. Load goes to ${fmt(lb,0)} for ${reps} reps`
       +(useRate?`, following your recent rate (+${fmt(rate,1)} lb per session).`:`, the load ${reps===lo?`${lo} reps`:`those ${reps} reps`} at RPE ${T} would take, given that set.`)
-      +(forced?` The largest single step allowed (${capTxt} of the load) is smaller than this exercise's smallest jump (${ex.inc} lb), so it takes one step anyway.`:` A single step is capped at ${capTxt}.`);
+      +(forced&&capBinds?` The largest single step allowed (${capTxt} of the load) is smaller than this exercise's smallest jump (${ex.inc} lb), so it takes one step anyway.`
+        :forced&&raw!=null?` That works out under this exercise's smallest jump (${ex.inc} lb), so it takes one step.`
+        :` A single step is capped at ${capTxt}.`);
   return done({lb,reps,
-    src:offChart?'last set too light to price · load up one step':forced?'load up one step · cap is smaller than a step':useRate?'from your recent rate':'from e1RM',
+    src:offChart?'last set too light to price · load up one step':forced&&capBinds?'load up one step · cap is smaller than a step':forced&&useRate?'from your recent rate · one step':useRate?'from your recent rate':'from e1RM',
     note:why});
 }
 /* Round to something actually loadable */
@@ -5950,6 +5954,15 @@ function ivWorkedBefore(family, kind){
    main lift's latest best on or before that day). Falling 3% or more from
    the first two sessions to the last two is a signal (Grade D). Population
    norms are deliberately not used: the research found them unreliable. */
+/* Population ranges from docs/research/lift-specific.md — CONTEXT ONLY, shown
+   next to your own ratio, never a trigger (the research rates them C–D and
+   found them unreliable; front:back squat depends heavily on squat style). */
+const RATIO_NORMS=[
+  {main:'bench', test:t=>t.ex==='bench'&&/pause:\d+@chest/.test(t.sig), lo:.93, hi:.95, grade:'C'},
+  {main:'bench', test:t=>t.ex==='cg_bench', lo:.88, hi:.95, grade:'D'},
+  {main:'squat', test:t=>t.ex==='front_squat', lo:.78, hi:.85, grade:'C'},
+  {main:'deadlift', test:t=>t.ex==='deadlift'&&/rom:deficit/.test(t.sig), lo:.90, hi:.95, grade:'D'}
+];
 function ownRatios(exId){
   const now=Date.now(), from=now-RATIO_WEEKS*WEEK_MS, main=liftBests(exId), t=x=>new Date(x.ts).getTime();
   if(!main.length) return [];
@@ -5963,7 +5976,8 @@ function ownRatios(exId){
     if(bs.length<3) return;
     const r=bs.map(b=>b.e1/mainAt(t(b))).filter(x=>isFinite(x)&&x>0); if(r.length<3) return;
     const a=(r[0]+r[1])/2, z=(r[r.length-1]+r[r.length-2])/2, change=z/a-1;
-    out.push({...tr, n:bs.length, ratio:r[r.length-1], change, falling:change<=-RATIO_FALL});
+    const norm=RATIO_NORMS.find(x=>x.main===exId&&x.test(tr))||null;
+    out.push({...tr, n:bs.length, ratio:r[r.length-1], change, falling:change<=-RATIO_FALL, norm});
   });
   return out;
 }
@@ -6082,7 +6096,7 @@ function stallCard(exId){
   if(plan.step===2){
     const dx=plan.dx, rs=(plan.ratios||[]);
     const where=dx.src==='reports'?'Your answers say it slows '+(STICK_LABEL[dx.region]||dx.region).toLowerCase()+' ('+dx.n+' of '+dx.total+').':dx.total?'Your answers so far say "nowhere specific".':'There are no answers yet on where it slows down.';
-    const rt=rs.length?' Your own ratios: '+rs.slice(0,3).map(r=>r.label+' '+Math.round(r.ratio*100)+'% of '+nm+(r.falling?', down '+Math.abs(Math.round(r.change*100))+'% in 8 weeks':'')).join('; ')+'.':'';
+    const rt=rs.length?' Your own ratios: '+rs.slice(0,3).map(r=>r.label+' '+Math.round(r.ratio*100)+'% of '+nm+(r.falling?', down '+Math.abs(Math.round(r.change*100))+'% in 8 weeks':'')+(r.norm?' (typical range '+Math.round(r.norm.lo*100)+'–'+Math.round(r.norm.hi*100)+'%, context only)':'')).join('; ')+'.':'';
     return {id:base+'2', snoozeDays:10, title:nm+': find where it slows',
       body:nm+' still has '+since+' after more practice. Step 2 is a diagnosis: film your next top set, and answer where it slowed. '+where+rt+' Then the app proposes a variant aimed at that point.',
       accept:{label:'Film the next top set', fn:()=>{ startIntervention(exId,plan); }}, decline:{label:'Not now'}};
