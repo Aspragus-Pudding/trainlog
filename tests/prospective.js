@@ -55,11 +55,12 @@ const prevOnTrack=s=>{ let p=null; for(const x of S){ if(x===s) break; if(x.exer
 const rows=withSug.map(s=>{ const sg=s.suggestion, shown=sg.shown?lbOf(sg.shown):sg.lb, L=lbOf(s.weight), prev=prevOnTrack(s);
   const up=prev&&shown>lbOf(prev.weight)+0.5;
   return {s, basis:sg.basis||'', up, taken:Math.abs(L-shown)<=Math.max(1,shown*0.005), heavier:L>shown+1, lighter:L<shown-1,
-    repsHit:s.reps>=(sg.reps||0), onRpe:s.rpe!=null&&sg.target_rpe!=null&&Math.abs(s.rpe-sg.target_rpe)<=1, rpeDiff:s.rpe!=null&&sg.target_rpe!=null?s.rpe-sg.target_rpe:null, chart:!A.isChartFree(A.exById[s.exercise_id])};
+    repsHit:s.reps>=(sg.reps||0), repsNear:sg.reps!=null&&Math.abs(s.reps-sg.reps)<=2, repsGap:sg.reps!=null?s.reps-sg.reps:null, onRpe:s.rpe!=null&&sg.target_rpe!=null&&Math.abs(s.rpe-sg.target_rpe)<=1, rpeDiff:s.rpe!=null&&sg.target_rpe!=null?s.rpe-sg.target_rpe:null, chart:!A.isChartFree(A.exById[s.exercise_id])};
 });
 const ups=rows.filter(r=>r.up), upTaken=ups.filter(r=>r.taken);
 console.log('1. SUGGESTED LOAD INCREASES ('+ups.length+' of '+rows.length+' recorded suggestions)');
 console.log('   taken as suggested: '+upTaken.length+' ('+pct(upTaken.length,ups.length)+') · went heavier '+ups.filter(r=>r.heavier).length+' · went lighter '+ups.filter(r=>r.lighter).length);
+console.log('   reps within ±2 of suggested: '+pct(ups.filter(r=>r.repsNear).length,ups.length)+' of increases · '+pct(rows.filter(r=>r.repsNear).length,rows.length)+' of all suggestions (median gap on increases: '+(()=>{ const g=ups.map(r=>r.repsGap).filter(x=>x!=null).sort((a,b)=>a-b); return g.length?(g[g.length>>1]>0?'+':'')+g[g.length>>1]:'—'; })()+' reps)');
 console.log('   of those taken: reps hit '+pct(upTaken.filter(r=>r.repsHit).length,upTaken.length)+' · RPE within ±1 of target '+pct(upTaken.filter(r=>r.onRpe).length,upTaken.length)
   +' · mean RPE vs target '+(upTaken.filter(r=>r.rpeDiff!=null).reduce((a,r)=>a+r.rpeDiff,0)/Math.max(1,upTaken.filter(r=>r.rpeDiff!=null).length)).toFixed(2));
 ['chart','machine/cable'].forEach((lab,i)=>{ const g=ups.filter(r=>r.chart===(i===0)), t=g.filter(r=>r.taken);

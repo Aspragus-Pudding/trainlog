@@ -8531,7 +8531,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
   }
 }
 </script>
-<script type="application/json" id="whats-new">{"version":"1.52.0","lines":["With anterior shoulder instability picked, three new amber warnings: low-bar squat (suggested swap: high-bar or the safety squat bar), pull-ups (swap: neutral grip) and incline dumbbell press (keep the elbows tucked and stop short of a deep stretch).","Setting a neutral or close grip on pull-ups clears that warning.","Face pulls get no warning. They're a standard exercise for this condition.","None of these is red, and they're only warnings. Nothing is removed from your program unless you choose it."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.53.0","lines":["After a load step, the suggested reps are now worked out from your last set instead of dropping to the bottom of the range. 60 × 15 used to become 70 × 8; now it becomes 70 × 12.","If one step would put you below your rep range, the app says the jump is too big and holds the load. It suggests a smaller step (on the info sheet) or a lower range instead.","Progress → Suggestions has a new line: reps within 2 of suggested. Matching the load alone hid how far off the reps were."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9098,7 +9098,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.52.0';
+const APP_VERSION='1.53.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -11252,8 +11252,11 @@ function rpeDeltaStep(slot, L0, R0, RPE0, T, failed){
     // raised backtest error). Only strictly PAST the ceiling overrides —
     // sitting at it is what the stagnation probe is for.
     if(R0<=hi) return {lb:L0, reps:R0, src:'last session', note:`Last set ${lastTxt} was right on target, so it repeats.`};
-    return {lb:stepUp(slot,L0), reps:lo, src:'hit top of range · load up',
-      note:`Last set ${lastTxt} was right on target but already past the top of the ${lo}–${hi} range, so load goes up one step and reps restart at ${lo}.`};
+    const up=stepUp(slot,L0), rr=repsAfterStep(slot,L0,R0,RPE0,up,T);
+    const big=stepTooBig(slot,L0,R0,up,rr,lastTxt); if(big) return big;
+    const reps=rr==null?lo:Math.min(hi,rr);
+    return {lb:up, reps, src:'hit top of range · load up',
+      note:`Last set ${lastTxt} was right on target but already past the top of the ${lo}–${hi} range, so load goes up one step, to ${reps} reps${rr==null?'':' (what that set says the new load is worth at RPE '+T+')'}.`};
   }
   if(delta>0){
     const g=Math.max(1,Math.round(delta)), proposed=R0+g;
@@ -11264,8 +11267,11 @@ function rpeDeltaStep(slot, L0, R0, RPE0, T, failed){
     const up=stepUp(slot,L0);
     if(R0<hi&&L0>0&&(up-L0)/L0>REP_FIRST_STEP) return {lb:L0, reps:hi, src:'reps first · then load',
       note:`Last set ${lastTxt} had reserve left, but the next step (${fmt(L0,0)} → ${fmt(up,0)}) is more than 5% of the load, so reps go to the top of the ${lo}–${hi} range at this load first.`};
-    return {lb:stepUp(slot,L0), reps:lo, src:'hit top of range · load up',
-      note:`Last set ${lastTxt} — hit the top of the ${lo}–${hi} range with reserve left, so load goes up one step and reps restart at ${lo}.`};
+    const rr=repsAfterStep(slot,L0,R0,RPE0,up,T);
+    const big=stepTooBig(slot,L0,R0,up,rr,lastTxt); if(big) return big;
+    const reps=rr==null?lo:Math.min(hi,rr);
+    return {lb:up, reps, src:'hit top of range · load up',
+      note:`Last set ${lastTxt} — hit the top of the ${lo}–${hi} range with reserve left, so load goes up one step, to ${reps} reps${rr==null?'':' (what that set says the new load is worth at RPE '+T+')'}.`};
   }
   const g=Math.max(1,Math.round(-delta)), proposed=R0-g;
   if(proposed>=lo) return {lb:L0, reps:proposed, src:'harder than aimed',
@@ -11304,8 +11310,11 @@ function stagnationProbe(slot){
   const tag=`Same ${fmt(last.topLb,0)} × ${last.reps} for ${STAGNATION_SESSIONS} sessions running`;
   if(last.reps<hi) return {lb:last.topLb, reps:last.reps+1, src:'stagnation probe',
     note:`${tag} — small push: one more rep.`};
-  return {lb:stepUp(slot,last.topLb), reps:lo, src:'stagnation probe',
-    note:`${tag}, already at the top of the range — small push: one load step up, reps back to ${lo}.`};
+  const up=stepUp(slot,last.topLb), rr=repsAfterStep(slot,last.topLb,last.reps,last.rpe,up,slot.rpe);
+  if(rr!=null&&rr<lo) return null;   // the step is too big for this range — the normal suggestion says so
+  const reps=rr==null?lo:Math.min(hi,rr);
+  return {lb:up, reps, src:'stagnation probe',
+    note:`${tag}, already at the top of the range — small push: one load step up, to ${reps} reps.`};
 }
 
 /* Within-session fatigue, measured from YOUR log rather than assumed: the mean
@@ -11432,6 +11441,30 @@ const draftLocked=()=>{ const L=draft.lock||{}; return !!(L.w||L.r||L.rpe); };
    points per rep (floor 30%) so a 15–20 range can be priced. The extension is
    a judgement default, Grade D — the chart itself stops at 16. */
 const pctExt=n=>n<=16?pct1RM(n):Math.max(30,PCT[16]-(n-16)*2.5);
+const rtfFromPctExt=p=>p==null||!isFinite(p)?null:p>=PCT[16]-1e-9?rtfFromPct(p):p<30?null:16+(PCT[16]-p)/2.5;
+/* Reps at a heavier load, priced on your e1RM track instead of reset to the
+   floor of the range (Oct 2026: after a step the app said 70 × 8, you did
+   70 × 15). Your last set says how far from failure you were; the same lifter
+   at the new load is that much closer, and the target RPE takes its reps in
+   reserve off — roughly −2 reps for a 7% step, −4 for 15% at the same RPE.
+   Never more than the last set's reps (load and reps never both rise). The
+   caller clamps to the top of the range; under the floor means the step is
+   too big for this range, and the caller says so instead of suggesting it. */
+function repsAfterStep(slot, L0, R0, RPE0, L1, T){
+  if(RPE0==null||!(L0>0)||!(L1>L0)) return null;
+  const off=bwOffset(exById[slot.ex]);
+  const p0=pctExt(R0+(10-RPE0)); if(!p0) return null;
+  const rtf=rtfFromPctExt(p0*(L1+off)/(L0+off)); if(rtf==null) return null;
+  return Math.min(R0,Math.floor(rtf-(10-T)+1e-9));
+}
+/* The suggestion when the next step would land under the range: hold the load,
+   and say why. Returns null when the step fits (then use the priced reps). */
+function stepTooBig(slot, L0, R0, L1, reps, lastTxt){
+  const lo=slot.reps[0], hi=slot.reps[1];
+  if(reps==null||reps>=lo) return null;
+  return {lb:L0, reps:Math.min(R0,hi), src:'step too big for the range', stepTooBig:{to:L1, reps},
+    note:(lastTxt?'Last set '+lastTxt+'. ':'')+'The next step ('+fmt(L0,0)+' → '+fmt(L1,0)+', '+Math.round((L1-L0)/L0*100)+'%) works out at about '+Math.max(1,reps)+' rep'+(reps===1?'':'s')+' at this effort — under your '+fmtRange(slot.reps)+' range, so the jump is too big for it. Holding at '+fmt(L0,0)+'. A smaller step (the exercise\'s smallest jump, on its info sheet) or a lower range would let the load move.'};
+}
 function nextPrescription(slot){
   const r=nextPrescriptionCore(slot);
   if(!r||r.lb==null||!slot.reps) return r;
@@ -11557,10 +11590,9 @@ function nextPrescriptionCore(slot){
   }
   // reps priced for the load actually returned, clamped to the range: effort-matched, never harder than aimed
   let reps=lo;
-  if(!offChart){
-    const rt=rtfFromPct((lb+off)/e1*100);
-    if(rt!=null) reps=Math.max(lo,Math.min(hi,Math.floor(rt-(10-T)+1e-9)));
-  }
+  { const rr=repsAfterStep(slot,L0,R0,RPE0,lb,T);
+    const big=stepTooBig(slot,L0,R0,lb,rr,lastTxt); if(big) return done(big);
+    if(rr!=null) reps=Math.max(lo,Math.min(hi,rr)); }
   const stepTxt=`${fmt(L0,0)} → ${fmt(lb,0)}`;
   const why=offChart
     ?`Last set ${lastTxt} was too light to price: ${fmt(rtf,0)} reps-to-failure is past the ${CHART_MAX_RTF} the chart covers. Load goes up one step (${stepTxt}) and reps restart at ${reps}.`
@@ -15520,7 +15552,10 @@ function ceilingFor(slot, reps, T){
   const h=trackHistory(slot); if(!h.length) return null;
   const sids=[...new Set(h.map(x=>x.session_id))].slice(-ENGINE.FLOOR_SESSIONS);
   const off=bwOffset(exById[slot.ex]);
-  let e1=null; h.filter(x=>sids.includes(x.session_id)&&x.rpe!=null).forEach(x=>{ const v=impliedE1(toLb(x.weight)+off,x.reps,x.rpe); if(v&&(!e1||v>e1)) e1=v; });
+  // sets past the chart (more than 16 reps from failure) count too, on the same extended
+  // chart the rep pricing uses — otherwise 44 × 20 sets are invisible and the cap sits far below them
+  const e1Of=(L,r,rpe)=>impliedE1(L,r,rpe)||(p=>p?L/(p/100):null)(pctExt(r+(10-rpe)));
+  let e1=null; h.filter(x=>sids.includes(x.session_id)&&x.rpe!=null).forEach(x=>{ const v=e1Of(toLb(x.weight)+off,x.reps,x.rpe); if(v&&(!e1||v>e1)) e1=v; });
   if(!e1) return null;
   const p=pctExt(reps+(10-T)); return p?Math.max(0,e1*p/100-off):null;
 }
@@ -15654,7 +15689,8 @@ function runModifiers(slot, base, o){
     // a drift is always named, even when it changes nothing today
     const dTxt=d.drift?' (moved one notch '+(d.drift>0?'up':'down')+' from your "'+DIAL_LABEL[String(d.stated)]+'" setting, because you\'ve been lifting '+(d.drift>0?'heavier':'lighter')+' than suggested — reset it on the info sheet)':'';
     if(d.bias>0&&!up()&&pr.reps<=R0&&last.rpe<=T){
-      const nx=R0<hi?{lb:L0,reps:R0+1}:{lb:stepUp(slot,L0),reps:lo};
+      const up1=stepUp(slot,L0), rr=R0<hi?null:repsAfterStep(slot,L0,R0,last.rpe,up1,T);
+      const nx=R0<hi?{lb:L0,reps:R0+1}:rr!=null&&rr<lo?{lb:L0,reps:R0}:{lb:up1,reps:rr==null?lo:Math.min(hi,rr)};
       pr={...pr,...nx}; rec('dial',true,'Your setting is "'+DIAL_LABEL[String(d.bias)]+'", so it takes the next step'+dTxt,pr);
     }else if(d.bias<0&&(up()||pr.reps>R0)&&last.rpe>=T-0.5*Math.abs(d.bias)){
       pr={...pr,lb:L0,reps:R0}; rec('dial',true,'Your setting is "'+DIAL_LABEL[String(d.bias)]+'", so it holds instead of stepping up'+dTxt,pr);
@@ -16596,8 +16632,10 @@ function suggestionAccuracy(){
     if(bySess[st.session_id].length<2&&LOG.some(e=>e.type==='session_end'&&e.session_id===st.session_id&&Math.abs(new Date(e.ts)-new Date(st.ts))<5000)) return;
     const sg=st.suggestion, shown=sg.shown?lbOf(sg.shown):sg.lb, L=lbOf(st.weight);
     const taken=Math.abs(L-shown)<=Math.max(1,shown*0.005);
-    const k=weekStart(new Date(st.ts)).toISOString().slice(0,10), b=wk.get(k)||{n:0,taken:0,on:0,rated:0};
+    const k=weekStart(new Date(st.ts)).toISOString().slice(0,10), b=wk.get(k)||{n:0,taken:0,on:0,rated:0,repsN:0,repsNear:0};
     b.n++; if(taken){ b.taken++; if(st.rpe!=null&&sg.target_rpe!=null){ b.rated++; if(Math.abs(st.rpe-sg.target_rpe)<=1) b.on++; } }
+    // reps: the load can match while the reps are far off (70 × 8 suggested, 70 × 15 done) — counted on every set
+    if(sg.reps!=null&&st.reps!=null){ b.repsN++; if(Math.abs(st.reps-sg.reps)<=2) b.repsNear++; }
     wk.set(k,b);
   });
   return [...wk.entries()].sort((a,b)=>a[0]<b[0]?-1:1).map(([d,b])=>({d,...b}));
@@ -16706,19 +16744,20 @@ function renderHist(){
   }
   // is the engine learning? suggestion accuracy by week
   {
-    const acc=suggestionAccuracy(), tot=acc.reduce((a,b)=>({n:a.n+b.n,taken:a.taken+b.taken,on:a.on+b.on,rated:a.rated+b.rated}),{n:0,taken:0,on:0,rated:0});
+    const acc=suggestionAccuracy(), tot=acc.reduce((a,b)=>({n:a.n+b.n,taken:a.taken+b.taken,on:a.on+b.on,rated:a.rated+b.rated,repsN:a.repsN+(b.repsN||0),repsNear:a.repsNear+(b.repsNear||0)}),{n:0,taken:0,on:0,rated:0,repsN:0,repsNear:0});
     const ca=el('div','card pad');
     ca.appendChild(el('div','row between','<span style="font-weight:650">Suggestions</span><span class="dim tiny">is it learning?</span>'));
     if(tot.n<10) ca.appendChild(el('div','empty','Fills in once a few weeks of sets carry the suggestion they were given.'));
     else{
       const p=(a,b)=>b?Math.round(a/b*100)+'%':'—';
-      ca.appendChild(el('div','sm',`Lifted as suggested <b>${p(tot.taken,tot.n)}</b> of ${tot.n} sets · on target (RPE within 1) when you did: <b>${p(tot.on,tot.rated)}</b>`)).style.marginTop='6px';
+      ca.appendChild(el('div','sm',`Lifted as suggested <b>${p(tot.taken,tot.n)}</b> of ${tot.n} sets · reps within 2 of suggested <b>${p(tot.repsNear,tot.repsN)}</b> · on target (RPE within 1) when you lifted the load: <b>${p(tot.on,tot.rated)}</b>`)).style.marginTop='6px';
       const wks=acc.filter(w=>w.n>=3);
       const ch=pctLines([
         {color:'var(--accent)', pts:wks.map(w=>Math.round(w.taken/w.n*100))},
-        {color:'var(--ok)', dash:true, pts:wks.map(w=>w.rated>=2?Math.round(w.on/w.rated*100):null)}]);
+        {color:'var(--ok)', dash:true, pts:wks.map(w=>w.rated>=2?Math.round(w.on/w.rated*100):null)},
+        {color:'var(--warn)', dash:true, pts:wks.map(w=>w.repsN>=3?Math.round(w.repsNear/w.repsN*100):null)}]);
       if(ch){ ch.style.marginTop='6px'; ca.appendChild(ch);
-        ca.appendChild(el('div','dim tiny',`<span style="color:var(--accent)">━</span> lifted as suggested · <span style="color:var(--ok)">╍</span> on target when you did (weeks with 2+ rated sets). Both out of 100%, by week.`)); }
+        ca.appendChild(el('div','dim tiny',`<span style="color:var(--accent)">━</span> load as suggested · <span style="color:var(--warn)">╍</span> reps within 2 of suggested · <span style="color:var(--ok)">╍</span> on target when you lifted the load. All out of 100%, by week.`)); }
       ca.appendChild(el('div','dim tiny','Going lighter than suggested on a bad day is fine — this measures fit, not obedience.')).style.marginTop='4px';
     }
     v.appendChild(ca);

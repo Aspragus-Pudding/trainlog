@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -109,7 +109,9 @@ for(const [R0,RPE0] of LASTS) for(const [hn,hcount] of Object.entries(HISTORIES)
     if(R0<hi){
       if(chartFree) ok(same&&p.reps===Math.min(hi,R0+Math.max(1,Math.round(dir))),'easy mid-range: reps should add the full RPE gap',tag);
       else ok(same&&p.reps===R0+1,'easy mid-range: one more rep',tag);
-    }else ok(up,'easy at range top: no load increase',tag);
+    }else{ const big=p.stepTooBig;
+      ok(up||(big&&same&&big.reps<lo&&p.reps<=R0),'easy at range top: no load increase',tag);
+      if(big){ ok(big.to>L0&&big.reps<lo,'"step too big" only when the priced reps land under the range',tag); } }
   }else if(!atTarget&&dir<0){
     ok(!up,'hard set got more load',tag);
     // the coarse-step rule (v1.49): a small overshoot on a big step holds the load, one rep
@@ -150,7 +152,8 @@ section('2. reported cases');
   ok(/hit top of range/.test(p.src),'hip abduction: no longer an off-chart concept, should say ceiling hit',p.src);
   p=run([set('pulldown','l',170,11,7.5,1)],{ex:'pulldown',role:'primary',sets:4,reps:[6,8],rpe:8,sets_target:4});
   ok(p.lb>170,'pulldown 170x11@7.5 load did not rise',JSON.stringify(p)); console.log('  lat pulldown 170x11@7.5 ->',p.lb,'x',p.reps,'|',p.src);
-  ok(p.reps===6,'pulldown ceiling-hit should reset reps to the floor',JSON.stringify(p));
+  // v1.53: reps after a step are priced, not reset to the floor — 170 × 11 @ 7.5 is worth ~10 at 180, so the top of 6–8
+  ok(p.reps===8,'pulldown ceiling-hit: reps priced for the new load, clamped to the top of the range',JSON.stringify(p));
   p=run([set('multihip_abd','l',60,6,8.5,1)],{ex:'multihip_abd',role:'secondary',sets:3,reps:[8,12],rpe:8,sets_target:3});
   // 6 reps in an 8–12 range used to be held at 6 (the Oct 2026 "range doesn't reach the suggestion" bug):
   // now it's priced back into the range at the floor
@@ -331,7 +334,7 @@ section('9. RPE-delta pricing path');
   // spec §2.5: a 5 lb step on 60 lb is >5%, so reach the top of the range first
   ok(p.lb===60&&p.reps===15,'easier, reps would pass the ceiling, step >5%: top of the range at this load first',JSON.stringify(p));
   p=A.rpeDeltaStep(slot(10,15,9),200,14,7,9);
-  ok(p.lb>200&&p.reps===10,'easier, reps would pass the ceiling, step ≤5%: step load up and reset to floor',JSON.stringify(p));
+  ok(p.lb>200&&p.reps===14,'easier, reps would pass the ceiling, step ≤5%: load up one step, reps priced (200 × 14 @ 7 is still 14 at 210 @ 9)',JSON.stringify(p));
   p=A.rpeDeltaStep(slot(10,15,9),60,13,10,9);
   ok(p.lb===60&&p.reps===12,'harder mid-range should hold load and drop reps',JSON.stringify(p));
   p=A.rpeDeltaStep(slot(10,15,9),60,10,9.5,9);
@@ -343,14 +346,15 @@ section('9. RPE-delta pricing path');
   p=A.rpeDeltaStep(slot(10,15,9),60,12,9.4,9);
   ok(p.lb===60&&p.reps===12,'within +/-0.5 of target should hold exactly, not snap',JSON.stringify(p));
   p=A.rpeDeltaStep(slot(10,15,9),60,17,9,9);
-  ok(p.lb>60&&p.reps===10,'at target but already past the ceiling should still raise load',JSON.stringify(p));
+  ok(p.lb>60&&p.reps===13,'at target but already past the ceiling should still raise load (60 × 17 @ 9 → 70 × 13)',JSON.stringify(p));
   // load and reps never move together, across a small sweep
   let bad=0;
   for(let r=6;r<=22;r++) for(let rpe=6;rpe<=10;rpe+=0.5){
     const q=A.rpeDeltaStep(slot(10,15,9),60,r,rpe,9);
-    if(q.lb!==60&&q.reps!==10) bad++;   // any load step always resets reps to lo=10
+    if(q.lb>60&&!(q.reps<=Math.min(r,15)&&q.reps>=10)) bad++;   // a step up: priced reps, in the range, never more than last time
+    if(q.lb<60&&q.reps!==10) bad++;                               // a step down still resets to the floor
   }
-  ok(bad===0,'RPE-delta: load and reps changed together somewhere in the sweep','count='+bad);
+  ok(bad===0,'RPE-delta: after a step up, reps are in the range and never above the last set; a step down resets to the floor','count='+bad);
   console.log('  easier/harder/at-target/boundary cases and a 6-22 rep sweep all pass');
 }
 
@@ -374,7 +378,7 @@ section('10. stagnation probe');
   const atTop=[];
   for(let i=0;i<3;i++) atTop.push(set('multihip_abd','t'+i,60,15,8,30-i*5));
   const pTop=load(atTop).stagnationProbe(slot);
-  ok(pTop&&pTop.lb>60&&pTop.reps===10,'stagnation probe at the range ceiling should step load, not reps',JSON.stringify(pTop));
+  ok(pTop&&pTop.lb>60&&pTop.reps>=10&&pTop.reps<15,'stagnation probe at the range ceiling should step load (reps priced for it), not reps',JSON.stringify(pTop));
 
   // declined probe: logged numbers didn't match what was probed -> suppressed for 2 sessions
   const declineEv=flatHist(3,8).concat([
@@ -2392,6 +2396,40 @@ section('56. shoulder instability: three yellows, no reds, face pulls left alone
     ok(JSON.stringify(Object.keys(f.yellow).sort())===JSON.stringify(['bench','db_bench','decline_press','machine_ohp','ohp','seated_db_press','weighted_pushup','z_press']),'shoulder_instability yellow rows unchanged',JSON.stringify(Object.keys(f.yellow)));
     ok(Object.values(A.FLAGS_ADDED).every(t=>!('face_pull' in t)),'face pulls are in no added table',''); }
   console.log('  low-bar → high-bar · pull-ups → neutral grip · incline DB cue · face pulls clean · none red · original rows untouched');
+}
+
+/* ─── 57. v1.53: reps after a load step are priced, not reset to the floor ─── */
+section('57. reps after a step: priced on the e1RM track; under the floor = the step is too big');
+{
+  const mk=(ex,lo,hi,T)=>({ex,role:'accessory',reps:[lo,hi],rpe:T,sets:[],sets_target:3});
+  const nx=(ex,w,r,rp,lo,hi,T)=>load([set(ex,'l',w,r,rp,1,{target:{reps:[lo,hi],rpe:T}})]).nextPrescription(mk(ex,lo,hi,T));
+  // the owner's cases (Oct 2026): suggested 70 × 8, did 70 × 15; suggested 50 × 6, did 50 × 10
+  let q=nx('machine_raise',60,20,8,15,20,9);
+  ok(q.lb===70&&q.reps===18,'60 × 20 @ 8 (target 9) → 70 × 18 (logged: 70 × 15 @ 8), not 70 × 15 at the floor',JSON.stringify(q));
+  q=nx('machine_raise',60,15,8,8,15,9);
+  ok(q.lb===70&&q.reps===12,'60 × 15 @ 8 (target 9) → 70 × 12 (a 17% step costs ~4 reps at the same effort), not 70 × 8',JSON.stringify(q));
+  q=nx('pendulum',45,12,8,6,10,8);
+  ok(q.lb>45&&q.reps>=8&&q.reps<=10,'45 × 12 @ 8 → 50 × 8–10 (logged: 50 × 10), not 50 × 6',JSON.stringify(q));
+  // the heuristic the spec gives, on the chart: 7% ≈ −2 reps, 15% ≈ −4 at the same RPE
+  { const A=load([]), sl=mk('bench',3,20,8);
+    const d7=12-A.repsAfterStep(sl,100,12,8,107,8), d15=12-A.repsAfterStep(sl,100,12,8,115,8);
+    ok(d7>=1&&d7<=3&&d15>=3&&d15<=5,'a 7% step costs about 2 reps, 15% about 4, at the same RPE',JSON.stringify({d7,d15})); }
+  // never more reps than last time with more load
+  { const A=load([]), sl=mk('machine_raise',8,20,9); let bad=0;
+    for(const R0 of [8,10,12,15,20]) for(const r of [6,7,8,9,10]){ const v=A.repsAfterStep(sl,60,R0,r,70,9); if(v!=null&&v>R0) bad++; }
+    ok(bad===0,'more load never comes with more reps than the last set',String(bad)); }
+  // the step lands under the range: say so, don't suggest it
+  q=nx('machine_raise',30,12,8,10,12,9);
+  ok(q.lb===30&&q.stepTooBig&&q.stepTooBig.reps<10&&/too big/.test(q.note)&&/smallest jump/.test(q.note),'30 × 12 @ 8 (target 9) on a 10 lb machine (a 33% step → ~3 reps): holds at 30 and says the jump is too big for the range',JSON.stringify(q));
+  // a smaller step you set lets it move again
+  { const A=load([set('machine_raise','l',30,12,8,1,{target:{reps:[10,12],rpe:9}})]); A.getCFG().stepOverride={machine_raise:2.5}; A.applyStepOverrides();
+    const r=A.nextPrescription(mk('machine_raise',10,12,9));
+    ok(r.lb===32.5&&r.reps>=10&&!r.stepTooBig,'with a 2.5 lb step set, the same set moves to 32.5',JSON.stringify(r)); }
+  // the accuracy measure: reps within 2 of the suggestion, counted on every set
+  { const ev=[]; for(let i=0;i<4;i++){ const sid='a'+i; ev.push(set('machine_raise',sid,70,15,8,10-i,{suggestion:{lb:70,reps:8,target_rpe:8}}),set('machine_raise',sid,70,9,8,10-i-0.001,{suggestion:{lb:70,reps:8,target_rpe:8}})); }
+    const acc=load(ev).suggestionAccuracy(), t=acc.reduce((a,b)=>({n:a.n+b.n,taken:a.taken+b.taken,repsN:a.repsN+b.repsN,repsNear:a.repsNear+b.repsNear}),{n:0,taken:0,repsN:0,repsNear:0});
+    ok(t.taken===t.n&&t.repsN===t.n&&t.repsNear===t.n/2,'load taken on every set, but reps within 2 on only half: the second line shows what the first hides',JSON.stringify(t)); }
+  console.log('  60 × 15 → 70 × 12 · 45 × 12 → 50 × 9 · 7% ≈ −2, 15% ≈ −4 · never more reps with more load · under the range → "too big", a smaller step moves it · reps-within-2 measured');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.53.0 — 2026-10-07
+- After a load step, the suggested reps are now worked out from your last set instead of dropping to the bottom of the range. 60 × 15 used to become 70 × 8; now it becomes 70 × 12.
+- If one step would put you below your rep range, the app says the jump is too big and holds the load. It suggests a smaller step (on the info sheet) or a lower range instead.
+- Progress → Suggestions has a new line: reps within 2 of suggested. Matching the load alone hid how far off the reps were.
+
 ## 1.52.0 — 2026-10-07
 - With anterior shoulder instability picked, three new amber warnings: low-bar squat (suggested swap: high-bar or the safety squat bar), pull-ups (swap: neutral grip) and incline dumbbell press (keep the elbows tucked and stop short of a deep stretch).
 - Setting a neutral or close grip on pull-ups clears that warning.
