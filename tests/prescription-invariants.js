@@ -1457,6 +1457,21 @@ section('39. progression rate');
   })));
   ok(compared>=20,'the standard-lift invariant was actually exercised',String(compared));
   ok(A.RATE_LABEL.fast==='adding load each session'&&A.RATE_LABEL.standard==='building reps, then load','dashboard wording, no mode labels','');
+  // like with like (found by tests/simulate.js): Monday's 3–5 top set must not drive Wednesday's 8–12 slot
+  {
+    const W=mk([[set('deadlift','t1',300,5,7,4,{role:'top',target:{reps:[3,5],rpe:7.5}}),{type:'session_end',id:'set1',ts:day(3.99),session_id:'t1',joints:{}}]],FAST);
+    const sl={ex:'deadlift',role:'secondary',reps:[8,12],rpe:8,sets_target:3,sets:[]};
+    const r=rx(W,sl);
+    ok(!r.pr.fast,'a different kind of set (top set → 8–12 working set) is not used for fast progression',JSON.stringify({lb:r.lb,reps:r.pr.reps,src:r.pr.src}));
+    const W2=mk([sess('deadlift','u1',225,8,7.5,4,{reps:[8,12],rpe:8})],FAST);
+    const r2=rx(W2,{...sl});
+    ok(r2.pr.fast&&r2.lb>225&&r2.pr.reps===8,'the same kind of set and rep range: one step up, same reps',JSON.stringify({lb:r2.lb,reps:r2.pr.reps}));
+    // load and reps never both rise on the fast path, across rep ranges
+    for(const [lo,hi] of [[3,5],[5,5],[6,8],[8,12],[10,15]]) for(const R of [lo,hi]){
+      const V=mk([sess('deadlift','v1',200,R,7,4,{reps:[lo,hi],rpe:8})],FAST), s3={ex:'deadlift',role:'primary',reps:[lo,hi],rpe:8,sets_target:3,sets:[]}, q=rx(V,s3);
+      if(q.pr.fast) ok(!(q.lb>200&&q.pr.reps>R),'fast '+lo+'–'+hi+' from '+R+' reps: load and reps never both rise',JSON.stringify({lb:q.lb,reps:q.pr.reps}));
+    }
+  }
   console.log('  fast = last + one step · one miss defers, two demote · block boundary 3-of-4 promotes/demotes · existing programs classified · TM tracks a fast lift · standard lifts untouched ('+compared+' cases)');
 }
 

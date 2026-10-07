@@ -818,7 +818,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.35.3';
+const APP_VERSION='1.35.4';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -5532,10 +5532,17 @@ function proposalCards(){
 function fastRx(slot, pr, o){
   if(!o||!o.fresh||pr.lb==null||!isMainLift(slot.ex)||slotTrack(slot).sig) return pr;
   const rs=rateState(slotTrack(slot).ex);
-  if(rs.rate!=='fast'||!rs.last||rs.last.miss) return pr;
-  const L0=rs.last.load, lo=slot.reps[0], hi=slot.reps[1], R=Math.max(lo,Math.min(hi,rs.last.set.reps));
+  if(rs.rate!=='fast') return pr;
+  // like with like: the last exposure of the same kind of set (top vs working)
+  // prescribed for the same rep range. A lift trained several ways a week
+  // (Monday's 3–5 top set, Wednesday's 8–12) must not carry one into the other —
+  // that raised load AND reps together (found by tests/simulate.js)
+  const lo=slot.reps[0], hi=slot.reps[1], cls=priceClass(slot);
+  const same=[...rs.exs].reverse().find(e=>inClass(e.set,cls)&&e.set.target&&e.set.target.reps[0]===lo&&e.set.target.reps[1]===hi);
+  if(!same||same.miss) return pr;
+  const L0=same.load, R=Math.max(lo,Math.min(hi,same.set.reps));
   return {...pr, lb:stepUp(slot,L0), reps:R, src:'adding load each session', fast:true,
-    note:'Last time '+fmt(L0,0)+' × '+rs.last.set.reps+(rs.last.set.rpe!=null?' @ RPE '+rs.last.set.rpe:'')+' hit its target, so the load goes up one step at '+R+' reps. This lift keeps adding load each session until it misses twice in a row, then it moves to the normal progression on its own. (Judgement default: one step, two misses.)'};
+    note:'Last time '+fmt(L0,0)+' × '+same.set.reps+(same.set.rpe!=null?' @ RPE '+same.set.rpe:'')+' hit its target, so the load goes up one step at '+R+' reps. This lift keeps adding load each session until it misses twice in a row, then it moves to the normal progression on its own. (Judgement default: one step, two misses.)'};
 }
 
 /* ---------- Fatigue-triggered deloads (spec §3.6) ----------
