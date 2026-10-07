@@ -484,8 +484,13 @@ section('12. session-based program position');
   const wks=(Date.now()-new Date(A.getCFG().start+'T00:00').getTime())/(7*864e5);
   ok(!pr.pace.planned&&Math.abs(pr.pace.perWeek-7/wks)<0.01,'pace should be observed sessions per week since the start',JSON.stringify(pr.pace));
   ok(pr.total===70&&pr.done===7&&pr.remaining===63,'70 program sessions (14 weeks incl. deloads x 5), 7 done',JSON.stringify({t:pr.total,d:pr.done,r:pr.remaining}));
-  ok(pr.days===Math.ceil(pr.remaining/pr.pace.perWeek*7),'projection = remaining sessions at recent pace',String(pr.days));
-  ok(pr.behindDays>A.DRIFT_DAYS,'2.45 sessions/week against a 5-day split should be well behind a 120-day target',String(pr.behindDays));
+  ok(pr.days===Math.ceil(pr.remaining/pr.dpw*7),'projection = remaining sessions at the PLANNED pace from today',String(pr.days));
+  ok(pr.atPace.days===Math.ceil(pr.remaining/pr.pace.perWeek*7),'the recent-pace finish is still computed, as context',String(pr.atPace.days));
+  // behind = sessions missed, not a slow fortnight extrapolated over the whole program (Oct 2026: 6 missed read as 15 weeks)
+  const tight=mkA(ev,20,78).programProjection();   // target = exactly the planned finish (start + 98 days)
+  ok(tight.missed===7,'20 days at 5 a week is 14 sessions; 7 done = 7 behind',String(tight.missed));
+  ok(tight.behindDays>=8&&tight.behindDays<=13,'7 missed sessions on a 5-day plan reads as about 10 days behind, not months',String(tight.behindDays));
+  ok(tight.atPace.behindDays>40,'(the recent pace alone would have said months)',String(tight.atPace.behindDays));
   const onTime=mkA(ev,20,400).programProjection();
   ok(onTime.behindDays<0,'a distant target should not read as behind',String(onTime.behindDays));
   // young program with too few sessions uses the planned pace

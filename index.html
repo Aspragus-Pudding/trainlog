@@ -818,7 +818,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.42.0';
+const APP_VERSION='1.43.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -2437,16 +2437,31 @@ function programPosition(roadmap){
   weeksBefore-=blockLen(b);
   return {idx:i, sessionsIn:left+blockLen(b)*dpw, week:blockLen(b), dpw, split:splitKeyFor(b), weeksBefore, past:true};
 }
+/* The finish is projected at your PLANNED days per week from today: the
+   sessions you've missed push it back, and nothing else does. Projecting at
+   your recent pace instead assumed a couple of light weeks would last the
+   whole program — 6 missed sessions read as 15 weeks behind (Oct 2026).
+   The recent-pace finish is still computed (atPace) and shown as context.
+   behind = sessions you'd have done at the planned pace since the start,
+   minus sessions done. */
+function sessionsBehind(){
+  if(!CFG.start) return 0;
+  const startT=new Date(CFG.start+'T00:00').getTime(), now=Date.now();
+  if(now<=startT) return 0;
+  const expected=Math.floor((now-startT)/(7*864e5)*(sessionsPerWeek()||5));
+  return Math.max(0, expected-programSessions());
+}
 function programProjection(roadmap){
   const rm=roadmap||ROADMAP;
   if(!rm.length) return null;
   const dpw=sessionsPerWeek(), total=rm.reduce((a,b)=>a+blockLen(b)*splitFor(b).days,0);
   const done=Math.min(total,programSessions()), remaining=total-done, pace=recentPace();
-  const days=Math.ceil(remaining/pace.perWeek*7);
-  const end=new Date(); end.setHours(12,0,0,0); end.setDate(end.getDate()+days);
+  const at=perWeek=>{ const d=Math.ceil(remaining/perWeek*7), e=new Date(); e.setHours(12,0,0,0); e.setDate(e.getDate()+d); return {days:d, end:e, endISO:e.toISOString().slice(0,10)}; };
+  const plan=at(dpw||5), recent=at(pace.perWeek);
   const target=CFG.target?new Date(CFG.target+'T12:00'):null;
-  return {total, done, remaining, pace, days, dpw, end, endISO:end.toISOString().slice(0,10),
-    behindDays:target?Math.round((end-target)/864e5):null};
+  return {total, done, remaining, pace, days:plan.days, dpw, end:plan.end, endISO:plan.endISO, missed:sessionsBehind(),
+    atPace:{...recent, behindDays:target?Math.round((recent.end-target)/864e5):null},
+    behindDays:target?Math.round((plan.end-target)/864e5):null};
 }
 /* Program weeks you can still fit before a target date at your recent pace,
    plus the weeks already trained. Before the program starts this is plain
@@ -2460,7 +2475,8 @@ function weeksAvailable(startISO, targetISO, splitKey){
   const dpw=(splitKey!=null?splitOf(splitKey):activeSplit()).days||5, pace=recentPace();
   const pos=ROADMAP.length?programPosition():null;
   const doneWeeks=pos?pos.weeksBefore+pos.sessionsIn/pos.dpw:programSessions()/dpw;
-  return Math.round(doneWeeks + Math.max(0,(target-now)/864e5/7)*pace.perWeek/dpw);
+  void pace;   // planned pace from here on, like programProjection()
+  return Math.round(doneWeeks + Math.max(0,(target-now)/864e5/7));
 }
 /* The linter's lower bound per block type. Compression never goes below it. */
 const BLOCK_MIN={hyp:3,str:2,peak:1,deload:1};
@@ -3104,10 +3120,12 @@ function driftCard(proj,p){
   const wk=Math.round(proj.behindDays/7);
   const c=el('div','card pad');
   c.style.cssText='border-left:3px solid var(--warn)';
+  const ds=d=>new Date(d+'T12:00').toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  const ap=proj.atPace, slower=!proj.pace.planned&&ap.endISO>proj.endISO;
   c.innerHTML=`<div style="font-weight:650;font-size:14.5px">About ${wk>=1?wk+' week'+(wk>1?'s':''):proj.behindDays+' days'} behind your target date</div>
     <div class="muted tiny" style="margin-top:3px">Program progress counts sessions trained, not calendar days.
-      ${proj.done} of ${proj.total} sessions done; at your recent pace of ${fmt(proj.pace.perWeek,1)} a week${proj.pace.planned?' (your planned pace — not enough history yet)':''}, you'd finish ${new Date(proj.endISO+'T12:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})}.
-      Nothing gets added to your sessions to catch up.</div>`;
+      ${proj.done} of ${proj.total} sessions done${proj.missed?' — '+proj.missed+' session'+(proj.missed>1?'s':'')+' behind your '+proj.dpw+'-a-week plan':''}. Back at ${proj.dpw} a week from today, you'd finish ${ds(proj.endISO)}.
+      ${slower?'At your recent pace of '+fmt(proj.pace.perWeek,1)+' a week it would be '+ds(ap.endISO)+'. ':''}Nothing gets added to your sessions to catch up.</div>`;
   const b=el('button','btn s',CFG.targetFixed?'Compress the remaining blocks':'Move target to '+new Date(proj.endISO+'T12:00').toLocaleDateString(undefined,{month:'short',day:'numeric'}));
   b.style.marginTop='10px';
   b.onclick=()=>{
@@ -3118,7 +3136,7 @@ function driftCard(proj,p){
   return c;
 }
 function openCompress(proj,p){
-  const cut=Math.ceil(proj.behindDays/7*proj.pace.perWeek/proj.dpw);
+  const cut=Math.ceil(proj.behindDays/7);
   const r=compressRoadmap(ROADMAP,cut,p), after=programProjection(r.draft);
   const rows=ROADMAP.map((b,i)=>{
     const a=r.draft[i], changed=a.weeks!==b.weeks;
