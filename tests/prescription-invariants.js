@@ -43,7 +43,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'exerciseSessionHistory','STAGNATION_SESSIONS','STAGNATION_SUPPRESS','RPE_HOLD_TOL','GROUP_LABEL','JOINT_PATTERNS',
   'jointTrend','jointLevel','jointNoteFor','jointSessions','programSessions','programProjection','recentPace',
   'compressRoadmap','BLOCK_MIN','applyShape','DRIFT_DAYS','LANDMARKS','MUSCLE_GROUP','SCALE','defaultRepRange','readinessScoreFromEvent',
-  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM'];
+  'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -1450,6 +1450,33 @@ section('39. progression rate');
   ok(compared>=20,'the standard-lift invariant was actually exercised',String(compared));
   ok(A.RATE_LABEL.fast==='adding load each session'&&A.RATE_LABEL.standard==='building reps, then load','dashboard wording, no mode labels','');
   console.log('  fast = last + one step · one miss defers, two demote · block boundary 3-of-4 promotes/demotes · existing programs classified · TM tracks a fast lift · standard lifts untouched ('+compared+' cases)');
+}
+
+/* ─── 40. moving an exercise's history ─── */
+section('40. move history to another exercise');
+{
+  const ev=[set('ssb_squat','q1',135,8,8,9),set('ssb_squat','q1',145,8,8.5,9),set('ssb_squat','q2',155,8,8,5),set('deadlift','q2',315,5,8,5),
+    {type:'exercise_rating',id:'rt1',ts:day(5),exercise_id:'ssb_squat',stimulus:4,enjoyment:4}];
+  const A=load(ev);
+  const s2=A.sets().find(x=>x.session_id==='q2'&&x.exercise_id==='ssb_squat');
+  A.append({type:'correction',target_id:s2.id,patch:{weight:{value:160,unit:'lb'}},reason:'edit'});        // an earlier fix
+  const s1=A.sets().find(x=>x.session_id==='q1'&&x.weight.value===135);
+  A.append({type:'correction',target_id:s1.id,patch:null,reason:'delete'});                               // a deleted set
+  const rawBefore=JSON.stringify(A.LOG.filter(e=>e.type!=='correction')), nBefore=A.LOG.length;
+  const r=A.moveHistory('ssb_squat','transformer_high_bar');
+  ok(r.count===2,'the two live squat sets move (the deleted one stays deleted)',String(r.count));
+  ok(JSON.stringify(A.LOG.filter(e=>e.type!=='correction'))===rawBefore&&A.LOG.length===nBefore+2,'append-only: only corrections were added, nothing rewritten','');
+  ok(A.sets().filter(x=>x.exercise_id==='ssb_squat').length===0&&A.sets().filter(x=>x.exercise_id==='transformer_high_bar').length===2,'history now reads as high-bar','');
+  ok(A.sets().find(x=>x.id===s2.id).weight.value===160,'an earlier weight correction is carried forward','');
+  ok(!A.sets().some(x=>x.id===s1.id),'a deleted set stays deleted','');
+  ok(A.sets().filter(x=>x.exercise_id==='deadlift').length===1,'other exercises untouched','');
+  ok(A.LOG.some(e=>e.type==='exercise_rating'&&e.exercise_id==='ssb_squat'),'ratings stay with the old exercise','');
+  const m=A.lastHistoryMove('transformer_high_bar');
+  ok(m&&m.from==='ssb_squat'&&m.count===2,'the move can be found for undo',JSON.stringify(m));
+  ok(A.undoHistoryMove(m.id)===2,'undo','');
+  ok(A.sets().filter(x=>x.exercise_id==='ssb_squat').length===2&&A.sets().find(x=>x.id===s2.id).weight.value===160,'undo restores the old exercise and the earlier correction','');
+  ok(!A.lastHistoryMove('transformer_high_bar'),'and the move is no longer offered for undo','');
+  console.log('  append-only · earlier edits kept · deleted stays deleted · others untouched · undo exact');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

@@ -818,7 +818,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.35.0';
+const APP_VERSION='1.35.1';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -4386,7 +4386,9 @@ function openInfo(exId){
       <div class="row between sm"><span class="muted">Best estimated 1RM</span><span>${b?fmt(b.v,0)+' lb':'—'}</span></div>
       <div class="row between sm"><span class="muted">Last logged</span><span>${last?`${fmt(last.weight.value)} ${last.weight.unit} × ${last.reps}`:'—'}</span></div>
       <div class="row between sm"><span class="muted">Sessions performed</span><span>${exposureCount(exId)}</span></div>
-      <div class="row" style="gap:6px;margin-top:9px"><button class="btn s" id="ihist">History and diary</button><button class="btn s" id="idiary">Add diary entry</button></div></div>
+      <div class="row" style="gap:6px;margin-top:9px"><button class="btn s" id="ihist">History and diary</button><button class="btn s" id="idiary">Add diary entry</button></div>
+      ${sets().some(x=>x.exercise_id===exId)?'<button class="btn s ghost" id="imove" style="margin-top:6px">Move this history to another exercise</button>':''}
+      ${lastHistoryMove(exId)?`<div class="anchor" id="iundo">History moved here from ${esc((exById[lastHistoryMove(exId).from]||{name:lastHistoryMove(exId).from}).name)}. <button class="btn s" id="iundob" style="margin-left:4px">Undo</button></div>`:''}</div>
     <button class="btn ghost wide" id="irename" style="margin-bottom:8px">Rename</button>
     ${ex.custom?'<button class="btn ghost wide" id="iedit" style="margin-bottom:8px">Edit this custom exercise</button>':''}
     ${ex.custom?'<button class="btn ghost wide" id="idel" style="margin-bottom:8px;color:var(--skip)">Delete this custom exercise</button>':''}
@@ -4396,6 +4398,10 @@ function openInfo(exId){
   if($('#ibar')) drawBarEditor($('#ibar'), ex);
   $('#ihist').onclick=()=>openExerciseHistory(exId, ()=>openInfo(exId));
   $('#idiary').onclick=()=>openDiaryEntry(exId, ()=>openInfo(exId));
+  if($('#imove')) $('#imove').onclick=()=>exPicker('Move '+ex.name+'\'s history to…', e=>e.id!==exId&&!e.rehab, e=>openMoveHistory(exId,e.id),
+    {muscle:primaryMuscle(ex), onCancel:()=>openInfo(exId), noCreate:true, keepOpen:true});
+  if($('#iundob')) $('#iundob').onclick=()=>{ const m=lastHistoryMove(exId);
+    if(m&&confirm('Move those '+m.count+' sets back to '+((exById[m.from]||{}).name||m.from)+'?')){ const n=undoHistoryMove(m.id); toast(n+' sets moved back'); openInfo(m.from); } };
   drawExNotes($('#inotes'), ex);
   $('#irename').onclick=()=>openRenameEx(ex);
   if(ex.custom&&$('#iedit')) $('#iedit').onclick=()=>openCustomEx(null,ex);
@@ -4437,6 +4443,55 @@ function drawBarEditor(host, ex){
     host.appendChild(sv);
   };
   draw();
+}
+
+/* ---------- Moving an exercise's history ----------
+   For history logged against one exercise that belongs to another (a
+   Transformer squat logged before its configurations were separate
+   exercises). Append-only: each set gets a correction re-pointing it, so the
+   raw log is never rewritten and the move can be undone. A correction
+   REPLACES an earlier one for the same set (see sets()), so each move carries
+   that set's previous patch forward — a weight you corrected stays corrected
+   — and records it, so undo can put it back exactly. Only working and warmup
+   SETS move; ratings, notes and diary entries stay with the old exercise. */
+function latestCorrection(setId){ let c=null; for(const e of LOG) if(e.type==='correction'&&e.target_id===setId) c=e; return c; }
+function moveHistory(fromId, toId){
+  const id='mv'+ulid(), to=exById[toId]; let n=0;
+  for(const e of LOG){
+    if(e.type!=='set') continue;
+    const prev=latestCorrection(e.id);
+    if(prev&&prev.patch===null) continue;                         // a deleted set stays deleted
+    const cur=prev?{...e,...prev.patch}:e;
+    if(cur.exercise_id!==fromId) continue;
+    const prevPatch=prev?prev.patch:null;
+    if(append({type:'correction',target_id:e.id,reason:'moved history',move:{id,from:fromId,to:toId,prev_patch:prevPatch},
+      patch:{...(prevPatch||{}),exercise_id:toId,slot:toId}})) n++;
+  }
+  return {id,count:n,to:to?to.name:toId};
+}
+/* The most recent move INTO this exercise that is still in effect. */
+function lastHistoryMove(exId){
+  let m=null;
+  for(const e of LOG){ if(e.type==='correction'&&e.move&&e.move.to===exId&&latestCorrection(e.target_id)===e){ if(!m||m.id!==e.move.id) m={id:e.move.id,from:e.move.from,count:0}; if(m.id===e.move.id) m.count++; } }
+  return m;
+}
+function undoHistoryMove(moveId){
+  let n=0;
+  LOG.filter(e=>e.type==='correction'&&e.move&&e.move.id===moveId).forEach(c=>{
+    if(latestCorrection(c.target_id)!==c) return;                  // something newer happened to that set
+    if(append({type:'correction',target_id:c.target_id,reason:'undo moved history',patch:c.move.prev_patch||{}})) n++;
+  });
+  return n;
+}
+function openMoveHistory(fromId, toId){
+  const from=exById[fromId], to=exById[toId];
+  const ss=sets().filter(x=>x.exercise_id===fromId), sessions=new Set(ss.map(x=>x.session_id)).size;
+  sheet(`<h2 style="font-size:20px;margin-bottom:6px">Move history</h2>
+    <div class="sm" style="line-height:1.5;margin-bottom:10px">Move <b>${ss.length} sets</b> from <b>${sessions} sessions</b> logged as <b>${esc(from.name)}</b> to <b>${esc(to.name)}</b>?</div>
+    <div class="muted tiny" style="line-height:1.5;margin-bottom:14px">Nothing is deleted — each set gets a correction pointing it at ${esc(to.name)}, so its e1RM, PRs and suggestions follow. You can undo it from ${esc(to.name)}'s info sheet. Ratings, notes and diary entries stay with ${esc(from.name)}.${(CFG.goals||[]).includes(fromId)?' '+esc(from.name)+' is one of your main lifts — swap it for '+esc(to.name)+' in Edit program afterwards if you want.':''}</div>
+    <div class="row" style="gap:8px"><button class="btn ghost grow" id="mvno">Cancel</button><button class="btn pri grow" id="mvgo">Move ${ss.length} sets</button></div>`);
+  $('#mvno').onclick=()=>openInfo(fromId);
+  $('#mvgo').onclick=()=>{ const r=moveHistory(fromId,toId); toast(r.count+' sets moved to '+r.to); render(); openInfo(toId); };
 }
 
 /* A range saved (or reset) on the info sheet applies everywhere at once:
