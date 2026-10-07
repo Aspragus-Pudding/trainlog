@@ -9968,6 +9968,23 @@ function applyBarOverrides(){
     ex.bar=(typeof o==='number'&&isFinite(o)&&o>=0)?o:BAR_DEFAULT[ex.id];
   });
 }
+/* Smallest jump per exercise. The library's step is the implement's own
+   (dumbbells 5 lb, a machine its stack step; a barbell is whatever the plate
+   set makes — 5 lb with 2.5 lb plates). Yours, set on the info sheet, wins
+   (CFG.stepOverride, lb, built-ins only — a custom exercise's step is part of
+   its own definition). Every step up, step down and "is this loadable" reads
+   ex.inc, so the override reaches all of them. kg defaults for when kg mode
+   exists: barbell 1.25 kg, dumbbell 2.5 kg (decided Oct 2026). */
+const STEP_DEFAULT={}, STEP_DEFAULT_KG={barbell:1.25, dumbbell:2.5};
+const stepOverridden=ex=>!!ex&&!ex.custom&&((CFG.stepOverride||{})[ex.id]>0);
+function applyStepOverrides(){
+  EX.forEach(ex=>{
+    if(ex.custom) return;
+    if(!(ex.id in STEP_DEFAULT)) STEP_DEFAULT[ex.id]=ex.inc;
+    const o=(CFG.stepOverride||{})[ex.id];
+    ex.inc=(typeof o==='number'&&isFinite(o)&&o>0)?o:STEP_DEFAULT[ex.id];
+  });
+}
 const barEditable=ex=>!!ex&&(ex.load==='barbell'||(ex.custom?(ex.bar||0):(BAR_DEFAULT[ex.id]||0))>0);
 
 /* roadmap — the phase ladder the chart draws */
@@ -10309,7 +10326,7 @@ const DAYS=[
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
   profile:null,profileParams:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
-  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null};
+  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{}};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
    from the address bar so it isn't left sitting in history. Each writes
@@ -10374,6 +10391,7 @@ function loadAll(){
   applyLibraryModel();
   applyNameOverrides();
   applyBarOverrides();
+  applyStepOverrides();
   applySetupLink();
   if(!CFG.start){
     CFG.start=new Date().toISOString().slice(0,10);
@@ -11164,7 +11182,7 @@ function capLimit(slot, L0){
    that may itself be off the grid, e.g. a 55 lb set on a 10 lb machine. */
 function gridFloor(slot, lb){
   const ex=exById[slot.ex];
-  if(ex.load==='barbell'&&ex.plateSet&&PLATE_SETS[ex.plateSet].unit==='lb') return loadable(slot,lb);
+  if(ex.load==='barbell'&&ex.plateSet&&PLATE_SETS[ex.plateSet].unit==='lb'&&!stepOverridden(ex)) return loadable(slot,lb);
   return Math.floor(lb/ex.inc+1e-9)*ex.inc;
 }
 function stepUp(slot, lb){
@@ -11197,6 +11215,21 @@ const REP_FIRST_STEP=0.05;
    pricing paths call this before cutting. Judgement defaults, Grade D: the 7%
    and the 1.5. */
 const COARSE_STEP=0.07, CUT_NEEDS_RPE=1.5;
+/* The other side of a coarse step (the "top of range → add load" increases you
+   took 24% of the time, Oct 2026): at the top of the range with reserve left,
+   when one step up is 7% of the load or more, ask for one rep past the range
+   first; the load goes up once that rep is done. The one place a suggestion
+   deliberately leaves the range, by one rep. Uses the exercise's smallest jump
+   (yours if you've set one). Judgement default, Grade D: the 7%. */
+const REP_PAST_STEP=0.07;
+function repPastFirst(slot, L0, R0, lastTxt){
+  const hi=slot.reps[1];
+  if(R0!==hi||!(L0>0)) return null;
+  const up=stepUp(slot,L0), frac=(up-L0)/L0;
+  if(frac<REP_PAST_STEP) return null;
+  return {lb:L0, reps:hi+1, repPast:true, src:'one rep past the range first',
+    note:(lastTxt?'Last set '+lastTxt+' hit the top of your range with reps to spare. ':'')+'The next step ('+fmt(L0,0)+' → '+fmt(up,0)+') is '+Math.round(frac*100)+'% of the load, so first one rep past the range at this load: '+(hi+1)+' reps. Then the load goes up.'};
+}
 function coarseHold(slot, L0, R0, RPE0, failed){
   const lo=slot.reps[0], hi=slot.reps[1];
   // RPE 10 is no reps left — it counts as a miss, or a target of 9 could never cut
@@ -11230,6 +11263,7 @@ function rpeDeltaStep(slot, L0, R0, RPE0, T, failed){
     // §2.5 increment-aware: below the top of the range and the next step is
     // more than 5% of the load — reach the top of the range at this load first
     const up=stepUp(slot,L0);
+    const past=repPastFirst(slot,L0,R0,lastTxt); if(past) return past;
     if(R0<hi&&L0>0&&(up-L0)/L0>REP_FIRST_STEP) return {lb:L0, reps:hi, src:'reps first · then load',
       note:`Last set ${lastTxt} had reserve left, but the next step (${fmt(L0,0)} → ${fmt(up,0)}) is more than 5% of the load, so reps go to the top of the ${lo}–${hi} range at this load first.`};
     return {lb:stepUp(slot,L0), reps:lo, src:'hit top of range · load up',
@@ -11272,6 +11306,7 @@ function stagnationProbe(slot){
   const tag=`Same ${fmt(last.topLb,0)} × ${last.reps} for ${STAGNATION_SESSIONS} sessions running`;
   if(last.reps<hi) return {lb:last.topLb, reps:last.reps+1, src:'stagnation probe',
     note:`${tag} — small push: one more rep.`};
+  { const past=repPastFirst(slot,last.topLb,last.reps,null); if(past) return {...past, src:'stagnation probe', note:tag+'. '+past.note}; }
   return {lb:stepUp(slot,last.topLb), reps:lo, src:'stagnation probe',
     note:`${tag}, already at the top of the range — small push: one load step up, reps back to ${lo}.`};
 }
@@ -11404,7 +11439,7 @@ function nextPrescription(slot){
   const r=nextPrescriptionCore(slot);
   if(!r||r.lb==null||!slot.reps) return r;
   const lo=slot.reps[0], hi=slot.reps[1];
-  if(r.reps>=lo&&r.reps<=hi) return r;
+  if((r.reps>=lo&&r.reps<=hi)||r.repPast) return r;
   const edge=r.reps<lo?lo:hi;
   const tr=slotTrack(slot), last=lastSetFor(tr.ex,tr.sig,priceClass(slot));
   if(!last||last.rpe==null) return {...r, reps:edge};
@@ -11507,6 +11542,9 @@ function nextPrescriptionCore(slot){
       `You've logged below the last few suggestions; a ${PROBE_INCREMENT_LB} lb probe is smaller than this exercise's ${ex.inc} lb step, so this holds ${lastTxt}.`);
   }
 
+  // at the top of the range on a coarse step: one rep past it first — unless the set was
+  // too light to price at all, when a whole step is plainly justified
+  if(!offChart){ const past=repPastFirst(slot,L0,R0,lastTxt); if(past) return done(past); }
   // at or past the top of the range and easier than aimed: add load
   const rate=ready?progressionRate(tr.ex,tr.sig,cls):null;
   const useRate=rate!=null&&rate>0;              // a flat or falling trailing rate is no reason to hold back
@@ -11545,7 +11583,7 @@ function nextPrescriptionCore(slot){
 function loadable(slot, lb){
   if(lb==null) return null;
   const ex=exById[slot.ex];
-  if(ex.load==='barbell'&&ex.plateSet&&PLATE_SETS[ex.plateSet].unit==='lb'){
+  if(ex.load==='barbell'&&ex.plateSet&&PLATE_SETS[ex.plateSet].unit==='lb'&&!stepOverridden(ex)){
     const s=solvePlates(lb,ex.bar,ex.plateSet);
     return s?s.achieved:lb;
   }
@@ -13158,8 +13196,8 @@ function openInfo(exId){
     <div class="qblock" id="irr"></div>
     <div class="qblock"><div class="qlab">Counts toward</div>${vols}</div>
     <div class="qblock"><div class="qlab">Progression</div>
-      <div class="muted sm">${esc(mode)}</div>
-      <div class="anchor">Smallest jump ${ex.inc} lb${ex.bar?` · bar ${ex.bar} lb`:''}</div></div>
+      <div class="muted sm">${esc(mode)}</div></div>
+    <div class="qblock" id="istep"></div>
     ${barEditable(ex)?'<div class="qblock" id="ibar"></div>':''}
     <div class="qblock"><div class="qlab">Your history</div>
       <div class="row between sm"><span class="muted">Best estimated 1RM</span><span>${b?fmt(b.v,0)+' lb':'—'}</span></div>
@@ -13175,6 +13213,7 @@ function openInfo(exId){
   $('#iclose').onclick=()=>$('#dlg').close();
   drawRepRangeEditor($('#irr'), ex);
   if($('#ibar')) drawBarEditor($('#ibar'), ex);
+  if($('#istep')) drawStepEditor($('#istep'), ex);
   $('#ihist').onclick=()=>openExerciseHistory(exId, ()=>openInfo(exId));
   $('#idiary').onclick=()=>openDiaryEntry(exId, ()=>openInfo(exId));
   // the dial for this exercise, and a focused deload
@@ -13218,6 +13257,29 @@ function openInfo(exId){
   };
 }
 
+/* Smallest jump for one exercise: the load steps the app suggests in. Changing
+   it never alters a logged set; it changes which loads are suggested from here on. */
+const STEP_CHOICES=[1.25,2.5,5,10,15,20,25];
+function drawStepEditor(host, ex){
+  if(ex.load==='bodyweight'){ host.remove(); return; }
+  const def=ex.custom?ex.inc:STEP_DEFAULT[ex.id], own=stepOverridden(ex);
+  const plates=ex.load==='barbell'&&!!ex.plateSet&&!own;
+  host.innerHTML=`<div class="qlab">Smallest jump</div>
+    <div class="row between sm"><span>${plates?'5 lb (a 2.5 lb plate each side)':fmt(ex.inc)+' lb'}</span><span class="dim tiny">${ex.custom?'your exercise':own?'set by you · library says '+fmt(def)+' lb':'library default'}</span></div>
+    <div class="anchor">The steps the app suggests loads in. When one step is 7% of the load or more, it asks for one rep past your range before adding load. Past sets don't change.</div>`;
+  const c=el('div','chips'); c.style.marginTop='8px';
+  STEP_CHOICES.forEach(v=>{ const b=el('button','chip',fmt(v)+' lb'); b.style.cssText='font-size:12.5px;padding:6px 10px';
+    b.setAttribute('aria-pressed',!plates&&Math.abs(ex.inc-v)<1e-9?'true':'false');
+    b.onclick=()=>{
+      if(ex.custom){ ex.inc=v; CFG.customEx=(CFG.customEx||[]).map(x=>x.id===ex.id?ex:x); }
+      else{ CFG.stepOverride=CFG.stepOverride||{}; if(Math.abs(v-def)<1e-9&&!(ex.load==='barbell'&&ex.plateSet)) delete CFG.stepOverride[ex.id]; else CFG.stepOverride[ex.id]=v; }
+      saveCfg(); applyStepOverrides(); render(); openInfo(ex.id); toast('Smallest jump: '+fmt(v)+' lb'); };
+    c.appendChild(b); });
+  host.appendChild(c);
+  if(own){ const r=el('button','btn s ghost','Reset to the library\'s '+(ex.load==='barbell'&&ex.plateSet?'plates':fmt(def)+' lb')); r.style.marginTop='8px';
+    r.onclick=()=>{ delete CFG.stepOverride[ex.id]; saveCfg(); applyStepOverrides(); render(); openInfo(ex.id); toast('Smallest jump reset'); };
+    host.appendChild(r); }
+}
 /* Bar weight for one exercise — used by the plate solver and shown in the
    set panel. Logged weights are totals, so changing it never alters a logged
    set; it changes which totals are loadable from here on. */
@@ -17855,7 +17917,7 @@ function finishImport(res){
     const {syncUrl:_s, feedbackUrl:_f, testerName:_n, ...rest}=res.cfgData||{};
     CFG={...CFG,...rest}; CFG.conditions=normalizeConditions(CFG.conditions); ROADMAP=(CFG.roadmap&&CFG.roadmap.length)?CFG.roadmap:ROADMAP;
     ROADMAP.forEach(b=>{ if(!b.vol||!b.vol.length) applyShape(b); });
-    mergeCustom(); applyBarOverrides();
+    mergeCustom(); applyBarOverrides(); applyStepOverrides();
     saveCfg();
   }
   render();

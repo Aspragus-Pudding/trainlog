@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','repPastFirst','STEP_DEFAULT'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -109,7 +109,9 @@ for(const [R0,RPE0] of LASTS) for(const [hn,hcount] of Object.entries(HISTORIES)
     if(R0<hi){
       if(chartFree) ok(same&&p.reps===Math.min(hi,R0+Math.max(1,Math.round(dir))),'easy mid-range: reps should add the full RPE gap',tag);
       else ok(same&&p.reps===R0+1,'easy mid-range: one more rep',tag);
-    }else ok(up,'easy at range top: no load increase',tag);
+    }else{ const past=/one rep past/.test(p.src);
+      ok(up||(past&&same&&R0===hi&&p.reps===hi+1&&(A.stepUp(slot,L0)-L0)/L0>=0.07),'easy at range top: no load increase',tag);
+      if(past) ok(R0===hi&&(A.stepUp(slot,L0)-L0)/L0>=0.07,'one rep past the range only at the top, on a step of 7%+',tag); }
   }else if(!atTarget&&dir<0){
     ok(!up,'hard set got more load',tag);
     // the coarse-step rule (v1.49): a small overshoot on a big step holds the load, one rep
@@ -123,7 +125,8 @@ for(const [R0,RPE0] of LASTS) for(const [hn,hcount] of Object.entries(HISTORIES)
     else ok(up,'chart-free: on target but strictly past ceiling should raise load',tag);
   }
   // every suggestion inside its range (the third report of "the range doesn't reach the suggestion")
-  ok(p.reps>=lo&&p.reps<=hi,'suggested reps outside the '+lo+'-'+hi+' range',tag);
+  // the one deliberate exception: one rep past the top on a coarse step (v1.51)
+  ok((p.reps>=lo&&p.reps<=hi)||(/one rep past/.test(p.src)&&p.reps===hi+1),'suggested reps outside the '+lo+'-'+hi+' range',tag);
   if(!chartFree&&inRange){
     const rtf=R0+(10-RPE0);
     if(dir>0&&R0>=hi&&rtf>16) ok(/too light to price/.test(p.note)&&/too light to price/.test(p.src),'off-chart set not reported',tag);
@@ -374,7 +377,11 @@ section('10. stagnation probe');
   const atTop=[];
   for(let i=0;i<3;i++) atTop.push(set('multihip_abd','t'+i,60,15,8,30-i*5));
   const pTop=load(atTop).stagnationProbe(slot);
-  ok(pTop&&pTop.lb>60&&pTop.reps===10,'stagnation probe at the range ceiling should step load, not reps',JSON.stringify(pTop));
+  // 60 lb on a 10 lb machine: a step is 17%, so one rep past the range first (v1.51)
+  ok(pTop&&pTop.lb===60&&pTop.reps===16&&/one rep past/.test(pTop.note),'stagnation probe at the ceiling on a coarse step: one rep past the range first',JSON.stringify(pTop));
+  const atTopH=[]; for(let i=0;i<3;i++) atTopH.push(set('multihip_abd','u'+i,200,15,8,30-i*5));
+  const pTopH=load(atTopH).stagnationProbe(slot);
+  ok(pTopH&&pTopH.lb>200&&pTopH.reps===10,'stagnation probe at the range ceiling on a fine step (5%) should step load, not reps',JSON.stringify(pTopH));
 
   // declined probe: logged numbers didn't match what was probed -> suppressed for 2 sessions
   const declineEv=flatHist(3,8).concat([
@@ -444,17 +451,17 @@ section('11. joint ladder');
   ok(imp.jointNoteFor('abduction').level===5,'with impingement, lateral raises count in full (abduction is the provoker)',JSON.stringify(imp.jointNoteFor('abduction')));
 
   // level 3 holds load on every set; the line names the joint
-  const hist=many(3,1).concat([set('incline_machine','h1',60,15,7,0.2)]);
+  const hist=many(3,1).concat([set('incline_machine','h1',200,15,7,0.2)]);   // 200: a 10 lb step is 5%, so the engine would add load
   const A3=load(hist), slot3={ex:'incline_machine',role:'primary',reps:[10,15],rpe:9,sets_target:3,sets:[],
     joint:A3.jointNoteFor('horizontal_press')};
   A3.setSession({id:'S3',slots:[slot3],adj:null,score:null});
   const unheld=A3.nextPrescription(slot3), s3=A3.suggestFor(slot3);
-  ok(unheld.lb>60,'precondition: without the ladder the engine would raise load',JSON.stringify(unheld));
-  ok(s3.lb===60&&s3.pr.reps===15,'level 3 must hold load at the last logged weight',JSON.stringify({lb:s3.lb,reps:s3.pr.reps}));
+  ok(unheld.lb>200,'precondition: without the ladder the engine would raise load',JSON.stringify(unheld));
+  ok(s3.lb===200&&s3.pr.reps===15,'level 3 must hold load at the last logged weight',JSON.stringify({lb:s3.lb,reps:s3.pr.reps}));
   ok(/shoulder: load held/.test(s3.why.line),'explanation line must say "shoulder: load held"',s3.why.line);
   slot3.sets=[{}];   // a later set in the same session: still held, still named
   const s3b=A3.suggestFor(slot3);
-  ok(s3b.lb===60&&/shoulder: load held/.test(s3b.why.line),'level 3 must hold and be named on later sets too',s3b.why.line);
+  ok(s3b.lb===200&&/shoulder: load held/.test(s3b.why.line),'level 3 must hold and be named on later sets too',s3b.why.line);
   // level 5: no rep increase either
   const A5=load(many(5,1).concat([set('incline_machine','h5',60,10,7,0.2)]));
   const slot5={ex:'incline_machine',role:'primary',reps:[10,15],rpe:9,sets_target:3,sets:[],joint:A5.jointNoteFor('horizontal_press')};
@@ -2345,6 +2352,51 @@ section('54. cut stacking · dial drift · bands · coarse-step hold · changelo
     ok(lines.length>=3&&lines.length<=5,'3–5 lines per entry',String(lines.length));
     ok(emb&&emb.version===ver&&JSON.stringify(emb.lines)===JSON.stringify(lines),'the embedded "what\'s new" matches CHANGELOG.md — run node tools/embed-changelog.js',JSON.stringify(emb&&emb.version)); }
   console.log('  cuts: one applies, the largest, sets too · dial: revealed + drift (300 random), traced, reset · bands = engine inputs · 7 Oct set 4 holds 70 × 10 · changelog in sync');
+}
+
+/* ─── 55. v1.51: smallest jump per exercise, and one rep past the range first ─── */
+section('55. smallest jump · one rep past the range on a coarse step');
+{
+  const mk=(ex,lo,hi,T)=>({ex,role:'accessory',reps:[lo,hi],rpe:T,sets:[],sets_target:3});
+  // the override reaches every step: up, down, loadable
+  { const A=load([]), C=A.getCFG(), sl=mk('incline_machine',10,15,8);
+    ok(A.exById.incline_machine.inc===10&&A.stepUp(sl,70)===80,'library step: 10 lb machine, 70 → 80','');
+    C.stepOverride={incline_machine:5}; A.applyStepOverrides();
+    ok(A.exById.incline_machine.inc===5&&A.stepUp(sl,70)===75&&A.stepDown(sl,70)===65&&A.loadable(sl,72)===70,'your 5 lb step: 70 → 75 up, 65 down, 72 loads as 70',JSON.stringify({up:A.stepUp(sl,70),dn:A.stepDown(sl,70)}));
+    C.stepOverride={}; A.applyStepOverrides();
+    ok(A.exById.incline_machine.inc===10,'reset: back to the library step','');
+    const b=mk('bench',3,5,8);
+    ok(A.stepUp(b,185)===190,'barbell default: the plate set (2.5 lb plates → 5 lb jumps)',String(A.stepUp(b,185)));
+    C.stepOverride={bench:2.5}; A.applyStepOverrides();
+    ok(A.stepUp(b,185)===187.5&&A.gridFloor(b,186)===185,'a barbell step you set bypasses the plate solver: 185 → 187.5',String(A.stepUp(b,185)));
+    C.stepOverride={}; A.applyStepOverrides(); }
+  // a custom exercise's step is its own definition, untouched by the override table
+  { const A=load([]), C=A.getCFG();
+    const cx={id:'cx_test',name:'Test machine',load:'machine',inc:7.5,vol:{chest:1},pattern:'horizontal_press',custom:true,prog:'double'};
+    C.customEx=[cx]; A.mergeCustom(); C.stepOverride={cx_test:20}; A.applyStepOverrides();
+    ok(A.exById.cx_test.inc===7.5,'custom exercises keep their own step (edited on the exercise itself)',String(A.exById.cx_test.inc)); }
+  // top of the range with reserve: one rep past it when a step is ≥ 7% of the load
+  { const run=(w,ov,ex)=>{ ex=ex||'incline_machine'; const A=load([set(ex,'l',w,15,7,1,{target:{reps:[10,15],rpe:8}})]);
+      if(ov){ A.getCFG().stepOverride={[ex]:ov}; A.applyStepOverrides(); } return A.nextPrescription(mk(ex,10,15,8)); };
+    let q=run(70);      ok(q.lb===70&&q.reps===16&&/one rep past/.test(q.src),'70 × 15 @ 7 on a 10 lb machine (14% step): 70 × 16 first',JSON.stringify(q));
+    q=run(70,5);        ok(q.lb===70&&q.reps===16,'your 5 lb step is still 7.1% of 70: rep first',JSON.stringify(q));
+    q=run(70,2.5);      ok(q.lb===72.5&&q.reps<=15,'a 2.5 lb step (3.6%): the load goes up',JSON.stringify(q));
+    q=run(200);         ok(q.lb>200&&q.reps<=15,'200 on a 10 lb machine (5%): the load goes up',JSON.stringify(q));
+    // after the rep past the range is done, the load goes up
+    const A=load([set('incline_machine','l',70,16,7.5,1,{target:{reps:[10,15],rpe:8}})]);
+    q=A.nextPrescription(mk('incline_machine',10,15,8));
+    ok(q.lb===80&&q.reps>=10&&q.reps<=15,'once 70 × 16 is done, the load goes up and reps come back into the range',JSON.stringify(q));
+    // dumbbell, chart path: 50 lb, 5 lb step = 10%
+    { const D=load([set('incline_db','l',50,12,7,1,{target:{reps:[8,12],rpe:8}})]); q=D.nextPrescription(mk('incline_db',8,12,8)); }
+    ok(q.lb===50&&q.reps===13,'chart path (dumbbell 50 × 12 @ 7, 5 lb = 10%): rep first too',JSON.stringify(q));
+    { const D=load([set('incline_db','l',50,15,6,1,{target:{reps:[10,15],rpe:8}})]); q=D.nextPrescription(mk('incline_db',10,15,8)); }
+    ok(q.lb>50,'…but a set too light to price at all (50 × 15 @ 6) takes the whole step',JSON.stringify(q));
+    // the guards keep it: a full session suggestion through the pipeline
+    const B=load([set('incline_machine','l',70,15,7,1,{target:{reps:[10,15],rpe:8}}),{type:'session_end',id:'e',ts:day(0.99),session_id:'l',joints:{}}]);
+    const sl=mk('incline_machine',10,15,8); B.setSession({id:'P',slots:[sl],openIdx:0,adj:null,score:0.7,ratings:{},startedAt:Date.now()});
+    const r=B.suggestFor(sl);
+    ok(r.lb===70&&r.pr.reps===16,'through the whole pipeline: still 70 × 16 (not re-fitted into the range)',JSON.stringify({lb:r.lb,reps:r.pr.reps,trace:r.trace})); }
+  console.log('  override reaches up/down/loadable, barbell bypasses plates, custom untouched · ≥7% step → one rep past the range, then load');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
