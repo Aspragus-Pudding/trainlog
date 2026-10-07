@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -98,7 +98,12 @@ for(const [R0,RPE0] of LASTS) for(const [hn,hcount] of Object.entries(HISTORIES)
   // the RPE-delta path holds within +/-0.5 of target (its own stated rule);
   // the chart path has always used exact equality — no change there
   const atTarget=chartFree?Math.abs(dir)<=0.5:dir===0;
-  if(!atTarget&&dir>0){
+  const inRange=R0>=lo&&R0<=hi;
+  if(!inRange){
+    // a last set outside the range is a different context: priced to the range edge (Oct 2026)
+    const edge=R0<lo?lo:hi, offc=chartFree?false:(R0+(10-RPE0)>16);
+    if(!offc&&!(chartFree&&R0>hi&&R0+(10-RPE0)>16)) ok(p.reps===edge||p.reps===Math.max(lo,Math.min(hi,p.reps)),'outside the range: priced to the nearest edge',tag);
+  }else if(!atTarget&&dir>0){
     ok(!down,'easy set got less load',tag);
     ok(!(same&&p.reps<R0),'easy set got same load, fewer reps',tag);
     if(R0<hi){
@@ -109,10 +114,13 @@ for(const [R0,RPE0] of LASTS) for(const [hn,hcount] of Object.entries(HISTORIES)
     ok(!up,'hard set got more load',tag);
     ok(down||(same&&p.reps<R0),'hard set not made easier',tag);
   }else{
+    // on target inside the range: hold exactly
     if(!chartFree||R0<=hi) ok(same&&p.reps===R0,'on target: not held exactly',tag);
     else ok(up,'chart-free: on target but strictly past ceiling should raise load',tag);
   }
-  if(!chartFree){
+  // every suggestion inside its range (the third report of "the range doesn't reach the suggestion")
+  ok(p.reps>=lo&&p.reps<=hi,'suggested reps outside the '+lo+'-'+hi+' range',tag);
+  if(!chartFree&&inRange){
     const rtf=R0+(10-RPE0);
     if(dir>0&&R0>=hi&&rtf>16) ok(/too light to price/.test(p.note)&&/too light to price/.test(p.src),'off-chart set not reported',tag);
     // priced pair: the returned (load, reps) should feel like the target, unless a whole step is forced
@@ -140,7 +148,9 @@ section('2. reported cases');
   ok(p.lb>170,'pulldown 170x11@7.5 load did not rise',JSON.stringify(p)); console.log('  lat pulldown 170x11@7.5 ->',p.lb,'x',p.reps,'|',p.src);
   ok(p.reps===6,'pulldown ceiling-hit should reset reps to the floor',JSON.stringify(p));
   p=run([set('multihip_abd','l',60,6,8.5,1)],{ex:'multihip_abd',role:'secondary',sets:3,reps:[8,12],rpe:8,sets_target:3});
-  ok(p.lb===60&&p.reps===6,'0.5 off target is within hold tolerance, should not change',JSON.stringify(p)); console.log('  hip abduction 60x6@8.5 (0.5 off target) ->',p.lb,'x',p.reps);
+  // 6 reps in an 8–12 range used to be held at 6 (the Oct 2026 "range doesn't reach the suggestion" bug):
+  // now it's priced back into the range at the floor
+  ok(p.reps===8&&p.lb<60,'below the range: priced to the floor, lighter',JSON.stringify(p)); console.log('  hip abduction 60x6@8.5 in an 8-12 range ->',p.lb,'x',p.reps);
   // RPE 9.5 vs target 9 is within the +/-0.5 hold tolerance (at target, not
   // harder), and 15 is exactly the ceiling, not past it — a normal,
   // correctly-dosed top set, so this holds (see index.html: firing a load-up
@@ -229,13 +239,21 @@ section('7. session mechanics');
   const mkSlot=id=>({ex:id,role:'accessory',reps:[8,12],rpe:8,sets_target:3,sets:[]});
   const S={id:'S',slots:[mkSlot('bench'),mkSlot('ohp'),mkSlot('curl')],openIdx:1,adj:null,ratings:{}};
   A.setSession(S);
-  // move the third exercise up: the open panel follows the exercise moved, not the one it displaced
-  A.moveSlot(2,-1);
-  ok(S.slots[1].ex==='curl'&&S.openIdx===1,'reorder up: panel did not follow moved exercise',`order ${S.slots.map(s=>s.ex)} open ${S.openIdx}`);
-  A.moveSlot(0,1);   // bench down one: it becomes the open one
-  ok(S.slots[1].ex==='bench'&&S.openIdx===1,'reorder down: panel did not follow moved exercise',`order ${S.slots.map(s=>s.ex)} open ${S.openIdx}`);
-  S.openIdx=0; A.moveSlot(2,-1);
-  ok(S.openIdx===1&&S.slots[1].ex===mkSlot('ohp').ex||S.openIdx===1,'reorder while another is open','');
+  // REORDERING NEVER MOVES THE PANEL — it stays on the exercise you have open. These tests used to
+  // assert the opposite (the panel followed the moved exercise), which is why "moving an exercise
+  // steals the Log Set panel" came back on v1.44.0 after being reported on v1.20.0.
+  const openEx=()=>S.slots[S.openIdx].ex;
+  A.moveSlot(2,-1);                                   // curl up past ohp, ohp open
+  ok(openEx()==='ohp','reorder up: the panel stays on the open exercise (ohp)',`order ${S.slots.map(s=>s.ex)} open ${openEx()}`);
+  A.moveSlot(0,1);                                    // bench down past curl
+  ok(openEx()==='ohp','reorder of two others: the panel stays on ohp',`order ${S.slots.map(s=>s.ex)} open ${openEx()}`);
+  const at=S.openIdx; A.moveSlot(at,-1);              // move the open exercise itself up
+  ok(openEx()==='ohp'&&S.openIdx===at-1,'moving the open exercise: the panel goes with it',`order ${S.slots.map(s=>s.ex)} open ${openEx()}`);
+  // mid-exercise: a logged set on the open one, then move something else — the draft is untouched
+  { const B=load(ev), T={id:'T',slots:[mkSlot('bench'),mkSlot('ohp'),mkSlot('curl')],openIdx:0,adj:null,ratings:{},startedAt:Date.now()};
+    B.setSession(T); B.seedDraft(T.slots[0]); const d=B.getDraft(); d.weight=140; d.reps=8; d.rpe=8; B.logSet(T.slots[0],0,'straight');
+    const w=B.getDraft().weight; B.moveSlot(2,-1);
+    ok(T.slots[T.openIdx].ex==='bench'&&B.getDraft().weight===w,'mid-exercise: moving another exercise keeps the panel and the draft (regression, reported twice)',T.slots[T.openIdx].ex+' '+B.getDraft().weight); }
   S.slots[0].sets.push({}); ok(A.moveSlot(0,1)===false,'moved an exercise that has logged sets','');
   // per-exercise set count on a collapsed card
   const sl=S.slots[2]; S.openIdx=0;
@@ -1990,6 +2008,54 @@ section('48. pain rules, phase plans, consent');
     const cs=Q.preSessionCues([{ex:'bench'},{ex:'squat'},{ex:'ohp'}]);
     ok(cs.length<=2&&cs[0].e.id==='el_hyperextension'&&cs[0].text===Q.INJ_BY.el_hyperextension.core_cue,'pre-session: at most 2 cues, structural first with its permanent core cue',JSON.stringify(cs.map(x=>x.e.id))); }
   console.log('  pain model + overrides · phase plan opt-in, proposed not automatic · consent · red flags gate only the plan · clearing works append-only');
+}
+
+/* ─── 49. an edited rep range is the range the suggestion uses (reported 3×: Oct 3, Oct 4, Oct 7) ─── */
+section('49. edited rep range reaches the suggestion');
+{
+  const cases=[['machine_raise',40,12,8,[10,15],[15,20]],['m_rd_fly',50,15,8,[10,15],[16,20]],['preacher',30,6,8,[8,15],null],['curl',25,8,9,[10,15],null],['bench',185,10,8,[6,8],[3,5]],['pulldown',150,6,8,[10,15],[8,12]]];
+  cases.forEach(([ex,w,r,rpe,r0,r1])=>{
+    const A=load([set(ex,'a',w,r,rpe,3,{target:{reps:r0,rpe}})]);
+    const slot={ex,role:'accessory',reps:r0.slice(),rpe,sets:[],sets_target:3};
+    A.setSession({id:'N',slots:[slot],openIdx:0,adj:null,ratings:{},startedAt:Date.now()});
+    let q=A.suggestFor(slot);
+    ok(q.pr.reps>=r0[0]&&q.pr.reps<=r0[1],ex+' '+w+'x'+r+': suggestion inside the '+r0.join('-')+' range',JSON.stringify({lb:q.lb,reps:q.pr.reps,src:q.pr.src}));
+    if(r1){
+      A.getCFG().repRanges={[ex]:r1}; A.applyRepRange(ex);
+      const s2=A.getSession().slots[0];
+      ok(JSON.stringify(s2.reps)===JSON.stringify(r1),ex+': the edit reaches today\'s slot',JSON.stringify(s2.reps));
+      q=A.suggestFor(s2);
+      ok(q.pr.reps>=r1[0]&&q.pr.reps<=r1[1],ex+': after editing the range to '+r1.join('-')+', the suggestion uses it',JSON.stringify({lb:q.lb,reps:q.pr.reps,src:q.pr.src}));
+      if(r1[0]>r) ok(q.lb<=w,ex+': more reps never come with more load',JSON.stringify({lb:q.lb,reps:q.pr.reps}));
+    }
+  });
+  console.log('  edited ranges reach the slot and the suggestion · suggestions always land inside the range');
+}
+
+/* ─── 51. soreness is local: sore legs never cut chest (Oct 4 report) ─── */
+section('51. soreness cuts only what it touches');
+{
+  const ev=[set('incline_machine','a',150,10,8,3),set('leg_press','a',400,10,8,3),set('preacher','a',35,10,8,3)];
+  const A=load(ev);
+  const mk=ex=>({ex,role:'primary',reps:[8,12],rpe:8,sets:[],sets_target:4});
+  const day={slots:[mk('leg_press'),mk('incline_machine'),mk('preacher')]};
+  const groups=A.soreGroupsFor(day);
+  const legG=groups.find(g=>/leg|quad/i.test(g))||groups[0];
+  const st={sleep:3,motivation:3,recovery:3,sore:Object.fromEntries(groups.map(g=>[g,g===legG?1:3])),joints:{}};
+  const adj=A.physicalCut(st,groups);
+  ok(adj&&!adj.global&&adj.groups.length>0,'very sore legs: a cut, scoped to the sore group',JSON.stringify(adj));
+  ok(A.adjHits(adj,'leg_press')&&!A.adjHits(adj,'incline_machine')&&!A.adjHits(adj,'preacher'),'it reaches leg press, not the chest press or curls','');
+  const S={id:'SC',slots:day.slots.map(x=>({...x})),openIdx:0,adj,score:0.5,ratings:{},startedAt:Date.now()};
+  A.setSession(S);
+  const free=load(ev); free.setSession({id:'F',slots:day.slots.map(x=>({...x})),openIdx:0,adj:null,score:0.7,ratings:{},startedAt:Date.now()});
+  ok(A.suggestFor(S.slots[1],{idx:1}).lb===free.suggestFor(free.getSession().slots[1],{idx:1}).lb,'chest press load unchanged by sore legs','');
+  ok(A.suggestFor(S.slots[0],{idx:0}).lb<free.suggestFor(free.getSession().slots[0],{idx:0}).lb,'leg press load is cut','');
+  A.applyReadinessSets(S);
+  ok(S.slots[0].sets_target===4+adj.sets&&S.slots[1].sets_target===4,'fewer sets only on the sore muscles\' main work',JSON.stringify(S.slots.map(x=>x.sets_target)));
+  const run={...st,recovery:1,sore:Object.fromEntries(groups.map(g=>[g,3]))};
+  const g2=A.physicalCut(run,groups);
+  ok(g2&&g2.global&&A.adjHits(g2,'incline_machine'),'run-down (rest of life) is whole-body: it still reaches everything','');
+  console.log('  soreness → only exercises training the sore group · rest-of-life stays session-wide');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

@@ -48,7 +48,7 @@ function boot(clock){
     'logSet','soreGroupsFor','readinessScore','physicalCut','jointNoteFor','ensureInitialTM','slotTrack','activeProposals','builderDefaults',
     'builderPlan','applyBuilder','rateOf','tmFor','toLb','loadable','rtfFromPct','pct1RM','bwOffset','isBW','JOINTS','jointLevel','jointTrend',
     'familyOf','splitFor','blockLen','stepUp','deloadSignals','mainEligible','dismissProposal','rateState','stallPlan','stallState','interventions',
-    'stallVideoWanted','FAMILY_STICKING','fatigueSignals'];
+    'stallVideoWanted','FAMILY_STICKING','fatigueSignals','applyReadinessSets'];
   const pick=names.map(n=>n+':(()=>{try{return '+n+'}catch(e){}})()').join(',');
   const body=src+'\n;return {'+pick+',getDraft:()=>draft,setSession:x=>{session=x},getSession:()=>session,getROADMAP:()=>ROADMAP,'+
     'setROADMAP:r=>{ROADMAP=r},getCFG:()=>CFG};';
@@ -138,7 +138,7 @@ function simulate(key){
       sess.score=A.readinessScore(st,sess.soreGroups); sess.adj=A.physicalCut(st,sess.soreGroups);
       sess.slots.forEach(sl=>{ const before=sl.joint; sl.joint=A.jointNoteFor(A.exById[sl.ex].pattern);
         if(sl.joint&&sl.joint.level>=4&&!(before&&before.level>=4)&&!sl.sets.length&&sl.sets_target>2) sl.sets_target--; });
-      if(sess.adj) sess.slots.slice(0,2).forEach(s=>{ s.sets_target=Math.max(1,s.sets_target+sess.adj.sets); });
+      A.applyReadinessSets(sess);
       // the lifter does the work
       const dayNoise=1+(R()*2-1)*P.noise;
       sess.slots.forEach((slot,i)=>{

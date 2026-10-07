@@ -9097,7 +9097,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.46.0';
+const APP_VERSION='1.47.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -9864,6 +9864,43 @@ function tracksFor(exId){
   return [...sigs].sort((a,b)=>a===''?-1:b===''?1:a.localeCompare(b));
 }
 
+/* How to do each rehab / prehab exercise: what it is, where you should feel
+   it, and the cues that matter. Standard physiotherapy descriptions written
+   for this app (Oct 2026) — not a substitute for your own clinician's
+   instructions. Illustrations: not yet. */
+const REHAB_HOWTO={
+  er_side:{what:'Elbow pinned to your side, bent to 90°, rotate your forearm outwards against a band or cable.',feel:'Back of the shoulder, behind and below the shoulder blade.',cues:['A rolled towel between elbow and ribs keeps the elbow in','Rotate only as far as you can without the elbow leaving your side','Slow back in — 2–3 seconds']},
+  er_sidelying:{what:'Lying on your side, top arm bent to 90° with the elbow on your hip, rotate a light dumbbell up towards the ceiling.',feel:'Back of the top shoulder.',cues:['Elbow stays glued to your side','Stop where the shoulder blade starts to move','Light — this is endurance, not strength']},
+  ir_side:{what:'Elbow at your side, bent to 90°, rotate your forearm in across your stomach against a band or cable.',feel:'Front of the shoulder and chest.',cues:['Elbow stays at your side','Control it back out — don\'t let the band snap it open','Small range is fine']},
+  iso_er:{what:'Elbow at your side, bent to 90°, press the back of your hand into a wall or doorframe and hold — no movement.',feel:'Back of the shoulder, building tension without moving.',cues:['Build to about 30–50% effort','Breathe while you hold','No pain — ease off if it pinches']},
+  serratus_punch:{what:'Lying on your back (or standing with a cable), arm straight up, push your fist towards the ceiling so the shoulder blade wraps forward.',feel:'Side of your ribs, under the armpit.',cues:['Elbow stays straight — the movement is the shoulder blade','Reach, pause, lower slowly','Small movement, a few centimetres']},
+  scap_pushup:{what:'In a push-up or kneeling plank with straight arms, let your chest sink between your shoulder blades, then push the floor away to spread them.',feel:'Between and around the shoulder blades, side of the ribs.',cues:['Arms stay straight the whole time','Spread the shoulder blades as wide as you can at the top','Slow on the way down']},
+  prone_t:{what:'Face down, arms out to the sides with thumbs up, lift your arms slightly off the floor or bench by squeezing your shoulder blades.',feel:'Middle back, between the shoulder blades.',cues:['Squeeze the shoulder blades together and down, not up to your ears','Small lift, short hold','Very light or no weight']},
+  rhythmic_stab:{what:'Arm held in a set position (straight up while lying, or out in front) while a partner or band gives small quick pushes in different directions — you hold still.',feel:'All around the shoulder, working to keep it steady.',cues:['Hold the position — don\'t chase the pushes','Start with the arm in a comfortable, safe position','Short bouts, 20–30 seconds']},
+  quadruped_shift:{what:'On hands and knees, slowly shift your weight forward over your hands, side to side and back.',feel:'Shoulders and shoulder blades, working to stay stable.',cues:['Push the floor away so your back doesn\'t sag between the shoulder blades','Small, controlled shifts','Stay in a range that feels secure']},
+  bear_hold:{what:'On hands and toes with knees hovering just off the floor, back flat — hold.',feel:'Shoulders, abs and front of the thighs.',cues:['Knees an inch off the floor','Push the floor away with your hands','Breathe; back stays flat']},
+  low_trap:{what:'Face down or leaning on an incline bench, arm out at a diagonal (a Y, kept below shoulder height for instability), thumb up, lift by drawing the shoulder blade down and back.',feel:'Lower middle back, below the shoulder blade.',cues:['Shoulder blade moves down and back, not up to your ear','Stay below 90° if your shoulder is unstable','Very light']},
+  scaption:{what:'Standing, arms angled about 30° forward of your sides, thumbs up, raise to about shoulder height.',feel:'Top and front of the shoulder.',cues:['Thumbs up the whole time','Stop at shoulder height or lower','Slow up, slower down']},
+  belly_press:{what:'Press your palm into your stomach with your elbow forward, as if trying to push your hand through your belly, and hold.',feel:'Front of the shoulder, deep.',cues:['Keep the elbow forward of your body, not dropping back','Wrist straight','Moderate effort, steady hold']},
+  jps_drill:{what:'Eyes closed, move your arm to a target position (e.g. halfway up), then check how close you were and repeat.',feel:'Not much effort — it trains your sense of where the arm is.',cues:['Slow, deliberate movements','Use positions that feel safe','A partner or mirror can check you']},
+  thoracic_ext:{what:'Foam roller across your upper back, hands behind your head supporting your neck, gently extend back over the roller.',feel:'A stretch through the upper back.',cues:['Keep your lower back and ribs down — the movement is the upper back','Move the roller up a few centimetres between sets','Breathe out as you extend']},
+  tib_raise:{what:'Back against a wall, heels a foot or so out, lift your toes and the balls of your feet towards your shins.',feel:'Front of your shins.',cues:['Heels stay on the floor','Full range: toes as high as they go','Slow lower']},
+  slant_squat:{what:'Squat with your heels on a slant board (or plates) so your knees travel forward over your toes, torso upright.',feel:'Front of the thighs and the tendon just below the kneecap.',cues:['Stay upright; let the knees go forward','Depth that keeps knee pain at 3/10 or less','Slow down, steady up']},
+  atg_split:{what:'A deep split squat where the front knee travels well past the toes and the back leg stays fairly straight.',feel:'Front of the front thigh and the back leg\'s hip flexor.',cues:['Start shallow and earn the depth','Front heel stays down','Use support for balance; don\'t force range']},
+  wrist_ext_iso:{what:'Forearm resting on your thigh, palm down, push the back of your hand up against your other hand or a fixed object and hold.',feel:'Top of the forearm, just below the outside of the elbow.',cues:['Wrist straight, no movement','Moderate effort — pain no more than mild','Hold 30–45 seconds']},
+  ecc_wrist_ext:{what:'Palm down, forearm supported, use your other hand to lift a light dumbbell up, then lower it slowly with the working wrist.',feel:'Top of the forearm.',cues:['Lower over 3–4 seconds','Use the other hand to lift it back up','Light enough to keep pain mild']},
+  ecc_wrist_flex:{what:'Palm up, forearm supported, use your other hand to lift a light dumbbell up, then lower it slowly with the working wrist.',feel:'Inside of the forearm, near the inside of the elbow.',cues:['Lower over 3–4 seconds','Help it back up with the other hand','Light weight']},
+  bird_dog:{what:'On hands and knees, reach one arm forward and the opposite leg back until both are level with your body, hold, return.',feel:'Back extensors, glutes and deep abs.',cues:['Back stays flat — no twisting or arching','Reach long rather than lifting high','Slow, with a short hold']},
+  side_plank:{what:'On your side, propped on your forearm (elbow under shoulder), lift your hips so your body is in a straight line.',feel:'Side of your trunk and the side of your hip.',cues:['Elbow directly under the shoulder','Hips up and slightly forward','Start from the knees if needed']}
+};
+/* One-line explanations for the set types (and "what's the difference?"). */
+const TECH_HELP={
+  straight:'Normal sets: rest, then the next set.',
+  myo:'Myo-reps: one hard "activation" set close to failure, then short mini-sets of a few reps with 3–5 breaths between — same weight. Lots of hard reps in little time.',
+  rest_pause:'Rest-pause: one set to near failure, rest 10–20 seconds, then squeeze out a couple more reps, once or twice. Like myo-reps, but fewer, slightly longer pauses and fewer bursts.',
+  drop:'Drop set: a set to near failure, then immediately take about 20% off and keep going.',
+  amrap:'All-out: one set of as many reps as you can at this weight, stopping when the next rep would break form.'
+};
 /* One compact editor for a slot's modifiers — used mid-session, in the
    workout preview and in the week view. onSave(cleanModsOrUndefined). */
 function openModifierEditor(exId, cur, onSave, onCancel){
@@ -11329,7 +11366,40 @@ const draftLocked=()=>{ const L=draft.lock||{}; return !!(L.w||L.r||L.rpe); };
       The RPE-delta path has no chart, so this can't happen there.
    Returns null lb when there's no history — the UI shows a dash rather than
    inventing a number. */
+/* Every suggestion lands inside the rep range it was given (reported three
+   times — Oct 3 rear-delt fly, Oct 4 preacher curl, Oct 7 lateral raise).
+   The range always reached the slot; the pricing just never fitted its answer
+   to it, so a 12-rep set kept suggesting 12 after the range became 15–20, and
+   6 reps on an 8–15 curl suggested 4. One step after pricing, both paths:
+   when the suggestion's reps fall outside the range, it's re-priced from
+   your last set to the nearest edge of the range at the target RPE (the
+   chart's RATIO between two rep counts, as the e1RM uses — so it prices the
+   same for machines). A suggestion already inside the range is untouched, so
+   double progression (top of the range → load up, back to the floor) and
+   the direction rules work as before. Load and reps never both rise. */
+/* %1RM for a reps-to-failure count, extended past the chart's 16 at 2.5
+   points per rep (floor 30%) so a 15–20 range can be priced. The extension is
+   a judgement default, Grade D — the chart itself stops at 16. */
+const pctExt=n=>n<=16?pct1RM(n):Math.max(30,PCT[16]-(n-16)*2.5);
 function nextPrescription(slot){
+  const r=nextPrescriptionCore(slot);
+  if(!r||r.lb==null||!slot.reps) return r;
+  const lo=slot.reps[0], hi=slot.reps[1];
+  if(r.reps>=lo&&r.reps<=hi) return r;
+  const edge=r.reps<lo?lo:hi;
+  const tr=slotTrack(slot), last=lastSetFor(tr.ex,tr.sig,priceClass(slot));
+  if(!last||last.rpe==null) return {...r, reps:edge};
+  const ex=exById[slot.ex], off=bwOffset(ex), L0=toLb(last.weight), R0=last.reps, T=aimFor(slot).T;
+  const p0=pctExt(R0+(10-last.rpe)), p1=pctExt(edge+(10-T));
+  if(p0==null||p1==null) return {...r, reps:edge};
+  let lb=gridFloor(slot,Math.max(0,(L0+off)*p1/p0-off));
+  if(lb>L0+1e-6&&edge>R0) lb=L0;                     // never more load AND more reps
+  const rng=fmtRange(slot.reps);
+  return {...r, lb, reps:edge, src:'priced for your range',
+    note:'Last set '+fmt(L0,0)+' × '+R0+' @ RPE '+last.rpe+(R0<lo||R0>hi?' was outside your '+rng+' range':' leaves the next set outside your '+rng+' range')
+      +', so it\'s priced to '+edge+' reps at RPE '+T+': '+fmt(lb,0)+'.'};
+}
+function nextPrescriptionCore(slot){
   const ex=exById[slot.ex], tr=slotTrack(slot), cls=priceClass(slot);
   const last=lastSetFor(tr.ex,tr.sig,cls);
   const off=bwOffset(ex);
@@ -11566,8 +11636,25 @@ function physicalCut(st, groups){
   const sig=[];
   if(ts===t) sig.push('sore '+(soreLabel||'muscles'));
   if(tr===t) sig.push(rec<=1?'run-down':'life stress');
-  return t===2?{load:0.90, sets:-2, label:'Reduced', signal:sig.join(' and ')}
-              :{load:0.95, sets:-1, label:'Slightly reduced', signal:sig.join(' and ')};
+  // SCOPE: soreness is local — only the groups at the cutting tier, and only
+  // exercises that train them (Oct 2026: sore quads and hamstrings cut chest
+  // and biceps too). "Rest of life" is whole-body, so it stays session-wide.
+  const soreAt=ts===t?(groups||[]).filter(g=>st.sore[g]!=null&&tier(st.sore[g],'soreness')===t):[];
+  const base=t===2?{load:0.90, sets:-2, label:'Reduced'}:{load:0.95, sets:-1, label:'Slightly reduced'};
+  return {...base, signal:sig.join(' and '), groups:soreAt, global:tr===t};
+}
+/* Does today's readiness cut reach this exercise? Session-wide for "rest of
+   life"; otherwise only exercises whose main muscles are in a sore group. */
+function adjHits(adj, exId){
+  if(!adj) return false;
+  if(adj.global||!adj.groups) return true;
+  const ex=exById[exId]; if(!ex) return false;
+  return Object.entries(ex.vol||{}).some(([m,w])=>w>=1&&adj.groups.includes(MUSCLE_GROUP[m]));
+}
+/* Fewer sets on the main work the cut reaches: the first two such exercises. */
+function applyReadinessSets(sess){
+  if(!sess||!sess.adj||!sess.adj.sets) return;
+  sess.slots.filter(sl=>adjHits(sess.adj,sl.ex)).slice(0,2).forEach(sl=>{ sl.sets_target=Math.max(1,sl.sets_target+sess.adj.sets); });
 }
 
 let TAB='dash', session=null, draft={weight:135,reps:5,rpe:8,unit:'lb',tech:'straight',group:null,alt:null};
@@ -11923,14 +12010,11 @@ function pctOfBest(slot, lb){
 function moveSlot(i, dir){
   const j=i+dir, sl=session.slots;
   if(j<0||j>=sl.length||sl[i].sets.length) return false;
-  const moved=sl[i], wasOpen=session.openIdx===i;
   [sl[i],sl[j]]=[sl[j],sl[i]];
-  if(draft.group){
-    if(session.openIdx===i) session.openIdx=j; else if(session.openIdx===j) session.openIdx=i;
-  }else{
-    session.openIdx=j;
-    if(!wasOpen) seedDraft(moved);
-  }
+  // The set panel stays on the exercise you have open — reordering never moves it.
+  // It used to jump to whichever exercise was moved (and reseed the draft), so moving
+  // anything mid-exercise stole the panel (reported on v1.20.0 and again on v1.44.0).
+  if(session.openIdx===i) session.openIdx=j; else if(session.openIdx===j) session.openIdx=i;
   saveSession(); return true;
 }
 /* +/- sets on any exercise, open or not. Never below what is already logged. */
@@ -12020,6 +12104,15 @@ function renderRehab(v){
       +'<div class="dim tiny">'+esc(m.dose)+' · '+esc(m.why)+'</div></span>';
     r.onclick=()=>{ m.done=!m.done; saveSession(); renderWork(); };
     b.appendChild(r);
+    const how=REHAB_HOWTO[m.ex];
+    if(how){
+      const open=!!(session.rehabHow||{})[m.ex];
+      const t=el('button','warmtog',(open?'How to do it ▾':'How to do it ▸')); t.style.cssText='margin:-4px 0 4px 38px;width:auto';
+      t.onclick=e=>{ e.stopPropagation(); session.rehabHow={...(session.rehabHow||{}),[m.ex]:!open}; saveSession(); renderWork(); };
+      b.appendChild(t);
+      if(open){ const d=el('div','anchor'); d.style.margin='0 0 8px 38px';
+        d.innerHTML=esc(how.what)+'<br><b>Feel it:</b> '+esc(how.feel)+'<br>'+how.cues.map(c=>'· '+esc(c)).join('<br>'); b.appendChild(d); }
+    }
   });
   b.appendChild(el('div','dim tiny','Chosen from your conditions, joint trends and today\'s work. Doses are starting points, not prescriptions. Doesn\'t count toward training volume.')).style.marginTop='7px';
   const sk=el('button','','Skip rehab today');
@@ -12038,7 +12131,7 @@ function renderWork(){
     a.style.cssText='background:var(--warn-soft);border-left:3px solid var(--warn)';
     a.innerHTML=`<div style="font-weight:650;color:var(--warn);font-size:14.5px">${esc(session.adj.label)} for today</div>
       <div class="muted tiny" style="margin-top:3px">
-        Top loads at ${Math.round(session.adj.load*100)}%, ${Math.abs(session.adj.sets)} fewer set${Math.abs(session.adj.sets)>1?'s':''} on the main work,
+        Top loads at ${Math.round(session.adj.load*100)}%, ${Math.abs(session.adj.sets)} fewer set${Math.abs(session.adj.sets)>1?'s':''} on the main work${session.adj.global||!session.adj.groups?'':' for '+session.adj.groups.map(g=>(GROUP_LABEL[g]||g).toLowerCase()).join(' and ')+' only'},
         longer warmup ramp. Driven by ${esc(session.adjReason)} — readiness ${session.score.toFixed(2)}.</div>`;
     v.appendChild(a);
   }
@@ -13002,6 +13095,9 @@ function openInfo(exId){
       familyOf(ex)!=='isolation'?' · '+esc(FAMILY_LABEL[familyOf(ex)])+' family':''}${
       parentEx?' · a version of '+esc(parentEx.name):''}</div>
     ${tipsHtml}
+    ${REHAB_HOWTO[exId]?`<div class="qblock"><div class="qlab">How to do it</div><div class="sm">${esc(REHAB_HOWTO[exId].what)}</div>
+      <div class="sm" style="margin-top:6px"><b>Feel it:</b> ${esc(REHAB_HOWTO[exId].feel)}</div>
+      <div class="muted tiny" style="margin-top:6px">${REHAB_HOWTO[exId].cues.map(c=>'· '+esc(c)).join('<br>')}</div></div>`:''}
     <div class="qblock" id="inotes"></div>
     ${(()=>{const f=flagFor(exId); if(!f) return '';
       const col=f.level==='red'?'var(--danger)':f.level==='ok'?'var(--ok)':f.level==='note'?'var(--muted)':'var(--warn)';
@@ -13409,6 +13505,7 @@ function entryPanel(slot,idx){
     tp.appendChild(c);
   });
   p.appendChild(tp);
+  if(draft.tech!=='straight'&&draft.tech!=='amrap'&&TECH_HELP[draft.tech]) p.appendChild(el('div','dim tiny',esc(TECH_HELP[draft.tech]))).style.marginTop='6px';
   if(draft.tech==='amrap'){
     const f0=flagFor(slot.ex,slot.modifiers), f=isWarning(f0)?f0:null, heavyBar=ex.load==='barbell'&&familyOf(ex)!=='isolation';
     p.appendChild(el('div','dim tiny','All-out: as many reps as you can at this weight, stopping when the next rep would break form. Logged at RPE 10 — it shows the app how your RPE ratings line up with reps actually left. It doesn\'t change your training max or push up your next sets.'
@@ -13731,7 +13828,7 @@ function explainRx(slot, pr, o){
       +(got===cut?'':got>0?'Rounded to this machine\'s '+exById[slot.ex].inc+' lb steps, the actual change is −'+got+'%.'
         :'That rounds back to the same load on this machine ('+exById[slot.ex].inc+' lb steps), so the load does not change.'));
   }
-  if(session&&session.adj&&session.adj.sets&&o.idx!=null&&o.idx>=0&&o.idx<2&&o.fresh!==false){
+  if(session&&session.adj&&session.adj.sets&&o.idx!=null&&o.idx>=0&&o.fresh!==false&&session.slots.filter(sl=>adjHits(session.adj,sl.ex)).slice(0,2).includes(session.slots[o.idx])){
     const n=Math.abs(session.adj.sets);
     detail.push('Readiness also removed '+n+' set'+(n>1?'s':'')+' from the first two exercises.');
   }
@@ -13832,7 +13929,7 @@ function suggestFor(slot){
   }
   let lb=pr.lb;
   const pct=(a,b)=>a>0?Math.round((1-b/a)*100):0;    // what the cut actually did after rounding to the machine's steps
-  if(lb!=null&&o.fresh&&session&&session.adj){ const b=lb; lb=loadable(slot, lb*session.adj.load); o.adj=session.adj; o.adjApplied=pct(b,lb); }
+  if(lb!=null&&o.fresh&&session&&session.adj&&adjHits(session.adj,slot.ex)){ const b=lb; lb=loadable(slot, lb*session.adj.load); o.adj=session.adj; o.adjApplied=pct(b,lb); }
   if(lb!=null&&o.fresh&&slot.joint&&slot.joint.level>=4){ const b=lb; lb=loadable(slot, lb*0.9); o.jointCut=true; o.jointApplied=pct(b,lb); }
   return {pr, lb, why:explainRx(slot,pr,o), o};
 }
@@ -15546,9 +15643,8 @@ function openCheckin(){
     });
     if(adj){
       session.adjReason=adj.signal;
-      // fewer sets on the main work only — accessories keep their volume
-      session.slots.slice(0,2).forEach(s=>
-        s.sets_target=Math.max(1, s.sets_target+adj.sets));
+      // fewer sets on the main work the cut reaches — accessories keep their volume
+      applyReadinessSets(session);
     }
     session.prep=buildPrep({slots:session.slots}, session.readiness).map(m=>({...m,done:false}));
     seedDraft(session.slots[0]); saveSession();
@@ -17478,7 +17574,7 @@ function demoTrain(weeks, P, o){
         session.readiness={sleep:st.sleep,motivation:st.motivation,recovery:st.recovery,sore:st.sore,joints:st.joints};
         session.score=readinessScore(st,session.soreGroups); session.adj=physicalCut(st,session.soreGroups);
         session.slots.forEach(sl=>{ sl.joint=jointNoteFor(exById[sl.ex].pattern); if(sl.joint&&sl.joint.level>=4&&sl.sets_target>2) sl.sets_target--; });
-        if(session.adj) session.slots.slice(0,2).forEach(s=>{ s.sets_target=Math.max(1,s.sets_target+session.adj.sets); });
+        applyReadinessSets(session);
         const dayNoise=1+(R()*2-1)*P.noise;
         session.slots.forEach((slot,i)=>{
           session.openIdx=i; seedDraft(slot);
