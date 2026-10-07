@@ -35,6 +35,16 @@ suggestion log and shown as "Why these numbers" on the Progress tab.
 | `floor` | exercise | load ≥ 85% of the best completed load in the last 6 sessions (exempt: focused_deload, ladder ≥ 4, range_fit first fit, deload weeks) | guard |
 | `both_up` | exercise | load and reps never both rise | guard |
 
+By design:
+
+- **Readiness has no Orange band.** The global items only ever do three
+  things: nothing (Green), stop a step up at a 2 (Yellow), or the sick-day
+  step down at a 1 (Red). There is no in-between action, so there is no
+  in-between band. Soreness is local and isn't banded.
+- **RPE 10 counts as a missed rep.** No reps were left, so it can trigger
+  a load cut on a coarse step (`coarseHold`). Otherwise, with a target of
+  9, target + 1.5 is past 10 and a cut could never happen.
+
 Judgement defaults (Grade D): the 85% floor over 6 sessions, the ±1 RPE
 ceiling window, the 8-session dial window and 4-session drift, the
 3-session ramp-back, the weekly-sets range.

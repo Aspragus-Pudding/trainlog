@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.49.1 — 2026-10-07
+- The dashboard no longer shows an all-joints comfort average. It could read 98 next to a shoulder rated Red.
+- Joints now lead with the worst one, for example "Shoulder: Red, load held", and list the others under it.
+- Wording tidy-up on the readiness and fatigue lines.
+
 ## 1.49.0 — 2026-10-07
 - Cuts no longer add up. If you're run down, sore and a joint is flagged on the same day, an exercise gets the largest single cut, not all of them. "Why these numbers" shows which one applied.
 - A small overshoot on a machine with big jumps no longer drops a whole step. If one step down is 7% of the load or more, the load holds and you aim one rep fewer, never below your range. A load cut needs RPE 1.5 over target or a missed rep.

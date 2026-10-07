@@ -8531,7 +8531,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
   }
 }
 </script>
-<script type="application/json" id="whats-new">{"version":"1.49.0","lines":["Cuts no longer add up. If you're run down, sore and a joint is flagged on the same day, an exercise gets the largest single cut, not all of them. \"Why these numbers\" shows which one applied.","A small overshoot on a machine with big jumps no longer drops a whole step. If one step down is 7% of the load or more, the load holds and you aim one rep fewer, never below your range. A load cut needs RPE 1.5 over target or a missed rep.","The dashboard bands now match what the app does. Readiness uses sleep, motivation and rest of life only, the same inputs as the suggestions. Joints are compared with your usual. Fatigue has a band too. Each line says what the app is doing about it.","Progress → Suggestions charts how often you landed on target, next to how often you lifted as suggested.","When the dial has moved from your setting because of what you've been lifting, the explanation says so every time."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.49.1","lines":["The dashboard no longer shows an all-joints comfort average. It could read 98 next to a shoulder rated Red.","Joints now lead with the worst one, for example \"Shoulder: Red, load held\", and list the others under it.","Wording tidy-up on the readiness and fatigue lines."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9098,7 +9098,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.49.0';
+const APP_VERSION='1.49.1';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -10866,26 +10866,6 @@ function jointNoteFor(pattern){
   return {level:jl, joint:jname, msg:JOINT_MSG[jl], info};
 }
 const JOINT_MSG={2:'longer warmup',3:'load held',4:'load reduced, one set fewer',5:'no progression'};
-/* One cumulative number for the Dashboard — averages every tracked joint's
-   comfort (same 0-100 inversion the Progress-tab sparklines use) over the
-   same rolling window jointTrend() already reads. A joint never flagged
-   still counts as comfortable (that's what "overall" means); null only
-   when there's no check-in data at all yet. Nothing new is stored — this
-   is a pure aggregate computed on read, same as everything else here. */
-function overallJointScore(){
-  const vals=JOINTS.map(j=>jointTrend(j,6)).filter(t=>t.n>0);
-  if(!vals.length) return null;
-  // mean is the average per-session weight (0 untouched … 2 bad) — the same
-  // basis as jointComfortSeries, so the dashboard and Progress agree
-  const comforts=vals.map(t=>Math.max(0,Math.min(100,Math.round(100-t.mean*50))));
-  return Math.round(comforts.reduce((a,b)=>a+b,0)/comforts.length);
-}
-function jointScoreLabel(score){
-  if(score>=85) return 'No issues';
-  if(score>=65) return 'Normal';
-  if(score>=45) return 'Some soreness';
-  return 'Flagged — see Progress';
-}
 const JOINT_ACTION={
   1:'No action — logged only',
   2:'Longer warmup ramp, consider a variation swap. No load change.',
@@ -11900,30 +11880,25 @@ function renderDash(){
   v.appendChild(cw);
 
   const lastReadiness=[...LOG].reverse().find(e=>e.type==='readiness');
-  const jointScore=overallJointScore();
-  if(lastReadiness||jointScore!=null){
+  const bands=dashBands(lastReadiness);
+  if(lastReadiness||bands.some(b=>b.joint)){
     const rc=el('div','card pad');
-    const cols=[];
+    let head='';
     if(lastReadiness){
       const score=readinessScoreFromEvent(lastReadiness);
-      cols.push(`<span class="grow"><div class="row between"><span style="font-weight:650">Readiness score</span>
+      head=`<div class="row between"><span style="font-weight:650">Readiness score</span>
           <span class="dim tiny">${new Date(lastReadiness.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></div>
         <div style="margin-top:6px"><span class="rscore" style="font-size:27px;font-weight:790;letter-spacing:-.03em">${Math.round(score*100)}</span>
           <span class="muted sm"> / 100 · ${esc(readinessLabel(score))}</span></div>
-        <div class="dim tiny" style="margin-top:2px">Sets your warm-up length</div></span>`);
+        <div class="dim tiny" style="margin-top:2px">Sets your warm-up length</div>`;
     }
-    if(jointScore!=null){
-      cols.push(`<span class="grow"><div style="font-weight:650">Joint comfort</div>
-        <div style="margin-top:6px"><span style="font-size:27px;font-weight:790;letter-spacing:-.03em">${jointScore}</span>
-          <span class="muted sm"> / 100 · ${esc(jointScoreLabel(jointScore))}</span></div>
-        <div class="dim tiny" style="margin-top:2px">Last 6 sessions, all joints</div></span>`);
-    }
-    // the bands: the same four words, each computed from what the engine actually reads
-    const rows=dashBands(lastReadiness).map(b=>`<div class="row" style="gap:9px;align-items:baseline;margin-top:7px">
-        <span class="tiny" style="flex:none;width:52px;font-weight:700;color:${BAND_COLOR[b.band]}">${b.band}</span>
-        <span class="sm grow"><b>${esc(b.what)}</b> <span class="dim">· ${esc(b.does)}</span></span></div>`).join('');
-    rc.innerHTML=`<div class="row" style="align-items:flex-start;gap:16px">${cols.join('')}</div>`
-      +(rows?`<div style="margin-top:10px;padding-top:4px;border-top:1px solid var(--line)">${rows}</div>`:'');
+    // the bands: the same four words, each computed from what the engine actually reads.
+    // Joints headline the worst one; the others sit under it (no all-joints average — it
+    // contradicted the worst joint and nobody acts on it)
+    const rows=bands.map(b=>`<div class="row" style="gap:9px;align-items:baseline;margin-top:${b.sub?3:7}px">
+        <span class="tiny" style="flex:none;width:52px;font-weight:700;color:${BAND_COLOR[b.band]}${b.sub?';opacity:.8':''}">${b.band}</span>
+        <span class="${b.sub?'tiny':'sm'} grow"><b>${esc(b.what)}</b><span class="dim">${b.sub?' · ':', '}${esc(b.does)}</span></span></div>`).join('');
+    rc.innerHTML=head+`<div style="${head?'margin-top:10px;padding-top:4px;border-top:1px solid var(--line)':''}">${rows}</div>`;
     v.appendChild(rc);
   }
 
@@ -15364,7 +15339,7 @@ const worseBand=(a,b)=>BAND_ORDER[Math.max(BAND_ORDER.indexOf(a),BAND_ORDER.inde
 const BAND_COLOR={Green:'var(--ok)', Yellow:'var(--warn)', Orange:'color-mix(in srgb, var(--warn), var(--danger))', Red:'var(--danger)'};
 /* What the ladder does at each level — the bands' action line for joints. */
 const JOINT_BAND={1:'Green',2:'Yellow',3:'Orange',4:'Red',5:'Red'};
-const JOINT_DOES={1:'No change', 2:'Longer warm-up; loads unchanged', 3:'Load held on these movements', 4:'Load −10% and one set fewer on these movements', 5:'No progression on these movements'};
+const JOINT_SHORT={1:'no change', 2:'longer warm-up, loads unchanged', 3:'load held', 4:'load −10%, one set fewer', 5:'no progression'};
 /* Joint band: your latest rating against your usual (the baseline the ladder
    already uses — jointUsual, else the rolling median), in rating steps (none,
    mild, moderate, bad): at or under it Green, one over Yellow, two Orange, more
@@ -15382,7 +15357,7 @@ function jointBand(joint){
 /* Readiness band: from the three global items only (sleep, motivation, rest of
    life) — exactly what the engine's global_readiness / sick_day read, so the
    dashboard and the suggestions can't disagree. Soreness is local, not banded. */
-const READY_DOES={Green:'Full plan', Yellow:'No step up today — loads hold where they would have gone up', Red:'Sick day: one step lighter on everything, today only'};
+const READY_DOES={Green:'full plan', Yellow:'no step up today — loads hold where they would have gone up', Red:'sick day: one step lighter on everything, today only'};
 /* Fatigue band: how many of the deload signals are showing (readiness falling,
    same weights feeling harder, a joint at ladder level 3+). Judgement default,
    Grade D: 1 / 2 / 3 signals → Yellow / Orange / Red. */
@@ -15398,13 +15373,21 @@ function dashBands(lastReadiness){
   }
   const js=JOINTS.map(jointBand).filter(Boolean);
   if(js.length){
-    const worst=js.reduce((a,b)=>BAND_ORDER.indexOf(b.band)>BAND_ORDER.indexOf(a.band)||(b.band===a.band&&b.level>a.level)?b:a);
-    const name=worst.joint.charAt(0).toUpperCase()+worst.joint.slice(1);
-    out.push({what:worst.band==='Green'?'Joints':name, band:worst.band,
-      does:worst.band==='Green'?'At or under your usual — no change':(worst.over>0?(worst.over===1?'one':worst.over===2?'two':'three')+' step'+(worst.over>1?'s':'')+' over your usual. ':'')+JOINT_DOES[worst.level]});
+    const rank=b=>BAND_ORDER.indexOf(b.band)*10+b.level;
+    js.sort((a,b)=>rank(b)-rank(a));
+    const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+    const line=b=>JOINT_SHORT[b.level]+(b.over>0?' · '+(b.over===1?'one step':b.over===2?'two steps':'three steps')+' over your usual':'');
+    const [worst,...rest]=js;
+    if(worst.band==='Green') out.push({joint:true, what:'Joints', band:'Green', does:'all at or under your usual — no change'});
+    else{
+      out.push({joint:true, what:cap(worst.joint), band:worst.band, does:line(worst)});
+      rest.filter(b=>b.band!=='Green').forEach(b=>out.push({joint:true, sub:true, what:cap(b.joint), band:b.band, does:line(b)}));
+      const ok=rest.filter(b=>b.band==='Green').map(b=>cap(b.joint));
+      if(ok.length) out.push({joint:true, sub:true, what:ok.join(', '), band:'Green', does:'at or under your usual'});
+    }
   }
   const f=fatigueBand(), onDeload=(currentPhase()||{}).onDeload;
-  out.push({what:'Fatigue', band:f.band, does:f.n?(onDeload?'Deload in progress':'A deload is suggested — your call. Stall fixes add no work while this shows'):'No signs — full plan'});
+  out.push({what:'Fatigue', band:f.band, does:f.n?(onDeload?'deload in progress':'a deload is suggested — your call; stall fixes add no work while this shows'):'no signs — full plan'});
   return out;
 }
 /* Global readiness from the global items only (sleep, motivation, rest of
