@@ -16,6 +16,17 @@ this file's top entry and `APP_VERSION` disagree.
 - If one step would put you below your rep range, the app says the jump is too big and holds the load. It suggests a smaller step (on the info sheet) or a lower range instead.
 - Progress → Suggestions has a new line: reps within 2 of suggested. Matching the load alone hid how far off the reps were.
 
+Measured on the maintainer's real log (158 sets, 13 Sep – 7 Oct), comparing what the app would have suggested with what was actually lifted. Lower is better:
+
+| Average miss | Before (1.52) | After (1.53) |
+|---|---|---|
+| Load | 4.0 lb | 4.0 lb |
+| Reps | 3.1 | 2.0 |
+| Reps, first set of an exercise | 3.3 | 2.5 |
+| Reps, later sets | 3.1 | 1.8 |
+| Reps, machines | 3.6 | 2.2 |
+| Estimated max | 9.8% | 8.3% |
+
 ## 1.52.0 — 2026-10-07
 - With anterior shoulder instability picked, three new amber warnings: low-bar squat (suggested swap: high-bar or the safety squat bar), pull-ups (swap: neutral grip) and incline dumbbell press (keep the elbows tucked and stop short of a deep stretch).
 - Setting a neutral or close grip on pull-ups clears that warning.

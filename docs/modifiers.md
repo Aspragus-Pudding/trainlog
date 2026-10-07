@@ -49,6 +49,17 @@ Judgement defaults (Grade D): the 85% floor over 6 sessions, the ±1 RPE
 ceiling window, the 8-session dial window and 4-session drift, the
 3-session ramp-back, the weekly-sets range.
 
+**Tunable guess: the %1RM chart past 16 reps from failure** (`pctExt` in
+`index.html`, v1.47). The chart stops at 16, so the app extends it at 2.5
+points per rep, with a floor of 30%. Since v1.53 this extension prices reps
+after a load step (`repsAfterStep`), and `ceilingFor` reads high-rep sets
+through it. There's no evidence for the 2.5. The research says any
+reps-to-%1RM formula gets unreliable past about 10 reps, so a high-rep set
+should count for less in the e1RM track than a heavy one, not the same.
+Today every set counts equally. Revisit at phase-2 calibration
+(`docs/calibration-plan.md`): weight sets by rep count, or fit the slope
+from the lifter's own data.
+
 ## Inventory of code paths (step 0, as of v1.47.0)
 
 Every code path that changes a suggested load, reps, sets or RPE, as of
