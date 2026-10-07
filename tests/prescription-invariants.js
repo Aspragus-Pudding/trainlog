@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -2345,6 +2345,30 @@ section('54. cut stacking · dial drift · bands · coarse-step hold · changelo
     ok(lines.length>=3&&lines.length<=5,'3–5 lines per entry',String(lines.length));
     ok(emb&&emb.version===ver&&JSON.stringify(emb.lines)===JSON.stringify(lines),'the embedded "what\'s new" matches CHANGELOG.md — run node tools/embed-changelog.js',JSON.stringify(emb&&emb.version)); }
   console.log('  cuts: one applies, the largest, sets too · dial: revealed + drift (300 random), traced, reset · bands = engine inputs · 7 Oct set 4 holds 70 × 10 · changelog in sync');
+}
+
+/* ─── 55. v1.51: smallest jump per exercise ─── */
+section('55. smallest jump per exercise');
+{
+  const mk=(ex,lo,hi,T)=>({ex,role:'accessory',reps:[lo,hi],rpe:T,sets:[],sets_target:3});
+  // the override reaches every step: up, down, loadable
+  { const A=load([]), C=A.getCFG(), sl=mk('incline_machine',10,15,8);
+    ok(A.exById.incline_machine.inc===10&&A.stepUp(sl,70)===80,'library step: 10 lb machine, 70 → 80','');
+    C.stepOverride={incline_machine:5}; A.applyStepOverrides();
+    ok(A.exById.incline_machine.inc===5&&A.stepUp(sl,70)===75&&A.stepDown(sl,70)===65&&A.loadable(sl,72)===70,'your 5 lb step: 70 → 75 up, 65 down, 72 loads as 70',JSON.stringify({up:A.stepUp(sl,70),dn:A.stepDown(sl,70)}));
+    C.stepOverride={}; A.applyStepOverrides();
+    ok(A.exById.incline_machine.inc===10,'reset: back to the library step','');
+    const b=mk('bench',3,5,8);
+    ok(A.stepUp(b,185)===190,'barbell default: the plate set (2.5 lb plates → 5 lb jumps)',String(A.stepUp(b,185)));
+    C.stepOverride={bench:2.5}; A.applyStepOverrides();
+    ok(A.stepUp(b,185)===187.5&&A.gridFloor(b,186)===185,'a barbell step you set bypasses the plate solver: 185 → 187.5',String(A.stepUp(b,185)));
+    C.stepOverride={}; A.applyStepOverrides(); }
+  // a custom exercise's step is its own definition, untouched by the override table
+  { const A=load([]), C=A.getCFG();
+    const cx={id:'cx_test',name:'Test machine',load:'machine',inc:7.5,vol:{chest:1},pattern:'horizontal_press',custom:true,prog:'double'};
+    C.customEx=[cx]; A.mergeCustom(); C.stepOverride={cx_test:20}; A.applyStepOverrides();
+    ok(A.exById.cx_test.inc===7.5,'custom exercises keep their own step (edited on the exercise itself)',String(A.exById.cx_test.inc)); }
+  console.log('  override reaches up/down/loadable, barbell bypasses plates, custom untouched');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
