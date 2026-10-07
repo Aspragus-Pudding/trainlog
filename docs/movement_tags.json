@@ -487,6 +487,11 @@
       "add": [
         "knee_flex_deep_loaded"
       ]
+    },
+    "straps:on": {
+      "remove": [
+        "max_grip_wrist_ext"
+      ]
     }
   }
 }

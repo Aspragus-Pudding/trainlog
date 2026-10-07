@@ -24,6 +24,7 @@ AppsScript.gs           Google Sheets backup receiver (lives in Apps Script, not
 FeedbackScript.gs       append-only receiver for testers' notes (CFG.feedbackUrl), never readable back
 CHANGELOG.md            what changed per version, newest first; the top entry is embedded as the in-app "What's new" card
 tools/embed-changelog.js   copies CHANGELOG.md's top entry into index.html
+tools/library-report.js    the library by implement, and every generated entry whose tags/flags differ from its parent (with the reason)
 ALPHA.md                tester plan, incl. what a tester's data touches — keep it true when changing network/storage code
 shoulder-protocol.md    reference doc, not used by the app
 tests/prescription-invariants.js   prescription direction/pairing tests, run with node
@@ -134,6 +135,20 @@ never swapped out mid-workout.
   a separate exercise (close-grip bench stays separate — it's a triceps
   movement). Folded entries stay in `EX` for old data but are never offered
   or generated.
+- **The wider library (v1.55):** every exercise has an `implement` (barbell,
+  Smith, specialty bar, dumbbell, kettlebell, cable, selectorised, plate-loaded,
+  bodyweight, band; `machine` where the library can't tell which). Implement is
+  display, search and generator preference; pricing still comes from `load`, and
+  a new implement only maps onto an existing path. New entries are declared in
+  `LIB_GEN` as [id, name, parent, implement, extra] and filled in from the
+  parent; tags, cues and hand-written flags are read through the parent chain
+  (`baseTags`, `cueFor`, `authoredFlag`). Any override (`tags`, `noFlag`)
+  needs a `why` — `node tools/library-report.js` lists them. `named` entries
+  (incline, one-arm, grip versions) are auto-picked only once logged.
+  `resolveEx` ranks history first, then the equipment answer (revealed
+  preference). `straps` is a modifier on pulls (removes the grip mechanism);
+  carries and hangs don't get it. Over-flagging is measured on the library as
+  the app applies it (generated entries, strapped versions, isometric holds).
 - **`exPicker()`** is the one shared exercise picker (search + category chips +
   create-new). Swapping, adding, and goal-lift selection all route through it.
   Don't write a second bespoke picker — that's how mid-session swap ended up

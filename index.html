@@ -1603,22 +1603,22 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    {
     "exercise": "deadlift",
     "substitute": "transformer_hinge",
-    "note": "or keep the deadlift and use straps"
+    "note": "straps on pulls: keep the deadlift, strapped"
    },
    {
     "exercise": "pullup",
     "substitute": "pulldown",
-    "note": "neutral handle, straps if needed"
+    "note": "straps on pulls; a neutral handle helps"
    },
    {
     "exercise": "farmer",
     "substitute": "trap_bar",
-    "note": "use straps; grip demand drops"
+    "note": "light carries OK under the pain cap (below 7/10); heavy ones strapped or on the trap bar"
    },
    {
     "exercise": "hang",
     "substitute": "rev_wrist",
-    "note": "build extensor capacity directly instead of a long hold"
+    "note": "straps on pulls; hangs and light carries OK under the pain cap (below 7/10) — a hang is an isometric hold"
    }
   ],
   "in_workout_cues": [
@@ -1745,22 +1745,22 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    {
     "exercise": "deadlift",
     "substitute": "transformer_hinge",
-    "note": "or keep the deadlift and use straps"
+    "note": "straps on pulls: keep the deadlift, strapped"
    },
    {
     "exercise": "pullup",
     "substitute": "pulldown",
-    "note": "neutral handle, straps if needed"
+    "note": "straps on pulls; a neutral handle helps"
    },
    {
     "exercise": "farmer",
     "substitute": "trap_bar",
-    "note": "use straps; grip demand drops"
+    "note": "light carries OK under the pain cap (below 7/10); heavy ones strapped or on the trap bar"
    },
    {
     "exercise": "hang",
     "substitute": "rev_wrist",
-    "note": "build extensor capacity directly instead of a long hold"
+    "note": "straps on pulls; hangs and light carries OK under the pain cap (below 7/10) — a hang is an isometric hold"
    }
   ],
   "in_workout_cues": [
@@ -8527,11 +8527,16 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
       "add": [
         "knee_flex_deep_loaded"
       ]
+    },
+    "straps:on": {
+      "remove": [
+        "max_grip_wrist_ext"
+      ]
     }
   }
 }
 </script>
-<script type="application/json" id="whats-new">{"version":"1.54.0","lines":["Back squat has a new \"Bar position\" option (high or low bar) under Modify. Like other modifiers, low-bar squats get their own history and suggestions.","With anterior shoulder instability picked, marking a squat as low bar shows the amber warning, with high bar as the suggested swap. An unmarked back squat stays unflagged.","The option only appears on barbell squats. The Transformer bar positions are already separate exercises."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.55.0","lines":["The exercise library grew from 121 to 219 exercises. It adds Smith machine, kettlebell, band, specialty-bar (EZ, trap bar, safety squat bar) and more cable and machine versions, each with the same warnings and cues as the movement it's based on.","Search by equipment: type \"smith\", \"cable\", \"kb\" or \"band\". Each exercise shows what you hold.","When the app builds a workout, what you've actually been doing now outranks your equipment answer. If you've logged Smith bench ten times, you get Smith bench.","New \"Straps\" option under Modify on pulls and shrugs. For outer-elbow pain, a strapped shrug isn't flagged red, and dead hangs are amber, not red.","If one of your own exercises matches a new built-in by name, its info sheet offers to move your history to the built-in. Nothing happens unless you tap it."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9098,7 +9103,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.54.0';
+const APP_VERSION='1.55.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -9394,6 +9399,7 @@ const FAMILY_TAGS={squat:['knee_flex_deep_loaded','hip_flex_deep_loaded'], hinge
 function baseTags(ex){
   if(!ex) return [];
   if(Array.isArray(ex.tags)) return ex.tags.slice();
+  if(ex.gen){ const t=baseTags(exById[ex.parent]); return ['band','bodyweight'].includes(ex.implement)?t.filter(x=>!LIGHT_DROP.includes(x)):t; }
   if(MOVE.exercises[ex.id]) return MOVE.exercises[ex.id].slice();
   if(ex.folded&&MOVE.exercises[ex.folded.parent]) return MOVE.exercises[ex.folded.parent].slice();
   if(ex.parent&&MOVE.exercises[ex.parent]) return MOVE.exercises[ex.parent].slice();
@@ -9407,6 +9413,7 @@ function exTags(exId, mods){
   if(m.grip) keys.push('grip:'+m.grip);
   if(m.lockout) keys.push('lockout:'+m.lockout);
   if(m.pause&&m.pause.at==='bottom') keys.push('pause:bottom');
+  if(m.straps) keys.push('straps:on');
   keys.forEach(k=>{ const r=MOVE.modifiers[k]; if(!r) return; (r.remove||[]).forEach(x=>t.delete(x)); (r.add||[]).forEach(x=>t.add(x)); });
   return [...t];
 }
@@ -9416,12 +9423,17 @@ function resolveSubstitute(s){
   const [id,mod]=String(s).split('+'); if(!exById[id]) return null;
   let modifiers;
   if(mod){ const [k,v]=mod.split(':');
-    modifiers=cleanMods(k==='rom'?{rom:{kind:v}}:k==='grip'?{grip:v}:k==='lockout'?{lockout:v}:k==='pause'?{pause:{seconds:2,at:v}}:k==='barpos'?{barpos:v}:{}); }
+    modifiers=cleanMods(k==='rom'?{rom:{kind:v}}:k==='grip'?{grip:v}:k==='lockout'?{lockout:v}:k==='pause'?{pause:{seconds:2,at:v}}:k==='barpos'?{barpos:v}:k==='straps'?{straps:true}:{}); }
   return {ex:id, modifiers, name:exById[id].name+(modifiers?' — '+modLabel(modifiers):'')};
 }
 
 /* ---- flags ---- */
 const LEVEL_RANK={note:0, yellow:1, red:2};
+/* Entries whose own pain rule keeps isometrics on the table (outer elbow: over
+   7/10, isometrics only — they're tolerated below that). For these, an
+   isometric hold (a dead hang) is worth attention, not red; dynamic loaded
+   gripping (heavy carries) stays red. */
+const ISOMETRIC_OK=new Set(['el_lateral_tendinopathy']);
 function libraryFlag(exId, mods){
   const tags=new Set(exTags(exId,mods)); if(!tags.size) return null;
   let best=null;
@@ -9432,10 +9444,12 @@ function libraryFlag(exId, mods){
       // structural (permanent) entries: only the core mechanism is a warning; the rest is
       // the entry's standing cue ("soft lockout on every press") shown as a note — 22 amber
       // badges for one old elbow fracture would be over-flagging
-      const level=e.category==='UMBRELLA'?'yellow':a.level==='core'?'red':e.category==='STRUCTURAL_PERMANENT'?'note':'yellow';
+      let level=e.category==='UMBRELLA'?'yellow':a.level==='core'?'red':e.category==='STRUCTURAL_PERMANENT'?'note':'yellow';
+      const iso=level==='red'&&ISOMETRIC_OK.has(e.id)&&(exById[exId]||{}).isometric;
+      if(iso) level='yellow';
       if(!best||LEVEL_RANK[level]>LEVEL_RANK[best.level]){
         const mod=(e.modify||[]).find(m=>m.exercise===exId)||(e.modify||[]).find(m=>(MOVE.exercises[m.exercise]||[]).includes(a.movement)&&m.exercise!==exId);
-        best={level, cond:c, why:level==='note'?(e.core_cue||a.mechanism):a.mechanism, movement:a.movement, swap:mod?resolveSubstitute(mod.substitute):null, swapNote:mod?mod.note:null};
+        best={level, cond:c, why:level==='note'?(e.core_cue||a.mechanism):iso?'an isometric hold — fine under the pain cap (below 7/10)':a.mechanism, movement:a.movement, swap:mod?resolveSubstitute(mod.substitute):null, swapNote:mod?mod.note:null};
       }
     });
   });
@@ -9459,16 +9473,19 @@ const FLAGS_ADDED={
 function authoredFlag(exId, mods, o){
   const ex=exById[exId], ids=[exId];
   if(ex&&ex.custom) FLAG_NAME_HINTS.forEach(([re,map])=>{ if(re.test(ex.name||'')) ids.push(...map); });
+  if(ex&&ex.gen) genChain(ex).forEach(p=>ids.push(p.id));     // a generated entry carries its parent's hand-written flags…
   let best=null;
   for(const c of legacyConds()){
     const f=FLAGS[c]; if(!f) continue;
+    if(ex&&ex.gen&&(ex.noFlag||[]).includes(c)) continue;      // …except where the condition doesn't apply to it
     for(const id of ids){
       if(f.red&&f.red[id]) return {level:'red',cond:LEGACY_COND[c]||c,why:f.red[id],authored:true};
       if(!best&&f.yellow&&f.yellow[id]) best={level:'yellow',cond:LEGACY_COND[c]||c,why:f.yellow[id],authored:true};
     }
   }
   if(!best&&!(o&&o.legacyOnly)) for(const c of legacyConds()){
-    const a=(FLAGS_ADDED[c]||{})[exId];
+    if(ex&&ex.gen&&(ex.noFlag||[]).includes(c)) continue;
+    const a=ids.map(id=>(FLAGS_ADDED[c]||{})[id]).find(Boolean);
     if(a&&(!a.when||a.when(mods))&&!(a.unless&&a.unless(mods))){ best={level:'yellow',cond:LEGACY_COND[c]||c,why:a.why,authored:true,swap:a.swap?resolveSubstitute(a.swap):null,swapNote:a.note||null}; break; }
   }
   return best;
@@ -9668,7 +9685,7 @@ const EX=[
  {id:'rev_wrist',name:'Reverse wrist curl',pattern:'wrist',load:'dumbbell',bar:0,plateSet:null,inc:2.5,prog:'double',vol:{forearms:1}},
  {id:'wrist_roller',name:'Wrist roller',pattern:'wrist',load:'bodyweight',bar:0,plateSet:null,inc:2.5,prog:'rep',vol:{forearms:1}},
  {id:'farmer',name:'Farmer carry',pattern:'grip',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',vol:{forearms:1,traps:1,abs:.5}},
- {id:'hang',name:'Dead hang',pattern:'grip',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',vol:{forearms:1,lats:.5}},
+ {id:'hang',name:'Dead hang',pattern:'grip',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',isometric:true,vol:{forearms:1,lats:.5}},
  {id:'shrug',name:'Barbell shrug',pattern:'shrug',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'double',vol:{traps:1,forearms:.5}},
  {id:'db_shrug',name:'DB shrug',pattern:'shrug',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',vol:{traps:1,forearms:.5}},
  {id:'hang_raise',name:'Hanging leg raise',pattern:'trunk',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',vol:{abs:1,forearms:.5}},
@@ -9716,6 +9733,194 @@ const EX=[
  {id:'pogo_hop',name:'Pogo hops',pattern:'plyometric',load:'bodyweight',bar:0,plateSet:null,inc:0,prog:'rep',manualOnly:true,vol:{calves:1}},
  {id:'jump_rope',name:'Jump rope',pattern:'plyometric',load:'bodyweight',bar:0,plateSet:null,inc:0,prog:'rep',manualOnly:true,vol:{calves:1}},
 ];
+/* ---------- The wider library (batch F part 1a, v1.55) ----------
+   IMPLEMENT is what you hold or sit in. It's display, search and generator
+   preference; the pricing path still comes from `load` (barbell/dumbbell/
+   bodyweight → the %1RM chart, machine/stack → RPE-delta stepping), so a new
+   implement only ever maps onto an existing path:
+     barbell, specialty bar, Smith → 'barbell' · dumbbell, kettlebell → 'dumbbell'
+     cable → 'stack' · selectorised and plate-loaded machine → 'machine'
+     bodyweight, band → 'bodyweight' (band: reps only, which band goes in the setup note)
+   GENERATED ENTRIES are declared as [id, name, parent, implement, extra] and
+   filled in from the parent at load: pattern, muscles, family, sticking points;
+   movement tags, coaching cues and the hand-written condition flags come from
+   the parent chain on read (baseTags, cueFor, authoredFlag). `named` entries
+   (incline/decline, one-arm, grip versions) are never auto-picked until you've
+   logged them; the rest are one entry per movement × implement and can be.
+   `tags` overrides the inherited movement tags (each override is in
+   tools/library-report.js's hand-check list with its reason); `noFlag` drops
+   an inherited hand-written flag for a condition that doesn't apply.
+   Judgement defaults, Grade D: Smith bar 20 lb (machines vary — set yours on
+   the info sheet), kettlebell step 9 lb (about 4 kg), SSB 65 lb. */
+const IMPLEMENT_LABEL={barbell:'Barbell',smith:'Smith machine',specialty:'Specialty bar',dumbbell:'Dumbbell',kettlebell:'Kettlebell',
+  cable:'Cable',selector:'Selectorised machine',plate:'Plate-loaded machine',machine:'Machine',bodyweight:'Bodyweight',band:'Band'};
+const IMPLEMENT_SEARCH={barbell:'barbell bb',smith:'smith machine',specialty:'specialty bar',dumbbell:'dumbbell db',kettlebell:'kettlebell kb',
+  cable:'cable',selector:'machine selectorised selectorized stack pin',plate:'machine plate-loaded plate loaded',machine:'machine',bodyweight:'bodyweight bw',band:'band'};
+const BAR_TYPE={transformer:{label:'Transformer bar',bar:55},ssb:{label:'Safety squat bar',bar:65},trap:{label:'Trap bar',bar:60},ez:{label:'EZ bar',bar:25}};
+const IMPLEMENTS={
+  barbell:{load:'barbell',plateSet:'main_lb',bar:45,inc:5,prog:'double'},
+  smith:{load:'barbell',plateSet:'main_lb',bar:20,inc:5,prog:'double',comparable:false},
+  specialty:{load:'barbell',plateSet:'main_lb',inc:5,prog:'double'},
+  dumbbell:{load:'dumbbell',plateSet:null,bar:0,inc:5,prog:'double'},
+  kettlebell:{load:'dumbbell',plateSet:null,bar:0,inc:9,prog:'double'},
+  cable:{load:'stack',plateSet:null,bar:0,inc:5,prog:'double',comparable:false},
+  selector:{load:'machine',plateSet:null,bar:0,inc:10,prog:'double',comparable:false},
+  plate:{load:'machine',plateSet:null,bar:0,inc:10,prog:'double',comparable:false,plateLoaded:true},
+  bodyweight:{load:'bodyweight',plateSet:null,bar:0,inc:5,prog:'rep'},
+  band:{load:'bodyweight',plateSet:null,bar:0,inc:0,prog:'rep',comparable:false}
+};
+/* Light or unloaded implements don't carry the library's "heavy" mechanisms. */
+const LIGHT_DROP=['spine_axial_heavy','hinge_heavy','elbow_flex_loaded_heavy','max_grip_wrist_ext'];
+/* The existing 121, tagged by implement. Machines the library can't place as
+   plate-loaded or selectorised stay 'machine' (shown as "Machine"). */
+const IMPLEMENT_OF={ssb_squat:'specialty',transformer_hinge:'specialty',transformer_low_bar:'specialty',transformer_high_bar:'specialty',
+  transformer_front:'specialty',transformer_goblet:'specialty',trap_bar:'specialty',skullcrusher:'specialty',kb_swing:'kettlebell',
+  pec_deck:'selector',assisted_pullup:'selector',pin_chest_press:'selector',pin_incline_press:'selector',pin_tri_dip:'selector',pin_preacher:'selector',
+  incline_machine:'machine',machine_press:'machine',chest_row:'machine',machine_row:'machine',machine_ohp:'machine'};
+const BAR_TYPE_OF={ssb_squat:'transformer',transformer_hinge:'transformer',transformer_low_bar:'transformer',transformer_high_bar:'transformer',
+  transformer_front:'transformer',transformer_goblet:'transformer',trap_bar:'trap',skullcrusher:'ez'};
+function implementOf(ex){
+  if(!ex) return null;
+  if(ex.implement) return ex.implement;
+  if(IMPLEMENT_OF[ex.id]) return IMPLEMENT_OF[ex.id];
+  if(ex.custom) return ex.load==='stack'||ex.load==='cable'?'cable':ex.load==='machine'?'machine':ex.load==='bodyweight_plus'?'bodyweight':ex.load;
+  if(ex.load==='stack') return 'cable';
+  if(ex.load==='machine') return ex.plateLoaded?'plate':'machine';
+  if(ex.load==='bodyweight_plus') return 'bodyweight';
+  return ex.load;
+}
+const LIB_GEN=[
+  // ── horizontal press
+  ['smith_bench','Smith machine bench press','bench','smith'],
+  ['bb_incline','Incline barbell bench press','bench','barbell',{named:true}],
+  ['smith_incline','Smith machine incline press','bench','smith',{named:true}],
+  ['db_decline','Decline dumbbell press','db_bench','dumbbell',{named:true}],
+  ['sa_db_bench','Single-arm dumbbell bench press','db_bench','dumbbell',{named:true,unilateral:true}],
+  ['kb_floor_press','Kettlebell floor press','floor_press','kettlebell'],
+  ['band_press','Band chest press','cable_press','band'],
+  // ── vertical press
+  ['smith_ohp','Smith machine shoulder press','ohp','smith'],
+  ['plate_ohp','Plate-loaded shoulder press','machine_ohp','plate'],
+  ['kb_press','Kettlebell overhead press','db_press','kettlebell',{unilateral:true}],
+  ['arnold','Arnold press','seated_db_press','dumbbell',{named:true}],
+  ['sa_landmine','Single-arm landmine press','landmine','barbell',{named:true,unilateral:true}],
+  ['band_ohp','Band overhead press','db_press','band'],
+  // ── squat
+  ['smith_squat','Smith machine squat','squat','smith',{tags:['spine_axial_heavy','knee_flex_deep_loaded','hip_flex_deep_loaded'],why:'feet can sit forward of the bar, so the shin stays upright: no deep loaded ankle bend'}],
+  ['safety_bar_squat','Safety squat bar squat','squat','specialty',{barType:'ssb',specialty:'Safety squat bar'}],
+  ['kb_goblet','Kettlebell goblet squat','goblet','kettlebell'],
+  ['bw_squat','Bodyweight squat','goblet','bodyweight'],
+  ['sel_leg_press','Selectorised leg press','leg_press','selector'],
+  ['leg_press_sl','Single-leg leg press','leg_press','plate',{named:true,unilateral:true}],
+  ['v_squat','V-squat machine','hack','plate',{named:true}],
+  ['db_split','Dumbbell split squat','bulgarian','dumbbell',{named:true,unilateral:true}],
+  ['bb_split','Barbell split squat','bulgarian','barbell',{named:true,unilateral:true}],
+  ['smith_split','Smith machine split squat','bulgarian','smith',{unilateral:true}],
+  ['db_lunge','Dumbbell walking lunge','bulgarian','dumbbell',{named:true,unilateral:true}],
+  ['bb_lunge','Barbell reverse lunge','bulgarian','barbell',{named:true,unilateral:true,tags:['knee_flex_deep_loaded','hip_flex_deep_loaded'],why:'stepping back keeps the front shin close to vertical, unlike a split squat or forward lunge'}],
+  ['bw_lunge','Bodyweight lunge','bulgarian','bodyweight',{unilateral:true}],
+  ['db_stepup','Dumbbell step-up','bulgarian','dumbbell',{named:true,unilateral:true}],
+  // ── hinge
+  ['sumo_dl','Sumo deadlift','deadlift','barbell',{named:true}],
+  ['db_rdl','Dumbbell Romanian deadlift','rdl','dumbbell'],
+  ['smith_rdl','Smith machine Romanian deadlift','rdl','smith'],
+  ['kb_rdl','Kettlebell Romanian deadlift','rdl','kettlebell'],
+  ['sl_rdl','Single-leg dumbbell RDL','rdl','dumbbell',{named:true,unilateral:true}],
+  ['smith_hip_thrust','Smith machine hip thrust','hip_thrust','smith',{named:true}],
+  ['machine_hip_thrust','Hip thrust machine','hip_thrust','plate'],
+  ['glute_bridge','Glute bridge','hip_thrust','bodyweight'],
+  ['cable_pullthrough','Cable pull-through','rdl','cable',{tags:['hamstring_lengthened_loaded'],vol:{glutes:1,hamstrings:1},why:'a light cable hinge: the hamstring stretch stays, the heavy-hinge spine load does not'}],
+  ['band_gm','Band good morning','good_morning','band',{noFlag:['low_back'],why:'a band, not a loaded bar across the back'}],
+  ['rev_hyper','Reverse hyperextension','back_ext','plate',{named:true,vol:{glutes:1,hamstrings:.5,lower_back:.5}}],
+  // ── vertical pull
+  ['sel_pulldown','Selectorised lat pulldown machine','pulldown','selector'],
+  ['sa_cable_pulldown','Single-arm cable pulldown','pulldown','cable',{named:true,unilateral:true}],
+  ['band_pulldown','Band lat pulldown','pulldown','band'],
+  // ── horizontal pull
+  ['bb_row','Barbell bent-over row','db_row','barbell',{tags:['hinge_heavy'],unilateral:false,why:'bent over and unsupported with a bar — a heavy hinge, unlike the braced one-arm row it comes from'}],
+  ['pendlay_row','Pendlay row','bb_row','barbell',{named:true}],
+  ['smith_row','Smith machine row','bb_row','smith'],
+  ['cs_db_row','Chest-supported dumbbell row','db_row','dumbbell',{named:true,unilateral:false,noFlag:['low_back'],why:'chest on the pad: not hinged'}],
+  ['kb_row','Kettlebell row','db_row','kettlebell'],
+  ['plate_row','Plate-loaded row','machine_row','plate'],
+  ['meadows_row','Meadows row','tbar','barbell',{named:true,unilateral:true}],
+  ['band_row','Band row','cable_row','band'],
+  ['cable_rd_fly','Cable rear-delt fly','rear_fly','cable',{named:true}],
+  ['band_pullapart','Band pull-apart','face_pull','band'],
+  ['band_facepull','Band face pull','face_pull','band',{named:true}],
+  // ── biceps
+  ['bb_curl','Barbell curl','curl','barbell'],
+  ['ez_curl','EZ-bar curl','bb_curl','specialty',{barType:'ez'}],
+  ['db_curl','Dumbbell curl','curl','dumbbell',{named:true}],
+  ['ez_preacher','EZ-bar preacher curl','preacher','specialty',{barType:'ez',named:true}],
+  ['conc_curl','Concentration curl','preacher','dumbbell',{named:true,unilateral:true}],
+  ['bayesian_curl','Bayesian cable curl','cable_curl','cable',{named:true,unilateral:true}],
+  ['cable_hammer','Rope hammer curl','hammer','cable',{named:true}],
+  ['rev_curl','Reverse-grip EZ curl','ez_curl','specialty',{barType:'ez',named:true,vol:{forearms:1,biceps:.5},tags:['elbow_flex_loaded_heavy','wrist_ext_loaded'],why:'an overhand grip loads the wrist extensors (the outer elbow) as well'}],
+  ['band_curl','Band curl','curl','band'],
+  // ── triceps
+  ['ez_skull','EZ-bar skullcrusher','skullcrusher','specialty',{barType:'ez',named:true}],
+  ['db_skull','Dumbbell skullcrusher','skullcrusher','dumbbell',{tags:['elbow_ext_endrange_loaded'],why:'a neutral grip keeps the wrist out of extension'}],
+  ['db_oh_ext','Dumbbell overhead triceps extension','oh_ext','dumbbell',{named:true}],
+  ['kickback','Dumbbell kickback','pushdown','dumbbell',{named:true}],
+  ['cable_kickback','Cable kickback','pushdown','cable',{named:true}],
+  ['smith_cg_bench','Smith machine close-grip bench','cg_bench','smith',{named:true}],
+  ['jm_press','JM press','skullcrusher','barbell',{named:true}],
+  ['band_pushdown','Band pushdown','pushdown','band'],
+  // ── delts
+  ['band_raise','Band lateral raise','lat_raise','band'],
+  ['bb_upright','Barbell upright row','lat_raise','barbell',{named:true,vol:{side_delts:1,traps:.5}}],
+  ['cable_upright','Cable upright row','lat_raise','cable',{named:true,vol:{side_delts:1,traps:.5}}],
+  ['db_front_raise','Dumbbell front raise','lat_raise','dumbbell',{manualOnly:true,vol:{front_delts:1},tags:[],why:'arm forward, not out to the side — not the abduction position lateral raises are tagged for'}],
+  ['cable_front_raise','Cable front raise','lat_raise','cable',{manualOnly:true,vol:{front_delts:1},tags:[],why:'arm forward, not out to the side — not the abduction position lateral raises are tagged for'}],
+  ['plate_front_raise','Plate front raise','lat_raise','dumbbell',{manualOnly:true,vol:{front_delts:1},tags:[],why:'arm forward, not out to the side — not the abduction position lateral raises are tagged for'}],
+  // ── legs, isolation
+  ['plate_leg_ext','Plate-loaded leg extension','leg_ext','plate'],
+  ['sl_leg_ext','Single-leg leg extension','leg_ext','selector',{named:true,unilateral:true}],
+  ['standing_leg_curl','Standing single-leg curl','leg_curl','selector',{named:true,unilateral:true}],
+  ['db_leg_curl','Dumbbell leg curl','lying_curl','dumbbell',{named:true}],
+  ['smith_calf','Smith machine calf raise','calf','smith'],
+  ['db_calf','Single-leg dumbbell calf raise','calf','dumbbell',{unilateral:true}],
+  ['bw_calf','Bodyweight calf raise','calf','bodyweight'],
+  ['cable_abd','Cable hip abduction','seated_abd','cable',{unilateral:true}],
+  ['band_abd','Band hip abduction','seated_abd','band'],
+  ['cable_add','Cable hip adduction','seated_add','cable',{unilateral:true}],
+  // ── core
+  ['machine_crunch','Crunch machine','cable_crunch','selector'],
+  ['decline_situp','Decline sit-up','cable_crunch','bodyweight'],
+  ['pallof','Pallof press','cable_crunch','cable',{named:true,tags:[],why:'no loaded spinal flexion: the trunk resists movement instead'}],
+  ['band_pallof','Band Pallof press','cable_crunch','band',{tags:[],why:'no loaded spinal flexion: the trunk resists movement instead'}],
+  ['woodchop','Cable woodchop','cable_crunch','cable',{named:true,tags:[],why:'no loaded spinal flexion: the trunk resists movement instead'}],
+  ['dead_bug','Dead bug','cable_crunch','bodyweight',{named:true,tags:[],why:'no loaded spinal flexion: the trunk resists movement instead'}],
+  // ── traps, forearms, carries
+  ['smith_shrug','Smith machine shrug','shrug','smith'],
+  ['trapbar_shrug','Trap bar shrug','shrug','specialty',{barType:'trap'}],
+  ['plate_shrug','Plate-loaded shrug machine','shrug','plate'],
+  ['bb_wrist_curl','Barbell wrist curl','wrist_curl','barbell',{named:true}],
+  ['trapbar_carry','Trap bar carry','farmer','specialty',{barType:'trap'}],
+  ['kb_carry','Kettlebell farmer carry','farmer','kettlebell'],
+  ['suitcase_carry','Suitcase carry','farmer','dumbbell',{named:true,unilateral:true,vol:{forearms:1,abs:1,traps:.5}}]
+];
+/* Built from the parent at load; tags, cues and flags are read through the chain. */
+function expandLibGen(base){
+  const by=Object.fromEntries(base.map(e=>[e.id,e])), out=[];
+  for(const [id,name,parent,impl,x={}] of LIB_GEN){
+    const p=by[parent]; if(!p||by[id]) continue;      // a typo'd parent or an id clash never ships an entry
+    const I=IMPLEMENTS[impl]||{}, bt=x.barType&&BAR_TYPE[x.barType];
+    const MACH=['machine','stack'];
+    const e={id,name,pattern:x.pattern||p.pattern,...I,bar:bt?bt.bar:(I.bar!=null?I.bar:p.bar||0),
+      vol:{...(x.vol||p.vol)},parent,specificity:MACH.includes(I.load)!==MACH.includes(p.load)?.5:.7,
+      implement:impl,gen:true};
+    if(bt) e.barType=x.barType;
+    ['named','manualOnly','specialty','noFlag','why'].forEach(k=>{ if(x[k]) e[k]=x[k]; });
+    if(p.manualOnly) e.manualOnly=true;
+    const uni=x.unilateral!=null?x.unilateral:p.unilateral; if(uni) e.unilateral=true;
+    if(x.tags) e.tags=x.tags.slice();
+    by[id]=e; out.push(e);
+  }
+  return out;
+}
+EX.push(...expandLibGen(EX));
 let exById=Object.fromEntries(EX.map(e=>[e.id,e]));
 /* Custom exercises live in CFG, so they persist across reloads AND ride along
    in every backup. Merged into the library at load. */
@@ -9789,7 +9994,15 @@ function applyLibraryModel(){
     if(L.sticking) ex.sticking=L.sticking.slice();
     if(L.folded){ ex.folded=L.folded; ex.parent=L.folded.parent; ex.specificity=.9; }
   });
+  EX.forEach(ex=>{
+    if(ex.custom) return;
+    ex.implement=implementOf(ex);
+    if(!ex.barType&&BAR_TYPE_OF[ex.id]) ex.barType=BAR_TYPE_OF[ex.id];
+    if(ex.gen){ const p=exById[ex.parent]; if(p){ if(!ex.family&&p.family) ex.family=p.family; if(!ex.sticking&&p.sticking) ex.sticking=p.sticking.slice(); } }
+  });
 }
+/* A generated entry's ancestors, nearest first (built-in parents end the chain). */
+function genChain(ex){ const out=[]; let p=ex; for(let i=0;i<6&&p&&p.gen;i++){ p=exById[p.parent]; if(p) out.push(p); } return out; }
 function familyOf(ex){
   if(!ex) return 'isolation';
   if(ex.family==='isolation'||TRACKED_FAMILIES.includes(ex.family)) return ex.family;
@@ -9816,6 +10029,12 @@ const GRIPS={standard:'standard grip',close:'close grip',wide:'wide grip',neutra
    Transformer bar's positions are separate exercises. */
 const BAR_POS={high:'high bar',low:'low bar'};
 const barPosApplies=ex=>!!ex&&ex.load==='barbell'&&familyOf(ex)==='squat'&&!ex.specialty;
+/* Straps (v1.55): take the grip out of a pull. Offered on hinges, rows, pulldowns,
+   pull-ups and shrugs — not on carries and hangs, which are there to train grip.
+   Removes the gripping mechanism (max_grip_wrist_ext), so a strapped shrug isn't
+   red for outer-elbow pain. Like any modifier it has its own history. */
+const STRAP_PATTERNS=['hinge','horizontal_pull','vertical_pull','shrug'];
+const strapsApply=ex=>!!ex&&STRAP_PATTERNS.includes(ex.pattern)&&!['bodyweight','band'].includes(implementOf(ex));
 function cleanMods(m){
   if(!m||typeof m!=='object') return undefined;
   const o={};
@@ -9825,6 +10044,7 @@ function cleanMods(m){
   if(m.grip&&GRIPS[m.grip]&&m.grip!=='standard') o.grip=m.grip;
   if(m.lockout==='soft') o.lockout='soft';
   if(m.barpos&&BAR_POS[m.barpos]) o.barpos=m.barpos;
+  if(m.straps===true||m.straps==='on') o.straps=true;
   return Object.keys(o).length?o:undefined;
 }
 /* Stable signature: fixed part order, so the same modifiers always give the same string. '' = unmodified. */
@@ -9837,6 +10057,7 @@ function modSig(m){
   if(c.grip) p.push('grip:'+c.grip);
   if(c.lockout) p.push('lockout:'+c.lockout);
   if(c.barpos) p.push('barpos:'+c.barpos);   // last, so every existing signature is unchanged
+  if(c.straps) p.push('straps:on');
   return p.join(',');
 }
 function modLabel(m){
@@ -9848,6 +10069,7 @@ function modLabel(m){
   if(c.grip) p.push(GRIPS[c.grip]);
   if(c.lockout) p.push('soft lockout');
   if(c.barpos) p.push(BAR_POS[c.barpos]);
+  if(c.straps) p.push('with straps');
   return p.join(' · ');
 }
 const mergeMods=(a,b)=>cleanMods({...(cleanMods(a)||{}),...(cleanMods(b)||{})});
@@ -9863,6 +10085,7 @@ function sigMods(sig){
     else if(k==='grip') m.grip=v;
     else if(k==='lockout') m.lockout=v;
     else if(k==='barpos') m.barpos=v;
+    else if(k==='straps') m.straps=true;
   });
   return m;
 }
@@ -9942,6 +10165,7 @@ function openModifierEditor(exId, cur, onSave, onCancel){
       <div class="qblock" id="mdg"><div class="qlab">Grip</div></div>
       <div class="qblock" id="mdl"><div class="qlab">Lockout</div></div>
       ${barPosApplies(ex)?'<div class="qblock" id="mdb"><div class="qlab">Bar position</div></div>':''}
+      ${strapsApply(ex)?'<div class="qblock" id="mds"><div class="qlab">Straps</div></div>':''}
       <div class="anchor" id="mdsum" style="margin-bottom:10px"></div>
       <div class="row" style="gap:8px"><button class="btn ghost grow" id="mdcancel">Cancel</button><button class="btn pri grow" id="mdsave">Save</button></div>`);
     const chips=(host,opts,on,fn)=>{ const c=el('div','chips'); opts.forEach(([v,l])=>{ const b=el('button','chip',esc(l));
@@ -9958,6 +10182,7 @@ function openModifierEditor(exId, cur, onSave, onCancel){
       $('#mdr').appendChild(g); }
     chips('#mdg',Object.entries(GRIPS),v=>(m.grip||'standard')===v,v=>{ if(v==='standard') delete m.grip; else m.grip=v; });
     chips('#mdl',[['','Full'],['soft','Soft — stop just short of straight']],v=>(m.lockout||'')===v,v=>{ if(v) m.lockout=v; else delete m.lockout; });
+    if(strapsApply(ex)) chips('#mds',[['','No straps'],['on','Straps']],v=>(m.straps?'on':'')===v,v=>{ if(v) m.straps=true; else delete m.straps; });
     if(barPosApplies(ex)) chips('#mdb',[['','Not marked'],['high','High bar'],['low','Low bar']],v=>(m.barpos||'')===v,v=>{ if(v) m.barpos=v; else delete m.barpos; });
     $('#mdsum').textContent=modLabel(m)?'Will log as: '+modLabel(m):'No modifier — the normal exercise.';
     $('#mdcancel').onclick=()=>{ if(onCancel) onCancel(); else $('#dlg').close(); };
@@ -10238,7 +10463,8 @@ function newSlotFor(ex, role){
 /* Pick an exercise for a pattern+role. Goal lifts win a primary slot;
    otherwise rank by your own ratings, then by what you've actually used. */
 function resolveEx(pattern, role, used){
-  const pool=EX.filter(e=>e.pattern===pattern&&!used.has(e.id)&&!e.folded&&!e.manualOnly);
+  // a named variant (incline, one-arm, a grip version) is auto-picked only once you've logged it
+  const pool=EX.filter(e=>e.pattern===pattern&&!used.has(e.id)&&!e.folded&&!e.manualOnly&&!(e.named&&!exposureCount(e.id)));
   if(!pool.length) return null;
   if(role==='primary'){
     const goal=pool.find(e=>(CFG.goals||[]).includes(e.id));
@@ -10251,7 +10477,9 @@ function resolveEx(pattern, role, used){
   if(avail.length) pool.length=0, pool.push(...avail);
   // specialty bars (the Kabuki Transformer) only if you've logged one or chose it as a goal lift —
   // with no history every score ties, and library order put them first for new users
-  const score=e=>equipmentScore(e)+(e.specialty&&!exposureCount(e.id)?-500:0)+(()=>{
+  // what you've actually done outranks the equipment answer (revealed preference): ten logged Smith
+  // benches beat an unlogged barbell bench in a barbell gym. The equipment answer orders what you haven't done.
+  const score=e=>equipmentScore(e)+(e.specialty&&!exposureCount(e.id)?-500:0)+1000*(()=>{
     // a flag never steers the pick (the app warns, it doesn't decide) — exclusions above do
     const rs=LOG.filter(x=>x.type==='exercise_rating'&&x.exercise_id===e.id);
     if(rs.length>=3) return 100+rs.reduce((a,r)=>a+r.stimulus*2+r.enjoyment,0)/rs.length;
@@ -13193,6 +13421,8 @@ function notesReport(){
    the info sheet then falls back to the generic tips. */
 const CUES=(()=>{ try{ const a=JSON.parse(document.getElementById('coaching-cues').textContent);
   return Object.fromEntries(a.map(o=>[o.id,o])); }catch{ return {}; } })();
+/* Cues for an exercise; a generated entry uses its nearest ancestor's. */
+function cueFor(exId){ const ex=exById[exId]; if(CUES[exId]) return CUES[exId]; if(ex&&ex.gen){ const p=genChain(ex).find(x=>CUES[x.id]); if(p) return CUES[p.id]; } return undefined; }
 function openInfo(exId){
   const ex=exById[exId], b=bestE1RM(exId), last=lastSetFor(exId);
   const mode={percentage:'Percentage — load set from your e1RM',
@@ -13200,7 +13430,7 @@ function openInfo(exId){
               rep:'Rep target — add reps before external load'}[ex.prog];
   const vols=Object.entries(ex.vol).map(([m,w])=>
     `<div class="row between sm"><span class="muted">${esc(ML[m])}</span><span>${w===1?'direct · 1.0':'indirect · 0.5'}</span></div>`).join('');
-  const cue=CUES[exId];
+  const cue=cueFor(exId);
   const disclaimer='<div class="dim tiny" style="margin-top:8px">Standard technique points, not a substitute for a coach watching you move.</div>';
   // the shoulder note only matters to someone with the condition — noise for everyone else
   const shoulderHtml=cue&&cue.shoulder&&hasLegacy('shoulder_instability')
@@ -13217,7 +13447,7 @@ function openInfo(exId){
       ${disclaimer}</div>` : '';
   const parentEx=ex.parent?exById[ex.parent]:null;
   sheet(`<h2 style="font-size:20px;margin-bottom:2px">${esc(ex.name)}</h2>
-    <div class="muted tiny" style="margin-bottom:15px">${esc(ex.pattern.replace(/_/g,' '))} · ${esc(loadName(ex.load))}${
+    <div class="muted tiny" style="margin-bottom:15px">${esc(ex.pattern.replace(/_/g,' '))} · ${esc(ex.barType&&BAR_TYPE[ex.barType]?BAR_TYPE[ex.barType].label:IMPLEMENT_LABEL[implementOf(ex)]||loadName(ex.load))}${
       familyOf(ex)!=='isolation'?' · '+esc(FAMILY_LABEL[familyOf(ex)])+' family':''}${
       parentEx?' · a version of '+esc(parentEx.name):''}</div>
     ${tipsHtml}
@@ -13244,6 +13474,7 @@ function openInfo(exId){
       <div class="row between sm"><span class="muted">Last logged</span><span>${last?`${fmt(last.weight.value)} ${last.weight.unit} × ${last.reps}`:'—'}</span></div>
       <div class="row between sm"><span class="muted">Sessions performed</span><span>${exposureCount(exId)}</span></div>
       <div class="row" style="gap:6px;margin-top:9px"><button class="btn s" id="ihist">History and diary</button><button class="btn s" id="idiary">Add diary entry</button></div>
+      ${(d=>d&&sets().some(x=>x.exercise_id===exId)?'<div class="anchor" style="margin-top:8px">The library now has <b>'+esc(d.name)+'</b>. <button class="btn s" id="idup" style="margin-left:4px">Use the built-in and keep my history</button></div>':'')(builtinTwin(exId))}
       ${sets().some(x=>x.exercise_id===exId)?'<button class="btn s ghost" id="imove" style="margin-top:6px">Move this history to another exercise</button>':''}
       ${lastHistoryMove(exId)?`<div class="anchor" id="iundo">History moved here from ${esc((exById[lastHistoryMove(exId).from]||{name:lastHistoryMove(exId).from}).name)}. <button class="btn s" id="iundob" style="margin-left:4px">Undo</button></div>`:''}</div>
     <button class="btn ghost wide" id="irename" style="margin-bottom:8px">Rename</button>
@@ -13282,6 +13513,7 @@ function openInfo(exId){
         c.appendChild(x); });
       host.appendChild(c);
     } } }
+  if($('#idup')) $('#idup').onclick=()=>openMoveHistory(exId,builtinTwin(exId).id);
   if($('#imove')) $('#imove').onclick=()=>exPicker('Move '+ex.name+'\'s history to…', e=>e.id!==exId&&!e.rehab, e=>openMoveHistory(exId,e.id),
     {muscle:primaryMuscle(ex), onCancel:()=>openInfo(exId), noCreate:true, keepOpen:true});
   if($('#iundob')) $('#iundob').onclick=()=>{ const m=lastHistoryMove(exId);
@@ -13390,6 +13622,13 @@ function undoHistoryMove(moveId){
   });
   return n;
 }
+/* A custom exercise whose name matches a built-in (case, spaces and punctuation
+   aside): the info sheet offers to move its history over. Never automatic. */
+const nameKey=n=>String(n||'').toLowerCase().replace(/[^a-z0-9]+/g,'');
+function builtinTwin(exId){
+  const ex=exById[exId]; if(!ex||!ex.custom) return null;
+  const k=nameKey(ex.name); return EX.find(e=>!e.custom&&!e.folded&&!e.rehab&&nameKey(e.name)===k)||null;
+}
 function openMoveHistory(fromId, toId){
   const from=exById[fromId], to=exById[toId];
   const ss=sets().filter(x=>x.exercise_id===fromId), sessions=new Set(ss.map(x=>x.session_id)).size;
@@ -13480,6 +13719,12 @@ const MUSCLE_ORDER=['chest','upper_back','lats','lower_back','traps','front_delt
    choosing goal lifts — one implementation, so a fix here fixes it everywhere. */
 /* opts.muscle: open with that muscle's chip selected (swaps pass the
    current exercise's primary muscle, so like-for-like comes first). */
+/* Picker search: name, movement pattern, or what you hold ("smith", "cable", "kb"). */
+function exMatches(e, q){
+  const ql=String(q||'').toLowerCase().trim(); if(!ql) return true;
+  const bt=e.barType&&BAR_TYPE[e.barType]?BAR_TYPE[e.barType].label.toLowerCase():'';
+  return e.name.toLowerCase().includes(ql)||e.pattern.includes(ql.replace(/ /g,'_'))||(IMPLEMENT_SEARCH[implementOf(e)]||'').includes(ql)||bt.includes(ql);
+}
 function exPicker(title, filterFn, onPick, opts){
   // muscle is the main way in — a chip lists every exercise that trains it
   // directly (counts a full set), so a deadlift shows under hamstrings, glutes
@@ -13491,7 +13736,7 @@ function exPicker(title, filterFn, onPick, opts){
     let list=base.filter(e=>grp==='rehab'?e.rehab:!e.rehab);
     if(grp==='custom') list=list.filter(e=>e.custom);
     if(mus) list=list.filter(e=>(e.vol||{})[mus]===1);
-    if(q) list=list.filter(e=>e.name.toLowerCase().includes(q.toLowerCase())||e.pattern.includes(q.toLowerCase().replace(/ /g,'_')));
+    if(q) list=list.filter(e=>exMatches(e,q));
     if(q){
       list=list.sort((a,b)=>a.name.localeCompare(b.name));
     }else{
@@ -13532,12 +13777,13 @@ function exPicker(title, filterFn, onPick, opts){
       const b=el('button','btn wide'); b.style.cssText='text-align:left';
       b.innerHTML=`<div>${esc(e.name)}${e.custom?' <span class="dim tiny">· custom</span>':''}${
         f&&f.level!=='note'?`<span style="color:${f.level==='red'?'var(--danger)':f.level==='ok'?'var(--ok)':'var(--warn)'};font-size:12px"> ${f.level==='red'?'▲':f.level==='ok'?'✓':'●'}</span>`:''}</div>
-        <div class="dim tiny" style="font-weight:400">${esc(e.pattern.replace(/_/g,' '))} · ${esc(loadName(e.load))}${
+        <div class="dim tiny" style="font-weight:400">${esc(e.pattern.replace(/_/g,' '))} · ${esc(e.barType&&BAR_TYPE[e.barType]?BAR_TYPE[e.barType].label:IMPLEMENT_LABEL[implementOf(e)]||loadName(e.load))}${
           rt?` · stimulus ${rt.st.toFixed(1)}/5 across ${rt.n}`:''}${
           f?` · ${esc(f.why)}`:''}</div>`;
       b.onclick=()=>{ if(!(opts&&opts.keepOpen)) $('#dlg').close(); onPick(e); };
       $('#exl').appendChild(b);
     });
+    if(list.length>60) $('#exl').appendChild(el('div','dim tiny',(list.length-60)+' more — pick a muscle or search (try an implement: smith, cable, band)')).style.padding='6px 2px';
     if(!list.length) $('#exl').appendChild(el('div','empty','Nothing matches. Create one below.'));
     if(opts&&opts.noCreate) $('#exnew').hidden=true;
     $('#exnew').onclick=()=>openCustomEx(ex=>{ $('#dlg').close(); onPick(ex); });
@@ -14402,12 +14648,15 @@ function planFromNow(o){
 /* Equipment filter for exercise selection (spec §4.2 step 5). Dumbbells only
    is a hard filter; machine-heavy and barbell are preferences. Unset = as
    before. */
+/* The setup's equipment answer, by implement — it only orders exercises you haven't
+   logged (resolveEx weighs history first). Dumbbells-only puts everything else last
+   rather than out: if you've logged it, you have it. */
 function equipmentScore(ex){
-  const q=CFG.equipment;
+  const q=CFG.equipment, im=implementOf(ex);
   if(!q||q==='mixed') return 0;
-  if(q==='dumbbell') return ['dumbbell','bodyweight','bodyweight_plus'].includes(ex.load)?0:-10000;
-  if(q==='machine') return ['machine','stack','cable'].includes(ex.load)?40:0;
-  if(q==='barbell') return ex.load==='barbell'?40:0;
+  if(q==='dumbbell') return ['dumbbell','kettlebell','bodyweight','band'].includes(im)?0:-500;
+  if(q==='machine') return ['machine','selector','plate','cable','smith'].includes(im)?40:0;
+  if(q==='barbell') return ['barbell','specialty'].includes(im)?40:im==='smith'?20:0;
   return 0;
 }
 
@@ -15289,7 +15538,8 @@ function painRule(nprs, kind, conds){
   const has=id=>conds.includes(id);
   if(kind==='apprehension') return {level:'stop', text:'Any apprehension: stop the set. Choose a position where the shoulder feels secure, or swap the exercise.'};
   if(kind==='site'&&has('shin_bsi_lowrisk')) return {level:'end', text:'Pain at the stress-fracture site: stop the session (Warden 2021). Running and impact wait until you\'re pain-free for 5 days.'};
-  if(has('el_lateral_tendinopathy')&&nprs>7) return {level:'stop', text:'Over 7/10: the elbow is highly irritable. Isometrics only for it today.'};
+  if(has('el_lateral_tendinopathy')&&nprs>7)   // the isometric allowance ISOMETRIC_OK relies on
+    return {level:'stop', text:'Over 7/10: the elbow is highly irritable. Isometrics only for it today.'};
   const cap=has('an_lateral_sprain')?3:has('sh_rcrsp')?4:5;
   if(nprs>cap) return {level:'stop', text:'Over '+cap+'/10'+(cap<5?' (the limit for this condition)':'')+': stop this exercise for today and swap it, or move on.'};
   if(nprs>=3) return {level:'amber', text:'Tolerable — carry on if it settles by tomorrow morning. Your next check-in looks at it.'};
@@ -15938,7 +16188,7 @@ function techFirstSet(slot){
 function checklistItems(exId){
   const out=[], own=exNote(exId,'setup');
   if(own) own.split(/\n+/).map(t=>t.trim()).filter(Boolean).forEach(t=>out.push({text:t, own:true}));
-  const cue=CUES[exId];
+  const cue=cueFor(exId);
   const lib=cue&&cue.setup?String(cue.setup).split(/(?<=\.)\s+/).map(t=>t.trim()).filter(Boolean)
     :(EXERCISE_TIPS[exId]||[]);
   lib.slice(0,3).forEach(t=>out.push({text:t, own:false}));

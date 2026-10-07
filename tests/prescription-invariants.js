@@ -46,11 +46,11 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
-const EMBEDS={injuries:EMBED('injuries'),'movement-tags':EMBED('movement-tags')};
+const EMBEDS={injuries:EMBED('injuries'),'movement-tags':EMBED('movement-tags'),'coaching-cues':EMBED('coaching-cues')};
 function docWithData(){ const d=stub(); return new Proxy(d,{get(t,k){ if(k==='getElementById') return id=>id in EMBEDS?{textContent:EMBEDS[id]}:stub(); return d[k]; }}); }
 function load(events, withData){
   const store={};
@@ -2434,6 +2434,64 @@ section('57. reps after a step: priced on the e1RM track; under the floor = the 
     const acc=load(ev).suggestionAccuracy(), t=acc.reduce((a,b)=>({n:a.n+b.n,taken:a.taken+b.taken,repsN:a.repsN+b.repsN,repsNear:a.repsNear+b.repsNear}),{n:0,taken:0,repsN:0,repsNear:0});
     ok(t.taken===t.n&&t.repsN===t.n&&t.repsNear===t.n/2,'load taken on every set, but reps within 2 on only half: the second line shows what the first hides',JSON.stringify(t)); }
   console.log('  60 × 15 → 70 × 12 · 45 × 12 → 50 × 9 · 7% ≈ −2, 15% ≈ −4 · never more reps with more load · under the range → "too big", a smaller step moves it · reps-within-2 measured');
+}
+
+/* ─── 58. v1.55: the wider library — generated from parents, existing ids untouched ─── */
+section('58. library: implements, inheritance, generator ranking, search, straps');
+{
+  const A=load([],true), W=A.EX.filter(e=>!e.rehab&&!e.folded), gen=W.filter(e=>e.gen);
+  const MOVE=JSON.parse(fs.readFileSync(path.join(__dirname,'..','docs','movement_tags.json'),'utf8'));
+  ok(gen.length>=90&&W.length>=210,'the library grew: '+W.length+' working exercises, '+gen.length+' generated',String(W.length));
+  ok(Object.keys(MOVE.exercises).every(id=>A.exById[id]&&!A.exById[id].gen),'every existing id is still there, unchanged in kind (not regenerated)','');
+  ok(W.every(e=>A.IMPLEMENT_LABEL[A.implementOf(e)]),'every exercise has an implement',JSON.stringify(W.filter(e=>!A.IMPLEMENT_LABEL[A.implementOf(e)]).map(e=>e.id)));
+  ok(W.every(e=>e.pattern&&Object.values(e.vol||{}).some(w=>w===1)),'every exercise has a pattern and a main muscle','');
+  ok(gen.every(e=>{ const c=A.genChain(e); return c.length&&!c[c.length-1].gen; }),'every generated entry\'s parent chain ends at a built-in','');
+  // a new implement maps onto an existing pricing path only
+  const PATH={barbell:'chart',smith:'chart',specialty:'chart',dumbbell:'chart',kettlebell:'chart',bodyweight:'chart',band:'chart',cable:'rpe',selector:'rpe',plate:'rpe'};
+  ok(gen.every(e=>['barbell','dumbbell','stack','machine','bodyweight'].includes(e.load)&&(A.isChartFree(e)?'rpe':'chart')===PATH[e.implement]),'each implement prices on an existing path (barbell/dumbbell/bodyweight chart, machines and cables RPE-delta)',JSON.stringify(gen.filter(e=>(A.isChartFree(e)?'rpe':'chart')!==PATH[e.implement]).map(e=>e.id)));
+  // inherited flags: a generated entry is never red where its parent isn't
+  { const conds=[...A.INJ.map(e=>e.id),'shoulder_instability','shoulder_impingement','knee_pain','low_back','hip_pain','ankle_pain','wrist_pain','elbow_pain'];
+    const C=A.getCFG(); let bad=[];
+    conds.forEach(c=>{ C.conditions=[c]; gen.forEach(e=>{ const f=A.flagFor(e.id), fp=A.flagFor(e.parent); if(f&&f.level==='red'&&!(fp&&fp.level==='red')) bad.push(e.id+'@'+c); }); });
+    C.conditions=[];
+    ok(bad.length===0,'no generated entry is red unless its parent is, under any condition',bad.slice(0,8).join(' '));
+    C.conditions=['shoulder_instability'];
+    ok((A.flagFor('smith_bench')||{}).level==='yellow'&&(A.flagFor('smith_incline')||{}).level==='yellow','the hand-written flags follow the parent: Smith bench and incline carry the bench\'s elbow-angle warning','');
+    C.conditions=['low_back'];
+    ok((A.flagFor('db_row')||{}).level==='yellow'&&!A.flagFor('cs_db_row'),'…except where the condition doesn\'t apply: a chest-supported row isn\'t hinged','');
+    C.conditions=['el_lateral_tendinopathy'];
+    // the library layer (the hand-written elbow table, which outranks it, already has carries and hangs at yellow)
+    const hang=A.libraryFlag('hang'), farmer=A.libraryFlag('farmer'), shrug=A.flagFor('shrug'), strapped=A.flagFor('shrug',{straps:true});
+    ok(hang&&hang.level==='yellow'&&/isometric/.test(hang.why)&&farmer&&farmer.level==='red','outer elbow, library layer: a dead hang (isometric) is yellow under the pain cap; a heavy carry is red',JSON.stringify({hang,farmer}));
+    ok(shrug&&shrug.level==='red'&&!strapped,'outer elbow: a shrug is red, a strapped shrug isn\'t',JSON.stringify({shrug,strapped}));
+    C.conditions=[]; }
+  ok(A.strapsApply(A.exById.deadlift)&&A.strapsApply(A.exById.shrug)&&A.strapsApply(A.exById.cable_row)&&!A.strapsApply(A.exById.farmer)&&!A.strapsApply(A.exById.hang)&&A.modSig({straps:true})==='straps:on','straps on pulls and shrugs, never on carries or hangs','');
+  // cues come from the nearest ancestor that has them
+  { const withCue=gen.find(e=>!A.CUES[e.id]&&A.genChain(e).some(x=>A.CUES[x.id]));
+    ok(withCue&&A.cueFor(withCue.id)===A.CUES[A.genChain(withCue).find(x=>A.CUES[x.id]).id],'a generated entry shows its parent\'s coaching cues',withCue&&withCue.id); }
+  // generator: a named variant is auto-picked only once logged
+  { const pool=W.filter(e=>e.pattern==='vertical_pull'&&!e.named).map(e=>e.id);
+    const B=load([]); ok(B.resolveEx('vertical_pull','accessory',new Set(pool))===null,'unlogged named variants are never auto-picked','');
+    const C2=load([set('sa_cable_pulldown','a',60,10,8,3),set('sa_cable_pulldown','b',60,10,8,6)]);
+    ok((C2.resolveEx('vertical_pull','accessory',new Set(pool))||{}).id==='sa_cable_pulldown','once logged, a named variant can be picked',''); }
+  // generator: what you've logged outranks the equipment answer
+  { const hp=W.filter(e=>e.pattern==='horizontal_press'&&!e.named&&!e.manualOnly);
+    const B=load([]); B.getCFG().equipment='barbell';
+    const r0=B.resolveEx('horizontal_press','secondary',new Set());
+    ok(r0&&['barbell','specialty'].includes(B.implementOf(r0)),'barbell gym, nothing logged: a barbell press',r0&&r0.id);
+    const ev=[]; for(let i=0;i<10;i++) ev.push(set('smith_bench','s'+i,135,8,8,30-i*2));
+    const C3=load(ev); C3.getCFG().equipment='barbell';
+    ok((C3.resolveEx('horizontal_press','secondary',new Set())||{}).id==='smith_bench','ten logged Smith benches beat an unlogged barbell bench in a barbell gym (revealed preference)','');
+    const D=load([]); D.getCFG().equipment='dumbbell';
+    const r1=D.resolveEx('horizontal_press','secondary',new Set());
+    ok(r1&&['dumbbell','kettlebell','bodyweight','band'].includes(D.implementOf(r1)),'dumbbells only, nothing logged: a dumbbell, kettlebell, bodyweight or band press',r1&&r1.id);
+    const D2=load([set('bench','x',135,5,8,3),set('bench','y',135,5,8,6)]); D2.getCFG().equipment='dumbbell';
+    ok((D2.resolveEx('horizontal_press','secondary',new Set())||{}).id==='bench','…but a logged barbell bench is picked: if you\'ve logged it, you have it',''); }
+  // picker search matches implements; a custom twin offers its built-in
+  ok(A.exMatches(A.exById.smith_bench,'smith')&&A.exMatches(A.exById.pulldown,'cable')&&A.exMatches(A.exById.kb_goblet,'kb')&&A.exMatches(A.exById.ez_curl,'ez bar')&&!A.exMatches(A.exById.bench,'cable'),'search finds exercises by implement: smith, cable, kb, ez bar','');
+  { const B=load([]), C=B.getCFG(); C.customEx=[{id:'cx_mine',name:'Smith Machine Bench-Press',load:'barbell',inc:5,bar:20,vol:{chest:1},pattern:'horizontal_press',custom:true,prog:'double'}]; B.mergeCustom();
+    ok((B.builtinTwin('cx_mine')||{}).id==='smith_bench'&&B.builtinTwin('bench')===null,'a custom exercise with a built-in\'s name is offered the built-in (case and punctuation aside); built-ins aren\'t',''); }
+  console.log('  '+W.length+' exercises · existing ids intact · implements → existing pricing paths · flags never redder than the parent · named only once logged · history over equipment · search by implement · straps');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

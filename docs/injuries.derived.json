@@ -1347,22 +1347,22 @@
    {
     "exercise": "deadlift",
     "substitute": "transformer_hinge",
-    "note": "or keep the deadlift and use straps"
+    "note": "straps on pulls: keep the deadlift, strapped"
    },
    {
     "exercise": "pullup",
     "substitute": "pulldown",
-    "note": "neutral handle, straps if needed"
+    "note": "straps on pulls; a neutral handle helps"
    },
    {
     "exercise": "farmer",
     "substitute": "trap_bar",
-    "note": "use straps; grip demand drops"
+    "note": "light carries OK under the pain cap (below 7/10); heavy ones strapped or on the trap bar"
    },
    {
     "exercise": "hang",
     "substitute": "rev_wrist",
-    "note": "build extensor capacity directly instead of a long hold"
+    "note": "straps on pulls; hangs and light carries OK under the pain cap (below 7/10) — a hang is an isometric hold"
    }
   ],
   "in_workout_cues": [
@@ -1489,22 +1489,22 @@
    {
     "exercise": "deadlift",
     "substitute": "transformer_hinge",
-    "note": "or keep the deadlift and use straps"
+    "note": "straps on pulls: keep the deadlift, strapped"
    },
    {
     "exercise": "pullup",
     "substitute": "pulldown",
-    "note": "neutral handle, straps if needed"
+    "note": "straps on pulls; a neutral handle helps"
    },
    {
     "exercise": "farmer",
     "substitute": "trap_bar",
-    "note": "use straps; grip demand drops"
+    "note": "light carries OK under the pain cap (below 7/10); heavy ones strapped or on the trap bar"
    },
    {
     "exercise": "hang",
     "substitute": "rev_wrist",
-    "note": "build extensor capacity directly instead of a long hold"
+    "note": "straps on pulls; hangs and light carries OK under the pain cap (below 7/10) — a hang is an isometric hold"
    }
   ],
   "in_workout_cues": [

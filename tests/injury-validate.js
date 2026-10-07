@@ -21,11 +21,21 @@ const REGIONS=['neck','shoulder','elbow','wrist_hand','thoracic_ribs','lower_bac
 const PHASES=['protect','restore_range','build_capacity','return_to_load','maintain'];
 const RUN=new Set(MOVE.running_tags||[]);
 const exIds=new Set(Object.keys(MOVE.exercises));
-// families and patterns from the app itself
-const famOf={}; (html.match(/\{id:'[a-z0-9_]+',[^\n]*pattern:'[a-z_]+'/g)||[]).forEach(s=>{ const id=s.match(/id:'([a-z0-9_]+)'/)[1], p=s.match(/pattern:'([a-z_]+)'/)[1]; famOf[id]=p; });
+// the library as the app builds it: hand-tagged built-ins plus the generated entries (v1.55),
+// which take their tags from their parent chain — over-flagging is measured on what's really applied
+const appSrc=html.match(/<script>([\s\S]*)<\/script>/)[1];
+function stub(){ return new Proxy(function(){},{get(t,k){ if(k===Symbol.toPrimitive) return ()=>''; if(k==='length') return 0; if(k==='then') return undefined; return stub(); },set(){return true;},apply(){return stub();},construct(){return stub();}}); }
+const appDoc={getElementById:id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?{textContent:m[1]}:null; },querySelector:()=>stub(),querySelectorAll:()=>[],createElement:()=>stub(),addEventListener(){},body:stub(),documentElement:stub()};
+const APP=new Function('document','window','navigator','localStorage','location','history','setTimeout','setInterval','alert','confirm','fetch','console',appSrc+';return {EX,exTags,strapsApply,ISOMETRIC_OK};')(appDoc,stub(),stub(),{getItem:()=>null,setItem(){},removeItem(){}},stub(),stub(),()=>0,()=>0,()=>{},()=>true,()=>Promise.resolve({}),{log(){},warn(){},error(){}});
+const WORK=APP.EX.filter(e=>!e.rehab&&!e.folded);
+const famOf={}; APP.EX.forEach(e=>{ if(!e.gen) famOf[e.id]=e.pattern; });
+const effTags=Object.fromEntries(WORK.map(e=>[e.id,APP.exTags(e.id)])), effFam=Object.fromEntries(WORK.map(e=>[e.id,e.pattern]));
+// the strapped version of anything straps apply to (v1.55): a family keeps a non-red option if strapping clears it
+const strappedTags=Object.fromEntries(WORK.filter(e=>APP.strapsApply(e)).map(e=>[e.id,APP.exTags(e.id,{straps:true})]));
+WORK.filter(e=>e.gen).forEach(e=>exIds.add(e.id));
 const byId=Object.fromEntries(src.map(e=>[e.id,e])), dById=Object.fromEntries(der.map(e=>[e.id,e]));
 const subOk=s=>{ const [id,mod]=String(s).split('+'); if(!exIds.has(id)) return false;
-  return !mod||['lockout:soft','grip:close','grip:neutral','grip:wide','rom:board','rom:pin','rom:partial','pause:bottom'].includes(mod); };
+  return !mod||['lockout:soft','grip:close','grip:neutral','grip:wide','rom:board','rom:pin','rom:partial','pause:bottom','straps:on'].includes(mod); };
 
 console.log('Injury library: '+src.length+' entries');
 // 1. shape
@@ -70,17 +80,20 @@ der.filter(e=>e.category!=='UMBRELLA').forEach(e=>{ const par=dById[e.parent_id]
   const pm=new Set((par.avoid||[]).map(a=>a.movement));
   (e.avoid||[]).filter(a=>a.level==='core').forEach(a=>{ if(!pm.has(a.movement)) fail(e.id+': core '+a.movement+' not in derived parent '+par.id); }); });
 // over-flagging, per entry as the app applies it (umbrella → all amber)
-const all=Object.keys(MOVE.exercises), N=all.length;
+const all=Object.keys(effTags), N=all.length;
 console.log('\nOver-flagging (of '+N+' exercises; limits 30% flagged, 10% red):');
 der.forEach(e=>{
   // as the app applies it: structural caution tags are notes, not warnings
   const tags=(e.avoid||[]).filter(a=>!RUN.has(a.movement)&&!(e.category==='STRUCTURAL_PERMANENT'&&a.level!=='core'));
   const coreT=new Set(e.category==='UMBRELLA'?[]:tags.filter(a=>a.level==='core').map(a=>a.movement)), anyT=new Set(tags.map(a=>a.movement));
-  const flagged=all.filter(id=>MOVE.exercises[id].some(t=>anyT.has(t))), red=all.filter(id=>MOVE.exercises[id].some(t=>coreT.has(t)));
+  const isoOk=APP.ISOMETRIC_OK.has(e.id), isoEx=new Set(WORK.filter(x=>x.isometric).map(x=>x.id));   // as the app applies it: an isometric hold isn't red where the pain rule keeps isometrics
+  const flagged=all.filter(id=>effTags[id].some(t=>anyT.has(t))), red=all.filter(id=>effTags[id].some(t=>coreT.has(t))&&!(isoOk&&isoEx.has(id)));
   const line=e.id.padEnd(26)+String(flagged.length).padStart(3)+' flagged ('+Math.round(flagged.length/N*100)+'%), '+red.length+' red';
   if(flagged.length/N>0.30) fail(line+' — over 30%'); else if(red.length/N>0.10) fail(line+' — red over 10%'); else console.log('  '+line);
   // no whole family red
-  const fams={}; all.forEach(id=>{ const f=famOf[id]; if(!f) return; (fams[f]=fams[f]||{n:0,r:0}).n++; if(red.includes(id)) fams[f].r++; });
+  const fams={}; all.forEach(id=>{ const f=effFam[id]; if(!f) return; (fams[f]=fams[f]||{n:0,r:0}).n++;
+    const strappedRed=!strappedTags[id]||strappedTags[id].some(t=>coreT.has(t));
+    if(red.includes(id)&&strappedRed) fams[f].r++; });
   Object.entries(fams).forEach(([f,c])=>{ if(c.n>=3&&c.r===c.n) fail(e.id+': every '+f+' exercise is red'); });
 });
 // embedded copies

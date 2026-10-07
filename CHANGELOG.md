@@ -6,6 +6,13 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.55.0 — 2026-10-07
+- The exercise library grew from 121 to 219 exercises. It adds Smith machine, kettlebell, band, specialty-bar (EZ, trap bar, safety squat bar) and more cable and machine versions, each with the same warnings and cues as the movement it's based on.
+- Search by equipment: type "smith", "cable", "kb" or "band". Each exercise shows what you hold.
+- When the app builds a workout, what you've actually been doing now outranks your equipment answer. If you've logged Smith bench ten times, you get Smith bench.
+- New "Straps" option under Modify on pulls and shrugs. For outer-elbow pain, a strapped shrug isn't flagged red, and dead hangs are amber, not red.
+- If one of your own exercises matches a new built-in by name, its info sheet offers to move your history to the built-in. Nothing happens unless you tap it.
+
 ## 1.54.0 — 2026-10-07
 - Back squat has a new "Bar position" option (high or low bar) under Modify. Like other modifiers, low-bar squats get their own history and suggestions.
 - With anterior shoulder instability picked, marking a squat as low bar shows the amber warning, with high bar as the suggested swap. An unmarked back squat stays unflagged.
