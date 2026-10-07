@@ -8531,7 +8531,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
   }
 }
 </script>
-<script type="application/json" id="whats-new">{"version":"1.51.0","lines":["Set the smallest jump for any exercise from its info sheet (2.5–25 lb). The app suggests loads in those steps from then on.","The default is the equipment's own step: the machine's stack step, dumbbells 5 lb, and a barbell whatever your plates allow (5 lb with 2.5 lb plates).","Reset returns to the library value. Past sets don't change."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.52.0","lines":["With anterior shoulder instability picked, three new amber warnings: low-bar squat (suggested swap: high-bar or the safety squat bar), pull-ups (swap: neutral grip) and incline dumbbell press (keep the elbows tucked and stop short of a deep stretch).","Setting a neutral or close grip on pull-ups clears that warning.","Face pulls get no warning. They're a standard exercise for this condition.","None of these is red, and they're only warnings. Nothing is removed from your program unless you choose it."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9098,7 +9098,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.51.0';
+const APP_VERSION='1.52.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -9444,7 +9444,17 @@ function libraryFlag(exId, mods){
 /* The authored table, keyed by the original conditions (implied by your
    picks); custom exercises are matched by name for the movements the
    library leaves out on purpose. Worst across conditions. */
-function authoredFlag(exId){
+/* Added after the v1.44 migration (Oct 2026, v1.52), yellow only, each with
+   its own swap. Kept apart from FLAGS so the one-time exclusion seed (which
+   reproduces what flags steered away from before v1.44) never picks them up.
+   unless: a modifier that takes the exercise out of the at-risk position. */
+const FLAGS_ADDED={
+  shoulder_instability:{
+    transformer_low_bar:{why:'the low-bar position needs the shoulder rotated back under load', swap:'transformer_high_bar', note:'or the safety squat bar'},
+    pullup:{why:'a wide overhand grip moves toward the at-risk position — shoulder width or narrower', swap:'pullup+grip:neutral', note:'parallel handles', unless:m=>!!m&&['neutral','close'].includes(m.grip)},
+    incline_db:{why:'loaded abduction with the shoulder rotated back at the bottom — keep the elbows tucked and stop short of a deep stretch'}}
+};
+function authoredFlag(exId, mods, o){
   const ex=exById[exId], ids=[exId];
   if(ex&&ex.custom) FLAG_NAME_HINTS.forEach(([re,map])=>{ if(re.test(ex.name||'')) ids.push(...map); });
   let best=null;
@@ -9455,6 +9465,10 @@ function authoredFlag(exId){
       if(!best&&f.yellow&&f.yellow[id]) best={level:'yellow',cond:LEGACY_COND[c]||c,why:f.yellow[id],authored:true};
     }
   }
+  if(!best&&!(o&&o.legacyOnly)) for(const c of legacyConds()){
+    const a=(FLAGS_ADDED[c]||{})[exId];
+    if(a&&!(a.unless&&a.unless(mods))){ best={level:'yellow',cond:LEGACY_COND[c]||c,why:a.why,authored:true,swap:a.swap?resolveSubstitute(a.swap):null,swapNote:a.note||null}; break; }
+  }
   return best;
 }
 /* One flag per exercise: the authored table where it has an opinion (it was
@@ -9462,8 +9476,8 @@ function authoredFlag(exId){
    ratings (exerciseVerdict) — "you've done this fine" softens it to a note,
    "it's hurt you" makes it red. Returns null, or {level: 'red'|'yellow'|'ok', …}. */
 function flagFor(exId, mods){
-  const lib=libraryFlag(exId,mods), auth=authoredFlag(exId);
-  let f=auth?{...auth, swap:lib&&lib.swap||null, swapNote:lib&&lib.swapNote||null}:lib;
+  const lib=libraryFlag(exId,mods), auth=authoredFlag(exId,mods);
+  let f=auth?{...auth, swap:auth.swap||lib&&lib.swap||null, swapNote:auth.swap?auth.swapNote:lib&&lib.swapNote||null}:lib;
   const v=exerciseVerdict(exId);
   if(v&&v.verdict==='bad') return {...(f||{cond:null}), level:'red', why:v.text, verdict:v};
   if(f&&v&&v.verdict==='ok') return {...f, level:'ok', why:v.text, libraryWhy:f.why, verdict:v};
@@ -10367,7 +10381,7 @@ function loadAll(){
   // starts with everything its flags were steering away from, and its program doesn't
   // change. All of it shows ticked in Edit program; untick any of them.
   if(CFG.excludedEx==null){
-    CFG.excludedEx=CFG.conditions.length?EX.filter(e=>!e.rehab&&!e.folded&&authoredFlag(e.id)).map(e=>e.id):[];
+    CFG.excludedEx=CFG.conditions.length?EX.filter(e=>!e.rehab&&!e.folded&&authoredFlag(e.id,null,{legacyOnly:true})).map(e=>e.id):[];
     try{ STORE.setItem(LS_CFG,JSON.stringify(CFG)); }catch{}
   }
   ROADMAP = CFG.roadmap && CFG.roadmap.length ? CFG.roadmap : DEFAULT_ROADMAP.map(b=>({...b}));

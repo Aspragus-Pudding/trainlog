@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -2369,6 +2369,29 @@ section('55. smallest jump per exercise');
     C.customEx=[cx]; A.mergeCustom(); C.stepOverride={cx_test:20}; A.applyStepOverrides();
     ok(A.exById.cx_test.inc===7.5,'custom exercises keep their own step (edited on the exercise itself)',String(A.exById.cx_test.inc)); }
   console.log('  override reaches up/down/loadable, barbell bypasses plates, custom untouched');
+}
+
+/* ─── 56. v1.52: instability yellows — low-bar, wide pull-ups, incline DB; face pulls never ─── */
+section('56. shoulder instability: three yellows, no reds, face pulls left alone');
+{
+  for(const cond of ['shoulder_instability','sh_ant_instability']){
+    const A=load([],true); A.getCFG().conditions=[cond];
+    const lb=A.flagFor('transformer_low_bar'), pu=A.flagFor('pullup'), pn=A.flagFor('pullup',{grip:'neutral'}), idb=A.flagFor('incline_db'), fp=A.flagFor('face_pull');
+    ok(lb&&lb.level==='yellow'&&lb.swap&&lb.swap.ex==='transformer_high_bar','['+cond+'] low-bar squat: yellow, swap to high-bar',JSON.stringify(lb));
+    ok(pu&&pu.level==='yellow'&&pu.swap&&pu.swap.ex==='pullup'&&pu.swap.modifiers&&pu.swap.modifiers.grip==='neutral','['+cond+'] pull-ups: yellow, swap to a neutral grip',JSON.stringify(pu));
+    ok(!pn||pn.level!=='yellow'||!/wide overhand/.test(pn.why),'['+cond+'] pull-ups with a neutral grip: that warning goes',JSON.stringify(pn));
+    ok(idb&&idb.level==='yellow'&&/elbows tucked/.test(idb.why)&&/stop short/.test(idb.why),'['+cond+'] incline DB: yellow, cue elbows tucked and a shorter range',JSON.stringify(idb));
+    ok(!fp,'['+cond+'] face pulls: no warning — they are the standard prescription for this condition',JSON.stringify(fp));
+    ok([lb,pu,idb].every(f=>f.level!=='red'),'['+cond+'] none of the three is red','');
+    // the one-time v1.44 exclusion seed never picks the new rows up
+    ok(['transformer_low_bar','pullup','incline_db'].every(id=>!A.authoredFlag(id,null,{legacyOnly:true})),'['+cond+'] the v1.44 exclusion seed ignores the added rows','');
+  }
+  // the hand-made shoulder_instability rows are exactly what they were — never softened
+  { const A=load([]), f=A.FLAGS.shoulder_instability;
+    ok(JSON.stringify(Object.keys(f.red).sort())===JSON.stringify(['bn_press','bn_pulldown','cable_fly','dip','fly','pullover','snatch']),'shoulder_instability red rows unchanged',JSON.stringify(Object.keys(f.red)));
+    ok(JSON.stringify(Object.keys(f.yellow).sort())===JSON.stringify(['bench','db_bench','decline_press','machine_ohp','ohp','seated_db_press','weighted_pushup','z_press']),'shoulder_instability yellow rows unchanged',JSON.stringify(Object.keys(f.yellow)));
+    ok(Object.values(A.FLAGS_ADDED).every(t=>!('face_pull' in t)),'face pulls are in no added table',''); }
+  console.log('  low-bar → high-bar · pull-ups → neutral grip · incline DB cue · face pulls clean · none red · original rows untouched');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

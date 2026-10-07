@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.52.0 — 2026-10-07
+- With anterior shoulder instability picked, three new amber warnings: low-bar squat (suggested swap: high-bar or the safety squat bar), pull-ups (swap: neutral grip) and incline dumbbell press (keep the elbows tucked and stop short of a deep stretch).
+- Setting a neutral or close grip on pull-ups clears that warning.
+- Face pulls get no warning. They're a standard exercise for this condition.
+- None of these is red, and they're only warnings. Nothing is removed from your program unless you choose it.
+
 ## 1.51.0 — 2026-10-07
 - Set the smallest jump for any exercise from its info sheet (2.5–25 lb). The app suggests loads in those steps from then on.
 - The default is the equipment's own step: the machine's stack step, dumbbells 5 lb, and a barbell whatever your plates allow (5 lb with 2.5 lb plates).
