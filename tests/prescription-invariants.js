@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -1909,7 +1909,9 @@ section('47. injury library: warn, never decide');
   // fly, cable_fly, bn_press, bn_pulldown and snatch were red in the hand-made table before they existed as exercises (added Oct 2026)
   const OLD={fly:'red',cable_fly:'red',bn_press:'red',bn_pulldown:'red',snatch:'red',dip:'red',pullover:'red',bench:'yellow',db_bench:'yellow',decline_press:'yellow',ohp:'yellow',seated_db_press:'yellow',machine_ohp:'yellow',z_press:'yellow',weighted_pushup:'yellow'};
   ok(Object.entries(OLD).every(([id,l])=>lv(id)===l),'every hand-made shoulder flag is exactly what it was',JSON.stringify(Object.keys(OLD).map(id=>id+':'+lv(id))));
-  ok(O.EX.filter(e=>!e.rehab&&!e.folded&&!OLD[e.id]).every(e=>lv(e.id)!=='red'),'no exercise turns red for the owner that was not red before','');
+  // a generated version of a red movement (assisted or banded dip, v1.56) carries that same hand-made red
+  const redParent=e=>e.gen&&O.genChain(e).some(p=>OLD[p.id]==='red');
+  ok(O.EX.filter(e=>!e.rehab&&!e.folded&&!OLD[e.id]&&!redParent(e)).every(e=>lv(e.id)!=='red'),'no exercise turns red for the owner that was not red before (versions of a red movement aside)',O.EX.filter(e=>!e.rehab&&!e.folded&&!OLD[e.id]&&!redParent(e)&&lv(e.id)==='red').map(e=>e.id).join(' '));
   // the rule: a condition never changes the generated workout; only your exclusions do
   const days=A=>A.generatedDays().map(d=>d.slots.map(x=>x.ex).join(',')).join(' | ');
   const base=withCfg({conditions:[],onboarded:true,goals:[],excludedEx:[]}), withK=withCfg({conditions:['kn_pfp','lb_pain','el_lateral_tendinopathy'],onboarded:true,goals:[],excludedEx:[]});
@@ -2448,7 +2450,7 @@ section('58. library: implements, inheritance, generator ranking, search, straps
   ok(gen.every(e=>{ const c=A.genChain(e); return c.length&&!c[c.length-1].gen; }),'every generated entry\'s parent chain ends at a built-in','');
   // a new implement maps onto an existing pricing path only
   const PATH={barbell:'chart',smith:'chart',specialty:'chart',dumbbell:'chart',kettlebell:'chart',bodyweight:'chart',band:'chart',cable:'rpe',selector:'rpe',plate:'rpe'};
-  ok(gen.every(e=>['barbell','dumbbell','stack','machine','bodyweight'].includes(e.load)&&(A.isChartFree(e)?'rpe':'chart')===PATH[e.implement]),'each implement prices on an existing path (barbell/dumbbell/bodyweight chart, machines and cables RPE-delta)',JSON.stringify(gen.filter(e=>(A.isChartFree(e)?'rpe':'chart')!==PATH[e.implement]).map(e=>e.id)));
+  ok(gen.every(e=>['barbell','dumbbell','stack','machine','bodyweight','bodyweight_plus'].includes(e.load)&&(A.isChartFree(e)?'rpe':'chart')===(A.bwClass(e)?'chart':PATH[e.implement])),'each implement prices on an existing path (barbell/dumbbell/bodyweight chart, machines and cables RPE-delta)',JSON.stringify(gen.filter(e=>(A.isChartFree(e)?'rpe':'chart')!==PATH[e.implement]).map(e=>e.id)));
   // inherited flags: a generated entry is never red where its parent isn't
   { const conds=[...A.INJ.map(e=>e.id),'shoulder_instability','shoulder_impingement','knee_pain','low_back','hip_pain','ankle_pain','wrist_pain','elbow_pain'];
     const C=A.getCFG(); let bad=[];
@@ -2496,6 +2498,94 @@ section('58. library: implements, inheritance, generator ranking, search, straps
   { const B=load([]), C=B.getCFG(); C.customEx=[{id:'cx_mine',name:'Smith Machine Bench-Press',load:'barbell',inc:5,bar:20,vol:{chest:1},pattern:'horizontal_press',custom:true,prog:'double'}]; B.mergeCustom();
     ok((B.builtinTwin('cx_mine')||{}).id==='smith_bench'&&B.builtinTwin('bench')===null,'a custom exercise with a built-in\'s name is offered the built-in (case and punctuation aside); built-ins aren\'t',''); }
   console.log('  '+W.length+' exercises · existing ids intact · implements → existing pricing paths · flags never redder than the parent · named only once logged · history over equipment · search by implement · straps');
+}
+
+/* ─── 59. v1.56: the bodyweight-relative class — priced on system load ─── */
+section('59. bodyweight class: system load, handoffs, goals');
+{
+  const bw=(lb,d)=>({type:'bodyweight',id:'bw'+(uid++),ts:day(d),bodyweight:lb});
+  const tgt={target:{reps:[6,10],rpe:8}};
+  const mk=ex=>({ex,role:'primary',reps:[6,10],rpe:8,sets:[],sets_target:3});
+  const sug=(A,ex)=>{ const sl=mk(ex); A.setSession({id:'N'+(uid++),slots:[sl],openIdx:0,adj:null,score:.7,ratings:{},startedAt:Date.now()}); return A.suggestFor(sl); };
+  // 1. a bodyweight change alone never changes the suggested system load — only the number you type
+  { let bad=[], n=0;
+    for(const [ex,step] of [['assisted_pullup',10],['pullup',5],['assisted_dip',10],['dip',5],['chinup',2.5]])
+    for(const typed of ex.startsWith('assisted')?[30,60,100]:[0,10,25]) for(const reps of [6,8,10]) for(const rpe of [7,8,9]) for(const k of [-2,-1,1,2]){
+      const ev=[bw(180,20),set(ex,'a',typed,reps,rpe,3,tgt)], A1=load(ev), A2=load([...ev,bw(180+k*step,1)]);
+      const r1=sug(A1,ex), r2=sug(A2,ex); n++;
+      if(r1.lb==null||r2.lb==null||r1.lb===0||r2.lb===0) continue;   // at the zero edge the handoff takes over (a plain entry can't go under bodyweight)
+      const assist=A1.bwClass(ex).mode==='assist', want=r1.lb+(assist?k*step:-k*step);
+      if(Math.abs(r2.pr.sys-r1.pr.sys)>1e-6&&!(want<0&&r2.lb===0)) bad.push(ex+' '+typed+'×'+reps+'@'+rpe+' bw'+(k>0?'+':'')+k*step+': sys '+r1.pr.sys+'→'+r2.pr.sys);
+      else if(want>=0&&Math.abs(r2.lb-want)>1e-6) bad.push(ex+' typed '+r1.lb+'→'+r2.lb+' (want '+want+')');
+      if(!(r2.trace||[]).some(t=>t.id==='bodyweight'&&/lighter|heavier/.test(t.reason))) bad.push(ex+' no bodyweight line in the trace');
+    }
+    ok(bad.length===0,'a bodyweight change alone moves only the typed number; the system load holds, and the trace says why ('+n+' cases)',bad.slice(0,4).join(' | ')); }
+  // 2. assisted: never more assistance after an on-target (or easier) set
+  { let bad=[];
+    for(const assist of [20,50,80,110]) for(const reps of [6,7,8,9,10]) for(const rpe of [6,7,7.5,8]){
+      const A=load([bw(185,20),set('assisted_pullup','a',assist,reps,rpe,2,tgt)]), r=sug(A,'assisted_pullup');
+      if(r.lb!=null&&r.lb>assist+1e-6) bad.push(assist+'×'+reps+'@'+rpe+' → '+r.lb); }
+    ok(bad.length===0,'assisted: an on-target or easier set never brings more assistance',bad.slice(0,4).join(' | ')); }
+  // 3. one e1RM track across assisted → bodyweight → weighted
+  { const A=load([bw(180,40),set('assisted_pullup','a',60,8,8,30),set('assisted_pullup','b',20,8,8,20),set('pullup','c',0,6,8.5,12),set('pullup','d',15,5,8.5,3)]);
+    const ser=A.e1rmSeries('pullup'), b1=A.bestE1RM('assisted_pullup'), b2=A.bestE1RM('pullup');
+    ok(ser.length===4&&ser.every((x,i)=>!i||x.v>ser[i-1].v)&&b1&&b2&&b1.v===b2.v,'one system-load track across assisted → bodyweight → weighted: four points, rising, same best from either version',JSON.stringify(ser.map(x=>Math.round(x.v)))); }
+  // nearest prior bodyweight; none before → the first one ever, marked assumed
+  { const A=load([set('pullup','a',10,6,8,30,tgt),bw(170,20),bw(175,10)]);
+    const i1=A.bwInfoAt(day(30)), i2=A.bwInfoAt(day(15)), i3=A.bwInfoAt(day(1));
+    ok(i1.bw===170&&i1.assumed&&i2.bw===170&&!i2.assumed&&i3.bw===175,'a past set uses the nearest prior bodyweight; before the first reading, the first one, marked assumed',JSON.stringify({i1,i2,i3}));
+    const r=sug(A,'pullup'); ok((r.trace||[]).some(t=>t.id==='bodyweight'&&/assumed/.test(t.reason)),'and the trace says "bodyweight assumed"',''); }
+  // stale bodyweight is marked
+  { const A=load([bw(180,12),set('pullup','a',10,6,8,2,tgt)]), r=sug(A,'pullup');
+    ok((r.trace||[]).some(t=>t.id==='bodyweight'&&/stale bodyweight/.test(t.reason)),'a bodyweight over a week old: the trace says "stale bodyweight"',''); }
+  // the one-step rule is on system load: a stack step, not a typed-number step
+  { const A=load([bw(180,20),set('assisted_pullup','a',100,10,6,2,tgt)]), r=sug(A,'assisted_pullup');
+    ok(r.lb===90&&r.pr.sys===90,'one step on system load: an easy 100-assist set goes to 90 assist (one 10 lb stack step, +10 lb lifted)',JSON.stringify({lb:r.lb,sys:r.pr.sys})); }
+  // 4. handoffs: proposed once, never automatic, goal untouched
+  { const ev=[bw(180,20),set('assisted_pullup','a',10,10,7,6,tgt),set('assisted_pullup','b',0,8,8,2,tgt)];
+    const A=load(ev); A.getCFG().goals=['assisted_pullup'];
+    const ps=()=>A.activeProposals().filter(x=>/^handoff:/.test(x.id));
+    ok(ps().length===1&&ps()[0].id==='handoff:assisted_pullup>pullup','zero assistance: the plain pull-up is proposed',JSON.stringify(ps().map(x=>x.id)));
+    ok(A.classVersion('assisted_pullup')==='assisted_pullup','…and nothing switches until you accept','');
+    ps()[0].accept.fn();
+    ok(ps().length===0,'accepted: the proposal doesn\'t come back (it fires once)','');
+    ok(A.classVersion('assisted_pullup')==='pullup'&&JSON.stringify(A.getCFG().goals)==='["assisted_pullup"]'&&A.isMainLift('pullup'),'the program uses the plain version; the goal is unchanged and still covers it','');
+    const B=load(ev); const pb=B.activeProposals().find(x=>/^handoff:/.test(x.id)); B.getCFG().proposalsDismissed={[pb.id]:new Date().toISOString()};
+    ok(!B.activeProposals().some(x=>/^handoff:/.test(x.id)),'declined: it doesn\'t come back either','');
+    const C=load([bw(180,20),set('pullup','a',0,3,9.5,2,tgt)]);
+    ok((C.activeProposals().find(x=>/^handoff:/.test(x.id))||{}).id==='handoff:pullup>assisted_pullup','short of the range at +0: the assisted version is offered',''); }
+  // goals: one per case
+  { // tracked on system-load e1RM whichever version you're on
+    const A=load([bw(180,60),set('assisted_pullup','a',60,8,8,50),set('assisted_pullup','b',40,8,8,40),set('assisted_pullup','c',20,8,8,30),set('pullup','d',0,6,8,20)]);
+    A.getCFG().goals=['assisted_pullup'];
+    const lb=A.liftBests('assisted_pullup');
+    ok(lb.length===4&&A.isMainLift('pullup')&&lb[3].e1>lb[0].e1,'goal: a pull-up goal reads one system-load e1RM across the assisted and plain versions',JSON.stringify(lb.map(x=>Math.round(x.e1))));
+    // three ways: load, % of bodyweight, milestone
+    const pr=A.classProgress('assisted_pullup');
+    ok(pr&&pr.last.v>0&&pr.ratio>1&&pr.next&&pr.next[1]==='bodyweight ×1.25','goal screen: system load, % of bodyweight and the next milestone (past first unassisted rep → bodyweight ×1.25)',JSON.stringify(pr&&{v:Math.round(pr.last.v),ratio:pr.ratio.toFixed(2),next:pr.next}));
+    const E=load([bw(180,20),set('assisted_pullup','a',60,8,8,2)]), pe=E.classProgress('assisted_pullup');
+    ok(pe&&pe.ratio<1&&pe.next[1]==='first unassisted rep','still assisted: the next milestone is the first unassisted rep',JSON.stringify(pe&&pe.next)); }
+  { // realization AMRAP: reps counted at the current system load
+    const A=load([bw(180,30),set('pullup','a',20,5,8,10,{role:'top',target:{reps:[3,5],rpe:8}}),bw(170,1)]);
+    A.getCFG().goals=['pullup'];
+    const sl={ex:'pullup',role:'primary',reps:[3,5],rpe:10,structure:'amrap',sets:[],sets_target:1};
+    A.setSession({id:'AM',slots:[sl],openIdx:0,adj:null,score:.7,ratings:{},startedAt:Date.now()});
+    const r=A.suggestFor(sl), raw=A.amrapRx(sl);
+    ok(r.pr.sys!=null&&raw.lb!=null&&Math.abs(r.pr.sys-raw.lb)<=5+1e-6&&r.lb===Math.max(0,r.pr.sys-170),'realization AMRAP: priced from the training max on system load, typed as added weight at today\'s bodyweight',JSON.stringify({sys:r.pr.sys,typed:r.lb,raw:raw.lb})); }
+  { // a cut: % of bodyweight up, labelled honestly
+    const ev=[bw(190,40)]; [35,28,21,14,7,1].forEach((d,i)=>{ ev.push(bw(190-i*2,d+0.5)); ev.push(set('pullup','c'+i,(i*2),5,8,d,tgt)); });
+    const A=load(ev), pr=A.classProgress('pullup');
+    ok(pr&&pr.note&&/Lighter you, same strength/.test(pr.note),'a cut with the same system load: % of bodyweight rises and says "lighter you, same strength"',JSON.stringify(pr&&pr.note)); }
+  { // stall detection on system load: a flat stack while bodyweight climbs is progress, not a plateau
+    const mkEv=climb=>{ const ev=[]; for(let w=0;w<8;w++){ const d=52-w*7; ev.push(bw(180+(climb?w*2:0),d+0.5)); ev.push(set('pullup','s'+w,25,5,8,d,{role:'top',target:{reps:[3,5],rpe:8}})); } return ev; };
+    const flat=load(mkEv(false)), bulk=load(mkEv(true)); flat.getCFG().goals=['pullup']; bulk.getCFG().goals=['pullup'];
+    const sF=flat.stallState('pullup'), sB=bulk.stallState('pullup');
+    ok(sF&&sF.kind==='stall'&&!sB,'stall detection reads system load: the same +25 for eight weeks is a stall at a steady bodyweight, but not while bodyweight climbs (you\'re lifting more)',JSON.stringify({flat:sF&&sF.kind,bulk:sB&&sB.kind}));
+    // and a bulk: added weight down by exactly the bodyweight gained is the same system load — level, not a regression
+    const ev=[]; for(let w=0;w<6;w++){ const d=42-w*7; ev.push(bw(180+w*2,d+0.5)); ev.push(set('pullup','r'+w,20-w*2,5,8,d,tgt)); }
+    const R=load(ev), lb=R.liftBests('pullup').map(x=>x.e1);
+    ok(Math.max(...lb)-Math.min(...lb)<1,'a bulk: added weight down by the bodyweight gained is the same system load — level, not a regression',JSON.stringify(lb.map(Math.round))); }
+  console.log('  bodyweight change → typed only · assisted never eases after on-target · one track · bodyweight assumed/stale · handoffs once · goals: track, three ways, AMRAP, cut, stall');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

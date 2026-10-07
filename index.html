@@ -8536,7 +8536,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
   }
 }
 </script>
-<script type="application/json" id="whats-new">{"version":"1.55.1","lines":["For outer-elbow tendinopathy, loaded carries (farmer, kettlebell, trap bar, suitcase) are now red instead of amber.","Dead hangs stay amber. They're an isometric hold, which that condition's pain rule allows below 7/10, and light carries are fine under the same cap.","General \"elbow pain\" is unchanged: carries stay amber there."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.56.0","lines":["Pull-ups, chin-ups, dips, push-ups, inverted rows and pistol squats are now tracked on what you actually lift: bodyweight plus added weight, minus assistance. Type what's on the machine, and the card shows the rest (\"60 assist → lifting 122 lb\").","New assisted chin-up and dip, and band-assisted pull-up, chin-up and dip (reps only). Assisted, bodyweight and weighted sets of the same movement are one history and one goal.","If your bodyweight changes, the suggested assistance or added weight moves to keep the same load. If your last bodyweight is over a week old, the card asks for it (you can skip).","At zero assistance the app proposes the unassisted version, and if you fall short at bodyweight it offers the assisted one. It never switches on its own.","Goals for these show load, % of bodyweight and the next milestone. A weight cut is labelled \"lighter you, same strength\", not as getting stronger."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9103,7 +9103,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.55.1';
+const APP_VERSION='1.56.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -9610,9 +9610,9 @@ const EX=[
  {id:'rdl',name:'Romanian deadlift',pattern:'hinge',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'double',vol:{hamstrings:1,glutes:.5,upper_back:.5,lower_back:0.5}},
  {id:'leg_curl',name:'Seated leg curl',pattern:'knee_flexion',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',vol:{hamstrings:1}},
  {id:'leg_ext',name:'Leg extension',pattern:'knee_extension',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',vol:{quads:1}},
- {id:'chinup',name:'Weighted chin-up',pattern:'vertical_pull',load:'bodyweight_plus',bar:0,plateSet:null,inc:2.5,prog:'double',vol:{lats:1,biceps:1,upper_back:.5}},
+ {id:'chinup',name:'Chin-up',pattern:'vertical_pull',load:'bodyweight_plus',bar:0,plateSet:null,inc:2.5,prog:'double',vol:{lats:1,biceps:1,upper_back:.5}},
  {id:'incline_machine',name:'Incline machine chest press',pattern:'horizontal_press',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{chest:1,front_delts:.5,triceps:.5}},
- {id:'pullup',name:'Weighted pull-up',pattern:'vertical_pull',load:'bodyweight_plus',bar:0,plateSet:null,inc:5,prog:'double',vol:{lats:1,biceps:.5,upper_back:.5}},
+ {id:'pullup',name:'Pull-up',pattern:'vertical_pull',load:'bodyweight_plus',bar:0,plateSet:null,inc:5,prog:'double',vol:{lats:1,biceps:.5,upper_back:.5}},
  {id:'pulldown',name:'Lat pulldown',pattern:'vertical_pull',load:'stack',bar:0,plateSet:null,inc:10,prog:'double',vol:{lats:1,biceps:.5,upper_back:.5}},
  {id:'cable_row',name:'Neutral cable row',pattern:'horizontal_pull',load:'stack',bar:0,plateSet:null,inc:10,prog:'double',vol:{upper_back:1,lats:.5,biceps:.5,rear_delts:.5}},
  {id:'chest_row',name:'Chest-supported row',pattern:'horizontal_pull',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',vol:{upper_back:1,lats:.5,rear_delts:.5,biceps:.5}},
@@ -9652,7 +9652,7 @@ const EX=[
  {id:'db_bench',name:'Flat DB press',pattern:'horizontal_press',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',vol:{chest:1,front_delts:.5,triceps:.5}},
  {id:'decline_press',name:'Decline barbell press',pattern:'horizontal_press',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'percentage',vol:{chest:1,triceps:.5}},
  {id:'board_press',name:'Board press',pattern:'horizontal_press',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'percentage',vol:{chest:1,triceps:1}},
- {id:'weighted_pushup',name:'Weighted push-up',pattern:'horizontal_press',load:'bodyweight',bar:0,plateSet:null,inc:5,prog:'rep',vol:{chest:1,triceps:.5,front_delts:.5}},
+ {id:'weighted_pushup',name:'Push-up',pattern:'horizontal_press',load:'bodyweight_plus',bar:0,plateSet:null,inc:5,prog:'double',vol:{chest:1,triceps:.5,front_delts:.5}},
  {id:'cable_press',name:'Cable chest press',pattern:'horizontal_press',load:'stack',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{chest:1,triceps:.5}},
  {id:'seated_db_press',name:'Seated DB shoulder press',pattern:'vertical_press',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',vol:{front_delts:1,triceps:.5,side_delts:.5}},
  {id:'machine_ohp',name:'Machine shoulder press',pattern:'vertical_press',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{front_delts:1,triceps:.5,side_delts:.5}},
@@ -9686,7 +9686,7 @@ const EX=[
  {id:'spider',name:'Spider curl',pattern:'elbow_flexion',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',vol:{biceps:1}},
  {id:'skullcrusher',name:'Skullcrusher',pattern:'elbow_extension',load:'barbell',bar:25,plateSet:'main_lb',inc:5,prog:'double',vol:{triceps:1}},
  {id:'cg_bench',name:'Close-grip bench',pattern:'elbow_extension',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'percentage',vol:{triceps:1,chest:.5,front_delts:.5}},
- {id:'dip',name:'Weighted dip',pattern:'elbow_extension',load:'bodyweight_plus',bar:0,plateSet:null,inc:5,prog:'double',vol:{triceps:1,chest:.5,front_delts:.5}},
+ {id:'dip',name:'Dip',pattern:'elbow_extension',load:'bodyweight_plus',bar:0,plateSet:null,inc:5,prog:'double',vol:{triceps:1,chest:.5,front_delts:.5}},
  {id:'seated_calf',name:'Seated calf raise',pattern:'calf_raise',load:'machine',bar:0,plateSet:null,inc:10,prog:'double',comparable:false,vol:{calves:1}},
  {id:'press_calf',name:'Leg press calf raise',pattern:'calf_raise',load:'machine',plateLoaded:true,bar:0,plateSet:null,inc:25,prog:'double',comparable:false,vol:{calves:1}},
  {id:'rev_wrist',name:'Reverse wrist curl',pattern:'wrist',load:'dumbbell',bar:0,plateSet:null,inc:2.5,prog:'double',vol:{forearms:1}},
@@ -9906,7 +9906,15 @@ const LIB_GEN=[
   ['bb_wrist_curl','Barbell wrist curl','wrist_curl','barbell',{named:true}],
   ['trapbar_carry','Trap bar carry','farmer','specialty',{barType:'trap'}],
   ['kb_carry','Kettlebell farmer carry','farmer','kettlebell'],
-  ['suitcase_carry','Suitcase carry','farmer','dumbbell',{named:true,unilateral:true,vol:{forearms:1,abs:1,traps:.5}}]
+  ['suitcase_carry','Suitcase carry','farmer','dumbbell',{named:true,unilateral:true,vol:{forearms:1,abs:1,traps:.5}}],
+  // ── the bodyweight-relative class (v1.56): assisted and banded versions, inverted row, pistol
+  ['assisted_chinup','Assisted chin-up','chinup','selector',{named:true}],
+  ['assisted_dip','Assisted dip','dip','selector',{named:true}],
+  ['band_pullup','Band-assisted pull-up','pullup','band',{named:true}],
+  ['band_chinup','Band-assisted chin-up','chinup','band',{named:true}],
+  ['band_dip','Band-assisted dip','dip','band',{named:true}],
+  ['inverted_row','Inverted row','cable_row','bodyweight',{load:'bodyweight_plus',prog:'double',vol:{upper_back:1,lats:.5,biceps:.5,rear_delts:.5}}],
+  ['pistol','Pistol squat','bulgarian','bodyweight',{load:'bodyweight_plus',prog:'double',named:true,unilateral:true}]
 ];
 /* Built from the parent at load; tags, cues and flags are read through the chain. */
 function expandLibGen(base){
@@ -9919,6 +9927,7 @@ function expandLibGen(base){
       vol:{...(x.vol||p.vol)},parent,specificity:MACH.includes(I.load)!==MACH.includes(p.load)?.5:.7,
       implement:impl,gen:true};
     if(bt) e.barType=x.barType;
+    if(x.load) e.load=x.load; if(x.prog) e.prog=x.prog; if(x.inc!=null) e.inc=x.inc;
     ['named','manualOnly','specialty','noFlag','why'].forEach(k=>{ if(x[k]) e[k]=x[k]; });
     if(p.manualOnly) e.manualOnly=true;
     const uni=x.unilateral!=null?x.unilateral:p.unilateral; if(uni) e.unilateral=true;
@@ -10100,19 +10109,19 @@ function sigMods(sig){
 function setTrack(st){
   const ex=exById[st.exercise_id];
   if(ex&&ex.folded) return {ex:ex.folded.parent, sig:modSig(mergeMods(ex.folded.modifiers,st.modifiers))};
-  return {ex:st.exercise_id, sig:modSig(st.modifiers)};
+  return {ex:trackRoot(st.exercise_id), sig:modSig(st.modifiers)};
 }
 function slotTrack(slot){
   const ex=exById[slot.ex];
   if(ex&&ex.folded) return {ex:ex.folded.parent, sig:modSig(mergeMods(ex.folded.modifiers,slot.modifiers))};
-  return {ex:slot.ex, sig:modSig(slot.modifiers)};
+  return {ex:trackRoot(slot.ex), sig:modSig(slot.modifiers)};
 }
 /* Set roles (spec §2.1): top, backoff, amrap, straight, practice. Back-offs
    and practice sets are deliberately lighter, so they never feed the
    engine's history, a lift's trend or its PRs — those read top sets, AMRAPs
    and ordinary straight sets (every set logged before roles existed). */
 const LIGHT_ROLES=['backoff','practice'];
-const onTrack=(st,exId,sig)=>{ if(LIGHT_ROLES.includes(st.role)) return false; const t=setTrack(st); return t.ex===exId&&t.sig===(sig||''); };
+const onTrack=(st,exId,sig)=>{ if(LIGHT_ROLES.includes(st.role)) return false; const t=setTrack(st); return t.ex===trackRoot(exId)&&t.sig===(sig||''); };
 const trackKey=(exId,sig)=>sig?exId+'|'+sig:exId;
 /* The signatures this exercise has history on, unmodified first. */
 function tracksFor(exId){
@@ -10506,6 +10515,7 @@ function buildDay(tpl, phase){
     if(lead&&role==='primary'&&!used.has(lead)&&exById[lead].pattern===pattern) ex=exById[lead];
     if(!ex) ex=resolveEx(pattern,role,used);
     if(!ex) return;
+    if(bwClass(ex)){ const v=classVersion(ex.id); if(v!==ex.id&&!used.has(v)) ex=exById[v]; }   // the version you've switched to (handoff)
     used.add(ex.id);
     const sc=schemeFor(role,phase.type,phase.week,phase.weeks,ex,phase.taper);
     const refinedHyp=phase.refined&&phase.type==='hyp'&&!phase.onDeload;
@@ -10589,7 +10599,7 @@ const DAYS=[
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
   profile:null,profileParams:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
-  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{}};
+  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{}};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
    from the address bar so it isn't left sitting in history. Each writes
@@ -10862,29 +10872,141 @@ const isStackLike=ex=>!!ex&&(ex.load==='stack'||ex.load==='cable');
    bodyweight work keeps the chart, where it has research grounding and the
    backtest showed no comparable problem. An exercise can override this with
    `pricingPath:'chart'` or `pricingPath:'rpe'`. */
-const isChartFree=ex=>!!ex&&(ex.pricingPath?ex.pricingPath==='rpe':(ex.load==='machine'||isStackLike(ex)));
+const isChartFree=ex=>!!ex&&!bwClass(ex)&&(ex.pricingPath?ex.pricingPath==='rpe':(ex.load==='machine'||isStackLike(ex)));
 let _bwCache=null, _bwLen=-1;
+/* Bodyweight readings: the check-in's, and the standalone 'bodyweight' events the
+   set card asks for when the latest is over a week old (v1.56). Chronological. */
 function bwSeries(){
   if(_bwCache&&_bwLen===LOG.length) return _bwCache;
-  _bwCache=LOG.filter(e=>e.type==='readiness'&&e.bodyweight>0)
-    .map(e=>({t:new Date(e.ts).getTime(),bw:Number(e.bodyweight)}));
+  _bwCache=LOG.filter(e=>(e.type==='readiness'||e.type==='bodyweight')&&e.bodyweight>0)
+    .map(e=>({t:new Date(e.ts).getTime(),bw:Number(e.bodyweight)})).sort((a,b)=>a.t-b.t);
   _bwLen=LOG.length; return _bwCache;
 }
-function bwAt(ts){
+/* The bodyweight that applied at a moment: the nearest reading at or before it.
+   Before the first reading, the first one ever, marked assumed. Null with none. */
+function bwInfoAt(ts){
+  const s=bwSeries(); if(!s.length) return null;
   const t=new Date(ts).getTime(); let r=null;
-  for(const x of bwSeries()){ if(x.t<=t) r=x.bw; else break; }
-  return r;
+  for(const x of s){ if(x.t<=t) r=x; else break; }
+  return r?{bw:r.bw,t:r.t,assumed:false}:{bw:s[0].bw,t:s[0].t,assumed:true};
 }
+const bwAt=ts=>{ const i=bwInfoAt(ts); return i?i.bw:null; };
 const latestBodyweight=()=>{ const s=bwSeries(); return s.length?s[s.length-1].bw:null; };
+const latestBodyweightAt=()=>{ const s=bwSeries(); return s.length?s[s.length-1].t:null; };
+const BW_STALE_DAYS=7;
+const bwStale=()=>{ const t=latestBodyweightAt(); return t==null||(Date.now()-t)/864e5>BW_STALE_DAYS; };
+/* No bodyweight at all: repeat what you last typed on this exercise, and say why. */
+function classNoBodyweight(slot){
+  const tr=slotTrack(slot), last=lastSetFor(tr.ex,tr.sig);
+  const same=last&&last.exercise_id===slot.ex;
+  return {lb:same?toLb(last.weight):null, reps:last?Math.min(Math.max(last.reps,slot.reps[0]),slot.reps[1]):slot.reps[0], src:'log your bodyweight', noBw:true,
+    note:'No bodyweight logged yet, so this can\'t be priced on what you actually lift. '+(same?'It repeats your last set. ':'')+'Log your bodyweight in the check-in or on this card.'};
+}
+/* System load → the number you type: assistance rounds up, added weight down, on
+   the stack's steps (never harder than priced). The trace says what bodyweight
+   did — and when it was assumed or stale. */
+function classTypedRx(slot, r){
+  const c=bwClass(slot.ex), bw=latestBodyweight();
+  if(!r||r.lb==null||bw==null||(r.pr&&r.pr.noBw)){ const tr0=(r&&r.trace||[]).filter(t=>t.id!=='bodyweight'); if(r&&r.pr&&r.pr.noBw) tr0.push({id:'bodyweight',changed:false,reason:'No bodyweight logged — it repeats your last set',lb:r.lb,reps:r.pr.reps}); return {...r,trace:tr0}; }
+  const g=classGrid(slot), sys=r.lb, t=classTyped(slot,g,sys,'floor'), sysT=sysOf(slot.ex,t,bw);
+  const tr=slotTrack(slot), last=lastSetFor(tr.ex,tr.sig), li=last?bwInfoAt(last.ts):null;
+  const word=c.mode==='assist'?'assistance':'added';
+  const how=c.mode==='assist'?'bodyweight '+fmt(bw)+' − '+fmt(t)+' assistance'+(assistRatio(slot.ex)!==1?' × '+assistRatio(slot.ex):''):t>0?'bodyweight '+fmt(bw)+' + '+fmt(t)+' added':'bodyweight '+fmt(bw);
+  let reason='Lifting '+fmt(sysT,0)+' lb: '+how, changed=false;
+  if(li&&Math.abs(li.bw-bw)>=0.5){
+    const d=bw-li.bw;
+    reason+='. You\'re '+fmt(Math.abs(d))+' lb '+(d<0?'lighter':'heavier')+' than at your last set ('+fmt(li.bw)+'), so the '+word+' moves to hold the load'+(d<0?(c.mode==='assist'?' (more assistance)':' (less added weight)'):(c.mode==='assist'?' (less assistance)':' (more added weight)'));
+    changed=last.exercise_id===slot.ex&&Math.abs(t-toLb(last.weight))>1e-6;
+  }
+  if(c.mode==='added'&&t===0&&sys<sysT-1e-6) reason+=' — bodyweight is the lightest this version goes (the assisted version goes lighter)';
+  if(c.mode==='assist'&&t===0&&sys>sysT+1e-6) reason+=' — zero assistance is the most this version goes (the unassisted version goes further)';
+  if(li&&li.assumed) reason+=' · bodyweight assumed for your last set (no reading before it, so your first one is used)';
+  if(bwStale()) reason+=' · stale bodyweight (latest reading is '+Math.floor((Date.now()-latestBodyweightAt())/864e5)+' days old)';
+  const trace=(r.trace||[]).concat([{id:'bodyweight',changed,reason,lb:t,reps:r.pr.reps,sys:sysT,bw}]);
+  const why=r.why?{...r.why,detail:(r.why.detail||[]).concat(['Loads in this explanation are system load — bodyweight ± what\'s on the machine. You type '+fmt(t)+(c.mode==='assist'?' assistance.':t>0?' added.':' (bodyweight only).')])}:r.why;
+  return {...r, pr:{...r.pr, lb:t, sys:sysT, bw}, lb:t, trace, why};
+}
+/* Handoffs between a movement's versions (v1.56). Proposed, never automatic, once
+   each: the assisted version reaching zero assistance proposes the plain one;
+   failing at +0 on the plain one offers the assisted one. Accepting appends a
+   'handoff' event; the program then uses that version for the movement (the goal
+   stays the movement, and history is one track either way). */
+const ASSISTED_OF={pullup:'assisted_pullup',chinup:'assisted_chinup',dip:'assisted_dip'};
+const PLAIN_OF=Object.fromEntries(Object.entries(ASSISTED_OF).map(([p,a])=>[a,p]));
+function classVersion(exId){
+  const root=trackRoot(exId); let v=null;
+  for(const e of LOG) if(e.type==='handoff'&&trackRoot(e.to)===root) v=e.to;
+  return v&&exById[v]?v:exId;
+}
+function handoffDue(from){
+  const to=PLAIN_OF[from]||ASSISTED_OF[from]; if(!to||!exById[from]||!exById[to]) return null;
+  if(LOG.some(e=>e.type==='handoff'&&e.from===from&&e.to===to)) return null;
+  const tr=trackRoot(from), mine=sets().filter(st=>st.exercise_id===from&&st.set_kind!=='warmup'&&!LIGHT_ROLES.includes(st.role));
+  if(!mine.length||latestBodyweight()==null) return null;
+  const last=mine[mine.length-1], inLast=mine.filter(x=>x.session_id===last.session_id);
+  if(PLAIN_OF[from]){
+    // assisted: down to zero assistance, or the next step up would need less than zero
+    const sl={ex:from,role:'accessory',reps:(last.target&&last.target.reps)||[6,10],rpe:(last.target&&last.target.rpe)||8,sets:[],sets_target:3};
+    const r=nextPrescription(sl), atZero=inLast.some(x=>(toLb(x.weight)||0)===0&&(x.rpe==null||x.rpe<=((x.target&&x.target.rpe)||8)));
+    return atZero||(r&&r.lb!=null&&r.lb>=latestBodyweight()-1e-6)?{from,to,kind:'up'}:null;
+  }
+  // plain at +0: a failed set, or the reps short of the range at or past the target effort
+  const fail=inLast.some(x=>(toLb(x.weight)||0)===0&&(x.failed||(x.target&&x.reps<x.target.reps[0]&&x.rpe!=null&&x.rpe>=x.target.rpe+1)));
+  return fail?{from,to,kind:'down'}:null;
+}
+function handoffProposal(){
+  const ids=[...new Set(sets().filter(st=>bwClass(st.exercise_id)).map(st=>st.exercise_id))];
+  for(const id of ids){ const h=handoffDue(id); if(!h) continue;
+    const A=exById[h.from], B=exById[h.to];
+    return {id:'handoff:'+h.from+'>'+h.to, snoozeDays:100000,
+      title:h.kind==='up'?'Ready for '+B.name.toLowerCase()+'s?':'Try '+B.name.toLowerCase()+'s for now?',
+      body:h.kind==='up'?'You\'re at zero assistance on '+A.name.toLowerCase()+'s. The plain version continues the same track — your history and goal carry over, you just type added weight (0 = bodyweight) instead of assistance.'
+        :'Your last '+A.name.toLowerCase()+' at bodyweight fell short. The assisted version is the same movement on the same track — your history and goal carry over, you just type the assistance.',
+      accept:{label:h.kind==='up'?'Switch to '+B.name:'Use '+B.name, fn:()=>{ append({type:'handoff',from:h.from,to:h.to}); toast('Switched to '+B.name); }},
+      decline:{label:'Not now'}};
+  }
+  return null;
+}
+/* ---- the bodyweight-relative class (batch F part 1b, v1.56) ----
+   Pull-up, chin-up, dip, push-up, inverted row and pistol squat, plus their
+   assisted versions, are tracked on SYSTEM LOAD: bodyweight + added − assistance
+   (× the machine's assist ratio, 1:1 unless set). You type what's on the machine
+   — added weight, assistance, or nothing — and the engine prices on system load:
+   the e1RM track, progression, one step, floor and ceiling. Each movement is one
+   track (its root), so history carries across assisted → bodyweight → weighted.
+   A past set uses the bodyweight that applied then; today's suggestion uses your
+   latest, so a bodyweight change alone moves the number you type, never the
+   system load. Push-ups and inverted rows count full bodyweight too (a constant
+   factor; it doesn't change progression), labelled "of bodyweight". Band-assisted
+   versions are reps only and stay off the track. */
+const BW_CLASS={pullup:{root:'pullup',mode:'added'},assisted_pullup:{root:'pullup',mode:'assist'},
+  chinup:{root:'chinup',mode:'added'},assisted_chinup:{root:'chinup',mode:'assist'},
+  dip:{root:'dip',mode:'added'},assisted_dip:{root:'dip',mode:'assist'},
+  weighted_pushup:{root:'weighted_pushup',mode:'added'},inverted_row:{root:'inverted_row',mode:'added'},pistol:{root:'pistol',mode:'added'}};
+const bwClass=x=>{ const id=typeof x==='string'?x:x&&x.id; return (id&&BW_CLASS[id])||null; };
+const trackRoot=id=>{ const c=bwClass(id); return c?c.root:id; };
+const classMembers=root=>Object.keys(BW_CLASS).filter(id=>BW_CLASS[id].root===root);
+const assistRatio=id=>{ const r=(CFG.assistRatio||{})[id]; return typeof r==='number'&&r>0?r:1; };
+function sysOf(exId, typedLb, bw){ const c=bwClass(exId); if(!c||bw==null) return null; const t=typedLb||0; return c.mode==='assist'?bw-t*assistRatio(exId):bw+t; }
+function typedOf(exId, sys, bw){ const c=bwClass(exId); if(!c||bw==null||sys==null) return null; return c.mode==='assist'?(bw-sys)/assistRatio(exId):sys-bw; }
+/* The load the engine prices on, for one logged set: system load for the class
+   (null for an assisted set with no bodyweight logged at all — it can't be placed),
+   the logged number for everything else. */
+function engLb(st){
+  if(!st) return null;
+  if(bwClass(st.exercise_id)){ const b=bwAt(st.ts); if(b!=null) return sysOf(st.exercise_id,toLb(st.weight)||0,b); return bwClass(st.exercise_id).mode==='assist'?null:toLb(st.weight); }
+  return toLb(st.weight);
+}
 /* Bodyweight added on top of the logged load for this exercise, in lb; 0 for
-   everything else and when no bodyweight has been logged. */
-const bwOffset=(ex,ts)=>ex&&ex.load==='bodyweight_plus'?((ts==null?latestBodyweight():bwAt(ts))||0):0;
+   everything else and when no bodyweight has been logged. The class carries its
+   bodyweight inside engLb(), so it's 0 for them here. */
+const bwOffset=(ex,ts)=>ex&&ex.load==='bodyweight_plus'&&!bwClass(ex)?((ts==null?latestBodyweight():bwAt(ts))||0):0;
 /* Does an estimate for this exercise rest on added weight alone? */
-const bwMissing=ex=>!!ex&&ex.load==='bodyweight_plus'&&latestBodyweight()==null;
+const bwMissing=ex=>!!ex&&(ex.load==='bodyweight_plus'||!!bwClass(ex))&&latestBodyweight()==null;
 /* e1RM of one logged set, on total load for bodyweight+added lifts */
 function setE1RM(st){
-  const ex=exById[st.exercise_id];
-  return e1rm(toLb(st.weight)+bwOffset(ex,st.ts),st.reps);
+  const ex=exById[st.exercise_id], L=engLb(st);
+  return L==null?null:e1rm(L+bwOffset(ex,st.ts),st.reps);
 }
 function bestE1RM(id, sig){ let b=null;
   for(const s of sets()){
@@ -10893,7 +11015,7 @@ function bestE1RM(id, sig){ let b=null;
     if(v!=null&&(!b||v>b.v)) b={v,reps:s.reps};
   }
   // a stated estimate is for the unmodified lift only
-  if(!b&&!sig){ const e=statedE1RM(id); if(e) b={v:e+bwOffset(exById[id]),reps:null,stated:true}; }
+  if(!b&&!sig){ const e=statedE1RM(id); if(e) b={v:e+bwOffset(exById[id]),reps:null,stated:true}; }   // (class: bwOffset is 0 — the estimate is what you'd lift in total)
   return b; }
 /* one best e1RM per calendar day, oldest first */
 /* Each session's best working set for one exercise, newest first — the one
@@ -10911,10 +11033,16 @@ function sessionBests(exId, sig){
     const cur=by.get(st.session_id);
     const better=!cur||(e1!=null&&(cur.e1==null||e1>cur.e1+1e-9||(Math.abs(e1-cur.e1)<1e-9&&lb>cur.lb)))
       ||(e1==null&&cur.e1==null&&lb>cur.lb);
-    if(better) by.set(st.session_id,{id:st.id,session_id:st.session_id,ts:st.ts,weight:st.weight,lb,reps:st.reps,rpe:st.rpe,e1});
+    if(better) by.set(st.session_id,{id:st.id,session_id:st.session_id,ts:st.ts,weight:st.weight,lb,reps:st.reps,rpe:st.rpe,e1,exercise_id:st.exercise_id});
   }
   const pr=prIds();
   return [...by.values()].map(b=>({...b,pr:pr.has(b.id)})).sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+}
+/* What was on the machine, in words: "60 assist", "+20", "bodyweight" for the class; "185 lb" otherwise. */
+function typedLabel(exId, w){
+  const c=bwClass(exId), v=w?w.value:0, u=w?w.unit:'lb';
+  if(!c) return fmt(v)+' '+u;
+  return c.mode==='assist'?fmt(v)+' '+u+' assist':v>0?'+'+fmt(v)+' '+u:'bodyweight';
 }
 /* Rows for sessionBests(), shared by both entry points. */
 function bestSetRows(exId, limit, sig){
@@ -10924,7 +11052,7 @@ function bestSetRows(exId, limit, sig){
   list.forEach(b=>{
     const r=el('div','row between sm'); r.style.cssText='padding:5px 0;border-top:1px solid var(--line)';
     const d=new Date(b.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'});
-    r.innerHTML=`<span class="grow">${fmt(b.weight.value)} ${esc(b.weight.unit)} × ${b.reps}${b.rpe!=null?' @ RPE '+b.rpe:''}${b.pr?'<span class="pr">PR</span>':''}</span>
+    r.innerHTML=`<span class="grow">${esc(typedLabel(b.exercise_id,b.weight))} × ${b.reps}${b.rpe!=null?' @ RPE '+b.rpe:''}${b.pr?'<span class="pr">PR</span>':''}</span>
       <span class="dim tiny" style="flex:none;text-align:right">${b.e1!=null?'e1RM '+fmt(b.e1,0)+' · ':''}${d}</span>`;
     box.appendChild(r);
   });
@@ -11394,7 +11522,7 @@ function exerciseSessionHistory(exId, sig, cls){
   for(const st of sets()){
     if(st.set_kind==='warmup'||!onTrack(st,exId,sig)||(cls&&!inClass(st,cls))) continue;
     if(st.group&&st.group.pos>0) continue;               // top set only
-    const w=toLb(st.weight);
+    const w=engLb(st);
     const cur=bySession.get(st.session_id);
     if(!cur||w>cur.topLb)
       bySession.set(st.session_id,{session_id:st.session_id,ts:st.ts,
@@ -11443,12 +11571,23 @@ function capLimit(slot, L0){
 /* Loadable values. gridFloor is the largest loadable at or below lb (plate
    solving already floors); stepUp / stepDown move exactly one step from a load
    that may itself be off the grid, e.g. a 55 lb set on a 10 lb machine. */
+/* The class steps on the stack you load: assistance or added weight, each in the
+   exercise's smallest jump, then back to system load at today's bodyweight. A
+   plain entry can't go below bodyweight, an assisted one can't go below zero
+   assistance — the handoff proposals cover those edges. */
+function classGrid(slot){ const c=bwClass(slot.ex); if(!c) return null; const bw=latestBodyweight(); if(bw==null) return null;
+  return {c,bw,inc:exById[slot.ex].inc||(c.mode==='assist'?10:5)}; }
+function classTyped(slot, g, sys, how){ const t=typedOf(slot.ex,sys,g.bw), k=t/g.inc;
+  const q=how==='round'?Math.round(k):g.c.mode==='assist'?Math.ceil(k-1e-9):Math.floor(k+1e-9);
+  return Math.max(0,q*g.inc); }
 function gridFloor(slot, lb){
   const ex=exById[slot.ex];
+  { const g=classGrid(slot); if(g) return sysOf(slot.ex,classTyped(slot,g,lb,'floor'),g.bw); }
   if(ex.load==='barbell'&&ex.plateSet&&PLATE_SETS[ex.plateSet].unit==='lb'&&!stepOverridden(ex)) return loadable(slot,lb);
   return Math.floor(lb/ex.inc+1e-9)*ex.inc;
 }
 function stepUp(slot, lb){
+  { const g=classGrid(slot); if(g){ const t=classTyped(slot,g,lb,'floor'); return sysOf(slot.ex,g.c.mode==='assist'?Math.max(0,t-g.inc):t+g.inc,g.bw); } }
   const inc=exById[slot.ex].inc;
   let x=gridFloor(slot,lb+inc);
   if(x<=lb+1e-6) x=gridFloor(slot,lb+2*inc);
@@ -11611,7 +11750,7 @@ function aimFor(slot){
    implies on the chart, else your best e1RM or stated estimate. */
 function refE1(slot){
   const ex=exById[slot.ex], off=bwOffset(ex), tr=slotTrack(slot), last=lastSetFor(tr.ex,tr.sig,priceClass(slot));
-  if(last&&last.rpe!=null){ const e=impliedE1(toLb(last.weight)+off,last.reps,last.rpe); if(e) return {e1:e,src:'last'}; }
+  if(last&&last.rpe!=null&&engLb(last)!=null){ const e=impliedE1(engLb(last)+off,last.reps,last.rpe); if(e) return {e1:e,src:'last'}; }
   const b=bestE1RM(tr.ex,tr.sig);
   return b?{e1:b.v,src:b.stated?'estimate':'best'}:null;
 }
@@ -11632,8 +11771,9 @@ function rebalance(slot, d){
   const lo=slot.reps[0], hi=slot.reps[1], field=L.w?'reps':'weight';
   const est=isChartFree(ex)?' Estimated from the %1RM chart, anchored to your last set.':'';
   if(!ref) return {field, priced:false, T, note:'Nothing logged to price this from — set both yourself.'};
+  const cg=classGrid(slot);
   if(L.w){
-    const lb=d.unit==='kg'?d.weight*LB:d.weight;
+    const lb0=d.unit==='kg'?d.weight*LB:d.weight, lb=cg?sysOf(slot.ex,lb0,cg.bw):lb0;
     const rtf=rtfFromPct((lb+off)/ref.e1*100);
     if(rtf==null) return {field, priced:false, T, note:(lb+off)>ref.e1
       ?'That\'s past your estimated max — no rep count hits RPE '+T+' there.'
@@ -11645,7 +11785,7 @@ function rebalance(slot, d){
   const lf=loadFor(ref.e1,d.reps,T);
   if(lf==null) return {field, priced:false, T, note:d.reps+' reps at RPE '+T+' is past what the chart can price.'};
   const added=Math.max(0,lf-off);
-  const weight=d.unit==='kg'?Math.floor(added/LB*2+1e-9)/2:gridFloor(slot,added);
+  const weight=cg?classTyped(slot,cg,lf,'floor'):d.unit==='kg'?Math.floor(added/LB*2+1e-9)/2:gridFloor(slot,added);
   return {field, priced:true, T, weight, out:d.reps<lo?'below':d.reps>hi?'above':null, est};
 }
 function rebalanceDraft(slot){
@@ -11715,6 +11855,7 @@ function stepTooBig(slot, L0, R0, L1, reps, lastTxt){
     note:(lastTxt?'Last set '+lastTxt+'. ':'')+'The next step ('+fmt(L0,0)+' → '+fmt(L1,0)+', '+Math.round((L1-L0)/L0*100)+'%) works out at about '+Math.max(1,reps)+' rep'+(reps===1?'':'s')+' at this effort — under your '+fmtRange(slot.reps)+' range, so the jump is too big for it. Holding at '+fmt(L0,0)+'. A smaller step (the exercise\'s smallest jump, on its info sheet) or a lower range would let the load move.'};
 }
 function nextPrescription(slot){
+  if(bwClass(slot.ex)&&latestBodyweight()==null) return classNoBodyweight(slot);
   const r=nextPrescriptionCore(slot);
   if(!r||r.lb==null||!slot.reps) return r;
   const lo=slot.reps[0], hi=slot.reps[1];
@@ -11722,7 +11863,7 @@ function nextPrescription(slot){
   const edge=r.reps<lo?lo:hi;
   const tr=slotTrack(slot), last=lastSetFor(tr.ex,tr.sig,priceClass(slot));
   if(!last||last.rpe==null) return {...r, reps:edge};
-  const ex=exById[slot.ex], off=bwOffset(ex), L0=toLb(last.weight), R0=last.reps, T=aimFor(slot).T;
+  const ex=exById[slot.ex], off=bwOffset(ex), L0=engLb(last), R0=last.reps, T=aimFor(slot).T;
   const p0=pctExt(R0+(10-last.rpe)), p1=pctExt(edge+(10-T));
   if(p0==null||p1==null) return {...r, reps:edge};
   let lb=gridFloor(slot,Math.max(0,(L0+off)*p1/p0-off));
@@ -11757,7 +11898,7 @@ function nextPrescriptionCore(slot){
     }
     return {lb:null, reps:lo, src:null, note:'No sets logged and no starting estimate, so there is nothing to base a load on.'};
   }
-  const L0=toLb(last.weight), R0=last.reps, RPE0=last.rpe;
+  const L0=engLb(last), R0=last.reps, RPE0=last.rpe;
   const lastTxt=`${fmt(L0,0)} × ${R0}${RPE0!=null?' @ RPE '+RPE0:''}`;
 
   // Within-session fatigue: only when the last set is from THIS session (we are
@@ -11858,6 +11999,7 @@ function nextPrescriptionCore(slot){
 function loadable(slot, lb){
   if(lb==null) return null;
   const ex=exById[slot.ex];
+  { const g=classGrid(slot); if(g) return sysOf(slot.ex,classTyped(slot,g,lb,'round'),g.bw); }
   if(ex.load==='barbell'&&ex.plateSet&&PLATE_SETS[ex.plateSet].unit==='lb'&&!stepOverridden(ex)){
     const s=solvePlates(lb,ex.bar,ex.plateSet);
     return s?s.achieved:lb;
@@ -12361,6 +12503,7 @@ function exCard(slot,o){
 function pctOfBest(slot, lb){
   const ex=exById[slot.ex], b=bestE1RM(slotTrack(slot).ex,slotTrack(slot).sig);
   if(lb==null||!b||ex.load==='bodyweight'||(isBW(ex)&&!lb&&!bwOffset(ex))) return '';
+  { const cg=classGrid(slot); if(cg) return Math.round(sysOf(slot.ex,lb,cg.bw)/b.v*100)+'% of '+fmt(b.v,0)+' est. 1RM (system load)'; }
   return Math.round((lb+bwOffset(ex))/b.v*100)+'% of '+fmt(b.v,0)+' est. 1RM'
     +(ex.load==='bodyweight_plus'?(bwMissing(ex)?' (added weight only, no bodyweight logged)':' (incl. bodyweight)'):'');
 }
@@ -13475,6 +13618,7 @@ function openInfo(exId){
     <div class="qblock"><div class="qlab">Progression</div>
       <div class="muted sm">${esc(mode)}</div></div>
     <div class="qblock" id="istep"></div>
+    ${bwClass(ex)&&bwClass(ex).mode==='assist'?'<div class="qblock" id="iratio"></div>':''}
     ${barEditable(ex)?'<div class="qblock" id="ibar"></div>':''}
     <div class="qblock"><div class="qlab">Your history</div>
       <div class="row between sm"><span class="muted">Best estimated 1RM</span><span>${b?fmt(b.v,0)+' lb':'—'}</span></div>
@@ -13492,6 +13636,7 @@ function openInfo(exId){
   drawRepRangeEditor($('#irr'), ex);
   if($('#ibar')) drawBarEditor($('#ibar'), ex);
   if($('#istep')) drawStepEditor($('#istep'), ex);
+  if($('#iratio')) drawAssistRatio($('#iratio'), ex);
   $('#ihist').onclick=()=>openExerciseHistory(exId, ()=>openInfo(exId));
   $('#idiary').onclick=()=>openDiaryEntry(exId, ()=>openInfo(exId));
   // the dial for this exercise, and a focused deload
@@ -13536,6 +13681,19 @@ function openInfo(exId){
   };
 }
 
+/* Assist ratio: most assisted machines take off what the stack says (1:1); some
+   are geared. Hidden behind a link unless you've set one. */
+function drawAssistRatio(host, ex){
+  const cur=(CFG.assistRatio||{})[ex.id];
+  if(cur==null&&!host.dataset.open){ const b=el('button','btn s ghost','Machine not 1:1?'); b.onclick=()=>{ host.dataset.open='1'; host.innerHTML=''; drawAssistRatio(host,ex); }; host.appendChild(b); return; }
+  host.innerHTML='<div class="qlab">Assist ratio</div><div class="anchor">How much of the stack actually comes off your bodyweight. 1 means 50 on the stack takes 50 lb off; 0.5 means it takes 25.</div>';
+  const c=el('div','chips'); c.style.marginTop='8px';
+  [0.5,0.75,1,1.5,2].forEach(v=>{ const b=el('button','chip',String(v)); b.style.cssText='font-size:12.5px;padding:6px 10px';
+    b.setAttribute('aria-pressed',(cur==null?1:cur)===v?'true':'false');
+    b.onclick=()=>{ CFG.assistRatio=CFG.assistRatio||{}; if(v===1) delete CFG.assistRatio[ex.id]; else CFG.assistRatio[ex.id]=v; saveCfg(); render(); openInfo(ex.id); toast('Assist ratio '+v); };
+    c.appendChild(b); });
+  host.appendChild(c);
+}
 /* Smallest jump for one exercise: the load steps the app suggests in. Changing
    it never alters a logged set; it changes which loads are suggested from here on. */
 const STEP_CHOICES=[2.5,5,10,15,20,25];
@@ -13821,6 +13979,21 @@ function openSwap(slot,idx){
   }, {muscle:primaryMuscle(cur)});
 }
 
+/* The class needs a recent bodyweight to price; over a week old, the card asks
+   once per session (one field, skippable — skipping uses the last reading and
+   the trace says "stale bodyweight"). */
+function bodyweightAsk(slot){
+  const last=latestBodyweight(), at=latestBodyweightAt();
+  const box=el('div','anchor'); box.style.marginBottom='9px';
+  box.innerHTML='<b>Bodyweight?</b> <span class="dim tiny">'+(last!=null?'Latest '+fmt(last)+' lb, '+Math.floor((Date.now()-at)/864e5)+' days ago.':'None logged yet.')+' This exercise is priced on what you lift in total.</span>';
+  let v=last||180;
+  const st=stepper('lb',v,0.5,nv=>{ v=Math.max(50,Math.min(500,nv)); },null,{typeable:true,min:50}); st.style.marginTop='6px'; box.appendChild(st);
+  const row=el('div','row'); row.style.cssText='gap:6px;margin-top:6px';
+  const sv=el('button','btn pri s','Save'); sv.onclick=()=>{ if(append({type:'bodyweight',bodyweight:Math.round(v*10)/10})){ if(session){ session.bwAsked=true; saveSession(); } seedDraft(slot); renderWork(); toast('Bodyweight saved'); } };
+  const sk=el('button','btn s ghost','Skip'); sk.onclick=()=>{ if(session){ session.bwAsked=true; session.bwSkipped=true; saveSession(); } renderWork(); };
+  row.append(sv,sk); box.appendChild(row);
+  return box;
+}
 function entryPanel(slot,idx){
   const ex=exById[slot.ex], p=el('div',''); p.style.marginTop='11px';
   p.appendChild(el('div','hr'));
@@ -13838,9 +14011,15 @@ function entryPanel(slot,idx){
   // number recomputes to hit the target RPE (rebalance()). Editing RPE stops it.
   const L=draft.lock||(draft.lock={});
   const lockAnd=(k,fn)=>v=>{ fn(v); draft.lock={...draft.lock,[k]:true}; draft.lockEx=slot.ex; rebalanceDraft(slot); renderWork(); };
-  p.appendChild(stepper('Weight',draft.weight,weightStep(draft.unit),
+  const bwc=bwClass(slot.ex);
+  if(bwc&&bwStale()&&!(session&&session.bwAsked)) p.appendChild(bodyweightAsk(slot));
+  p.appendChild(stepper(bwc?(bwc.mode==='assist'?'Assistance':'Added (0 = bodyweight)'):'Weight',draft.weight,weightStep(draft.unit),
     lockAnd('w',v=>{draft.weight=v;draft.alt=null;}),
     draft.unit,{wide:true,typeable:true,min:0,suggested:!L.w&&draft.sugW}));
+  if(bwc){ const bw=latestBodyweight(), t=draft.unit==='kg'?draft.weight*LB:draft.weight;
+    p.appendChild(el('div','dim tiny',bw==null?'Log your bodyweight to see what you\'re lifting.'
+      :(bwc.mode==='assist'?fmt(draft.weight)+' assist':t>0?'+'+fmt(draft.weight)+' added':'bodyweight')+' → lifting '+fmt(sysOf(slot.ex,t,bw),0)+' lb'
+        +' <span class="dim">· '+Math.round(sysOf(slot.ex,t,bw)/bw*100)+'% of bodyweight</span>')).style.marginTop='4px'; }
   const g=el('div','stepgrid'); g.style.marginTop='8px';
   g.appendChild(stepper('Reps',draft.reps,1,lockAnd('r',v=>{draft.reps=v;}),
     null,{typeable:true,min:1,max:100,suggested:!L.r&&draft.sugR}));
@@ -13901,11 +14080,12 @@ function entryPanel(slot,idx){
     p.appendChild(el('div','plates', sol&&sol.plates.length?`${sol.plates.join(' + ')} per ${side}`:'No plates'));
     p.appendChild(el('div','dim tiny','Plates only — the machine\'s own resistance isn\'t counted.'));
   }
-  const est=e1rm((draft.unit==='kg'?draft.weight*LB:draft.weight)+bwOffset(ex),draft.reps);
+  const cgE=classGrid(slot), typedE=draft.unit==='kg'?draft.weight*LB:draft.weight;
+  const est=e1rm(cgE?sysOf(slot.ex,typedE,cgE.bw):typedE+bwOffset(ex),draft.reps);
   if(est){
     const c=conf(draft.reps), d=el('div','sm',
       `<span style="font-size:27px;font-weight:760;letter-spacing:-.03em">${fmt(est,0)}</span>
-       <span class="muted tiny"> est. 1RM lb${ex.load==='bodyweight_plus'?(bwMissing(ex)?' · added weight only, no bodyweight logged':' · incl. bodyweight'):''}</span>${c!=='high'?`<span class="dim tiny"> · ${c} confidence at ${draft.reps} reps</span>`:''}`);
+       <span class="muted tiny"> est. 1RM lb${cgE?' · system load':ex.load==='bodyweight_plus'?(bwMissing(ex)?' · added weight only, no bodyweight logged':' · incl. bodyweight'):''}</span>${c!=='high'?`<span class="dim tiny"> · ${c} confidence at ${draft.reps} reps</span>`:''}`);
     d.style.margin='9px 0 2px'; p.appendChild(d);
   }
   // technique picker
@@ -14303,7 +14483,12 @@ function whyEl(exp, key, cls){
    set of an exercise: once a set is logged today, the next suggestion is priced
    from what you actually lifted, which already reflects them. Applying them
    again would compound the cut set after set. */
+/* Every suggestion; for the class, priced on system load and converted back here. */
 function suggestFor(slot){
+  const r=suggestForSys(slot);
+  return bwClass(slot.ex)?classTypedRx(slot,r):r;
+}
+function suggestForSys(slot){
   const o={idx:session?session.slots.indexOf(slot):null, fresh:!slot.sets.length};
   // after the top set, back-offs come from what you actually lifted — readiness
   // and joint cuts are already in it
@@ -14440,7 +14625,7 @@ function backoffLoad(slot, topLb){
 }
 function backoffRx(slot){
   const top=topSetOf(slot); if(!top) return null;
-  const c=backoffCfg(), L=toLb(top.weight), lb=backoffLoad(slot,L);
+  const c=backoffCfg(), L=engLb(top), lb=backoffLoad(slot,L);
   const k=slot.sets.filter(x=>x.role==='backoff').length+1, n=(slot.backoff&&slot.backoff.n)||Math.max(1,slot.sets_target-1);
   return {lb, reps:top.reps, src:'back-off', backoffK:k, backoffN:n,
     note:'Back-off '+k+(c.mode==='fixed'?' of '+n:'')+': '+Math.round(c.drop*100)+'% under the top set you logged ('+fmt(L,0)+' × '+top.reps+'), same reps.'
@@ -14498,7 +14683,7 @@ function rateExposures(exId){
   const by=new Map();
   for(const st of sets()){
     if(st.set_kind==='warmup'||!onTrack(st,exId,'')) continue;
-    const cur=by.get(st.session_id), top=TOP_ROLES.includes(st.role), L=toLb(st.weight);
+    const cur=by.get(st.session_id), top=TOP_ROLES.includes(st.role), L=engLb(st);
     if(!cur||(top&&!cur.top)||(top===cur.top&&L>cur.load)) by.set(st.session_id,{set:st, load:L, top, ts:st.ts});
   }
   const ord=sessionOrdinals();
@@ -14678,6 +14863,7 @@ function proposalDismissedRecently(id, days){
 }
 function dismissProposal(id){ CFG.proposalsDismissed={...(CFG.proposalsDismissed||{}),[id]:new Date().toISOString()}; saveCfg(); }
 const PROPOSAL_SOURCES=[];
+PROPOSAL_SOURCES.push(handoffProposal);   // bodyweight-class handoffs (v1.56)
 function activeProposals(){
   const out=[];
   PROPOSAL_SOURCES.forEach(fn=>{ try{ [].concat(fn()||[]).forEach(p=>{ if(p&&!proposalDismissedRecently(p.id,p.snoozeDays)) out.push(p); }); }catch(err){ console.error('proposal failed',err); } });
@@ -14764,10 +14950,10 @@ function rpeDrift(exId){
   const recent=ss.filter(st=>age(st)<=7), old=ss.filter(st=>age(st)>=14&&age(st)<=28);
   const mean=a=>a.reduce((t,x)=>t+x.rpe,0)/a.length;
   let best=null;
-  recent.forEach(r=>{ const L=toLb(r.weight); if(!L) return;
+  recent.forEach(r=>{ const L=engLb(r); if(!L) return;
     // matched load AND matched reps (±1): the effort ramp asks for more reps at a
     // load later in a block, and that higher RPE is the plan, not fatigue
-    const near=x=>Math.abs(toLb(x.weight)-L)/L<=0.025&&Math.abs(x.reps-r.reps)<=1;
+    const near=x=>Math.abs(engLb(x)-L)/L<=0.025&&Math.abs(x.reps-r.reps)<=1;
     const rn=recent.filter(near), on=old.filter(near);
     if(rn.length<DRIFT_MIN_SETS||on.length<DRIFT_MIN_SETS) return;
     const d=mean(rn)-mean(on); if(best==null||d>best) best=d; });
@@ -15335,8 +15521,8 @@ function rpeScatter(exId){
   const firsts=new Map();
   for(const st of sets()){ if(st.set_kind==='warmup'||st.rpe==null||!onTrack(st,exId,'')) continue; if(!firsts.has(st.session_id)) firsts.set(st.session_id,st); }
   const ss=[...firsts.values()].reverse(); if(ss.length<4) return null;
-  const L=toLb(ss[0].weight); if(!L) return null;
-  const m=ss.filter(x=>Math.abs(toLb(x.weight)-L)/L<=0.025).slice(0,4); if(m.length<4) return null;
+  const L=engLb(ss[0]); if(!L) return null;
+  const m=ss.filter(x=>Math.abs(engLb(x)-L)/L<=0.025).slice(0,4); if(m.length<4) return null;
   const r=m.map(x=>x.rpe), spread=Math.max(...r)-Math.min(...r); if(spread<1.5) return null;
   const rd=readinessSeries(), days=new Set(m.map(x=>x.ts.slice(0,10))), v=rd.filter(x=>days.has(x.d)).map(x=>x.v);
   if(v.length&&Math.max(...v)-Math.min(...v)>10) return null;
@@ -15706,7 +15892,8 @@ const ENGINE={
     ceiling:{scope:'exercise', max:'load ≤ what the e1RM supports at the target reps and RPE', expires:'n/a — guard'},
     one_step:{scope:'exercise', max:'load moves ≤ one increment per session', expires:'n/a — guard'},
     floor:{scope:'exercise', max:'load ≥ 85% of the best completed load in the last 6 sessions', expires:'n/a — guard'},
-    both_up:{scope:'exercise', max:'load and reps never both rise; load and sets never both rise', expires:'n/a — guard'}
+    both_up:{scope:'exercise', max:'load and reps never both rise; load and sets never both rise', expires:'n/a — guard'},
+    bodyweight:{scope:'exercise', max:'none on system load — converts it to the number you type (bodyweight-relative class)', expires:'each suggestion'}
   },
   FLOOR_PCT:0.85, FLOOR_SESSIONS:6,             // judgement defaults (spec §2)
   SORE_MISS_RPE:1,                              // a "miss": a failed set or RPE ≥ target + 1
@@ -15816,7 +16003,7 @@ function trackHistory(slot){
 function floorFor(slot){
   const h=trackHistory(slot); if(!h.length) return null;
   const sids=[...new Set(h.map(x=>x.session_id))].slice(-ENGINE.FLOOR_SESSIONS);
-  const best=Math.max(...h.filter(x=>sids.includes(x.session_id)&&!x.failed).map(x=>toLb(x.weight)));
+  const best=Math.max(...h.filter(x=>sids.includes(x.session_id)&&!x.failed&&engLb(x)!=null).map(x=>engLb(x)));
   return isFinite(best)&&best>0?best*ENGINE.FLOOR_PCT:null;
 }
 function ceilingFor(slot, reps, T){
@@ -15826,7 +16013,7 @@ function ceilingFor(slot, reps, T){
   // sets past the chart (more than 16 reps from failure) count too, on the same extended
   // chart the rep pricing uses — otherwise 44 × 20 sets are invisible and the cap sits far below them
   const e1Of=(L,r,rpe)=>impliedE1(L,r,rpe)||(p=>p?L/(p/100):null)(pctExt(r+(10-rpe)));
-  let e1=null; h.filter(x=>sids.includes(x.session_id)&&x.rpe!=null).forEach(x=>{ const v=e1Of(toLb(x.weight)+off,x.reps,x.rpe); if(v&&(!e1||v>e1)) e1=v; });
+  let e1=null; h.filter(x=>sids.includes(x.session_id)&&x.rpe!=null&&engLb(x)!=null).forEach(x=>{ const v=e1Of(engLb(x)+off,x.reps,x.rpe); if(v&&(!e1||v>e1)) e1=v; });
   if(!e1) return null;
   const p=pctExt(reps+(10-T)); return p?Math.max(0,e1*p/100-off):null;
 }
@@ -15899,8 +16086,8 @@ function fdExtension(fd, endAt){
 function fdReference(fd, exId){
   // the load you were on at the start: the heaviest working set of your last session on it before the window
   let best=null, sid=null;
-  for(let i=Math.min(fd.start,LOG.length)-1;i>=0;i--){ const e=LOG[i]; if(e.type!=='set'||e.exercise_id!==exId||e.set_kind==='warmup') continue;
-    if(sid==null) sid=e.session_id; if(e.session_id!==sid) break; const L=toLb(e.weight); if(best==null||L>best) best=L; }
+  for(let i=Math.min(fd.start,LOG.length)-1;i>=0;i--){ const e=LOG[i]; if(e.type!=='set'||trackRoot(e.exercise_id)!==trackRoot(exId)||e.set_kind==='warmup') continue;
+    if(sid==null) sid=e.session_id; if(e.session_id!==sid) break; const L=engLb(e); if(L!=null&&(best==null||L>best)) best=L; }
   return best;
 }
 function startFocusedDeload(exercises, level, weeks, muscle){
@@ -15928,7 +16115,10 @@ function dialRevealed(exId){
   const rows=[...firsts.values()].slice(-ENGINE.DIAL_WINDOW).filter(e=>e.rpe!=null&&e.suggestion.target_rpe!=null&&Math.abs(e.rpe-e.suggestion.target_rpe)<=1);
   if(!rows.length) return {n:0,mean:0,notch:0};
   const step=Math.max(2.5,ex.inc||5);
-  const ov=rows.map(e=>(toLb(e.weight)-(e.suggestion.shown?toLb(e.suggestion.shown):e.suggestion.lb))/step);
+  const sugLb=e=>e.suggestion.shown?toLb(e.suggestion.shown):e.suggestion.lb;
+  const ov=rows.map(e=>bwClass(e.exercise_id)&&bwAt(e.ts)!=null
+    ?(engLb(e)-(e.suggestion.sys!=null?e.suggestion.sys:sysOf(e.exercise_id,sugLb(e),bwAt(e.ts))))/(step*(bwClass(e.exercise_id).mode==='assist'?assistRatio(e.exercise_id):1))
+    :(toLb(e.weight)-sugLb(e))/step);
   const mean=ov.reduce((a,b)=>a+b,0)/ov.length;
   return {n:rows.length, mean, notch:Math.max(-2,Math.min(2,Math.round(mean))), ov};
 }
@@ -15948,7 +16138,7 @@ function runModifiers(slot, base, o){
   let pr={...base};
   if(pr.lb==null){ rec('progression',false,base.src||'nothing to base a load on',pr); return {pr,trace}; }
   const fresh=o.fresh, h=trackHistory(slot), last=h[h.length-1]||null;
-  const L0=last?toLb(last.weight):null, R0=last?last.reps:null;
+  const L0=last?engLb(last):null, R0=last?last.reps:null;
   const T=slot.rpe, lo=slot.reps[0], hi=slot.reps[1];
   const ph=currentPhase(), fd=focusedDeload(), pinned=fdCovers(fd,slot.ex);
   const rangeFirst=base.src==='priced for your range'&&last&&(R0<lo||R0>hi);
@@ -16020,8 +16210,8 @@ function runModifiers(slot, base, o){
     const exempt=trace.some(t=>t.changed&&['range_fit','focused_deload','joint_ladder'].includes(t.id))||rangeFirst||(ph&&ph.onDeload)||slot.structure==='amrap'||isTopBack(slot)||isMaint(slot);
     if(!exempt){
       const upLim=stepUp(slot,L0), dnLim=stepDown(slot,L0);
-      if(pr.lb>upLim+1e-6){ pr={...pr,lb:upLim}; rec('one_step',true,'At most one step up per session',pr); }
-      if(pr.lb<dnLim-1e-6&&dnLim>0){ pr={...pr,lb:dnLim}; rec('one_step',true,'At most one step down per session',pr); }
+      if(pr.lb>upLim+1e-6&&upLim>L0+1e-6){ pr={...pr,lb:upLim}; rec('one_step',true,'At most one step up per session',pr); }
+      if(pr.lb<dnLim-1e-6&&dnLim>0&&dnLim<L0-1e-6){ pr={...pr,lb:dnLim}; rec('one_step',true,'At most one step down per session',pr); }
     }
     // ceiling with the app's ±1 RPE "on target" window, so one step up after an on-target set
     // (fast progression, double progression) isn't frozen — it's there to stop runaways
@@ -16168,7 +16358,7 @@ function amrapRx(slot){
 /* After the AMRAP is logged: the one place a TM moves up or down. */
 function tmFromAmrap(slot, ev){
   const ex=exById[slot.ex], exId=slotTrack(slot).ex, cur=tmFor(exId); if(!cur) return null;
-  const prev=cur.tm, target=slot.reps[1], off=bwOffset(ex), L=toLb(ev.weight)+off;
+  const prev=cur.tm, target=slot.reps[1], off=bwOffset(ex), L=engLb(ev)+off;
   let tm, reason;
   if(ev.reps<target){ tm=prev*TM_SHORT; reason='short'; }
   else{
@@ -16185,7 +16375,7 @@ function tmFromAmrap(slot, ev){
    ask where a rep failed. All three attach to a main lift's TOP set — or,
    where the session has no top set (hypertrophy blocks until batch B), its
    first working set. */
-const isMainLift=exId=>(CFG.goals||[]).includes(exId);
+const isMainLift=exId=>(CFG.goals||[]).some(g=>trackRoot(g)===trackRoot(exId));
 function techFirstSet(slot){
   if(slot.structure==='amrap') return !slot.sets.length;
   if(isTopBack(slot)||isMaint(slot)) return !topSetOf(slot);
@@ -16295,6 +16485,7 @@ function recordedSuggestion(slot, rec){
   const {pr,lb,o}=rec;
   return {
     lb, shown:shownLoad(slot, lb), reps:pr.reps, target_rpe:slot.rpe, basis:pr.src,
+    ...(pr.sys!=null?{sys:pr.sys, bw:pr.bw}:{}),
     readiness:o.adj?{score:Math.round(session.score*100),cut_pct:Math.round((1-o.adj.load)*100),applied_pct:o.adjApplied||0}:null,
     joint:slot.joint?{joint:slot.joint.joint,level:slot.joint.level,applied_pct:o.jointApplied||0,held:!!o.jointHeld}:null,
     fatigue:(pr.fatigue&&pr.fatigue.applied)?{rise:pr.fatigue.rise,pairs:pr.fatigue.n,sessions:pr.fatigue.sessions}:null,
@@ -16944,6 +17135,47 @@ function pctLines(lines){
     <line x1="0" x2="${W}" y1="${y(50)}" y2="${y(50)}" stroke="var(--line)" stroke-dasharray="2 6"/>${paths}</svg>`;
   return box;
 }
+/* The bodyweight-relative class on Progress (v1.56): the e1RM is system load, so
+   it's shown three ways — load, % of bodyweight, and the next milestone — and a
+   change in bodyweight is never passed off as a change in strength. */
+const BW_MILESTONES=[[1,'first unassisted rep'],[1.25,'bodyweight ×1.25'],[1.5,'bodyweight ×1.5'],[1.75,'bodyweight ×1.75'],[2,'bodyweight ×2']];
+function classProgress(id){
+  const ser=e1rmSeries(id).map(p=>({...p,bw:bwAt(p.d+'T23:59:59')})).filter(p=>p.bw);
+  if(!ser.length) return null;
+  const last=ser[ser.length-1], ratio=last.v/last.bw;
+  const next=BW_MILESTONES.find(([m])=>ratio<m-1e-9);
+  // the last six weeks: did the lift move, or did the lifter?
+  const since=ser.filter(p=>new Date(p.d)>=new Date(Date.now()-42*864e5)), first=since[0];
+  let note=null;
+  if(first&&since.length>=2){
+    const dE=(last.v-first.v)/first.v, dB=last.bw-first.bw, dR=ratio-first.v/first.bw;
+    if(dB<=-2&&Math.abs(dE)<=0.02&&dR>0) note='Lighter you, same strength: % of bodyweight is up because you weigh '+fmt(-dB)+' lb less — the lift itself is level.';
+    else if(dB>=2&&Math.abs(dE)<=0.02&&dR<0) note='Heavier you, same strength: % of bodyweight dipped because you weigh '+fmt(dB)+' lb more — the lift itself is level.';
+  }
+  return {ser, last, ratio, next, note};
+}
+function classGoalBlock(id){
+  const p=classProgress(id); if(!p) return el('div','dim tiny','Log your bodyweight and a set to see this as % of bodyweight.');
+  const box=el('div',''); box.style.margin='8px 0 2px';
+  box.innerHTML='<div class="row" style="gap:14px;flex-wrap:wrap"><span class="sm"><span class="dim">System load</span> <b>'+fmt(p.last.v,0)+' lb</b></span>'
+    +'<span class="sm"><span class="dim">Of bodyweight</span> <b>'+Math.round(p.ratio*100)+'%</b></span></div>'
+    +'<div class="sm" style="margin-top:4px">'+(p.next?(p.next[0]===1&&p.ratio<1?'Next: <b>'+p.next[1]+'</b> — your estimate is at '+Math.round(p.ratio*100)+'% of bodyweight':'Next: <b>'+p.next[1]+'</b> (now ×'+p.ratio.toFixed(2)+')'):'Past bodyweight ×2')+'</div>'
+    +(p.note?'<div class="tiny" style="margin-top:4px;color:var(--accent)">'+esc(p.note)+'</div>':'')
+    +'<div class="dim tiny" style="margin-top:3px">System load is bodyweight ± what\'s on the machine, so assisted, bodyweight and weighted sets are one line.</div>';
+  return box;
+}
+/* System load and % of bodyweight on one chart, each on its own scale. */
+function classTrend(id){
+  const p=classProgress(id); if(!p||p.ser.length<2) return null;
+  const W=600,H=90,pad=6, n=p.ser.length, x=i=>pad+(i/(n-1))*(W-pad*2);
+  const path=vals=>{ const mn=Math.min(...vals), mx=Math.max(...vals), sp=(mx-mn)||1; return vals.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+(pad+(1-(v-mn)/sp)*(H-pad*2)).toFixed(1)).join(' '); };
+  const box=el('div','');
+  box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:90px;display:block" aria-hidden="true">'
+    +'<path d="'+path(p.ser.map(q=>q.v))+'" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>'
+    +'<path d="'+path(p.ser.map(q=>q.v/q.bw))+'" fill="none" stroke="var(--ok)" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/></svg>'
+    +'<div class="dim tiny"><span style="color:var(--accent)">━</span> system load e1RM · <span style="color:var(--ok)">╍</span> % of bodyweight (each on its own scale)</div>';
+  return box;
+}
 function renderHist(){
   const v=$('#v-hist'); v.innerHTML='';
 
@@ -16961,7 +17193,8 @@ function renderHist(){
         <div class="big" style="font-size:26px">${last?fmt(last.v,0):'—'}</div>
         <div class="tiny" style="color:${delta==null?'var(--dim)':delta>=0?'var(--ok)':'var(--danger)'}">${
           delta==null?'lb':(delta>=0?'+':'')+fmt(delta,0)+' lb'}</div></span>`));
-    if(last&&!isBW(ex)){
+    if(bwClass(ex)){ const cb=classGoalBlock(id); if(cb) c.appendChild(cb); }
+    if(last&&!isBW(ex)&&!bwClass(ex)){
       const rm=el('div','row'); rm.style.cssText='gap:14px;margin:8px 0 2px;flex-wrap:wrap';
       [[3,'3RM'],[5,'5RM'],[10,'10RM']].forEach(([r,lab])=>{
         const v=repMax(last.v,r); if(v==null) return;
@@ -16978,10 +17211,10 @@ function renderHist(){
          <span class="dim">· ${Math.abs(prof.gapPct).toFixed(0)}% gap across ${prof.loN}+${prof.hiN} sets. Trust the heavy-set number for loading.</span>`))
         .style.marginTop='6px';
     }
-    const sp=sparkline(ser, ex.comparable===false?'var(--warn)':'var(--accent)');
+    const sp=bwClass(ex)?classTrend(id):sparkline(ser, ex.comparable===false?'var(--warn)':'var(--accent)');
     if(sp) c.appendChild(sp);
     else c.appendChild(el('div','empty','Log a few working sets and the trend appears here.'));
-    if(ex.comparable===false)
+    if(ex.comparable===false&&!bwClass(ex))
       c.appendChild(el('div','dim tiny','Machine-specific — valid against itself, not against other equipment.'));
     { const t=tmFor(id); if(t&&t.src==='logged') c.appendChild(el('div','sm',
         '<span class="dim">Training max</span> <b>'+fmt(t.tm,0)+' lb</b> <span class="dim tiny">· planning number, moved only by realization AMRAPs</span>')).style.marginTop='8px'; }

@@ -6,6 +6,13 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.56.0 — 2026-10-07
+- Pull-ups, chin-ups, dips, push-ups, inverted rows and pistol squats are now tracked on what you actually lift: bodyweight plus added weight, minus assistance. Type what's on the machine, and the card shows the rest ("60 assist → lifting 122 lb").
+- New assisted chin-up and dip, and band-assisted pull-up, chin-up and dip (reps only). Assisted, bodyweight and weighted sets of the same movement are one history and one goal.
+- If your bodyweight changes, the suggested assistance or added weight moves to keep the same load. If your last bodyweight is over a week old, the card asks for it (you can skip).
+- At zero assistance the app proposes the unassisted version, and if you fall short at bodyweight it offers the assisted one. It never switches on its own.
+- Goals for these show load, % of bodyweight and the next milestone. A weight cut is labelled "lighter you, same strength", not as getting stronger.
+
 ## 1.55.1 — 2026-10-07
 - For outer-elbow tendinopathy, loaded carries (farmer, kettlebell, trap bar, suitcase) are now red instead of amber.
 - Dead hangs stay amber. They're an isometric hold, which that condition's pain rule allows below 7/10, and light carries are fine under the same cap.

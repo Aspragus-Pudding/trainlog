@@ -149,6 +149,17 @@ never swapped out mid-workout.
   preference). `straps` is a modifier on pulls (removes the grip mechanism);
   carries and hangs don't get it. Over-flagging is measured on the library as
   the app applies it (generated entries, strapped versions, isometric holds).
+- **Bodyweight-relative class (v1.56):** pull-up, chin-up, dip, push-up,
+  inverted row, pistol and their assisted versions (`BW_CLASS`) price on
+  SYSTEM LOAD = bodyweight + added − assistance × ratio. You type what's on the
+  machine; `engLb(st)` is the one place a logged set becomes the load the engine
+  prices on, `trackRoot()` makes each movement one track, the grid
+  (`gridFloor`/`stepUp`/`loadable`) steps the stack in system space at today's
+  bodyweight, and `suggestFor()` converts back once (`classTypedRx`: assistance
+  rounds up, added weight down). Past sets use the nearest prior bodyweight
+  (`bwInfoAt`; before the first reading, the first one, "assumed"). Never read
+  `toLb(st.weight)` for pricing a class set. Handoffs between versions are
+  proposals (`handoff` events → `classVersion`); goals stay on the movement.
 - **`exPicker()`** is the one shared exercise picker (search + category chips +
   create-new). Swapping, adding, and goal-lift selection all route through it.
   Don't write a second bespoke picker — that's how mid-session swap ended up
