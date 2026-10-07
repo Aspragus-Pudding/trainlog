@@ -818,7 +818,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.35.1';
+const APP_VERSION='1.35.2';
 const LS_KEY='trainlog.jsonl.v1', LS_CFG='trainlog.cfg.v1', LS_SESS='trainlog.session.v1', SCHEMA_V=1;
 
 const PCT={1:100,2:95.5,3:92.2,4:89.2,5:86.3,6:83.7,7:81.1,8:78.6,9:76.2,
@@ -5865,7 +5865,9 @@ function logSet(slot,idx,kind,extend,over){
     ...(kind!=='warmup'&&cleanMods(slot.modifiers)?{modifiers:cleanMods(slot.modifiers)}:{}),
     ...(kind!=='warmup'?{role:group?'straight':(slot.structure==='amrap'&&!slot.sets.length)||(slot.calib&&slot.sets.length===slot.sets_target-1&&slot.sets.length>0)?'amrap':isTopBack(slot)?(topSetOf(slot)?'backoff':'top'):isMaint(slot)&&!topSetOf(slot)?'top':'straight'}:{}),
     ...(kind!=='warmup'&&draft.failed?{failed:true}:{}),
-    target:{reps:slot.reps,rpe:slot.rpe},
+    // the target this set was actually prescribed against: a maintenance slot's
+    // weekly top set is 3–5 @ RPE 7.5, not the slot's hypertrophy range
+    target:(kind!=='warmup'&&!group&&isMaint(slot)&&!topSetOf(slot))?{reps:MAINT_TOP.reps.slice(),rpe:MAINT_TOP.rpe}:{reps:slot.reps,rpe:slot.rpe},
     suggested_lb:stampSuggestion?(draft.suggestedLb??null):null,
     ...(suggestion&&{suggestion})};
   // PR must be decided BEFORE the event is written, or the flag never persists

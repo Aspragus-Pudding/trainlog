@@ -1479,5 +1479,19 @@ section('40. move history to another exercise');
   console.log('  append-only · earlier edits kept · deleted stays deleted · others untouched · undo exact');
 }
 
+/* ─── 41. a weekly top set is judged against its own target (found by tests/simulate.js) ─── */
+section('41. maintenance top set target');
+{
+  const A=load([set('deadlift','w1',300,4,7.5,7,{role:'top'})]); const C=A.getCFG(); C.goals=['deadlift']; C.rateSeed={at:0,dflt:'fast',lifts:{}};
+  const slot={ex:'deadlift',role:'primary',reps:[6,8],rpe:8,sets_target:4,sets:[],structure:'maint'};
+  A.setSession({id:'MT',slots:[slot],openIdx:0,adj:null,ratings:{},startedAt:Date.now()}); A.seedDraft(slot);
+  const d=A.getDraft(); d.weight=305; d.reps=5; d.rpe=7.5; A.logSet(slot,0,'straight');
+  ok(JSON.stringify(slot.sets[0].target)==='{"reps":[3,5],"rpe":7.5}','the weekly top set stores 3–5 @ 7.5, not the slot\'s 6–8',JSON.stringify(slot.sets[0].target));
+  d.weight=245; d.reps=8; d.rpe=8; A.logSet(slot,0,'straight');
+  ok(JSON.stringify(slot.sets[1].target)==='{"reps":[6,8],"rpe":8}','the hypertrophy sets after it keep the slot\'s target','');
+  ok(!A.rateState('deadlift').last.miss,'so 5 reps at RPE 7.5 is a hit, not a miss — a fast lift is not demoted by its own top set','');
+  console.log('  top set target stored as prescribed · not counted as a miss');
+}
+
 console.log('\n'+checks+' checks, '+failures+' failed');
 if(failures){ console.log('\n'+Object.entries(shown).map(([k,n])=>n+' x '+k).join('\n')); process.exit(1); }
