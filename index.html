@@ -818,7 +818,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.37.0';
+const APP_VERSION='1.38.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -6942,6 +6942,26 @@ function fillToTarget(draft, startDate, targetDate, splitKey){
 }
 
 /* ═══ PROGRESS ═══ */
+/* ---------- Is the engine learning? (engine phase 2) ----------
+   Per week, from the suggestion recorded on each working set (v1.13.0+):
+   how often you lifted what was suggested (within 1 lb or 0.5%), and of
+   those, how often the RPE landed within ±1 of the target. Derived on read.
+   Sessions made by automation (one set, all within a few seconds) are left
+   out. The same measures, in more detail: tests/prospective.js. */
+function suggestionAccuracy(){
+  const S=sets().filter(st=>st.set_kind!=='warmup'&&!(st.group&&st.group.pos>0)&&st.suggestion&&st.suggestion.lb!=null);
+  const bySess={}; S.forEach(st=>(bySess[st.session_id]=bySess[st.session_id]||[]).push(st));
+  const lbOf=w=>w?toLb(w):0, wk=new Map();
+  S.forEach(st=>{
+    if(bySess[st.session_id].length<2&&LOG.some(e=>e.type==='session_end'&&e.session_id===st.session_id&&Math.abs(new Date(e.ts)-new Date(st.ts))<5000)) return;
+    const sg=st.suggestion, shown=sg.shown?lbOf(sg.shown):sg.lb, L=lbOf(st.weight);
+    const taken=Math.abs(L-shown)<=Math.max(1,shown*0.005);
+    const k=weekStart(new Date(st.ts)).toISOString().slice(0,10), b=wk.get(k)||{n:0,taken:0,on:0,rated:0};
+    b.n++; if(taken){ b.taken++; if(st.rpe!=null&&sg.target_rpe!=null){ b.rated++; if(Math.abs(st.rpe-sg.target_rpe)<=1) b.on++; } }
+    wk.set(k,b);
+  });
+  return [...wk.entries()].sort((a,b)=>a[0]<b[0]?-1:1).map(([d,b])=>({d,...b}));
+}
 function sparkline(series, color){
   if(series.length<2) return null;
   const W=600,H=90,pad=6;
@@ -7015,6 +7035,21 @@ function renderHist(){
     v.appendChild(c);
   });
 
+  // is the engine learning? suggestion accuracy by week
+  {
+    const acc=suggestionAccuracy(), tot=acc.reduce((a,b)=>({n:a.n+b.n,taken:a.taken+b.taken,on:a.on+b.on,rated:a.rated+b.rated}),{n:0,taken:0,on:0,rated:0});
+    const ca=el('div','card pad');
+    ca.appendChild(el('div','row between','<span style="font-weight:650">Suggestions</span><span class="dim tiny">is it learning?</span>'));
+    if(tot.n<10) ca.appendChild(el('div','empty','Fills in once a few weeks of sets carry the suggestion they were given.'));
+    else{
+      const p=(a,b)=>b?Math.round(a/b*100)+'%':'—';
+      ca.appendChild(el('div','sm',`Lifted as suggested <b>${p(tot.taken,tot.n)}</b> of ${tot.n} sets · on target (RPE within 1) when you did: <b>${p(tot.on,tot.rated)}</b>`)).style.marginTop='6px';
+      const ser=acc.filter(w=>w.n>=3).map(w=>({v:Math.round(w.taken/w.n*100)}));
+      const sp=sparkline(ser,'var(--accent)'); if(sp){ sp.style.marginTop='6px'; ca.appendChild(sp); ca.appendChild(el('div','dim tiny','Weekly share of sets lifted as suggested. Rising means the suggestions are matching what you can do more often.')); }
+      ca.appendChild(el('div','dim tiny','Going lighter than suggested on a bad day is fine — this measures fit, not obedience.')).style.marginTop='4px';
+    }
+    v.appendChild(ca);
+  }
   // weekly volume history
   const wk=weeklyVolumeSeries(12).filter(w=>w.sets>0);
   const cv=el('div','card pad');
@@ -8418,8 +8453,8 @@ function demoTrain(weeks, P, o){
   DEMO_QUIET=true;
   try{
     for(let w=0;w<weeks;w++){
-      const weekStart=start+w*7*DAY;
-      setDemoClock(weekStart);
+      const wkStart=start+w*7*DAY;
+      setDemoClock(wkStart);
       if(o.answer) activeProposals().forEach(p=>{
         if((p.id==='deload'||p.id.endsWith(':hard'))&&P.acceptDeload){ p.accept.fn(); dismissProposal(p.id); }
         else if(p.id.startsWith('stall:')&&!p.id.endsWith(':hard')){ p.accept.fn(); dismissProposal(p.id); }
@@ -8427,7 +8462,7 @@ function demoTrain(weeks, P, o){
       const ph0=currentPhase(), dpw=sessionsPerWeek()||5;
       for(let d=0;d<dpw;d++){
         if(R()>P.attend) continue;
-        setDemoClock(weekStart+Math.round(d*7/dpw)*DAY+(9+Math.floor(R()*9))*3600e3);
+        setDemoClock(wkStart+Math.round(d*7/dpw)*DAY+(9+Math.floor(R()*9))*3600e3);
         const day=todayDay(); if(!day||!day.slots.length) continue;
         const phase=currentPhase(); if(phase.onDeload) fatigue=Math.max(0,fatigue-0.03);
         day.slots.forEach(sl=>{ if(['topback','amrap','maint'].includes(sl.structure)) ensureInitialTM(slotTrack(sl).ex); });

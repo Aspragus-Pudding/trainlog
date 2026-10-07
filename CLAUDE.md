@@ -26,6 +26,7 @@ ALPHA.md                tester plan, incl. what a tester's data touches — keep
 shoulder-protocol.md    reference doc, not used by the app
 tests/prescription-invariants.js   prescription direction/pairing tests, run with node
 tests/backtest.js       replays the engine against a real exported log to measure suggestion accuracy
+tests/prospective.js    engine phase 2 check: were suggestions taken, did they land on target (node tests/prospective.js <export>)
 tests/simulate.js       persona simulator: made-up lifters train through the real app for months (node tests/simulate.js)
 docs/calibration-plan.md   phase-2 personal-calibration spec, not yet implemented
 docs/coaching-cues.json    per-exercise coaching cues — the editable source (see below)

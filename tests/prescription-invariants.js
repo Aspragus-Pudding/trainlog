@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -1741,6 +1741,20 @@ section('43. demo isolation');
   ok(store['trainlog-demo:trainlog.jsonl.v1']===real['trainlog.jsonl.v1']&&!cc.syncUrl&&!cc.feedbackUrl,'copy-my-real-log copies the log and drops the URLs','');
   ok(Object.keys(real).every(k=>store[k]===real[k]),'and leaves the real keys untouched','');
   console.log('  demo store prefixed · no network · real keys byte-identical after seed/train/log/settings/wipe · copy is read-only and URL-free');
+}
+
+/* ─── 44. suggestion accuracy (engine phase 2) ─── */
+section('44. suggestion accuracy');
+{
+  const sg=(lb,rpe)=>({suggestion:{lb,shown:{value:lb,unit:'lb'},reps:8,target_rpe:8,basis:'x'}});
+  const ev=[set('incline_machine','a1',150,8,8,6,sg(150)),set('incline_machine','a1',150,8,9.5,6,sg(150)),set('incline_machine','a1',140,8,7,6,sg(150)),
+    {type:'session_end',id:'ea1',ts:day(5.9),session_id:'a1',joints:{}},
+    set('incline_machine','bot',150,8,8,3,sg(150)),{type:'session_end',id:'ebot',ts:day(3),session_id:'bot',joints:{}}];
+  const A=load(ev), acc=A.suggestionAccuracy();
+  const t=acc.reduce((a,b)=>({n:a.n+b.n,taken:a.taken+b.taken,on:a.on+b.on}),{n:0,taken:0,on:0});
+  ok(t.n===3,'a one-set session ending within seconds (automation) is left out',JSON.stringify(acc));
+  ok(t.taken===2&&t.on===1,'taken = lifted as suggested; on target = RPE within 1 of target',JSON.stringify(t));
+  console.log('  taken / on-target counted from the recorded suggestion · automation sessions excluded');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
