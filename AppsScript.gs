@@ -60,6 +60,8 @@ function fetchRaw(callback) {
       text = values.map(function (r) { return r[0]; }).filter(function (v) { return v; }).join('\n');
     }
   }
+  // only a plain function name can come back as JSONP (the app uses trainlogJsonp<digits>)
+  if (callback && !/^[A-Za-z_$][\w$]{0,63}$/.test(callback)) callback = '';
   if (callback) {
     var payload = callback + '(' + JSON.stringify(text) + ')';
     return ContentService.createTextOutput(payload).setMimeType(ContentService.MimeType.JAVASCRIPT);

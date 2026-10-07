@@ -190,6 +190,15 @@ never swapped out mid-workout.
   demo has its own clock (`DEMO_OFF`); network paths check `DEMO` and stop.
   The only direct `localStorage` reads are `STORE`'s own definition and
   `demoCopyReal()` (read-only). §43 checks real keys stay byte-identical.
+- **Conditions are general, not shoulder-only.** `FLAGS` per condition
+  (additive only; never soften shoulder_instability), `flagFor()` returns the
+  worst flag across conditions and matches custom exercises by name
+  (`FLAG_NAME_HINTS`). Stall-engine additions route through
+  `CONDITION_SUBS` / `VARIANT_UNSAFE`. Specialty bars (`specialty:` on the
+  Transformer entries) are never auto-picked until logged.
+- **Testers:** restoring a backup never imports `syncUrl`/`feedbackUrl`/
+  `testerName`; setup links (`?sync=&feedback=&who=`) can also be pasted in
+  Settings; `isTester()` hides owner-only copy. ALPHA.md is the setup guide.
 - **`PENDING`** holds pre-workout plan edits until the session starts.
 - **Readiness** drives load adjustment (discrete tiers) and warmup length
   (continuous score). Adjustments are downward-only by design.

@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -404,13 +404,17 @@ section('11. joint ladder');
   // window is the last 6 sessions
   r=lvl([].concat(sess({shoulder:1}),many(6,0).map(e=>({...e,joints:{}}))),'shoulder');
   ok(r.t.score===0&&r.L===1,'a flag 7 sessions back must fall out of the window',JSON.stringify(r.t));
-  // abduction: half weight, never past load held
-  const A6=load(many(6,1));
+  // abduction: half weight, never past load held — for shoulder INSTABILITY (raises stay below the at-risk position)
+  const inst=A=>{ A.getCFG().conditions=['shoulder_instability']; return A; };
+  const A6=inst(load(many(6,1)));
   const press=A6.jointNoteFor('horizontal_press'), raise=A6.jointNoteFor('abduction'), curl=A6.jointNoteFor('elbow_flexion');
   ok(press&&press.level===5,'presses should be level 5 at 6 moderate shoulder sessions',JSON.stringify(press));
   ok(raise&&raise.level===3,'abduction should be half weight and capped at load held',JSON.stringify(raise));
   ok(curl===null,'a curl is not a shoulder pattern',JSON.stringify(curl));
-  ok(load(many(2,1)).jointNoteFor('abduction').level===2,'abduction at score 2 (half = 1) should only lengthen the warmup','');
+  ok(inst(load(many(2,1))).jointNoteFor('abduction').level===2,'abduction at score 2 (half = 1) should only lengthen the warmup','');
+  // without instability (impingement, or a sore shoulder of unknown cause) abduction counts in full
+  const imp=load(many(6,1)); imp.getCFG().conditions=['shoulder_impingement'];
+  ok(imp.jointNoteFor('abduction').level===5,'with impingement, lateral raises count in full (abduction is the provoker)',JSON.stringify(imp.jointNoteFor('abduction')));
 
   // level 3 holds load on every set; the line names the joint
   const hist=many(3,1).concat([set('incline_machine','h1',60,15,7,0.2)]);
@@ -1780,6 +1784,67 @@ section('45. all-out (AMRAP) set type');
   ok(withA.lb===without.lb&&withA.pr.reps===without.pr.reps,'the all-out set does not change the next session\'s working-set suggestion',JSON.stringify([withA.lb,withA.pr.reps,without.lb,without.pr.reps]));
   ok(A.allOutNext({calib:true,sets:[{}],sets_target:2})===true&&A.allOutNext({structure:'amrap',calib:true,sets:[{}],sets_target:2})===false,'week-1 calibration AMRAPs still work; realization AMRAPs are separate','');
   console.log('  one set · role amrap @ RPE 10 · resets to straight · no TM change · next session unaffected');
+}
+
+/* ─── 46. alpha testers: data separation and conditions other than the owner's ─── */
+section('46. alpha safety');
+{
+  const OWN='https://script.google.com/macros/s/OWNERSYNC/exec', FB='https://script.google.com/macros/s/OWNERFB/exec';
+  // a restored backup file never brings its backup/notes address or name
+  {
+    const A=load([]); const C=A.getCFG(); C.syncUrl=''; C.feedbackUrl=FB; C.testerName='Sam';
+    const other=[JSON.stringify({type:'config_snapshot',cfg:{goals:['squat'],syncUrl:OWN,feedbackUrl:'https://script.google.com/macros/s/X/exec',testerName:'Owner',roadmap:[]}}),
+      JSON.stringify(set('squat','z1',200,5,8,3))].join('\n');
+    const res=A.importBackup(other); A.finishImport(res);
+    const D=A.getCFG();
+    ok(D.syncUrl===''&&D.feedbackUrl===FB&&D.testerName==='Sam','importing someone else\'s backup keeps this phone\'s backup/notes addresses and name',JSON.stringify({s:D.syncUrl,f:D.feedbackUrl,n:D.testerName}));
+    ok((D.goals||[]).includes('squat'),'while the program itself is restored','');
+  }
+  // setup links: each parameter sets only its own field; bad addresses ignored; &who= names a tester
+  {
+    const A=load([]); const C=A.getCFG(); C.syncUrl=''; C.feedbackUrl=''; C.testerName='';
+    A.applySetupLink('?feedback='+encodeURIComponent(FB)+'&who=Jo');
+    ok(C.feedbackUrl===FB&&C.syncUrl===''&&C.testerName==='Jo','a feedback link sets notes and name, never the backup address',JSON.stringify({s:C.syncUrl,f:C.feedbackUrl,n:C.testerName}));
+    A.applySetupLink('?sync='+encodeURIComponent('https://evil.example/exec'));
+    ok(C.syncUrl==='','an address that is not an Apps Script web app is ignored','');
+  }
+  // conditions: worst flag wins; custom exercises flagged by name
+  {
+    const A=load([]); const C=A.getCFG();
+    C.conditions=['shoulder_impingement','shoulder_instability'];
+    ok(A.flagFor('dip').level==='red','a yellow from one condition never hides a red from another',JSON.stringify(A.flagFor('dip')));
+    C.customEx=[{id:'cx_fly1',name:'Cable fly (low to high)',pattern:'horizontal_press',load:'stack',vol:{chest:1},custom:true}]; A.mergeCustom();
+    ok(A.flagFor('cx_fly1')&&A.flagFor('cx_fly1').level==='red','a custom exercise called a fly gets the fly flag',JSON.stringify(A.flagFor('cx_fly1')));
+    C.conditions=['knee_pain']; ok(A.flagFor('sissy').level==='red'&&A.flagFor('pendulum').level==='yellow','knee pain flags deep knee flexion','');
+    C.conditions=['hip_pain']; ok(!!A.flagFor('squat'),'hip pain is a condition you can declare, and it flags deep hip flexion','');
+    C.conditions=[]; ok(A.flagFor('dip')===null,'no conditions: no flags','');
+  }
+  // the half-weight lateral-raise rule only applies to instability (tested in §2); low back pulls in prep
+  {
+    const A=load([]); A.getCFG().conditions=['low_back'];
+    const prep=A.buildPrep({slots:[{ex:'deadlift'}]},null).map(m=>m.id);
+    ok(prep.includes('p_catcow')||prep.includes('p_birddog'),'a declared low back gets low-back prep',JSON.stringify(prep));
+  }
+  // new users are not handed a specialty bar they don't own
+  {
+    const A=load([]); A.getCFG().goals=[]; A.getCFG().equipment='mixed';
+    const sq=A.resolveEx('squat','primary',new Set()), hg=A.resolveEx('hinge','primary',new Set());
+    ok(!sq.specialty&&!hg.specialty,'a fresh install gets a normal squat and hinge, not the Transformer bar',sq.id+' / '+hg.id);
+    const B=load([set('transformer_high_bar','tb',185,5,8,3),{type:'session_end',id:'etb',ts:day(2.99),session_id:'tb',joints:{}}]); B.getCFG().goals=[];
+    ok(B.resolveEx('squat','primary',new Set()).specialty,'once you have logged one, it can be picked','');
+  }
+  // condition-aware stall substitutions
+  {
+    const A=load([]); const C=A.getCFG();
+    C.conditions=['low_back']; ok(A.addedExposureFor('squat')!=='squat'&&A.addedExposureFor('deadlift')!=='deadlift','low back: an added squat or hinge day goes to a substitute',A.addedExposureFor('squat')+' / '+A.addedExposureFor('deadlift'));
+    ok(A.variantOptions('deadlift','off_floor').every(o=>!(o.modifiers&&o.modifiers.rom&&o.modifiers.rom.kind==='deficit')),'low back: no deficit deadlifts offered','');
+    C.conditions=['knee_pain']; ok(A.addedExposureFor('squat')==='belt_squat','knee pain: added squat days go to the belt squat',A.addedExposureFor('squat'));
+    C.conditions=[]; ok(A.addedExposureFor('squat')==='squat'&&A.addedExposureFor('bench')==='bench','no conditions: no substitution','');
+  }
+  // the quick setup asks about equipment and conditions
+  ok(A0().BUILDER_QUICK.includes('constraints')&&A0().BUILDER_QUICK.includes('equipment'),'quick setup asks what you are working around and what your gym has','');
+  function A0(){ return load([]); }
+  console.log('  restore never imports addresses · setup links field-scoped · worst flag wins · custom flagged by name · no specialty bars for new users · condition-aware subs');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

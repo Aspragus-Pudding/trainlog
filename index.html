@@ -317,7 +317,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
     "setup": "Bar on the upper back, hands as close as shoulders allow. Feet about shoulder width, toes slightly out. Big brace.",
     "execution": "Break at hips and knees together. Knees track over toes. Depth to at least parallel. Drive up through the mid-foot.",
     "faults": "Knees caving in. Weight shifting to the toes. Chest dropping and hips shooting up first.",
-    "shoulder": "Low-bar position needs shoulder external rotation that may aggravate instability. Use a high-bar position, a wider grip, or the Transformer/safety bar which removes the issue entirely.",
+    "shoulder": "Low-bar position needs shoulder external rotation that may aggravate instability. Use a high-bar position, a wider grip, or a safety squat bar (or similar specialty bar), which removes the issue entirely.",
     "sources": [
       "Baraki",
       "Nuckols",
@@ -479,7 +479,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
     "setup": "Underhand grip at shoulder width. Dead hang with shoulder blades slightly set. Belt snug.",
     "execution": "Same pull as a pull-up — elbows to the hips. Biceps naturally contribute more. Full range every rep.",
     "faults": "Half reps at the bottom. Swinging the belt weight. Hunching forward at the top.",
-    "shoulder": "The underhand grip keeps the shoulder in a safer position than a wide pronated pull-up. Well suited to anterior instability — your goal lift is a good choice.",
+    "shoulder": "The underhand grip keeps the shoulder in a safer position than a wide pronated pull-up. Well suited to anterior instability.",
     "sources": [
       "Nuckols",
       "Nippard"
@@ -818,7 +818,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.41.0';
+const APP_VERSION='1.42.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -936,7 +936,7 @@ const PREP=[
  {id:'p_hipair',   name:'Hip airplane',            tgt:['post'],           joint:'hip', dose:'5 each side'}
 ];
 /* Prep that puts a declared condition's joint at risk is never suggested. */
-const PREP_UNSAFE={shoulder_instability:['p_dislocate','p_hang']};
+const PREP_UNSAFE={shoulder_instability:['p_dislocate','p_hang'], knee_pain:['p_cossack'], wrist_pain:['p_scappush'], hip_pain:['p_cossack']};
 
 function buildPrep(day, rd){
   const groups=soreGroupsFor(day);
@@ -958,6 +958,8 @@ function buildPrep(day, rd){
 
   // 1. anything aimed at a joint you flagged or that is trending
   PREP.filter(m=>m.joint&&joints.has(m.joint)).forEach(m=>add(m, m.joint));
+  // no prep item is tagged to the low back (cat-cow and bird dog serve soreness), so a flagged low back pulls those in
+  if(joints.has('low back')) PREP.filter(m=>!m.joint&&m.tgt.includes('lowback')).forEach(m=>add(m,'low back'));
   // 2. anything aimed at a group you said was sore
   PREP.filter(m=>!m.joint&&m.tgt.some(t=>sore.has(t))).forEach(m=>add(m,'sore'));
   // 3. general coverage of what you're training today
@@ -972,6 +974,8 @@ function buildPrep(day, rd){
 /* Conditions you can declare. Exercises carry a flag per condition so the
    app can warn without ever refusing — you decide, it just remembers. */
 const CONDITIONS={
+  hip_pain:{name:'Hip pain', joint:'hip', note:'Deep hip flexion, especially with rotation, is the usual provoker.'},
+  ankle_pain:{name:'Ankle pain / stiffness', joint:'ankle', note:'Deep dorsiflexion under load — the bottom of a squat, loaded calf stretch.'},
   shoulder_instability:{name:'Anterior shoulder instability', joint:'shoulder',
     note:'Risk lives in abduction plus external rotation — arm out to the side and rotated back, under load.'},
   shoulder_impingement:{name:'Shoulder impingement / pinching', joint:'shoulder',
@@ -1002,24 +1006,60 @@ const FLAGS={
       weighted_pushup:'watch elbow flare at the bottom'}},
   shoulder_impingement:{red:{bn_press:'overhead with forced external rotation',bn_pulldown:'overhead behind the neck'},
     yellow:{ohp:'loaded overhead',lat_raise:'abduction near shoulder height',machine_raise:'abduction near shoulder height',
-      cable_raise:'abduction near shoulder height',seated_db_press:'loaded overhead'}},
-  knee_pain:{yellow:{sissy:'extreme knee flexion under load',leg_ext:'open-chain extension loads the patellar tendon directly',
-      hack:'deep flexion under load',bulgarian:'deep flexion, one leg',front_squat:'deep knee flexion'}},
+      cable_raise:'abduction near shoulder height',seated_db_press:'loaded overhead',
+      stand_m_raise:'abduction near shoulder height',seat_m_raise:'abduction near shoulder height',lean_raise:'abduction near shoulder height',
+      machine_ohp:'loaded overhead',db_press:'loaded overhead',z_press:'loaded overhead',
+      dip:'deep shoulder extension',pullover:'end-range overhead'}},
+  knee_pain:{red:{sissy:'extreme knee flexion under load'},
+    yellow:{leg_ext:'open-chain extension loads the patellar tendon directly',
+      hack:'deep flexion under load',bulgarian:'deep flexion, one leg',front_squat:'deep knee flexion',
+      pendulum:'deep flexion under load',goblet:'deep knee flexion',leg_press:'deep flexion if the seat lets you go low',
+      squat:'deep knee flexion under load',ssb_squat:'deep knee flexion under load',transformer_high_bar:'deep knee flexion under load',
+      transformer_low_bar:'knee flexion under load',transformer_front:'deep knee flexion',transformer_goblet:'deep knee flexion',
+      rev_nordic:'long-lever load on the knee in flexion'}},
+  hip_pain:{yellow:{squat:'deep hip flexion',front_squat:'deep hip flexion',bulgarian:'deep hip flexion, one leg',
+      leg_press:'deep hip flexion if the seat lets you go low',goblet:'deep hip flexion',hack:'deep hip flexion',pendulum:'deep hip flexion',
+      ssb_squat:'deep hip flexion',transformer_high_bar:'deep hip flexion',transformer_low_bar:'deep hip flexion',good_morning:'loaded hip flexion'}},
+  ankle_pain:{yellow:{front_squat:'deep dorsiflexion',goblet:'deep dorsiflexion',bulgarian:'dorsiflexion under load on the front foot',
+      hack:'deep dorsiflexion',pendulum:'deep dorsiflexion',calf:'loaded ankle stretch at the bottom',stand_m_calf:'loaded ankle stretch at the bottom',
+      seated_calf:'loaded ankle stretch at the bottom',seat_pl_calf:'loaded ankle stretch at the bottom'}},
   low_back:{red:{good_morning:'heavy loaded hip flexion with a long lever'},
     yellow:{deadlift:'heavy axial load',squat:'axial compression',rdl:'loaded spinal position',
-      seal_row:'supported, but watch the setup',tbar:'hinged and loaded',cable_crunch:'loaded spinal flexion'}},
-  wrist_pain:{yellow:{bench:'loaded wrist extension',front_squat:'front rack forces wrist extension',
-      cg_bench:'loaded wrist extension',weighted_pushup:'maximal wrist extension',skullcrusher:'loaded wrist position'}},
+      seal_row:'supported, but watch the setup',tbar:'hinged and loaded',cable_crunch:'loaded spinal flexion',
+      trap_bar:'heavy axial load',transformer_hinge:'heavy axial load',front_squat:'axial compression',ssb_squat:'axial compression',
+      transformer_high_bar:'axial compression',transformer_low_bar:'axial compression, more forward lean',roman_hinge:'loaded spinal position',
+      back_ext:'loaded spinal extension',belt_rdl:'hinged, though the belt spares the spine',farmer:'heavy carry loads the spine',
+      shrug:'heavy axial load',ab_wheel:'anti-extension at full length',hang_raise:'hip flexors pull on the lower back',db_row:'hinged and loaded'}},
+  wrist_pain:{red:{wrist_roller:'loads the wrist directly',rev_wrist:'loads the wrist directly',wrist_curl:'loads the wrist directly'},
+    yellow:{bench:'loaded wrist extension',front_squat:'front rack forces wrist extension',
+      cg_bench:'loaded wrist extension',weighted_pushup:'maximal wrist extension',skullcrusher:'loaded wrist position',
+      db_bench:'loaded wrist extension',incline_db:'loaded wrist extension',floor_press:'loaded wrist extension',decline_press:'loaded wrist extension',
+      ohp:'loaded wrist extension overhead',z_press:'loaded wrist extension overhead',farmer:'heavy grip',transformer_front:'front rack forces wrist extension'}},
   elbow_pain:{yellow:{skullcrusher:'high elbow stress',pushdown:'direct elbow extension',
-      oh_ext:'elbow extension under stretch',cg_bench:'elbow-dominant pressing'}}
+      oh_ext:'elbow extension under stretch',cg_bench:'elbow-dominant pressing',
+      rope_pushdown:'direct elbow extension',m_oh_tri:'elbow extension under stretch',pin_tri_dip:'direct elbow extension',dip:'heavy elbow extension',
+      curl:'direct elbow flexion',hammer:'elbow flexion with a heavy grip',preacher:'elbow flexion at full stretch',spider:'elbow flexion at full stretch',
+      cable_curl:'direct elbow flexion',pin_preacher:'elbow flexion at full stretch',sa_cable_curl:'direct elbow flexion',
+      chinup:'heavy elbow flexion and grip',pullup:'heavy grip',farmer:'heavy grip',hang:'heavy grip'}}
 };
+/* Custom exercises have generated ids, so they'd never match a flag. Their
+   names are matched against the flag ids for movements the library leaves
+   out on purpose (flyes, behind-the-neck, snatch). Judgement default. */
+const FLAG_NAME_HINTS=[[/\bfl(y|ies|ye|yes)\b|pec ?deck/i,['fly','cable_fly']],[/behind.?the.?neck|\bbtn\b/i,['bn_press','bn_pulldown']],[/\bsnatch/i,['snatch']],
+  [/\bdips?\b/i,['dip']],[/pull.?over/i,['pullover']],[/sissy/i,['sissy']],[/good.?morning/i,['good_morning']],[/skull/i,['skullcrusher']]];
 function flagFor(exId){
+  const ex=exById[exId], ids=[exId];
+  if(ex&&ex.custom) FLAG_NAME_HINTS.forEach(([re,map])=>{ if(re.test(ex.name||'')) ids.push(...map); });
+  let best=null;
+  // the worst flag across every declared condition wins: a yellow from one must not hide a red from another
   for(const c of (CFG.conditions||[])){
     const f=FLAGS[c]; if(!f) continue;
-    if(f.red&&f.red[exId]) return {level:'red',cond:c,why:f.red[exId]};
-    if(f.yellow&&f.yellow[exId]) return {level:'yellow',cond:c,why:f.yellow[exId]};
+    for(const id of ids){
+      if(f.red&&f.red[id]) return {level:'red',cond:c,why:f.red[id]};
+      if(!best&&f.yellow&&f.yellow[id]) best={level:'yellow',cond:c,why:f.yellow[id]};
+    }
   }
-  return null;
+  return best;
 }
 const JOINTS=['wrist','elbow','shoulder','low back','hip','knee','ankle'];
 
@@ -1050,12 +1090,12 @@ const EX=[
  {id:'ohp',name:'Overhead press',pattern:'vertical_press',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'percentage',vol:{front_delts:1,triceps:.5,side_delts:.5}},
  {id:'landmine',name:'Landmine press',pattern:'vertical_press',load:'barbell',bar:22,plateSet:'main_lb',inc:5,prog:'double',vol:{front_delts:1,triceps:.5}},
  {id:'db_press',name:'Neutral DB shoulder press',pattern:'vertical_press',load:'dumbbell',bar:0,plateSet:null,inc:5,prog:'double',vol:{front_delts:1,triceps:.5,side_delts:.5}},
- {id:'ssb_squat',name:'Transformer bar squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:1,glutes:.5,upper_back:.5,hamstrings:.5}},
- {id:'transformer_hinge',name:'Transformer bar hinge',pattern:'hinge',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{hamstrings:1,glutes:1,upper_back:.5,lower_back:0.5}},
- {id:'transformer_low_bar',name:'Transformer bar low-bar squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:.5,glutes:1,hamstrings:.5,upper_back:.5}},
- {id:'transformer_high_bar',name:'Transformer bar high-bar squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:1,glutes:.5,upper_back:.5}},
- {id:'transformer_front',name:'Transformer bar front squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:1,upper_back:.5}},
- {id:'transformer_goblet',name:'Transformer bar goblet squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'double',vol:{quads:1,glutes:.5}},
+ {id:'ssb_squat',specialty:'Kabuki Transformer bar',name:'Transformer bar squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:1,glutes:.5,upper_back:.5,hamstrings:.5}},
+ {id:'transformer_hinge',specialty:'Kabuki Transformer bar',name:'Transformer bar hinge',pattern:'hinge',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{hamstrings:1,glutes:1,upper_back:.5,lower_back:0.5}},
+ {id:'transformer_low_bar',specialty:'Kabuki Transformer bar',name:'Transformer bar low-bar squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:.5,glutes:1,hamstrings:.5,upper_back:.5}},
+ {id:'transformer_high_bar',specialty:'Kabuki Transformer bar',name:'Transformer bar high-bar squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:1,glutes:.5,upper_back:.5}},
+ {id:'transformer_front',specialty:'Kabuki Transformer bar',name:'Transformer bar front squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:1,upper_back:.5}},
+ {id:'transformer_goblet',specialty:'Kabuki Transformer bar',name:'Transformer bar goblet squat',pattern:'squat',load:'barbell',bar:55,plateSet:'main_lb',inc:5,prog:'double',vol:{quads:1,glutes:.5}},
  {id:'squat',name:'Back squat',pattern:'squat',load:'barbell',bar:45,plateSet:'main_lb',inc:5,prog:'percentage',vol:{quads:1,glutes:.5,hamstrings:.5}},
  {id:'hack',name:'Hack squat',pattern:'squat',load:'machine',plateLoaded:true,bar:0,plateSet:null,inc:25,prog:'double',vol:{quads:1,glutes:.5}},
  {id:'pendulum',name:'Pendulum squat',pattern:'squat',load:'machine',plateLoaded:true,bar:0,plateSet:null,inc:25,prog:'double',vol:{quads:1,glutes:.5}},
@@ -1635,7 +1675,9 @@ function resolveEx(pattern, role, used){
   // rehab movements are prescribed deliberately, never auto-selected
   const avail=pool.filter(e=>!e.rehab);
   if(avail.length) pool.length=0, pool.push(...avail);
-  const score=e=>equipmentScore(e)+(()=>{
+  // specialty bars (the Kabuki Transformer) only if you've logged one or chose it as a goal lift —
+  // with no history every score ties, and library order put them first for new users
+  const score=e=>equipmentScore(e)+(e.specialty&&!exposureCount(e.id)?-500:0)+(()=>{
     const f=flagFor(e.id);
     if(f&&f.level==='red') return -1000;
     if(f&&f.level==='yellow') return -50;
@@ -1732,9 +1774,10 @@ let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',cu
    proof the link came from you: a link never silently REPLACES a URL that's
    already set, it asks first. */
 const SCRIPT_URL_RE=/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
-function applySetupLink(){
+function applySetupLink(search){
+  const fromPaste=search!=null;
   try{
-    const q=new URLSearchParams(location.search);
+    const q=new URLSearchParams(fromPaste?search:location.search);
     const set=(param,key,what)=>{
       const url=(q.get(param)||'').trim();
       if(!url||!SCRIPT_URL_RE.test(url)||CFG[key]===url) return false;
@@ -1742,9 +1785,12 @@ function applySetupLink(){
       CFG[key]=url; return true;
     };
     const a=set('sync','syncUrl','your backups'), b=set('feedback','feedbackUrl','your notes');
-    if(q.has('sync')||q.has('feedback')) history.replaceState({},'',location.pathname);
-    if(a||b){ saveCfg(); setTimeout(()=>toast(a&&b?'Backup and notes configured':a?'Backup configured':'Notes configured'),600); }
-  }catch{}
+    const who=(q.get('who')||'').trim().slice(0,40), c=!!who&&!CFG.testerName;
+    if(c) CFG.testerName=who;
+    if(!fromPaste&&(q.has('sync')||q.has('feedback')||q.has('who'))) history.replaceState({},'',location.pathname);
+    if(a||b||c){ saveCfg(); setTimeout(()=>toast(a&&b?'Backup and notes configured':a?'Backup configured':b?'Notes configured':'Name set'),600); }
+    return {sync:a, feedback:b, name:c, any:a||b||c};
+  }catch{ return {any:false}; }
 }
 
 function loadAll(){
@@ -2191,9 +2237,9 @@ function jointComfortSeries(joint, n){
 /* response ladder — graded, pattern-targeted, free at the lower rungs */
 const JOINT_PATTERNS={
   shoulder:['horizontal_press','vertical_press','horizontal_pull','vertical_pull','abduction'],
-  elbow:['horizontal_press','vertical_press','elbow_flexion','elbow_extension'],
+  elbow:['horizontal_press','vertical_press','elbow_flexion','elbow_extension','vertical_pull','horizontal_pull','grip'],
   wrist:['horizontal_press','vertical_press','wrist','grip'],
-  'low back':['hinge','squat','shrug'], hip:['squat','hinge'],
+  'low back':['hinge','squat','shrug','trunk','horizontal_pull'], hip:['squat','hinge','hip_abduction','hip_adduction'],
   knee:['squat','knee_extension','knee_flexion'], ankle:['squat','calf_raise']
 };
 /* Level from how far the last 6 sessions sat above your baseline (xscore, in
@@ -2235,6 +2281,10 @@ function jointDriftNote(joint){
    never past "load held" — a precaution, not a cut. Rear-delt work belongs
    under horizontal_pull, which counts in full. */
 const JOINT_PATTERN_SCALE={shoulder:{abduction:{weight:0.5,cap:3}}};
+/* Lateral raises stay below the at-risk position for INSTABILITY, so they
+   count half and can't go past level 3. For impingement, abduction is the
+   main provoker, so without the instability condition it counts in full. */
+const jointScale=(j,pattern)=>j==='shoulder'&&!(CFG.conditions||[]).includes('shoulder_instability')?null:(JOINT_PATTERN_SCALE[j]||{})[pattern];
 /* The ladder note for one movement pattern, from the log as it stands —
    including today's check-in once it's been logged. Shared by buildDay(),
    the check-in, and tests/backtest.js so they can't drift apart. */
@@ -2243,7 +2293,7 @@ function jointNoteFor(pattern){
   let jt=null, painStop=false;
   JOINTS.forEach(j=>{
     if(!(JOINT_PATTERNS[j]||[]).includes(pattern)) return;
-    const sc=(JOINT_PATTERN_SCALE[j]||{})[pattern];
+    const sc=jointScale(j,pattern);
     const t=jointTrend(j,6);
     let L=jointLevel(sc?{...t,xscore:t.xscore*sc.weight}:t);
     if(sc) L=Math.min(L,sc.cap);
@@ -3388,7 +3438,7 @@ const REHAB_PATTERN={shoulder:'rehab_shoulder',knee:'prehab_knee',wrist:'prehab_
   elbow:'prehab_elbow','low back':'prehab_lowback'};
 /* Rehab movements that load a declared condition's risk position. Checked in
    addition to flagFor(). prone_t is abduction with external rotation. */
-const REHAB_UNSAFE={shoulder_instability:['prone_t']};
+const REHAB_UNSAFE={shoulder_instability:['prone_t'], knee_pain:['atg_split']};
 function rehabUnsafe(exId){
   if(flagFor(exId)) return true;
   return (CFG.conditions||[]).some(c=>(REHAB_UNSAFE[c]||[]).includes(exId));
@@ -4266,11 +4316,26 @@ function feedbackPayload(note){
   return {kind:'trainlog_feedback', name:CFG.testerName||'', tag:note.tag,
     text:note.text, app_version:note.app_version, ts:note.ts};
 }
+/* no-cors: a sent note can't be confirmed, but a failed one (no signal at
+   the gym) rejects — those ids wait in a small queue and go out on the next
+   launch or when the phone comes back online. */
+const LS_FBQ='trainlog.feedbackQueue';
+const fbQueue=()=>{ try{ return JSON.parse(STORE.getItem(LS_FBQ)||'[]')||[]; }catch{ return []; } };
+const setFbQueue=q=>{ try{ STORE.setItem(LS_FBQ,JSON.stringify([...new Set(q)])); }catch{} };
+/* A tester's app: named, or sending notes to whoever set it up. */
+const isTester=()=>!!(CFG.testerName||(CFG.feedbackUrl||'').trim());
 function sendFeedback(note){
   if(DEMO) return;
   const url=(CFG.feedbackUrl||'').trim(); if(!url) return;
-  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify(feedbackPayload(note))}).catch(()=>{});
+  const queue=()=>{ if(note&&note.id) setFbQueue(fbQueue().concat(note.id)); };
+  if(typeof navigator!=='undefined'&&navigator.onLine===false){ queue(); return; }
+  return Promise.resolve(fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(feedbackPayload(note))})).then(()=>{ if(note&&note.id) setFbQueue(fbQueue().filter(x=>x!==note.id)); }).catch(queue);
+}
+function flushFeedback(){
+  if(DEMO||!(CFG.feedbackUrl||'').trim()) return;
+  const q=fbQueue(); if(!q.length) return;
+  q.forEach(id=>{ const n=LOG.find(e=>e.type==='note'&&e.id===id); if(n) sendFeedback(n); else setFbQueue(fbQueue().filter(x=>x!==id)); });
 }
 /* The open feedback notes, oldest first — the ONE definition of "open". The
    Progress list and the copy-for-Claude-Code report both read this. They used
@@ -5888,10 +5953,12 @@ function variantName(exId, o){
 }
 function variantUsable(exId, o){
   const ex=exById[exId];
+  if((CFG.conditions||[]).some(c=>VARIANT_UNSAFE[c]&&VARIANT_UNSAFE[c](o))) return false;
   if(o.barbell&&ex.load!=='barbell') return false;
   if(o.modifiers){ const fam=familyOf(ex), m=cleanMods(o.modifiers); if(!m) return false;
     if(m.pause&&!(PAUSE_AT[fam]||[]).includes(m.pause.at)) return false; return true; }
   const v=exById[o.ex]; if(!v||v.folded||v.rehab||v.id===exId) return false;
+  if(v.specialty&&!exposureCount(v.id)) return false;   // a specialty bar you've never logged
   const f=flagFor(v.id); if(f&&f.level==='red') return false;
   return equipmentScore(v)>-1000;
 }
@@ -5998,18 +6065,32 @@ function stickingDiagnosis(exId){
   return {region:typ||null, n:0, total, src:typ?'typical':null};
 }
 
-/* ---------- Shoulder gating (§5.6) ----------
-   With shoulder_instability, anything an intervention ADDS to a barbell
-   press — an extra day, specialization frequency — goes to a substitute
-   from the research's list instead (machine press with the hands in front,
-   landmine); nothing here ever raises barbell pressing frequency. No usable
-   substitute: the exposure isn't added at all. */
-const SHOULDER_SUBS={horizontal_press:['machine_press','pin_chest_press','ln_pl_press'], vertical_press:['machine_ohp','landmine']};
+/* ---------- Condition gating (§5.6) ----------
+   Anything an intervention ADDS to a barbell lift — an extra day,
+   specialization frequency — goes to a substitute when a declared condition
+   says so: shoulder_instability never gets more barbell pressing (machine
+   press with the hands in front, landmine — the research's list); low_back
+   never gets more barbell squatting or hinging (belt squat, hack, back
+   extension); knee_pain never gets more barbell squatting (belt squat). The
+   first substitute with no red flag wins; none usable: the exposure isn't
+   added. The low-back and knee lists are judgement defaults (the research's
+   machine equivalents, chosen to unload the joint). */
+const CONDITION_SUBS={
+  shoulder_instability:{horizontal_press:['machine_press','pin_chest_press','ln_pl_press'], vertical_press:['machine_ohp','landmine']},
+  low_back:{squat:['belt_squat','hack','leg_press'], hinge:['belt_rdl','back_ext','hip_thrust']},
+  knee_pain:{squat:['belt_squat']}
+};
+const SHOULDER_SUBS=CONDITION_SUBS.shoulder_instability;
 function addedExposureFor(exId){
   const ex=exById[exId], fam=familyOf(ex);
-  if(!(CFG.conditions||[]).includes('shoulder_instability')||!SHOULDER_SUBS[fam]||ex.load!=='barbell') return exId;
-  return SHOULDER_SUBS[fam].find(id=>exById[id]&&!exById[id].folded&&!(flagFor(id)&&flagFor(id).level==='red'))||null;
+  if(ex.load!=='barbell') return exId;
+  const conds=(CFG.conditions||[]).filter(c=>CONDITION_SUBS[c]&&CONDITION_SUBS[c][fam]);
+  if(!conds.length) return exId;
+  const pool=conds.flatMap(c=>CONDITION_SUBS[c][fam]);
+  return pool.find(id=>exById[id]&&!exById[id].folded&&!(flagFor(id)&&flagFor(id).level==='red'))||null;
 }
+/* Targeted variants a condition rules out even when the exercise itself isn't flagged. */
+const VARIANT_UNSAFE={low_back:o=>!!(o.modifiers&&o.modifiers.rom&&o.modifiers.rom.kind==='deficit')};
 
 /* ---------- Specialization (§5.6) ---------- */
 function specializationCheck(exId, episode){
@@ -6019,7 +6100,7 @@ function specializationCheck(exId, episode){
   if(JOINTS.some(j=>jointLevel(jointTrend(j,6))>=2)) why.push('not with a joint at level 2 or higher');
   if(CFG.testDate){ const d=(new Date(CFG.testDate+'T12:00')-Date.now())/864e5; if(d>=-1&&d<28) why.push('not with a test within 4 weeks'); }
   if(!(episode||[]).some(s=>s.ev.kind==='variant')) why.push('a targeted variant comes first');
-  if(addedExposureFor(exId)==null) why.push('no shoulder-safe substitute for the extra days');
+  if(addedExposureFor(exId)==null) why.push('no substitute for the extra days that suits what you are working around');
   return {ok:!why.length, why};
 }
 
@@ -6117,7 +6198,7 @@ function stallCard(exId){
     const sub=addedExposureFor(exId);
     return {id:base+'4', snoozeDays:28, title:nm+': a specialization block?',
       body:'Practice and a targeted variant have not moved '+nm+'. A specialization block trains it on up to 4 days a week, mostly 4–6 reps at RPE 7.5, with your other main lifts at about a third of their sets, for '+IV_WEEKS+' weeks.'
-        +(sub!==exId?' Because of your shoulder, the extra days use '+exById[sub].name+', not more barbell pressing.':'')
+        +(sub!==exId?' Because of what you are working around, the extra days use '+exById[sub].name+', not more of the barbell lift.':'')
         +' Retest 4–8 weeks after — specialization gains are often temporary. Grade C/D.',
       accept:{label:'Start for '+IV_WEEKS+' weeks', fn:start}, decline:{label:'Not now'}};
   }
@@ -7133,7 +7214,7 @@ function renderHist(){
         <div class="muted tiny" style="margin-top:2px">${esc(JOINT_ACTION[lv])}</div>
         <div class="dim tiny" style="margin-top:2px">Your usual: ${esc(jointSevLabel(t.base))} · ${t.baseSrc==='set'?'set by you':t.baseSrc==='median'?'from your recent sessions':'not enough history yet'}. Ratings at your usual never change load.</div>
         ${jointDriftNote(j)?`<div class="tiny" style="margin-top:4px;color:var(--warn)">${esc(jointDriftNote(j))}</div>`:''}
-        ${lv>=2?`<div class="dim tiny" style="margin-top:2px">Affects: ${(JOINT_PATTERNS[j]||[]).map(x=>x.replace(/_/g,' ')+(((JOINT_PATTERN_SCALE[j]||{})[x])?' (held only, half weight)':'')).join(', ')}</div>`:''}`;
+        ${lv>=2?`<div class="dim tiny" style="margin-top:2px">Affects: ${(JOINT_PATTERNS[j]||[]).map(x=>x.replace(/_/g,' ')+(jointScale(j,x)?' (held only, half weight)':'')).join(', ')}</div>`:''}`;
       const comfort=jointComfortSeries(j,12);
       if(comfort.length>=2){
         const cs=sparkline(comfort,col); if(cs){ cs.style.marginTop='6px'; r.appendChild(cs); }
@@ -7166,7 +7247,7 @@ function renderHist(){
               n.app_version?' · v'+n.app_version:''}${n.screen?' · '+esc(n.screen):''}</div></span></div>`;
       // Done is the owner's triage. A tester's notes went to the owner, so
       // they just see that it's been sent (or saved, if sending is off).
-      if(CFG.testerName){
+      if(isTester()){
         r.appendChild(el('span','sbadge',(CFG.feedbackUrl||'').trim()?'Sent':'Saved')).style.cssText='display:inline-block;margin-top:7px;margin-left:0';
       }else{
         const done=el('button','btn s','Done'); done.style.marginTop='7px';
@@ -7181,7 +7262,7 @@ function renderHist(){
       cn.appendChild(more);
     }
     const cp=el('button','btn pri wide','Copy all for Claude Code');
-    cp.style.marginTop='12px'; if(CFG.testerName) cp.hidden=true;
+    cp.style.marginTop='12px'; if(isTester()) cp.hidden=true;
     cp.onclick=async()=>{
       const r=notesReport(); if(!r) return;
       try{ await navigator.clipboard.writeText(r.text); toast(`${r.count} notes copied`); }
@@ -7193,7 +7274,7 @@ function renderHist(){
       }
     };
     cn.appendChild(cp);
-    if(!CFG.testerName) cn.appendChild(el('div','dim tiny','Formatted and ready to paste into Claude Code.'))
+    if(!isTester()) cn.appendChild(el('div','dim tiny','Formatted and ready to paste into Claude Code.'))
       .style.marginTop='7px';
   }
   v.appendChild(cn);
@@ -7447,7 +7528,7 @@ function needsOnboarding(){ return !CFG.onboarded && !LOG.some(e=>e.type==='set'
    rerun keeps finished blocks and the one you're in, shows before/after, and
    never touches logged history. */
 let BUILDER=null;
-const BUILDER_QUICK=['path','goal','schedule','lifts','review'];
+const BUILDER_QUICK=['path','goal','schedule','lifts','equipment','constraints','review'];
 const BUILDER_FULL=['path','goal','experience','schedule','lifts','equipment','dates','constraints','review'];
 const BUILDER_DEFAULT_WEEKS=24;   // when there's no target date — judgement default
 function builderDefaults(rerun){
@@ -7544,9 +7625,10 @@ function drawBuilder(rerun){
     w.appendChild(c); host.appendChild(w); return w; };
 
   if(step==='path'){
-    card(false,'Quick setup','Goal, days per week, main lifts. Everything else on sensible defaults.',()=>{ B.path='quick'; B.i=1; openBuilder(); });
+    card(false,'Quick setup','Goal, days per week, main lifts, your gym, and anything you are working around. The rest on sensible defaults.',()=>{ B.path='quick'; B.i=1; openBuilder(); });
     card(false,'Full setup','Also experience, equipment, dates and anything you\'re working around.',()=>{ B.path='full'; B.i=1; openBuilder(); });
-    if(!B.rerun) chipsRow([['lb','Pounds'],['kg','Kilograms']],v=>B.units===v,v=>{ B.units=v; },'Units');
+    // Kilograms is hidden for now: the engine prices in lb and kg isn't carried through every
+    // screen yet. Per-exercise kg (machines labelled in kg) still works from the set card.
     navBtn(B.rerun?'Cancel':'Skip setup','ghost',()=>{ if(B.rerun){ BUILDER=null; $('#dlg').close(); return; }
       B.path='quick'; const plan=builderPlan(B); applyBuilder(B,plan); BUILDER=null; $('#dlg').close(); TAB='dash'; render(); if(!CFG.introSeen) setTimeout(()=>openTutorial(0),250); });
     return;
@@ -7944,7 +8026,22 @@ function openSettings(){
         style="width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit;font-size:13px">
       <div class="anchor">Leave blank to back up manually instead.</div>`;
     host.appendChild(sy);
-    $('#syncu').onchange=e=>{S.syncUrl=e.target.value.trim();};
+    $('#syncu').onchange=e=>{ const v=e.target.value.trim();
+      if(v&&!SCRIPT_URL_RE.test(v)){ toast('That isn\'t an Apps Script web app address (it ends in /exec). Not changed.'); e.target.value=S.syncUrl; return; }
+      S.syncUrl=v; };
+    {
+      const sl=el('div','qblock');
+      sl.innerHTML=`<div class="qlab">Setup link</div>
+        <div class="field">Got a setup link from whoever gave you this app? Paste it here. On iPhone the home-screen app doesn't share Safari's storage, so a link opened in Safari doesn't reach it.</div>
+        <input type="text" id="slink" placeholder="https://…?feedback=…" style="width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit;font-size:13px">`;
+      const ab=el('button','btn s','Apply'); ab.style.marginTop='8px';
+      ab.onclick=()=>{ const raw=($('#slink').value||'').trim(); if(!raw) return;
+        let qs=''; try{ qs=new URL(raw).search; }catch{ qs=raw.includes('?')?raw.slice(raw.indexOf('?')):''; }
+        const r=applySetupLink(qs);
+        if(!r.any){ toast('Nothing to apply in that link'); return; }
+        S.syncUrl=CFG.syncUrl||''; S.feedbackUrl=CFG.feedbackUrl||''; S.testerName=CFG.testerName||''; draw(); };
+      sl.appendChild(ab); host.appendChild(sl);
+    }
     if(S.feedbackUrl){
       const fbk=el('div','qblock');
       fbk.innerHTML=`<div class="qlab">Notes</div>
@@ -7995,8 +8092,10 @@ function openSettings(){
     host.appendChild(themeBlock());
     if(S.syncUrl){
       const tb=el('button','btn s','Test it now'); tb.style.marginTop='9px';
-      tb.onclick=()=>{ CFG.syncUrl=$('#syncu').value.trim(); saveCfg();
-        syncNow(false).then(()=>toast('Sent — check your sheet')); };
+      // sends to the address in the box without saving it — Save or Cancel still decides
+      tb.onclick=()=>{ const u=$('#syncu').value.trim();
+        if(!SCRIPT_URL_RE.test(u)){ toast('That isn\'t an Apps Script web app address (it ends in /exec)'); return; }
+        syncNow(false,u).then(ok=>{ if(ok) toast('Sent — check your sheet'); }); };
       sy.appendChild(tb);
     }
 
@@ -8177,9 +8276,9 @@ function exportLog(){
 
    The browser sends this no-cors, so the response can't be read and delivery
    can't be confirmed from here. Check the Sheet occasionally. */
-async function syncNow(silent){
+async function syncNow(silent, testUrl){
   if(DEMO){ if(!silent) toast('Demo: nothing is sent anywhere'); return false; }
-  const url=(CFG.syncUrl||'').trim();
+  const url=(testUrl||CFG.syncUrl||'').trim();
   if(!url){ if(!silent) toast('No sync URL set'); return false; }
   try{
     await fetch(url,{method:'POST',mode:'no-cors',
@@ -8229,11 +8328,15 @@ function importBackup(text){
 /* Shared tail end of both restore paths (file + sheet): offer to restore the
    program config, then report what changed. */
 function finishImport(res){
-  if(res.cfg&&confirm('This backup contains a program (roadmap, goals, split). Restore it too?\n\nYour current program will be replaced.')){
-    CFG={...CFG,...res.cfgData}; ROADMAP=(CFG.roadmap&&CFG.roadmap.length)?CFG.roadmap:ROADMAP;
+  if(res.cfg&&confirm('This backup contains a program (roadmap, goals, split). Restore it too?\n\nYour current program will be replaced. Where this phone sends backups and notes stays as it is.')){
+    // Never take another device's backup or notes address, or its name: a
+    // file from someone else would point this phone at THEIR sheet (which a
+    // sync overwrites, and which can read the whole log back).
+    const {syncUrl:_s, feedbackUrl:_f, testerName:_n, ...rest}=res.cfgData||{};
+    CFG={...CFG,...rest}; ROADMAP=(CFG.roadmap&&CFG.roadmap.length)?CFG.roadmap:ROADMAP;
     ROADMAP.forEach(b=>{ if(!b.vol||!b.vol.length) applyShape(b); });
     mergeCustom(); applyBarOverrides();
-    applySetupLink(); saveCfg();
+    saveCfg();
   }
   render();
   alert(res.added?`Restored ${res.added} new event${res.added>1?'s':''}.`:'Nothing new in that backup — your log already had everything in it.');
@@ -8619,6 +8722,7 @@ loadAll(); applyTheme(); loadPending(); loadWeekEdits(); restoreSession();
 if(DEMO){ try{ demoPendingRun(); }catch(err){ console.error('demo seed failed',err); DEMO_QUIET=false; } }
 if(session&&session.slots&&session.slots[session.openIdx]) seedDraft(session.slots[session.openIdx]);
 restoreRest(); render(); initUpdates(); demoBar();
+flushFeedback(); try{ window.addEventListener('online',flushFeedback); }catch{}
 if(needsOnboarding()) setTimeout(()=>{ BUILDER=null; openBuilder(false); },250);
 requestPersistence();
 </script>
