@@ -9097,7 +9097,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.47.0';
+const APP_VERSION='1.48.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -10271,9 +10271,26 @@ const blockSplitSpec=b=>b&&validWeek(b.week)?b.week:(b&&b.split&&SPLITS[b.split]
 const splitKeyFor=b=>splitOf(blockSplitSpec(b)).key;
 const splitFor=b=>splitOf(blockSplitSpec(b));
 function activeSplit(){ return splitFor(ROADMAP.length?ROADMAP[programPosition().idx]:null); }
+/* phase_ramp: whatever adds sets (ramp, priority, practice, interventions), each
+   muscle's weekly fractional sets stay at or under the top of its typical range
+   (ENGINE.weeklySets — Grade D defaults). Over: trim practice/added work first,
+   then accessories, then secondary; never a slot below 2 sets, never a primary. */
+function weekVolumeCap(days){
+  const order=sl=>sl.iv||sl.structure==='practice'?0:sl.role==='accessory'?1:sl.role==='secondary'?2:9;
+  for(let guard=0;guard<60;guard++){
+    const tot={}; days.forEach(d=>d.slots.forEach(sl=>{ const ex=exById[sl.ex]; if(!ex) return; Object.entries(ex.vol||{}).forEach(([m,w])=>tot[m]=(tot[m]||0)+w*sl.sets); }));
+    const over=Object.entries(tot).find(([m,v])=>{ const r=ENGINE.weeklySets(m); return r&&v>r[1]+1e-9; });
+    if(!over) break;
+    const [m]=over;
+    const cand=days.flatMap(d=>d.slots).filter(sl=>exById[sl.ex]&&(exById[sl.ex].vol||{})[m]>0&&order(sl)<9&&sl.sets>2).sort((a,b)=>order(a)-order(b)||(exById[b.ex].vol[m]-exById[a.ex].vol[m]));
+    if(!cand.length) break;
+    cand[0].sets--; cand[0].weekCapped={muscle:m, max:ENGINE.weeklySets(m)[1]};
+  }
+  return days;
+}
 function generatedDays(){
   const phase=currentPhase();
-  const days=applyInterventions(addPracticeDays(addMaintenance(activeSplit().template.map(t=>buildDay(t,phase)), phase), phase), phase);
+  const days=weekVolumeCap(applyInterventions(addPracticeDays(addMaintenance(activeSplit().template.map(t=>buildDay(t,phase)), phase), phase), phase));
   if(phase&&phase.refined&&phase.type==='hyp'&&!phase.onDeload) days.forEach(capSessionVolume);
   return days;
 }
@@ -11468,7 +11485,8 @@ function nextPrescriptionCore(slot){
   if(dir===0) return hold('last session',`Last set ${lastTxt} was right on target, so it repeats.`);
 
   // ── easier than aimed
-  const overridden=overrideStreak(tr.ex,tr.sig,cls)>=OVERRIDE_TRIGGER;
+  // override damping was replaced by the dial's revealed intent (batch E §4)
+  const overridden=false; void OVERRIDE_TRIGGER;
   if(!atCeiling){
     if(overridden&&lastWasProbe(tr.ex,tr.sig,cls)) return hold('holding at what you\'ve set',
       `You've logged below the last few suggestions and the last one was already a probe, so this holds ${lastTxt}.`);
@@ -11631,7 +11649,9 @@ function physicalCut(st, groups){
   const rec=st.recovery??3;
   // floor of the scale: 2; halfway to the floor: 1; neutral or better: 0
   const tier=(v,key)=>{ const a=fromNeutral(v,key); return a<=-1?2:a<=-0.5?1:0; };
-  const ts=tier(worstSore,'soreness'), tr=tier(rec,'recovery'), t=Math.max(ts,tr);
+  // "rest of life" no longer cuts here: global signals touch only warm-up and the top of the
+  // range; a 1 on any global item is the sick day, one step, in runModifiers (batch E)
+  const ts=tier(worstSore,'soreness'), tr=0, t=ts; void rec;
   if(!t) return null;
   const sig=[];
   if(ts===t) sig.push('sore '+(soreLabel||'muscles'));
@@ -11804,6 +11824,7 @@ function renderDash(){
     </div>`;
   v.appendChild(hero);
   if(_mlc) v.appendChild(_mlc);
+  { const fdc=focusedDeloadCard(); if(fdc) v.appendChild(fdc); }
   $('#chart').appendChild(phaseChart(p));
   if(proj&&proj.behindDays!=null&&proj.behindDays>DRIFT_DAYS) v.appendChild(driftCard(proj,p));
 
@@ -11843,12 +11864,14 @@ function renderDash(){
       cols.push(`<span class="grow"><div class="row between"><span style="font-weight:650">Readiness</span>
           <span class="dim tiny">${new Date(lastReadiness.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></div>
         <div style="margin-top:6px"><span class="rscore" style="font-size:27px;font-weight:790;letter-spacing:-.03em">${Math.round(score*100)}</span>
-          <span class="muted sm"> / 100 · ${esc(readinessLabel(score))}</span></div></span>`);
+          <span class="muted sm"> / 100 · ${esc(readinessLabel(score))}</span></div>
+        <div class="dim tiny" style="margin-top:2px">${bandOf(Math.round(score*100))}: ${esc(BAND_DOES[bandOf(Math.round(score*100))])}</div></span>`);
     }
     if(jointScore!=null){
       cols.push(`<span class="grow"><div style="font-weight:650">Joints</div>
         <div style="margin-top:6px"><span style="font-size:27px;font-weight:790;letter-spacing:-.03em">${jointScore}</span>
-          <span class="muted sm"> / 100 · ${esc(jointScoreLabel(jointScore))}</span></div></span>`);
+          <span class="muted sm"> / 100 · ${esc(jointScoreLabel(jointScore))}</span></div>
+        <div class="dim tiny" style="margin-top:2px">${bandOf(jointScore)} · relative to your usual</div></span>`);
     }
     rc.innerHTML=`<div class="row" style="align-items:flex-start;gap:16px">${cols.join('')}</div>`;
     v.appendChild(rc);
@@ -13129,6 +13152,16 @@ function openInfo(exId){
   if($('#ibar')) drawBarEditor($('#ibar'), ex);
   $('#ihist').onclick=()=>openExerciseHistory(exId, ()=>openInfo(exId));
   $('#idiary').onclick=()=>openDiaryEntry(exId, ()=>openInfo(exId));
+  // the dial for this exercise, and a focused deload
+  { const host=$('#iexcl'); if(host){
+    const dd=el('div',''); dd.style.marginBottom='12px';
+    const de=dialEffective(exId);
+    dd.innerHTML='<div class="qlab">How hard should it push here?</div>'+(de.drift?'<div class="dim tiny">Drifted '+(de.drift>0?'up':'down')+' a notch from what you\'ve been lifting.</div>':'');
+    dd.appendChild(dialChips(de.stated,v=>{ append({type:'dial_set',exercise_id:exId,value:v}); openInfo(exId); }));
+    if(de.drift){ const rs=el('button','btn s ghost','Reset the drift'); rs.style.marginTop='6px'; rs.onclick=()=>{ append({type:'dial_reset',exercise_id:exId}); openInfo(exId); }; dd.appendChild(rs); }
+    const fb=el('button','btn s',(fdCovers(focusedDeload(),exId)?'Focused deload: on — change or end':'Focused deload…')); fb.style.marginTop='8px';
+    fb.onclick=()=>openFocusedDeload(exId,()=>openInfo(exId)); dd.appendChild(fb);
+    host.parentNode.insertBefore(dd,host); } }
   // your call, never the app's: include this automatically or not; and a custom exercise's movement tags
   { const host=$('#iexcl'); if(host){ const on=isExcluded(exId);
     host.innerHTML='<div class="qlab">In generated programs</div><div class="field">'+(on?'Not included automatically — you can still add it yourself.':'Can be picked automatically.')+'</div>';
@@ -13892,23 +13925,20 @@ function suggestFor(slot){
   const o={idx:session?session.slots.indexOf(slot):null, fresh:!slot.sets.length};
   // after the top set, back-offs come from what you actually lifted — readiness
   // and joint cuts are already in it
-  if(isTopBack(slot)&&topSetOf(slot)){
-    const b=backoffRx(slot); o.backoff=true;
-    return {pr:b, lb:b.lb, why:explainRx(slot,b,o), o};
-  }
-  if(slot.structure==='amrap'&&!slot.sets.length){
-    const a=amrapRx(slot);
-    return {pr:a, lb:a.lb, why:explainRx(slot,a,o), o};
-  }
+  // structural sets (a back-off from today's top set, a realization AMRAP, a calibration
+  // AMRAP) are priced by their own rule; their trace says so
+  const only=(pr,id,v)=>({pr, lb:pr.lb, why:explainRx(v||slot,pr,o), o, trace:[{id:'progression',changed:false,reason:pr.src||id,lb:pr.lb,reps:pr.reps}]});
+  if(isTopBack(slot)&&topSetOf(slot)){ const b=backoffRx(slot); o.backoff=true; return only(b,'back-off'); }
+  if(slot.structure==='amrap'&&!slot.sets.length) return only(amrapRx(slot),'realization AMRAP');
   if(allOutNext(slot)){
     const base=nextPrescription(slot);
-    const pr={...base, calibAmrap:true, note:(base.note||'')+' Last set: as many reps as you can at this load — a calibration set, so the app learns how your RPE ratings line up with reps left. Week 1 only.'};
-    return {pr, lb:pr.lb, why:explainRx(slot,pr,o), o};
+    return only({...base, calibAmrap:true, note:(base.note||'')+' Last set: as many reps as you can at this load — a calibration set, so the app learns how your RPE ratings line up with reps left. Week 1 only.'},'calibration');
   }
   if(isMaint(slot)&&!topSetOf(slot)){
     const v=maintTopView(slot), m=fastRx(v, nextPrescription(v), o);
-    const pr={...m, maint:true};
-    return {pr, lb:pr.lb, why:explainRx(v,pr,o), o};
+    const r=runModifiers(v,{...m,maint:true},o), why=explainRx(v,r.pr,o);
+    why.detail=(why.detail||[]).concat(traceLines(r.trace));
+    return {pr:r.pr, lb:r.pr.lb, why, o, trace:r.trace};
   }
   let pr=fastRx(slot, nextPrescription(slot), o);
   // Stagnation probe only on the first set of a session, and only on the
@@ -13919,19 +13949,12 @@ function suggestFor(slot){
     const probe=stagnationProbe(slot);
     if(probe) pr={...pr, ...probe};
   }
-  // Joint ladder level 3+: no load increase on this exercise, every set —
-  // repeat the last logged load. Level 5: no rep increase either.
-  const j=slot.joint, lastJ=(j&&j.level>=3&&pr.lb!=null)?lastSetFor(slotTrack(slot).ex,slotTrack(slot).sig):null;
-  if(lastJ){
-    const L0=toLb(lastJ.weight);
-    if(pr.lb>L0+1e-6){ pr={...pr, lb:L0, reps:lastJ.reps}; o.jointHeld=true; }
-    if(j.level>=5&&pr.lb>=L0-1e-6&&pr.reps>lastJ.reps){ pr={...pr, reps:lastJ.reps}; o.jointHeld=true; }
-  }
-  let lb=pr.lb;
-  const pct=(a,b)=>a>0?Math.round((1-b/a)*100):0;    // what the cut actually did after rounding to the machine's steps
-  if(lb!=null&&o.fresh&&session&&session.adj&&adjHits(session.adj,slot.ex)){ const b=lb; lb=loadable(slot, lb*session.adj.load); o.adj=session.adj; o.adjApplied=pct(b,lb); }
-  if(lb!=null&&o.fresh&&slot.joint&&slot.joint.level>=4){ const b=lb; lb=loadable(slot, lb*0.9); o.jointCut=true; o.jointApplied=pct(b,lb); }
-  return {pr, lb, why:explainRx(slot,pr,o), o};
+  // everything that adjusts a number goes through one pipeline, in precedence order (ENGINE)
+  const r=runModifiers(slot,pr,o), why=explainRx(slot,r.pr,o);
+  why.detail=(why.detail||[]).concat(traceLines(r.trace));
+  const firstChange=r.trace.find(t=>t.changed&&!['progression','range_fit'].includes(t.id));
+  if(firstChange&&why.line) why.line+=' · '+firstChange.id.replace(/_/g,' ');
+  return {pr:r.pr, lb:r.pr.lb, why, o, trace:r.trace};
 }
 /* Top set + back-offs (spec §2.2). Main lifts in strength blocks: one top
    set priced by the normal engine, then back-offs at the top set you
@@ -15237,6 +15260,375 @@ function clearPainData(){
 }
 const painClearedAt=()=>{ let i=-1; LOG.forEach((e,k)=>{ if(e.type==='pain_data_cleared') i=k; }); return i; };
 
+/* ═══ ENGINE — batch E: one modifier model ═══
+   Every adjustment to a base prescription is a modifier in ENGINE.modifiers
+   (mirrored in docs/modifiers.md — a test checks the two list the same ids).
+   suggestFor() → base (progression / range_fit) → modifiers in precedence
+   order → guards → the number, with every step recorded as trace[] in the
+   suggestion log so "why this number" can be shown line by line.
+   Precedence (high → low): condition_flag → focused_deload → joint_ladder →
+   local_soreness → global_readiness / sick_day → dial → phase_ramp →
+   progression. Applied low → high: every step after the dial can only make
+   the number more conservative, never less. No modifier reads another's
+   output except through this order. Nothing persists without an expiry:
+   each modifier is derived from its input on read and vanishes with it.
+   The goal is not smarter numbers — it's that every number has a visible
+   chain of reasons and nothing can run away. */
+const ENGINE={
+  modifiers:{
+    progression:{scope:'exercise', max:'one load step, or reps within the range', expires:'n/a — base'},
+    range_fit:{scope:'exercise', max:'one re-price to the range edge (first fit only)', expires:'once the last set is back in range'},
+    phase_ramp:{scope:'muscle', max:'sets per muscle per week inside the typical range (LANDMARKS)', expires:'the block'},
+    dial:{scope:'exercise', max:'±1 step on top of the base', expires:'stated: until changed · revealed: 8-session window'},
+    global_readiness:{scope:'global', max:'warm-up length; holds the top of the range (no step up). Never a load cut', expires:'this session'},
+    sick_day:{scope:'global', max:'one load step down, every exercise', expires:'this session (needs another 1 to repeat)'},
+    local_soreness:{scope:'muscle', max:'load ×0.90 and −2 sets on the sore muscles\' main work', expires:'this session; never two sessions running without a miss'},
+    joint_ladder:{scope:'joint', max:'L3 hold · L4 −10% and −1 set · L5 no progression', expires:'6-session trend'},
+    focused_deload:{scope:'exercise', max:'pinned at hold / −10% / −20% of the load at the start', expires:'1–3 weeks + ramp-back'},
+    condition_flag:{scope:'exercise', max:'display only — never changes the number', expires:'while the condition is picked'},
+    calibrating:{scope:'global', max:'no load step up', expires:'first session after a program, phase or profile change'},
+    ceiling:{scope:'exercise', max:'load ≤ what the e1RM supports at the target reps and RPE', expires:'n/a — guard'},
+    one_step:{scope:'exercise', max:'load moves ≤ one increment per session', expires:'n/a — guard'},
+    floor:{scope:'exercise', max:'load ≥ 85% of the best completed load in the last 6 sessions', expires:'n/a — guard'},
+    both_up:{scope:'exercise', max:'load and reps never both rise; load and sets never both rise', expires:'n/a — guard'}
+  },
+  FLOOR_PCT:0.85, FLOOR_SESSIONS:6,             // judgement defaults (spec §2)
+  SORE_MISS_RPE:1,                              // a "miss": a failed set or RPE ≥ target + 1
+  DIAL_WINDOW:8, DIAL_DRIFT_SESSIONS:4,         // revealed intent window; disagreement before drift
+  FD_RAMP_SESSIONS:3,                           // focused deload: ramp-back over the last 3 sessions
+  BAND:[[75,'Green'],[50,'Yellow'],[25,'Orange'],[0,'Red']],
+  /* Weekly sets per muscle: the typical range the phase ramp stays inside.
+     LANDMARKS' MEV–MRV numbers, Grade D — engine defaults, never shown as
+     evidence ("typical range" at most). Tunable here. */
+  weeklySets:muscle=>{ const l=LANDMARKS[muscle]; return l?[l.MEV,l.MRV]:null; }
+};
+const ENGINE_IDS=Object.keys(ENGINE.modifiers);
+
+/* ---- score bands: the same four words everywhere (spec §5) ---- */
+const BAND_DOES={Green:'Full plan', Yellow:'Hold the top of the range; longer warm-up', Orange:'Scoped cut, one step — only where it hurts', Red:'Swap or skip — your call'};
+function bandOf(score100){ for(const [min,name] of ENGINE.BAND) if(score100>=min) return name; return 'Red'; }
+/* Joint bands are relative to your own baseline: the ladder level is the band. */
+const JOINT_BAND={1:'Green',2:'Yellow',3:'Orange',4:'Red',5:'Red'};
+/* Global readiness from the global items only (sleep, motivation, rest of
+   life): a 1 on any of them is the sick-day signal; 2 on any is yellow;
+   otherwise green. Soreness and joints are local and handled per exercise. */
+function globalReadiness(r){
+  if(!r) return {band:'Green', sick:false};
+  const items=[r.sleep,r.motivation,r.recovery].filter(v=>v!=null);
+  const sick=items.some(v=>v<=1);
+  const low=items.some(v=>v<=2);
+  return {band:sick?'Red':low?'Yellow':'Green', sick};
+}
+
+/* ---- calibrating: the first session after a program, phase or profile change ---- */
+function programEditedSinceLastSession(){
+  let edit=-1, trained=-1;
+  LOG.forEach((e,i)=>{ if(e.type==='program_edit') edit=i; if(countsAsTrained(e)) trained=i; });
+  return edit>trained;
+}
+function phaseChangedSinceLastSession(){
+  const n=programSessions(); if(n<1||!ROADMAP.length) return false;
+  const now=programPosition(), b=programPositionAt(n-1);
+  return !!b&&now.idx!==b.idx;
+}
+function programPositionAt(n){
+  let left=n; for(let i=0;i<ROADMAP.length;i++){ const cap=blockLen(ROADMAP[i])*splitFor(ROADMAP[i]).days; if(left<cap) return {idx:i}; left-=cap; }
+  return {idx:ROADMAP.length-1};
+}
+const calibratingNow=()=>programEditedSinceLastSession()||phaseChangedSinceLastSession();
+
+/* ---- the last completed load before this session, and the floor/ceiling ---- */
+function trackHistory(slot){
+  const tr=slotTrack(slot), cls=priceClass(slot);
+  const out=[]; for(const st of sets()){ if(st.set_kind==='warmup'||!onTrack(st,tr.ex,tr.sig)||!inClass(st,cls)) continue; if(session&&st.session_id===session.id) continue; out.push(st); }
+  return out;
+}
+function floorFor(slot){
+  const h=trackHistory(slot); if(!h.length) return null;
+  const sids=[...new Set(h.map(x=>x.session_id))].slice(-ENGINE.FLOOR_SESSIONS);
+  const best=Math.max(...h.filter(x=>sids.includes(x.session_id)&&!x.failed).map(x=>toLb(x.weight)));
+  return isFinite(best)&&best>0?best*ENGINE.FLOOR_PCT:null;
+}
+function ceilingFor(slot, reps, T){
+  const h=trackHistory(slot); if(!h.length) return null;
+  const sids=[...new Set(h.map(x=>x.session_id))].slice(-ENGINE.FLOOR_SESSIONS);
+  const off=bwOffset(exById[slot.ex]);
+  let e1=null; h.filter(x=>sids.includes(x.session_id)&&x.rpe!=null).forEach(x=>{ const v=impliedE1(toLb(x.weight)+off,x.reps,x.rpe); if(v&&(!e1||v>e1)) e1=v; });
+  if(!e1) return null;
+  const p=pctExt(reps+(10-T)); return p?Math.max(0,e1*p/100-off):null;
+}
+
+/* ---- local soreness: never two sessions in a row without a miss ---- */
+function soreCutLastTime(slot){
+  const h=trackHistory(slot); if(!h.length) return false;
+  const lastSid=h[h.length-1].session_id, inLast=h.filter(x=>x.session_id===lastSid);
+  const first=inLast[0], trace=first&&first.suggestion&&first.suggestion.trace||[];
+  const cut=trace.some(t=>(t.id==='local_soreness'||t.id==='sick_day')&&t.changed);
+  const miss=inLast.some(x=>x.failed||(x.rpe!=null&&x.target&&x.target.rpe!=null&&x.rpe>=x.target.rpe+ENGINE.SORE_MISS_RPE));
+  return cut&&!miss;
+}
+
+/* ---- focused deload (spec §3): a declared, time-boxed ladder pin ----
+   Events: focused_deload_start {fd_id, exercises[], muscle?, level, weeks},
+   focused_deload_add {fd_id, exercises[]}, focused_deload_step {fd_id, level},
+   focused_deload_end {fd_id}. The window is derived from them: weeks ×
+   your days per week in sessions, plus one session for each ramp-back
+   session your joint wasn't at baseline. Adding exercises joins the window. */
+const FD_LEVELS=['swap','cut20','cut10','hold','off'];
+const FD_LABEL={hold:'hold load',cut10:'−10%',cut20:'−20%',swap:'swap to a substitute (−20% if you keep it)',off:'back to normal'};
+const FD_MUL={hold:1, cut10:0.9, cut20:0.8, swap:0.8};
+function focusedDeload(){
+  let fd=null, idx=-1;
+  LOG.forEach((e,i)=>{
+    if(e.type==='focused_deload_start'&&!fd){ fd={id:e.fd_id, start:i, ts:e.ts, level:e.level, weeks:e.weeks||2, exercises:[...(e.exercises||[])], muscle:e.muscle||null, endedAt:null, dpw:e.dpw||sessionsPerWeek()||5}; idx=i; }
+    else if(fd&&e.fd_id===fd.id){
+      if(e.type==='focused_deload_add') e.exercises.forEach(x=>{ if(!fd.exercises.includes(x)) fd.exercises.push(x); });
+      if(e.type==='focused_deload_step') fd.level=e.level;
+      if(e.type==='focused_deload_end') fd.endedAt=i;
+    }
+  });
+  if(!fd) return null;
+  const done=trainedAfterIndex(fd.start), planned=Math.round(fd.weeks*fd.dpw);
+  // ending early: the ramp-back still runs — its 3 sessions start from the end
+  const endAt=fd.endedAt!=null?Math.min(planned,(done-trainedAfterIndex(fd.endedAt))+ENGINE.FD_RAMP_SESSIONS):planned;
+  const len=endAt+fdExtension(fd,endAt);
+  if(fd.level==='off'||done>=len) return null;
+  const left=len-done, ramp=left<=ENGINE.FD_RAMP_SESSIONS;
+  return {...fd, done, len, left, ramp, daysLeft:Math.ceil(left*7/fd.dpw)};
+}
+/* Exercises the window covers: the ones named, plus every exercise whose main muscle is the scope muscle. */
+function fdCovers(fd, exId){
+  if(!fd) return false;
+  if(fd.exercises.includes(exId)) return true;
+  const ex=exById[exId]; return !!(fd.muscle&&ex&&Object.entries(ex.vol||{}).some(([m,w])=>w>=1&&m===fd.muscle));
+}
+/* The joint a window watches: your own post-workout answer for its exercises first, then a
+   condition you've picked that loads the pattern, then the likeliest joint for the pattern. */
+const FD_JOINT_ORDER=['shoulder','knee','low back','hip','elbow','ankle','wrist'];
+function fdJoint(fd){
+  for(let i=LOG.length-1;i>=0;i--){ const e=LOG[i]; if(e.type==='exercise_joint'&&fd.exercises.includes(e.exercise_id)&&e.joint) return e.joint; }
+  const ex=exById[fd.exercises[0]]; if(!ex) return null;
+  const cj=condJoints().find(j=>(JOINT_PATTERNS[j]||[]).includes(ex.pattern)); if(cj) return cj;
+  return FD_JOINT_ORDER.find(j=>(JOINT_PATTERNS[j]||[]).includes(ex.pattern))||null;
+}
+/* Ramp-back sessions where the joint was above its baseline extend the window one each. */
+function fdExtension(fd, endAt){
+  const j=fdJoint(fd); if(!j) return 0;
+  let n=0, k=0;
+  for(let i=fd.start+1;i<LOG.length;i++){ const e=LOG[i];
+    if(countsAsTrained(e)){ k++;
+      if(k>endAt-ENGINE.FD_RAMP_SESSIONS+n&&k<=endAt+n){
+        // that session's worst rating: its check-in or its end-of-session flag
+        let w=jointWeight(e,j); for(let q=i-1;q>fd.start;q--){ const r=LOG[q]; if(countsAsTrained(r)) break; if(r.type==='readiness'){ w=Math.max(w,jointWeight(r,j)); break; } }
+        if(w>jointBaseline(j).w) n++; } } }
+  return n;
+}
+function fdReference(fd, exId){
+  // the load you were on at the start: the heaviest working set of your last session on it before the window
+  let best=null, sid=null;
+  for(let i=Math.min(fd.start,LOG.length)-1;i>=0;i--){ const e=LOG[i]; if(e.type!=='set'||e.exercise_id!==exId||e.set_kind==='warmup') continue;
+    if(sid==null) sid=e.session_id; if(e.session_id!==sid) break; const L=toLb(e.weight); if(best==null||L>best) best=L; }
+  return best;
+}
+function startFocusedDeload(exercises, level, weeks, muscle){
+  const cur=focusedDeload();
+  if(cur){ append({type:'focused_deload_add',fd_id:cur.id,exercises}); return cur.id; }   // joins the existing window
+  const id='fd'+ulid();
+  append({type:'focused_deload_start',fd_id:id,exercises,level,weeks:Math.max(1,Math.min(3,weeks||2)),dpw:sessionsPerWeek()||5,...(muscle?{muscle}:{})});
+  return id;
+}
+
+/* ---- the dial (spec §4): stated intent + revealed intent, reconciled ---- */
+const DIAL_LABEL={'-2':'hold me back','-1':'ease off','0':'standard','1':'push a bit','2':'push me'};
+function dialStated(exId){
+  let p=0, x=null;
+  LOG.forEach(e=>{ if(e.type==='dial_set'){ if(e.exercise_id){ if(e.exercise_id===exId) x=e.value; } else p=e.value; } });
+  return x!=null?x:p;
+}
+/* Mean signed override (in load steps) over the last 8 sessions' first sets,
+   counted only where the set landed within ±1 RPE of target. */
+function dialRevealed(exId){
+  let reset=-1; LOG.forEach((e,i)=>{ if(e.type==='dial_reset'&&(!e.exercise_id||e.exercise_id===exId)) reset=i; });
+  const ex=exById[exId]; if(!ex) return {n:0,mean:0,notch:0};
+  const firsts=new Map();
+  LOG.forEach((e,i)=>{ if(i<=reset||e.type!=='set'||e.exercise_id!==exId||e.set_kind==='warmup'||!e.suggestion||e.suggestion.lb==null) return; if(!firsts.has(e.session_id)) firsts.set(e.session_id,e); });
+  const rows=[...firsts.values()].slice(-ENGINE.DIAL_WINDOW).filter(e=>e.rpe!=null&&e.suggestion.target_rpe!=null&&Math.abs(e.rpe-e.suggestion.target_rpe)<=1);
+  if(!rows.length) return {n:0,mean:0,notch:0};
+  const step=Math.max(2.5,ex.inc||5);
+  const ov=rows.map(e=>(toLb(e.weight)-(e.suggestion.shown?toLb(e.suggestion.shown):e.suggestion.lb))/step);
+  const mean=ov.reduce((a,b)=>a+b,0)/ov.length;
+  return {n:rows.length, mean, notch:Math.max(-2,Math.min(2,Math.round(mean))), ov};
+}
+/* Stated and revealed disagreeing for 4+ sessions: the effective bias drifts one
+   notch toward what you actually do — shown, never silent, and resettable. */
+function dialEffective(exId){
+  const s=dialStated(exId), r=dialRevealed(exId);
+  const disagree=r.ov?r.ov.filter(v=>Math.sign(Math.round(v))!==0&&Math.sign(Math.round(v))!==Math.sign(s)&&Math.sign(r.notch-s)===Math.sign(Math.round(v))).length:0;
+  const drift=r.n>=ENGINE.DIAL_DRIFT_SESSIONS&&disagree>=ENGINE.DIAL_DRIFT_SESSIONS?Math.sign(r.notch-s):0;
+  return {stated:s, revealed:r, drift, bias:Math.max(-2,Math.min(2,s+drift))};
+}
+
+/* ---- the pipeline ---- */
+function runModifiers(slot, base, o){
+  const trace=[], ex=exById[slot.ex];
+  const rec=(id,changed,reason,pr)=>trace.push({id,changed:!!changed,reason,lb:pr.lb,reps:pr.reps});
+  let pr={...base};
+  if(pr.lb==null){ rec('progression',false,base.src||'nothing to base a load on',pr); return {pr,trace}; }
+  const fresh=o.fresh, h=trackHistory(slot), last=h[h.length-1]||null;
+  const L0=last?toLb(last.weight):null, R0=last?last.reps:null;
+  const T=slot.rpe, lo=slot.reps[0], hi=slot.reps[1];
+  const ph=currentPhase(), fd=focusedDeload(), pinned=fdCovers(fd,slot.ex);
+  const rangeFirst=base.src==='priced for your range'&&last&&(R0<lo||R0>hi);
+  rec(rangeFirst?'range_fit':'progression',false,base.src||'',pr);
+  const up=()=>L0!=null&&pr.lb>L0+1e-6;
+  // dial (lowest of the modifiers): a bias of one step, either way
+  if(fresh&&last&&last.rpe!=null){
+    const d=dialEffective(slot.ex);
+    if(d.bias>0&&!up()&&pr.reps<=R0&&last.rpe<=T){
+      const nx=R0<hi?{lb:L0,reps:R0+1}:{lb:stepUp(slot,L0),reps:lo};
+      pr={...pr,...nx}; rec('dial',true,'Your setting is "'+DIAL_LABEL[String(d.bias)]+'", so it takes the next step'+(d.drift?' (stepped up from what you\'ve been lifting)':''),pr);
+    }else if(d.bias<0&&(up()||pr.reps>R0)&&last.rpe>=T-0.5*Math.abs(d.bias)){
+      pr={...pr,lb:L0,reps:R0}; rec('dial',true,'Your setting is "'+DIAL_LABEL[String(d.bias)]+'", so it holds instead of stepping up'+(d.drift?' (stepped down from what you\'ve been lifting)':''),pr);
+    }else if(d.bias) rec('dial',false,'Setting "'+DIAL_LABEL[String(d.bias)]+'" — no change needed here',pr);
+  }
+  // global readiness / sick day — not on top of a focused deload
+  if(fresh&&session&&session.readiness&&!pinned){
+    const g=globalReadiness(session.readiness);
+    if(g.sick&&!soreCutLastTime(slot)){ const b=pr.lb; pr={...pr,lb:stepDown(slot,pr.lb)}; rec('sick_day',pr.lb<b-1e-6,'A 1 on today\'s check-in: one step lighter, today only',pr); }
+    else if(g.band!=='Green'&&L0!=null&&(up()||pr.reps>R0)){ pr={...pr,lb:Math.min(pr.lb,L0),reps:Math.min(pr.reps,R0)}; rec('global_readiness',true,'Low sleep or motivation: no step up today (it never cuts load on its own)',pr); }
+  }
+  // local soreness — only the sore muscles' exercises, never two sessions running without a miss
+  if(fresh&&session&&session.adj&&adjHits(session.adj,slot.ex)&&!pinned){
+    if(soreCutLastTime(slot)) rec('local_soreness',false,'Sore today, but it cut last session without a miss in between, so not again',pr);
+    else{ const b=pr.lb; pr={...pr,lb:loadable(slot,pr.lb*session.adj.load)}; o.adj=session.adj; o.adjApplied=b>0?Math.round((1-pr.lb/b)*100):0;
+      rec('local_soreness',pr.lb<b-1e-6,'Sore '+((session.adj.groups||[]).map(g=>(GROUP_LABEL[g]||g).toLowerCase()).join(' and ')||'muscles')+': load ×'+session.adj.load,pr); }
+  }
+  // joint ladder
+  const j=slot.joint;
+  if(j&&j.level>=3&&L0!=null){
+    if(pr.lb>L0+1e-6){ pr={...pr,lb:L0,reps:R0}; o.jointHeld=true; rec('joint_ladder',true,j.joint+' at level '+j.level+': load held',pr); }
+    if(j.level>=5&&pr.lb>=L0-1e-6&&pr.reps>R0){ pr={...pr,reps:R0}; o.jointHeld=true; rec('joint_ladder',true,j.joint+' at level 5: no progression',pr); }
+    if(fresh&&j.level>=4){ const b=pr.lb; pr={...pr,lb:loadable(slot,pr.lb*0.9)}; o.jointCut=true; o.jointApplied=b>0?Math.round((1-pr.lb/b)*100):0; rec('joint_ladder',pr.lb<b-1e-6,j.joint+' at level '+j.level+': −10%',pr); }
+  }
+  // focused deload: never above the pin
+  if(pinned){
+    const ref=fdReference(fd,slot.ex), lv=fd.level, cap=ref!=null?loadable(slot,ref*FD_MUL[lv]):null;
+    if(cap!=null&&pr.lb>cap+1e-6){ pr={...pr,lb:cap}; rec('focused_deload',true,'Focused deload: '+FD_LABEL[lv]+' ('+fd.left+' session'+(fd.left===1?'':'s')+' left)',pr); }
+    else rec('focused_deload',false,'Focused deload: '+FD_LABEL[lv]+' — already at or under the pin',pr);
+  }
+  // condition flags: shown, never applied
+  const f=flagFor(slot.ex,slot.modifiers); if(isWarning(f)) rec('condition_flag',false,f.why+' — a note, not a change',pr);
+  // ── guards
+  if(L0!=null&&fresh){
+    if(up()&&calibratingNow()){ pr={...pr,lb:L0,reps:Math.min(pr.reps,Math.max(R0,lo))}; rec('calibrating',true,'First session after a program change: no load step up while it calibrates',pr); }
+    // order: floor → one step → ceiling. The ceiling (what your recent sets support) is
+    // the last word — if capacity has really dropped, safety beats "not below 85%".
+    // the floor stops the number sliding down; it never pushes it up past where you are
+    // (if your last set was already under 85% of your recent best, the floor is that set)
+    const fl0=floorFor(slot), fl=fl0==null?null:Math.min(fl0,L0);
+    const flExempt=trace.some(t=>t.changed&&['focused_deload'].includes(t.id))||(j&&j.level>=4)||rangeFirst||(ph&&ph.onDeload);
+    if(fl!=null&&!flExempt&&pr.lb<fl-1e-6){ const v=loadable(slot,fl); pr={...pr,lb:Math.min(L0,v>=fl-1e-6?v:stepUp(slot,v))}; rec('floor',true,'Not below 85% of your best working load in the last 6 sessions',pr); }
+    const exempt=trace.some(t=>t.changed&&['range_fit','focused_deload','joint_ladder'].includes(t.id))||rangeFirst||(ph&&ph.onDeload)||slot.structure==='amrap'||isTopBack(slot)||isMaint(slot);
+    if(!exempt){
+      const upLim=stepUp(slot,L0), dnLim=stepDown(slot,L0);
+      if(pr.lb>upLim+1e-6){ pr={...pr,lb:upLim}; rec('one_step',true,'At most one step up per session',pr); }
+      if(pr.lb<dnLim-1e-6&&dnLim>0){ pr={...pr,lb:dnLim}; rec('one_step',true,'At most one step down per session',pr); }
+    }
+    // ceiling with the app's ±1 RPE "on target" window, so one step up after an on-target set
+    // (fast progression, double progression) isn't frozen — it's there to stop runaways
+    const ceil=ceilingFor(slot,pr.reps,Math.min(10,T+1));
+    if(ceil!=null&&pr.lb>ceil+1e-6&&!isBW(ex)){ const c=gridFloor(slot,ceil); if(c<pr.lb){ pr={...pr,lb:Math.max(c,0)}; rec('ceiling',true,'Capped at what your recent sets support for '+pr.reps+' reps (within 1 RPE of '+T+')',pr); } }
+    if(pr.lb>L0+1e-6&&pr.reps>R0){ pr=lo>R0?{...pr,lb:L0}:{...pr,reps:R0}; rec('both_up',true,'Load and reps never both go up',pr); }
+    if(pr.lb>L0+1e-6&&slot.baseSets!=null&&(slot.sets_target||slot.sets)>slot.baseSets){ pr={...pr,lb:L0}; rec('both_up',true,'Extra sets today, so the load holds',pr); }
+  }
+  return {pr,trace};
+}
+/* One line per modifier that did something, for "why this number". */
+function traceLines(trace){
+  return (trace||[]).filter(t=>t.changed||['range_fit','focused_deload','condition_flag','dial','calibrating'].includes(t.id))
+    .map(t=>(t.id==='progression'||t.id==='range_fit'?'':'· ')+t.reason+(t.changed&&t.lb!=null?' → '+fmt(t.lb,0)+' × '+t.reps:''));
+}
+
+/* ---- focused deload: proposals (ramp-back, and the two places it's offered) ---- */
+PROPOSAL_SOURCES.push(()=>{
+  const fd=focusedDeload(); if(!fd||!fd.ramp) return null;
+  const j=fdJoint(fd), i=FD_LEVELS.indexOf(fd.level), next=FD_LEVELS[Math.min(FD_LEVELS.length-1,i+1)];
+  // the last check-in's joint at or under your baseline
+  let lastW=null; for(let k=LOG.length-1;k>=0;k--){ if(LOG[k].type==='readiness'){ lastW=j?jointWeight(LOG[k],j):0; break; } }
+  if(j&&lastW!=null&&lastW>jointBaseline(j).w) return null;      // not at baseline: hold (the window extends a session)
+  return {id:'fdstep:'+fd.id+':'+fd.level+':'+fd.done, snoozeDays:1,
+    title:(j?j.charAt(0).toUpperCase()+j.slice(1)+'\'s been at your usual':'Focused deload ending')+' — try the next step up?',
+    body:'Focused deload: '+fd.left+' session'+(fd.left===1?'':'s')+' left. Next step: '+FD_LABEL[next]+'. Only if it feels right — say no and it holds where it is.',
+    accept:{label:'Step up', fn:()=>append({type:'focused_deload_step',fd_id:fd.id,level:next})}, decline:{label:'Hold'}};
+});
+PROPOSAL_SOURCES.push(()=>{
+  if(focusedDeload()) return null;
+  // the post-session joint answer: moderate or worse on an exercise last session
+  let lastEnd=-1; for(let k=LOG.length-1;k>=0;k--){ if(countsAsTrained(LOG[k])){ lastEnd=k; break; } }
+  if(lastEnd<0) return null;
+  const sid=LOG[lastEnd].session_id;
+  const bad=LOG.filter(e=>e.type==='exercise_joint'&&e.session_id===sid&&e.severity>=2).map(e=>e.exercise_id).filter(id=>exById[id]);
+  if(!bad.length) return null;
+  const names=bad.map(id=>exById[id].name).join(', ');
+  return {id:'fdoffer:'+sid, snoozeDays:30, title:'Ease off '+names+' for a while?',
+    body:'You rated your joint moderate or worse on '+names+' last session. A focused deload holds it at −10% for 2 weeks, then ramps back as it settles — everything else carries on as normal. Your call.',
+    accept:{label:'Focused deload, 2 weeks', fn:()=>{ startFocusedDeload(bad,'cut10',2); toast('Focused deload started'); }}, decline:{label:'Not now'}};
+});
+PROPOSAL_SOURCES.push(()=>{
+  if(focusedDeload()) return null;
+  const hot=JOINTS.filter(j=>jointLevel(jointTrend(j,6))>=3); if(!hot.length) return null;
+  const j=hot[0], exs=[...new Set(generatedDays().flatMap(d=>d.slots.map(s=>s.ex)))].filter(id=>exById[id]&&(JOINT_PATTERNS[j]||[]).includes(exById[id].pattern));
+  if(!exs.length) return null;
+  return {id:'fdladder:'+j, snoozeDays:14, title:'Your '+j+' is at ladder level 3+ — pin it for a while?',
+    body:'The ladder is already holding load on '+j+' exercises. A focused deload pins them at −10% for 2 weeks with a gentle ramp-back, instead of reacting session by session. Exercises: '+exs.map(id=>exById[id].name).join(', ')+'.',
+    accept:{label:'Focused deload, 2 weeks', fn:()=>{ startFocusedDeload(exs,'cut10',2); toast('Focused deload started'); }}, decline:{label:'Not now'}};
+});
+/* The sheet, from an exercise's info sheet (or a condition card). */
+function openFocusedDeload(exId, back){
+  const ex=exById[exId], cur=focusedDeload(), m=primaryMuscle(ex);
+  let level='cut10', weeks=2, scope='exercise';
+  const draw=()=>{
+    sheet(`<h2 style="font-size:20px;margin-bottom:4px">Focused deload</h2>
+      <div class="muted tiny" style="margin-bottom:12px;line-height:1.5">Hold back just this — everything else carries on. It never goes above the level you set; a bad day can still take it lower. The last 3 sessions ramp back one step at a time, only when the joint's at your usual, and only if you say yes.</div>
+      ${cur?`<div class="anchor" style="margin-bottom:10px">One is already running (${cur.left} session${cur.left===1?'':'s'} left, ${FD_LABEL[cur.level]}). Adding ${esc(ex.name)} joins it — same timer.</div>`:''}
+      <div class="qblock" id="fds"><div class="qlab">What</div></div>
+      ${cur?'':'<div class="qblock" id="fdl"><div class="qlab">How much</div></div><div class="qblock" id="fdw"><div class="qlab">How long</div></div>'}
+      <div class="row" style="gap:8px;margin-top:6px"><button class="btn ghost grow" id="fdno">Cancel</button><button class="btn pri grow" id="fdgo">${cur?'Add to it':'Start'}</button></div>
+      ${cur?'<button class="btn ghost wide" id="fdend" style="margin-top:8px">End it early (the ramp-back still runs)</button>':''}`);
+    const chips=(host,opts,on,fn)=>{ const c=el('div','chips'); opts.forEach(([v,l])=>{ const b=el('button','chip',esc(l)); b.setAttribute('aria-pressed',on(v)?'true':'false'); b.onclick=()=>{ fn(v); draw(); }; c.appendChild(b); }); $(host).appendChild(c); };
+    chips('#fds',[['exercise',ex.name],...(m?[['muscle','Everything for '+(ML[m]||m).toLowerCase()]]:[])],v=>scope===v,v=>{ scope=v; });
+    if(!cur){ chips('#fdl',[['hold','Hold load'],['cut10','−10%'],['cut20','−20%'],['swap','Swap it']],v=>level===v,v=>{ level=v; });
+      chips('#fdw',[[1,'1 week'],[2,'2 weeks'],[3,'3 weeks']],v=>weeks===v,v=>{ weeks=v; }); }
+    $('#fdno').onclick=()=>back?back():$('#dlg').close();
+    $('#fdgo').onclick=()=>{ const exs=scope==='muscle'?EX.filter(e=>!e.rehab&&!e.folded&&(e.vol||{})[m]>=1).map(e=>e.id):[exId];
+      startFocusedDeload(exs,level,weeks,scope==='muscle'?m:null); $('#dlg').close(); render(); toast(cur?'Added to the focused deload':'Focused deload started'); };
+    if($('#fdend')) $('#fdend').onclick=()=>{ append({type:'focused_deload_end',fd_id:cur.id}); $('#dlg').close(); render(); toast('Ending — ramping back over 3 sessions'); };
+  };
+  draw();
+}
+function focusedDeloadCard(){
+  const fd=focusedDeload(); if(!fd) return null;
+  const names=fd.exercises.map(id=>(exById[id]||{name:id}).name).concat(fd.muscle?['everything for '+(ML[fd.muscle]||fd.muscle).toLowerCase()]:[]);
+  const c=el('div','card pad'); c.style.cssText='border-left:3px solid var(--warn)';
+  c.innerHTML=`<div class="row between"><span style="font-weight:650">Focused deload</span><span class="dim tiny">${fd.left} session${fd.left===1?'':'s'} left · about ${fd.daysLeft} days</span></div>
+    <div class="sm" style="margin-top:4px">${esc(names.join(', '))}: ${esc(FD_LABEL[fd.level])}</div>
+    <div class="dim tiny" style="margin-top:3px">${fd.ramp?'Ramping back: one step per session when the joint\'s at your usual — you confirm each step.':'Ramp-back starts in the last 3 sessions.'}</div>`;
+  return c;
+}
+/* The dial: "How hard should suggestions push?" — profile level in Edit program, per exercise on its info sheet. */
+function dialChips(cur, onPick){
+  const c=el('div','chips');
+  [-2,-1,0,1,2].forEach(v=>{ const b=el('button','chip',DIAL_LABEL[String(v)]); b.style.cssText='font-size:12px;padding:6px 9px';
+    b.setAttribute('aria-pressed',cur===v?'true':'false'); b.onclick=()=>onPick(v); c.appendChild(b); });
+  return c;
+}
+/* One line per exercise where what you lift and your setting disagree. */
+function dialDriftLines(){
+  const ids=[...new Set(LOG.filter(e=>e.type==='set'&&e.suggestion).map(e=>e.exercise_id))].filter(id=>exById[id]);
+  return ids.map(id=>({id,d:dialEffective(id)})).filter(x=>x.d.drift)
+    .map(x=>({id:x.id, text:x.d.drift>0?'You\'ve been lifting above suggestion on '+exById[x.id].name+', so it\'s stepped up a notch.':'You\'ve been lifting below suggestion on '+exById[x.id].name+', so it\'s stepped down a notch.'}));
+}
+
 /* ---------- Training max and realization (spec §2.3–2.4) ----------
    The training max (TM) is a PLANNING number per main lift, separate from the
    live e1RM the per-set engine prices with. It changes only by recorded
@@ -15417,7 +15809,8 @@ function recordedSuggestion(slot, rec){
     readiness:o.adj?{score:Math.round(session.score*100),cut_pct:Math.round((1-o.adj.load)*100),applied_pct:o.adjApplied||0}:null,
     joint:slot.joint?{joint:slot.joint.joint,level:slot.joint.level,applied_pct:o.jointApplied||0,held:!!o.jointHeld}:null,
     fatigue:(pr.fatigue&&pr.fatigue.applied)?{rise:pr.fatigue.rise,pairs:pr.fatigue.n,sessions:pr.fatigue.sessions}:null,
-    rep_range:slot.repSrc!=='block'?{src:slot.repSrc,muscle:slot.repMuscle||null,capped:!!slot.repCapped}:null
+    rep_range:slot.repSrc!=='block'?{src:slot.repSrc,muscle:slot.repMuscle||null,capped:!!slot.repCapped}:null,
+    trace:(rec.trace||[]).map(t=>({id:t.id,changed:t.changed,reason:t.reason,lb:t.lb,reps:t.reps}))
   };
 }
 /* The load as the set card shows it, in the unit you lift it in: a kg-only
@@ -16100,6 +16493,22 @@ function renderHist(){
     v.appendChild(c);
   });
 
+  // why these numbers: last session's first suggestion per exercise, one line per modifier
+  {
+    let lastSid=null; for(let k=LOG.length-1;k>=0;k--){ const e=LOG[k]; if(e.type==='set'&&e.suggestion&&e.suggestion.trace){ lastSid=e.session_id; break; } }
+    const firsts=new Map(); if(lastSid) LOG.forEach(e=>{ if(e.type==='set'&&e.session_id===lastSid&&e.suggestion&&!firsts.has(e.exercise_id)) firsts.set(e.exercise_id,e); });
+    const drift=dialDriftLines(), fdc=focusedDeloadCard();
+    if(firsts.size||drift.length){
+      const cw=el('div','card pad'); cw.appendChild(el('div','row between','<span style="font-weight:650">Why these numbers</span><span class="dim tiny">last session</span>'));
+      drift.forEach(x=>cw.appendChild(el('div','sm',esc(x.text))).style.cssText='margin-top:6px;color:var(--accent)');
+      [...firsts.values()].forEach(e=>{ const lines=traceLines(e.suggestion.trace);
+        const r=el('div',''); r.style.cssText='padding:7px 0;border-top:1px solid var(--line);margin-top:6px';
+        r.innerHTML='<div class="sm"><b>'+esc((exById[e.exercise_id]||{name:e.exercise_id}).name)+'</b> <span class="dim tiny">'+fmt(e.suggestion.lb,0)+' × '+e.suggestion.reps+'</span></div>'+(lines.length?'<div class="dim tiny" style="line-height:1.5">'+lines.map(esc).join('<br>')+'</div>':'');
+        cw.appendChild(r); });
+      v.appendChild(cw);
+    }
+    if(fdc) v.appendChild(fdc);
+  }
   // is the engine learning? suggestion accuracy by week
   {
     const acc=suggestionAccuracy(), tot=acc.reduce((a,b)=>({n:a.n+b.n,taken:a.taken+b.taken,on:a.on+b.on,rated:a.rated+b.rated}),{n:0,taken:0,on:0,rated:0});
@@ -16521,6 +16930,7 @@ function builderPlan(B){
 }
 /* Accept: settings from the draft, roadmap from the plan. History untouched. */
 function applyBuilder(B, plan){
+  append({type:'program_edit',what:B.rerun?'rerun':'setup'});
   CFG.units=B.units; CFG.profile=B.profile; CFG.profileParams={...(B.params||{})}; CFG.experience=B.experience;
   // the experience answer only seeds each main lift's starting progression rate,
   // and only for a new setup — a rerun leaves rates to the log (rateState)
@@ -16727,7 +17137,7 @@ function openSettings(){
       split: (s=>Array.isArray(s)?[...s]:s)(programSplitSpec()), syncUrl: CFG.syncUrl||'', feedbackUrl: CFG.feedbackUrl||'', testerName: CFG.testerName||'',
       energy: CFG.energy||'maintenance', conds: normalizeConditions(CFG.conditions), excluded: [...(CFG.excludedEx||[])],
       jointUsual: {...(CFG.jointUsual||{})},
-      backoff: {...backoffCfg()}, autoIntervene: !!CFG.autoIntervene
+      backoff: {...backoffCfg()}, autoIntervene: !!CFG.autoIntervene, dial: dialStated(null)
     };
   }
   const S=SETTINGS_DRAFT;
@@ -17035,6 +17445,12 @@ function openSettings(){
       if(S.backoff.mode==='fatigue') bo.appendChild(el('div','anchor','Keeps adding back-offs at the same load until one feels as hard as the top set — at most two more than the plan.'));
       host.appendChild(bo);
     }
+    // the dial: stated intent, reconciled with what you actually lift (batch E §4)
+    {
+      const dl=el('div','qblock');
+      dl.innerHTML='<div class="qlab">How hard should suggestions push?</div><div class="field">A starting bias of one step either way. If you keep lifting more (or less) than suggested at the right effort, it drifts a notch toward that and tells you on the Progress tab. You can set it per exercise on its info sheet too.</div>';
+      dl.appendChild(dialChips(S.dial,v=>{ S.dial=v; draw(); })); host.appendChild(dl);
+    }
     // stall interventions: proposed by default; opt in to starting them automatically
     {
       const ai=el('div','qblock');
@@ -17106,6 +17522,9 @@ function openSettings(){
     }
     CFG.syncUrl=S.syncUrl; CFG.energy=S.energy; CFG.conditions=normalizeConditions(S.conds); CFG.excludedEx=[...new Set(S.excluded)]; CFG.jointUsual=S.jointUsual; CFG.backoff=S.backoff; CFG.autoIntervene=!!S.autoIntervene;
     CFG.feedbackUrl=S.feedbackUrl; CFG.testerName=S.testerName;
+    if(JSON.stringify(ROADMAP.map(b=>[b.type,b.weeks,b.week||b.split||null]))!==JSON.stringify(S.draft.map(b=>[b.type,b.weeks,b.week||b.split||null]))||splitOf(S.split).key!==splitOf(programSplitSpec()).key)
+      append({type:'program_edit',what:'settings'});
+    if(S.dial!==dialStated(null)) append({type:'dial_set',value:S.dial});
     ROADMAP=S.draft; saveCfg(); SETTINGS_DRAFT=null;
     $('#dlg').close(); render(); toast('Program saved');
   };

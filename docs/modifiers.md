@@ -1,4 +1,40 @@
-# Prescription modifiers — inventory (v1.47.0)
+# Prescription modifiers
+
+## The engine's modifiers (batch E, v1.48.0)
+
+Every adjustment to a base prescription is one of these, in `ENGINE.modifiers`
+in `index.html`. **This table and that block list the same ids** —
+`tests/prescription-invariants.js` §52 fails if they drift. Precedence, high to
+low: `condition_flag` → `focused_deload` → `joint_ladder` → `local_soreness` →
+`global_readiness` / `sick_day` → `dial` → `phase_ramp` → `progression`.
+Applied low to high: after the dial, a step can only make the number more
+conservative. Guards (`calibrating`, `ceiling`, `one_step`, `floor`,
+`both_up`) run last. Every suggestion's chain is stored as `trace[]` in the
+suggestion log and shown as "Why these numbers" on the Progress tab.
+
+| id | scope | max effect | expires |
+|---|---|---|---|
+| `progression` | exercise | one load step, or reps within the range | base |
+| `range_fit` | exercise | one re-price to the range edge — first fit only, exempt from one_step and floor | once the last set is back in range |
+| `phase_ramp` | muscle | weekly sets per muscle ≤ top of the typical range (LANDMARKS, Grade D defaults) | the block |
+| `dial` | exercise | ±1 step (stated −2…+2, drifts a notch toward revealed after 4 sessions of disagreement) | stated: until changed · revealed: 8 sessions |
+| `global_readiness` | global | no step up when sleep, motivation or rest of life is at 2; never a load cut | this session |
+| `sick_day` | global | one load step down everywhere when any global item is 1 | this session |
+| `local_soreness` | muscle | load ×0.95/0.90, −1/−2 sets on the sore muscles' main work; never two sessions running without a miss | this session |
+| `joint_ladder` | joint | L3 hold · L4 −10% and −1 set · L5 no progression | 6-session trend |
+| `focused_deload` | exercise | pinned at hold / −10% / −20% of the starting load; exempt from one_step and floor | 1–3 weeks + 3-session ramp-back |
+| `condition_flag` | exercise | display only | while the condition is picked |
+| `calibrating` | global | no load step up | first session after a program, phase or profile change |
+| `ceiling` | exercise | load ≤ what the last 6 sessions' e1RM supports at the reps and target RPE + 1 | guard |
+| `one_step` | exercise | load moves ≤ one increment per session (exempt: range_fit first fit, focused_deload, joint ladder cut, deload weeks, top sets/AMRAP/back-offs) | guard |
+| `floor` | exercise | load ≥ 85% of the best completed load in the last 6 sessions (exempt: focused_deload, ladder ≥ 4, range_fit first fit, deload weeks) | guard |
+| `both_up` | exercise | load and reps never both rise | guard |
+
+Judgement defaults (Grade D): the 85% floor over 6 sessions, the ±1 RPE
+ceiling window, the 8-session dial window and 4-session drift, the
+3-session ramp-back, the weekly-sets range.
+
+## Inventory of code paths (step 0, as of v1.47.0)
 
 Every code path that changes a suggested load, reps, sets or RPE, as of
 v1.47.0. Batch E step 0. This is the starting point for the batch E modifier

@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -547,16 +547,17 @@ section('13. recovery input');
   const A=load([]);
   const st=(rec,sore)=>({sleep:3,motivation:3,recovery:rec,sore:{push:sore??3},joints:{}});
   const c1=A.physicalCut(st(1),['push']), c2=A.physicalCut(st(2),['push']);
-  ok(c1&&c1.label==='Reduced'&&/run-down/.test(c1.signal),'recovery 1 should cut hard and say run-down',JSON.stringify(c1));
-  ok(c2&&c2.label==='Slightly reduced'&&/life stress/.test(c2.signal),'recovery 2 should cut lightly and say life stress',JSON.stringify(c2));
+  // batch E: "rest of life" is global — it never cuts load through the soreness path. A 1 is the
+  // sick-day signal (one step, everywhere, in runModifiers); 2–5 touch only warm-up and the top of the range.
+  ok(c1===null&&c2===null,'recovery alone (1 or 2) makes no soreness cut',JSON.stringify([c1,c2]));
+  ok(A.globalReadiness({sleep:3,motivation:3,recovery:1}).sick&&!A.globalReadiness({sleep:3,motivation:3,recovery:2}).sick,'a 1 on rest of life is the sick day; a 2 is not','');
+  ok(A.globalReadiness({sleep:2,motivation:3,recovery:3}).band==='Yellow'&&A.globalReadiness({sleep:3,motivation:3,recovery:3}).band==='Green','a 2 on any global item is yellow; all average is green','');
   [3,4,5].forEach(v=>ok(A.physicalCut(st(v),['push'])===null,'recovery '+v+' must not cut',''));
   ok(A.readinessScore(st(5),['push'])===A.readinessScore(st(3),['push']),'recovery 4-5 must never add to readiness','');
   ok(A.readinessScore(st(4),['push'])===A.readinessScore(st(3),['push']),'recovery 4 must never add to readiness','');
   ok(A.readinessScore(st(1),['push'])<A.readinessScore(st(3),['push']),'recovery 1 should lower the warmup score','');
   const both=A.physicalCut(st(2,1),['push']);
-  ok(both&&both.label==='Reduced'&&/sore/.test(both.signal),'the worse of soreness and recovery decides the cut',JSON.stringify(both));
-  const both2=A.physicalCut(st(1,1),['push']);
-  ok(both2&&/sore/.test(both2.signal)&&/run-down/.test(both2.signal),'when both hit the same tier, both are named',JSON.stringify(both2));
+  ok(both&&both.label==='Reduced'&&/sore/.test(both.signal)&&!both.global,'soreness decides the soreness cut, scoped to the sore group',JSON.stringify(both));
   // legacy readiness events (no recovery field) score as if recovery were 3
   const legacy={sleep_quality:3,motivation:3,soreness:{push:3}};
   ok(A.readinessScoreFromEvent(legacy)===A.readinessScoreFromEvent({...legacy,recovery:3}),'events without recovery must read as neutral','');
@@ -1415,7 +1416,7 @@ section('38. program builder');
   R.applyBuilder(RB,rp);
   const after=R.getRoadmap().slice(0,rp.kept).map(b=>{ const c={...b}; delete c.week; return c; });
   ok(JSON.stringify(after)===JSON.stringify(JSON.parse(before)),'their contents are unchanged','');
-  ok(R.LOG.length===logBefore,'logged history is untouched','');
+  ok(R.LOG.length===logBefore+1&&R.LOG[R.LOG.length-1].type==='program_edit','logged history is untouched — applying only adds a program_edit line (for the calibrating session)','');
   ok(JSON.stringify(R.getCFG().week)==='["upper","lower","upper","lower"]'&&R.getCFG().start===RC.start,'the new week applies from here; the program start date stays','');
   ok(R.programPosition().idx===pos.idx&&R.programPosition().sessionsIn===pos.sessionsIn,'you are exactly where you were in the program','');
   // every profile × experience gives blocks the review can draw (the novice block once had no shape)
@@ -2053,9 +2054,158 @@ section('51. soreness cuts only what it touches');
   A.applyReadinessSets(S);
   ok(S.slots[0].sets_target===4+adj.sets&&S.slots[1].sets_target===4,'fewer sets only on the sore muscles\' main work',JSON.stringify(S.slots.map(x=>x.sets_target)));
   const run={...st,recovery:1,sore:Object.fromEntries(groups.map(g=>[g,3]))};
-  const g2=A.physicalCut(run,groups);
-  ok(g2&&g2.global&&A.adjHits(g2,'incline_machine'),'run-down (rest of life) is whole-body: it still reaches everything','');
+  ok(A.physicalCut(run,groups)===null&&A.globalReadiness(run).sick,'run-down (a 1) is the sick day — handled as one step everywhere, not as soreness','');
   console.log('  soreness → only exercises training the sore group · rest-of-life stays session-wide');
+}
+
+/* ─── 52. batch E: one modifier model — invariants under randomised stacks ─── */
+section('52. modifiers: bounded, scoped, traced, never sticky');
+{
+  // the doc and the constants list the same modifier ids
+  { const A=load([]); const doc=fs.readFileSync(path.join(__dirname,'..','docs','modifiers.md'),'utf8');
+    const docIds=[...doc.matchAll(/^\| `([a-z_]+)` \|/gm)].map(m=>m[1]);
+    const code=A.ENGINE_IDS;
+    ok(code.every(id=>docIds.includes(id))&&docIds.every(id=>code.includes(id)),'docs/modifiers.md and ENGINE.modifiers list the same ids',JSON.stringify({missingInDoc:code.filter(id=>!docIds.includes(id)),missingInCode:docIds.filter(id=>!code.includes(id))})); }
+  // a seeded RNG, so a failure reproduces
+  let seed=20261007; const R=()=>{ seed^=seed<<13; seed>>>=0; seed^=seed>>17; seed^=seed<<5; seed>>>=0; return seed/4294967296; };
+  const pick=a=>a[Math.floor(R()*a.length)];
+  const EXS=[['bench',185],['incline_machine',80],['preacher',35],['leg_press',360],['squat',245],['pulldown',150],['machine_raise',50]];
+  const RANGES=[[3,5],[6,8],[8,12],[10,15],[12,20]];
+  let runs=0, viol={oneStep:0,bothUp:0,floor:0,ceiling:0,calib:0,twice:0,sticky:0,ids:0,sets:0};
+  const show={};
+  const bad=(k,msg)=>{ viol[k]++; if(!show[k]){ show[k]=1; console.log('    e.g. '+k+': '+msg); } };
+  for(let run=0;run<1200;run++){
+    const [ex,base]=pick(EXS), [lo,hi]=pick(RANGES), T=pick([7,7.5,8,8.5,9]);
+    const ev=[]; const nS=2+Math.floor(R()*6); let t=40;
+    for(let k=0;k<nS;k++){ const sid='r'+run+'_'+k, L=Math.max(5,Math.round(base*(0.85+R()*0.3)/5)*5), reps=Math.max(1,lo-2+Math.floor(R()*(hi-lo+5))), rpe=pick([6,7,7.5,8,8.5,9,9.5,10]);
+      ev.push({type:'readiness',id:'rd'+sid,ts:day(t+0.01),sleep_quality:3,motivation:3,recovery:3,soreness:{},joints:{},joint_scale:3});
+      const st=set(ex,sid,L,reps,rpe,t,{role:'straight',target:{reps:[lo,hi],rpe:T}});
+      if(k===nS-1&&R()<0.3) st.suggestion={lb:L,reps,target_rpe:T,trace:[{id:'local_soreness',changed:true}]};   // last time: a soreness cut…
+      ev.push(st,{type:'session_end',id:'e'+sid,ts:day(t-0.01),session_id:sid,joints:{}}); t-=3+R()*3; }
+    const calib=R()<0.2; if(calib) ev.push({type:'program_edit',id:'pe'+run,ts:day(1),what:'settings'});
+    const fdOn=R()<0.25; if(fdOn) ev.push({type:'focused_deload_start',id:'fs'+run,ts:day(2),fd_id:'fd'+run,exercises:[ex],level:pick(['hold','cut10','cut20','swap']),weeks:2,dpw:5});
+    if(R()<0.3) ev.push({type:'dial_set',id:'ds'+run,ts:day(2),value:pick([-2,-1,1,2])});
+    ev.sort((a,b)=>a.ts<b.ts?-1:1);
+    const A=load(ev); const C=A.getCFG(); C.start=new Date(Date.now()-60*864e5).toISOString().slice(0,10);
+    A.setRoadmap([A.applyShape({type:'hyp',label:'H',weeks:30,deload:false,hyp:[]})]);
+    const slot={ex,role:pick(['primary','secondary','accessory']),reps:[lo,hi],rpe:T,sets:[],sets_target:3};
+    const lvl=pick([null,null,null,3,4,5]); if(lvl) slot.joint={joint:'shoulder',level:lvl};
+    const sore=R()<0.3, gl={sleep:pick([1,2,3,3,4]),motivation:pick([2,3,3,4]),recovery:pick([1,2,3,3,3])};
+    const groups=A.soreGroupsFor({slots:[slot]});
+    const rd={...gl,sore:Object.fromEntries(groups.map(g=>[g,sore?pick([1,2]):3])),joints:{}};
+    const S={id:'NOW'+run,slots:[slot],openIdx:0,readiness:rd,adj:A.physicalCut(rd,groups),score:0.6,ratings:{},startedAt:Date.now()};
+    A.setSession(S);
+    const r=A.suggestFor(slot); runs++;
+    if(r.lb==null) continue;
+    const h=A.trackHistory(slot), last=h[h.length-1]; if(!last) continue;
+    const L0=A.toLb(last.weight), R0=last.reps, tr=r.trace||[], has=(id,ch)=>tr.some(x=>x.id===id&&(!ch||x.changed));
+    const tag=ex+' '+L0+'x'+R0+'@'+last.rpe+' '+lo+'-'+hi+'@'+T+' → '+r.lb+'x'+r.pr.reps+' ['+tr.filter(x=>x.changed).map(x=>x.id).join(',')+']';
+    const exempt=has('range_fit')||has('focused_deload',true)||has('joint_ladder',true)||has('ceiling',true);
+    if(!exempt&&(r.lb>A.stepUp(slot,L0)+1e-6||(r.lb<A.stepDown(slot,L0)-1e-6&&A.stepDown(slot,L0)>0))) bad('oneStep',tag);
+    if(r.lb>L0+1e-6&&r.pr.reps>R0) bad('bothUp',tag);
+    const fl0=A.floorFor(slot), fl=fl0==null?null:Math.min(fl0,L0);   // the floor never sits above where you are
+    if(fl!=null&&r.lb<fl-1e-6&&!has('focused_deload',true)&&!(lvl>=4)&&!has('range_fit')&&!has('ceiling',true)) bad('floor',tag+' floor '+fl.toFixed(1));
+    const ce=A.ceilingFor(slot,r.pr.reps,Math.min(10,T+1));
+    if(ce!=null&&r.lb>Math.max(ce,0)+1e-6&&r.lb>A.loadable(slot,0)+1e-6) bad('ceiling',tag+' ceiling '+ce.toFixed(1));
+    if(calib&&r.lb>L0+1e-6) bad('calib',tag);
+    // a soreness/readiness cut never two sessions running without a miss in between
+    const lastCut=last.suggestion&&(last.suggestion.trace||[]).some(x=>x.id==='local_soreness'&&x.changed);
+    const missed=h.filter(x=>x.session_id===last.session_id).some(x=>x.failed||(x.rpe!=null&&x.rpe>=T+1));
+    if(lastCut&&!missed&&(has('local_soreness',true)||has('sick_day',true))) bad('twice',tag);
+    // never sticky: clear every signal, re-run → the modifiers are gone
+    S.readiness={sleep:3,motivation:3,recovery:3,sore:{},joints:{}}; S.adj=null; delete slot.joint;
+    const r2=A.suggestFor(slot), tr2=r2.trace||[];
+    if(tr2.some(x=>['local_soreness','sick_day','global_readiness','joint_ladder'].includes(x.id)&&x.changed)) bad('sticky',ex+' '+JSON.stringify(tr2.filter(x=>x.changed).map(x=>x.id)));
+  }
+  ok(runs>=1000,'1000+ randomised modifier stacks ran',String(runs));
+  Object.entries(viol).forEach(([k,n])=>ok(n===0,{oneStep:'load moves at most one step per session',bothUp:'load and reps never both rise',floor:'never below 85% of the recent best (unless a deload/ladder/range fit/ceiling says so)',ceiling:'never above what recent sets support',calib:'calibrating session: no step up',twice:'a soreness/readiness cut never two sessions running without a miss',sticky:'every modifier disappears when its input does',ids:'',sets:''}[k]||k,n+' of '+runs));
+  // modifiers never change the exercise list, and never add sets
+  { const base=load([]); const days=d=>d.map(x=>x.slots.map(s=>s.ex).join(',')).join('|');
+    const w0=days(base.generatedDays());
+    const M=load([{type:'focused_deload_start',id:'f',ts:day(1),fd_id:'f1',exercises:['bench','squat'],level:'cut20',weeks:2,dpw:5},{type:'dial_set',id:'d',ts:day(1),value:2},{type:'program_edit',id:'p',ts:day(1)}]);
+    ok(days(M.generatedDays())===w0,'applying modifiers never changes the workout\'s exercise list','');
+    const S2={id:'X',slots:base.generatedDays()[0].slots.map(x=>({...x,sets_target:x.sets,sets:[]})),adj:{load:0.9,sets:-2,groups:['push','pull','quads','post'],global:false},ratings:{}};
+    const before=S2.slots.map(x=>x.sets_target).join(); base.applyReadinessSets(S2);
+    ok(S2.slots.every((x,i)=>x.sets_target<=+before.split(',')[i]),'no modifier ever adds sets',''); }
+  // weekly sets per muscle stay inside the typical range, whatever adds sets
+  { const A=load([]); const C=A.getCFG(); C.goals=['bench','squat','deadlift'];
+    A.setRoadmap([A.applyShape({type:'hyp',label:'H',weeks:8,deload:false,hyp:['chest','quads','biceps'],refined:true,emphasis:'high'})]);
+    const tot={}; A.generatedDays().forEach(d=>d.slots.forEach(sl=>{ const ex=A.exById[sl.ex]; Object.entries(ex.vol||{}).forEach(([m,w])=>tot[m]=(tot[m]||0)+w*sl.sets); }));
+    const over=Object.entries(tot).filter(([m,v])=>{ const r=A.ENGINE.weeklySets(m); return r&&v>r[1]+1e-9; });
+    ok(over.length===0,'weekly sets per muscle stay at or under the top of the typical range (high emphasis, priority muscles)',JSON.stringify(over)); }
+  // regression: sore quads/hams never cut chest (Oct 4) — through the whole pipeline
+  { const ev=[set('incline_machine','a',150,10,8,3),set('leg_press','a',400,10,8,3)];
+    const A=load(ev), mk=x=>({ex:x,role:'primary',reps:[8,12],rpe:8,sets:[],sets_target:4}), slots=[mk('leg_press'),mk('incline_machine')];
+    const groups=A.soreGroupsFor({slots}), rd={sleep:3,motivation:3,recovery:3,sore:Object.fromEntries(groups.map(g=>[g,['quads','post'].includes(g)?1:3])),joints:{}};
+    A.setSession({id:'SR',slots,openIdx:0,readiness:rd,adj:A.physicalCut(rd,groups),score:0.6,ratings:{},startedAt:Date.now()});
+    const c=A.suggestFor(slots[1]), l=A.suggestFor(slots[0]);
+    ok(!(c.trace||[]).some(x=>x.id==='local_soreness'),'regression: sore legs leave the chest press alone (no soreness modifier in its trace)',JSON.stringify(c.trace));
+    ok((l.trace||[]).some(x=>x.id==='local_soreness'&&x.changed),'and cut the leg press',JSON.stringify(l.trace)); }
+  // regression: the first session after a program change makes no step up, and says why
+  { const ev=[set('incline_machine','a',75,12,7,4,{target:{reps:[8,12],rpe:8}}),{type:'session_end',id:'ea',ts:day(3.99),session_id:'a',joints:{}},{type:'program_edit',id:'pe',ts:day(1),what:'rerun'}];
+    const A=load(ev); const sl={ex:'incline_machine',role:'primary',reps:[10,15],rpe:8,sets:[],sets_target:3};
+    A.setSession({id:'CB',slots:[sl],openIdx:0,adj:null,score:0.7,ratings:{},startedAt:Date.now()});
+    const r=A.suggestFor(sl);
+    ok(r.lb<=75&&(r.trace||[]).some(x=>x.id==='calibrating'||x.id==='progression'),'regression: new block → no load step up',JSON.stringify({lb:r.lb,trace:r.trace}));
+    const B=load(ev.slice(0,2)); B.setSession({id:'CB2',slots:[{...sl}],openIdx:0,adj:null,score:0.7,ratings:{},startedAt:Date.now()});
+    ok(B.suggestFor(B.getSession().slots[0]).lb>=r.lb,'(without the program change it may step up)',''); }
+  // sick day: a 1 cuts one step everywhere, today only; global 2s never cut load
+  { const ev=[set('incline_machine','a',80,10,8,3,{target:{reps:[8,12],rpe:8}}),{type:'session_end',id:'ea',ts:day(2.99),session_id:'a',joints:{}}];
+    const run=(gl)=>{ const A=load(ev), sl={ex:'incline_machine',role:'primary',reps:[8,12],rpe:8,sets:[],sets_target:3};
+      A.setSession({id:'G',slots:[sl],openIdx:0,readiness:{...gl,sore:{},joints:{}},adj:null,score:0.5,ratings:{},startedAt:Date.now()}); return A.suggestFor(sl); };
+    const g2=run({sleep:2,motivation:2,recovery:2}), g1=run({sleep:3,motivation:3,recovery:1}), g3=run({sleep:3,motivation:3,recovery:3});
+    ok(g2.lb>=80&&!(g2.trace||[]).some(x=>x.id==='sick_day'),'global 2s: no load cut (only no step up)',JSON.stringify(g2.trace));
+    ok(g1.lb<80&&(g1.trace||[]).some(x=>x.id==='sick_day'&&x.changed),'a 1: one step lighter, marked sick_day',JSON.stringify({lb:g1.lb,trace:g1.trace}));
+    ok(!(g3.trace||[]).some(x=>x.id==='sick_day'),'and gone the next session without another 1',''); }
+  console.log('  ids match the doc · '+runs+' random stacks: one step, never both up, floor, ceiling, calibrating, no double soreness cut, nothing sticky · exercise list unchanged · weekly sets capped · regressions');
+}
+
+/* ─── 53. the maintainer's case: a focused deload, walked end to end ─── */
+section('53. focused deload: incline −10%, pulldown joins, ramp-back');
+{
+  const ev=[]; let t=30, k=0;
+  const sess=()=>{ const sid='w'+(k++);
+    ev.push({type:'readiness',id:'r'+sid,ts:day(t+0.01),sleep_quality:3,motivation:3,recovery:3,soreness:{},joints:{},joint_scale:3});
+    [['incline_machine',80,10],['uh_pl_pulldown',200,10],['bench',185,8],['cable_row',140,10]].forEach(([ex,w,r])=>ev.push(set(ex,sid,w,r,8,t,{role:'straight',target:{reps:[8,12],rpe:8}})));
+    ev.push({type:'session_end',id:'e'+sid,ts:day(t-0.01),session_id:sid,joints:{}}); t-=1; };
+  for(let i=0;i<4;i++) sess();
+  const A=load(ev); const C=A.getCFG(); C.start=new Date(Date.now()-60*864e5).toISOString().slice(0,10); C.split='full5';
+  A.setRoadmap([A.applyShape({type:'hyp',label:'H',weeks:30,deload:false,hyp:[]})]);
+  const id=A.startFocusedDeload(['incline_machine'],'cut10',2);
+  let fd=A.focusedDeload();
+  ok(fd&&fd.id===id&&fd.len===10,'a 2-week window on a 5-day week is 10 sessions',JSON.stringify(fd&&{len:fd.len,left:fd.left}));
+  const mk=ex=>({ex,role:'primary',reps:[8,12],rpe:8,sets:[],sets_target:3});
+  const rx=(B,ex,rd)=>{ const sl=mk(ex); B.setSession({id:'NOW'+Math.random(),slots:[sl],openIdx:0,readiness:rd||{sleep:3,motivation:3,recovery:3,sore:{},joints:{}},adj:null,score:0.7,ratings:{},startedAt:Date.now()}); return B.suggestFor(sl); };
+  let r=rx(A,'incline_machine');
+  ok(r.lb<=72&&(r.trace||[]).some(x=>x.id==='focused_deload'),'incline pinned at −10% of 80 (≤ 72)',JSON.stringify({lb:r.lb}));
+  // three sessions later, pulldown joins the SAME window
+  const cont=B=>{ for(let i=0;i<3;i++){ const sid='x'+i; B.append({type:'readiness',sleep_quality:3,motivation:3,recovery:3,soreness:{},joints:{},joint_scale:3});
+      B.append({...set('incline_machine',sid,70,10,8,0),id:undefined}); B.append({type:'session_end',session_id:sid,joints:{}}); } };
+  cont(A);
+  A.startFocusedDeload(['uh_pl_pulldown'],'cut20',3);     // level/weeks ignored: it joins
+  fd=A.focusedDeload();
+  ok(fd.id===id&&fd.exercises.includes('uh_pl_pulldown')&&fd.exercises.includes('incline_machine')&&fd.len===10,'pulldown joins the existing window — one window, same timer',JSON.stringify({id:fd.id,ex:fd.exercises,len:fd.len,done:fd.done}));
+  ok(A.LOG.filter(e=>e.type==='focused_deload_start').length===1,'no second window was started','');
+  // bench and rows untouched
+  ['bench','cable_row'].forEach(ex=>{ const q=rx(A,ex); ok(!(q.trace||[]).some(x=>x.id==='focused_deload'),ex+' untouched by the focused deload',JSON.stringify(q.trace)); });
+  // global readiness doesn't double-cut a pinned exercise
+  const sick={sleep:3,motivation:3,recovery:1,sore:{},joints:{}};
+  const pin=rx(A,'incline_machine',sick), free=rx(A,'bench',sick);
+  ok(!(pin.trace||[]).some(x=>x.id==='sick_day')&&(free.trace||[]).some(x=>x.id==='sick_day'),'a sick day cuts bench but does not stack on the pinned incline','');
+  // ramp-back: no step-up proposal until the last 3 sessions
+  const props=()=>A.activeProposals().filter(x=>x.id.startsWith('fdstep:'));
+  ok(props().length===0,'no ramp-back proposal mid-window',String(A.focusedDeload().left)+' left');
+  while(A.focusedDeload()&&A.focusedDeload().left>3){ const sid='y'+A.LOG.length; A.append({type:'readiness',sleep_quality:3,motivation:3,recovery:3,soreness:{},joints:{},joint_scale:3}); A.append({type:'session_end',session_id:sid,joints:{}}); }
+  fd=A.focusedDeload();
+  ok(fd&&fd.ramp&&props().length===1,'in the last 3 sessions, with the joint at its usual, a ramp-back step is proposed',JSON.stringify({left:fd&&fd.left,props:props().map(x=>x.id)}));
+  const before=A.focusedDeload().level; props()[0].accept.fn();
+  ok(A.focusedDeload().level!==before&&A.focusedDeload().level==='hold','accepting steps up one level (−10% → hold) — never automatic',A.focusedDeload().level);
+  // joint above its usual in a ramp session: hold and extend one session
+  const len0=A.focusedDeload().len;
+  A.append({type:'readiness',sleep_quality:3,motivation:3,recovery:3,soreness:{},joints:{shoulder:3},joint_scale:3}); A.append({type:'session_end',session_id:'z1',joints:{}});
+  ok(A.focusedDeload()&&A.focusedDeload().len===len0+1,'a ramp session with the shoulder above its usual extends the window one session',JSON.stringify({len0,len:A.focusedDeload()&&A.focusedDeload().len}));
+  ok(props().length===0,'and no step-up is proposed that session','');
+  console.log('  incline pinned · pulldown joins one window · bench/rows untouched · sick day not stacked · ramp-back proposed only at the end, extends on a bad day');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

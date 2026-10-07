@@ -224,6 +224,21 @@ never swapped out mid-workout.
 - **Testers:** restoring a backup never imports `syncUrl`/`feedbackUrl`/
   `testerName`; setup links (`?sync=&feedback=&who=`) can also be pasted in
   Settings; `isTester()` hides owner-only copy. ALPHA.md is the setup guide.
+- **One modifier model (batch E).** Every adjustment to a suggested number
+  is a modifier in `ENGINE.modifiers` (mirrored in docs/modifiers.md — §52
+  fails if the ids drift). `suggestFor()` → base (`progression`/`range_fit`)
+  → `runModifiers()` in precedence order (dial → global readiness / sick day
+  → local soreness → joint ladder → focused deload → condition flags) →
+  guards (calibrating, floor, one step, ceiling, both-up), every step in
+  `trace[]` (stored in the suggestion log, shown as "Why these numbers").
+  Never add a new adjustment outside this pipeline. Global signals (sleep,
+  motivation, rest of life) never cut load except a 1 (sick day, one step,
+  today only); soreness is local; nothing persists without an expiry. Focused
+  deload = `focused_deload_*` events (one window; adding joins it; ramp-back
+  is proposed, never automatic). The dial = `dial_set`/`dial_reset` events
+  plus revealed overrides; it replaced override damping. Program changes
+  append `program_edit` (the next session is "calibrating": no step up).
+  §52 runs 1200 randomised stacks — if it fails, fix the interaction, not the test.
 - **`PENDING`** holds pre-workout plan edits until the session starts.
 - **Readiness** drives load adjustment (discrete tiers) and warmup length
   (continuous score). Adjustments are downward-only by design.
