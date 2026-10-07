@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext'];
 function load(events){
   const store={};
   if(events&&events.length) store['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
@@ -1755,6 +1755,34 @@ section('44. suggestion accuracy');
   ok(t.n===3,'a one-set session ending within seconds (automation) is left out',JSON.stringify(acc));
   ok(t.taken===2&&t.on===1,'taken = lifted as suggested; on target = RPE within 1 of target',JSON.stringify(t));
   console.log('  taken / on-target counted from the recorded suggestion · automation sessions excluded');
+}
+
+/* ─── 45. on-demand all-out last set ─── */
+section('45. all-out (AMRAP) last set on demand');
+{
+  const hist=[set('preacher','h1',60,10,8,6),set('preacher','h1',60,10,8.5,6),{type:'session_end',id:'eh1',ts:day(5.9),session_id:'h1',joints:{}}];
+  const A=load(hist); A.getCFG().goals=['deadlift'];
+  const slot={ex:'preacher',role:'accessory',reps:[8,12],rpe:8,sets:[],sets_target:3,amrapLast:true};
+  A.setSession({id:'AM',slots:[slot],openIdx:0,adj:null,ratings:{},startedAt:Date.now()});
+  A.seedDraft(slot); let d=A.getDraft();
+  ok(!A.suggestFor(slot).pr.calibAmrap&&d.rpe!==10,'switched on: the first sets are normal','');
+  for(let i=0;i<2;i++){ A.seedDraft(slot); d=A.getDraft(); d.reps=10; d.rpe=8; A.logSet(slot,0,'straight'); }
+  A.seedDraft(slot); d=A.getDraft();
+  const r=A.suggestFor(slot);
+  ok(r.pr.calibAmrap&&d.rpe===10,'the last set is all-out: priced like a normal set, logged at RPE 10',JSON.stringify({c:r.pr.calibAmrap,rpe:d.rpe}));
+  d.reps=14; A.logSet(slot,0,'straight');
+  const last=slot.sets[slot.sets.length-1];
+  ok(last.role==='amrap'&&last.rpe===10,'it is stored as role amrap at RPE 10 (a reps-to-failure anchor)',JSON.stringify({role:last.role,rpe:last.rpe}));
+  ok(!A.LOG.some(e=>e.type==='tm_update'),'an on-demand all-out set never moves a training max','');
+  // it does not drive the next session's working-set pricing
+  const B=load(hist.concat(A.LOG.filter(e=>e.session_id==='AM'&&e.role!=='amrap')));
+  const next=sl=>{ const x=load(sl); const s2={ex:'preacher',role:'accessory',reps:[8,12],rpe:8,sets:[],sets_target:3};
+    x.setSession({id:'N',slots:[s2],openIdx:0,adj:null,ratings:{},startedAt:Date.now()}); return x.suggestFor(s2); };
+  const withA=next(A.LOG.filter(e=>e.type==='set'||e.type==='session_end')), without=next(B.LOG.filter(e=>e.type==='set'||e.type==='session_end'));
+  ok(withA.lb===without.lb&&withA.pr.reps===without.pr.reps,'the all-out set does not change the next session\'s working-set suggestion',JSON.stringify([withA.lb,withA.pr.reps,without.lb,without.pr.reps]));
+  // a realization AMRAP still moves the TM
+  ok(A.allOutNext({structure:'amrap',sets:[],sets_target:1,amrapLast:true})===false,'a realization AMRAP slot is not treated as an on-demand one','');
+  console.log('  off by default · last set only · role amrap @ RPE 10 · no TM change · next session unaffected');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
