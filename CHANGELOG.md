@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.57.0 — 2026-10-07
+- The first time a Smith machine exercise comes up, the app asks what its bar weighs (15, 20, 25 lb, or counterbalanced ≈ 0) and remembers it for that exercise. You can change it on the info sheet.
+- Plate-loaded machines can have their empty sled or arm weight set on the info sheet. The set card then shows plates + sled as a rough total. You still log the plates, so your history doesn't change.
+- In kg, a standard bar is shown as 20 kg.
+
 ## 1.56.0 — 2026-10-07
 - Pull-ups, chin-ups, dips, push-ups, inverted rows and pistol squats are now tracked on what you actually lift: bodyweight plus added weight, minus assistance. Type what's on the machine, and the card shows the rest ("60 assist → lifting 122 lb").
 - New assisted chin-up and dip, and band-assisted pull-up, chin-up and dip (reps only). Assisted, bodyweight and weighted sets of the same movement are one history and one goal.

@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -2586,6 +2586,37 @@ section('59. bodyweight class: system load, handoffs, goals');
     const R=load(ev), lb=R.liftBests('pullup').map(x=>x.e1);
     ok(Math.max(...lb)-Math.min(...lb)<1,'a bulk: added weight down by the bodyweight gained is the same system load — level, not a regression',JSON.stringify(lb.map(Math.round))); }
   console.log('  bodyweight change → typed only · assisted never eases after on-target · one track · bodyweight assumed/stale · handoffs once · goals: track, three ways, AMRAP, cut, stall');
+}
+
+/* ─── 60. v1.57: equipment weights — display and plate maths only ─── */
+section('60. equipment weights: bar, Smith, sled — never touch a logged event');
+{
+  const ev=[set('bench','a',185,5,8,3),set('smith_bench','b',135,8,8,2),set('incline_machine','c',80,10,8,1)];
+  const A=load(ev), C=A.getCFG();
+  const snap=()=>JSON.stringify(A.LOG)+'|'+JSON.stringify(A.sets());
+  const before=snap(), e1=A.setE1RM(A.sets()[0]);
+  const sl={ex:'bench',role:'primary',reps:[3,5],rpe:8,sets:[],sets_target:3};
+  const p45=A.solvePlates(185,A.exById.bench.bar,'main_lb');
+  C.barOverrides={bench:35}; A.applyBarOverrides();
+  const p35=A.solvePlates(185,A.exById.bench.bar,'main_lb');
+  ok(A.exById.bench.bar===35&&JSON.stringify(p35.plates)!==JSON.stringify(p45.plates),'a bar weight you set changes the plate maths',JSON.stringify({p45:p45.plates,p35:p35.plates}));
+  C.sledWeight={incline_machine:45};
+  ok(snap()===before&&A.setE1RM(A.sets()[0])===e1,'…and changes no logged event: the log, every set and its e1RM are byte-for-byte the same','');
+  C.barOverrides={}; A.applyBarOverrides(); C.sledWeight={};
+  // Smith: asked once per exercise, remembered even at the default
+  ok(A.smithUnasked(A.exById.smith_bench)&&A.smithUnasked(A.exById.smith_squat)&&!A.smithUnasked(A.exById.bench),'a Smith exercise asks for its bar weight; a barbell doesn\'t','');
+  C.barOverrides={smith_bench:20}; A.applyBarOverrides();
+  ok(!A.smithUnasked(A.exById.smith_bench)&&A.smithUnasked(A.exById.smith_squat),'answered once, remembered for that exercise (even at 20 lb, the placeholder) — the others still ask','');
+  C.barOverrides={smith_bench:0}; A.applyBarOverrides();
+  const s0=A.solvePlates(100,A.exById.smith_bench.bar,'main_lb');
+  ok(A.exById.smith_bench.bar===0&&s0&&s0.achieved===100,'counterbalanced (≈ 0): 100 lb is all plates',JSON.stringify(s0));
+  // the sled is display only: the suggestion doesn't move
+  { const B=load(ev), slm={ex:'incline_machine',role:'primary',reps:[8,12],rpe:8,sets:[],sets_target:3};
+    B.setSession({id:'S',slots:[slm],openIdx:0,adj:null,score:.7,ratings:{},startedAt:Date.now()});
+    const r0=B.suggestFor(slm).lb; B.getCFG().sledWeight={incline_machine:45};
+    ok(B.suggestFor(slm).lb===r0,'a sled weight never changes the suggestion (you log plates; it\'s display)',String(r0)); }
+  ok(A.barKg(45)===20&&A.barKg(55)===25&&A.barKg(25)===11.5,'in kg a standard bar is 20 kg, the rest convert','');
+  console.log('  bar weight → plate maths only · log untouched · Smith asked once per exercise · counterbalanced · sled display only · 20 kg bar');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

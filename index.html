@@ -8536,7 +8536,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
   }
 }
 </script>
-<script type="application/json" id="whats-new">{"version":"1.56.0","lines":["Pull-ups, chin-ups, dips, push-ups, inverted rows and pistol squats are now tracked on what you actually lift: bodyweight plus added weight, minus assistance. Type what's on the machine, and the card shows the rest (\"60 assist → lifting 122 lb\").","New assisted chin-up and dip, and band-assisted pull-up, chin-up and dip (reps only). Assisted, bodyweight and weighted sets of the same movement are one history and one goal.","If your bodyweight changes, the suggested assistance or added weight moves to keep the same load. If your last bodyweight is over a week old, the card asks for it (you can skip).","At zero assistance the app proposes the unassisted version, and if you fall short at bodyweight it offers the assisted one. It never switches on its own.","Goals for these show load, % of bodyweight and the next milestone. A weight cut is labelled \"lighter you, same strength\", not as getting stronger."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.57.0","lines":["The first time a Smith machine exercise comes up, the app asks what its bar weighs (15, 20, 25 lb, or counterbalanced ≈ 0) and remembers it for that exercise. You can change it on the info sheet.","Plate-loaded machines can have their empty sled or arm weight set on the info sheet. The set card then shows plates + sled as a rough total. You still log the plates, so your history doesn't change.","In kg, a standard bar is shown as 20 kg."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9103,7 +9103,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.56.0';
+const APP_VERSION='1.57.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -10599,7 +10599,7 @@ const DAYS=[
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
   profile:null,profileParams:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
-  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{}};
+  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{}};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
    from the address bar so it isn't left sitting in history. Each writes
@@ -13620,6 +13620,7 @@ function openInfo(exId){
     <div class="qblock" id="istep"></div>
     ${bwClass(ex)&&bwClass(ex).mode==='assist'?'<div class="qblock" id="iratio"></div>':''}
     ${barEditable(ex)?'<div class="qblock" id="ibar"></div>':''}
+    ${ex.plateLoaded&&!ex.custom?'<div class="qblock" id="isled"></div>':''}
     <div class="qblock"><div class="qlab">Your history</div>
       <div class="row between sm"><span class="muted">Best estimated 1RM</span><span>${b?fmt(b.v,0)+' lb':'—'}</span></div>
       <div class="row between sm"><span class="muted">Last logged</span><span>${last?`${fmt(last.weight.value)} ${last.weight.unit} × ${last.reps}`:'—'}</span></div>
@@ -13635,6 +13636,7 @@ function openInfo(exId){
   $('#iclose').onclick=()=>$('#dlg').close();
   drawRepRangeEditor($('#irr'), ex);
   if($('#ibar')) drawBarEditor($('#ibar'), ex);
+  if($('#isled')) drawSledEditor($('#isled'), ex);
   if($('#istep')) drawStepEditor($('#istep'), ex);
   if($('#iratio')) drawAssistRatio($('#iratio'), ex);
   $('#ihist').onclick=()=>openExerciseHistory(exId, ()=>openInfo(exId));
@@ -13720,6 +13722,43 @@ function drawStepEditor(host, ex){
 /* Bar weight for one exercise — used by the plate solver and shown in the
    set panel. Logged weights are totals, so changing it never alters a logged
    set; it changes which totals are loadable from here on. */
+/* A bar in kg: the standard bar is 20 kg (not 45 lb converted); the rest convert
+   to the nearest half kilo. */
+const barKg=lb=>Math.abs(lb-45)<1e-9?20:Math.round(lb/LB*2)/2;
+/* Smith machines differ (a counterbalanced bar is close to weightless), so the
+   first time a Smith exercise is on the set card the app asks once — 15, 20 or
+   25 lb, or counterbalanced (≈ 0) — and remembers it for that exercise
+   (CFG.barOverrides, like any bar weight you set). Logged loads are totals as
+   always; this only changes the plate maths from here on. */
+const SMITH_BARS=[[15,'15 lb'],[20,'20 lb'],[25,'25 lb'],[0,'Counterbalanced (≈ 0)']];
+const smithUnasked=ex=>!!ex&&!ex.custom&&implementOf(ex)==='smith'&&!Object.prototype.hasOwnProperty.call(CFG.barOverrides||{},ex.id);
+function smithAsk(slot){
+  const ex=exById[slot.ex], box=el('div','anchor'); box.style.marginBottom='9px';
+  const other=EX.find(e=>e.id!==ex.id&&implementOf(e)==='smith'&&Object.prototype.hasOwnProperty.call(CFG.barOverrides||{},e.id));
+  box.innerHTML='<b>What does this Smith bar weigh?</b> <span class="dim tiny">Machines differ, and the plate maths needs it. Asked once for this exercise.'
+    +(other?' Your '+esc(other.name)+' is set to '+fmt(CFG.barOverrides[other.id])+' lb.':'')+'</span>';
+  const c=el('div','chips'); c.style.marginTop='7px';
+  SMITH_BARS.forEach(([v,lab])=>{ const b=el('button','chip',esc(lab)); b.style.cssText='font-size:12.5px;padding:6px 10px';
+    b.onclick=()=>{ CFG.barOverrides=CFG.barOverrides||{}; CFG.barOverrides[ex.id]=v; saveCfg(); applyBarOverrides(); seedDraft(slot); renderWork(); toast('Smith bar: '+lab+' — change it on the info sheet'); };
+    c.appendChild(b); });
+  box.appendChild(c);
+  return box;
+}
+/* The empty sled or arms of a plate-loaded machine (CFG.sledWeight, lb). Display
+   only: logged numbers stay plates-only, so history stays comparable; the set
+   card adds it to show roughly what's moving. Unset by default — it isn't on the label. */
+function drawSledEditor(host, ex){
+  const cur=(CFG.sledWeight||{})[ex.id];
+  host.innerHTML='<div class="qlab">Sled or arm weight</div><div class="row between sm"><span>'+(cur!=null?fmt(cur)+' lb':'Not set')+'</span><span class="dim tiny">display only</span></div>'
+    +'<div class="anchor">What the machine weighs empty, if you know it. You still log the plates; the set card shows plates + sled as a rough total. Past sets don\'t change.</div>';
+  let v=cur!=null?cur:45;
+  const g=el('div',''); g.style.marginTop='8px'; g.appendChild(stepper('sled lb',v,5,nv=>{ v=Math.max(0,Math.min(300,nv)); },null,{typeable:true,min:0})); host.appendChild(g);
+  const row=el('div','row'); row.style.cssText='gap:6px;margin-top:8px';
+  const sv=el('button','btn pri s','Save'); sv.onclick=()=>{ CFG.sledWeight=CFG.sledWeight||{}; CFG.sledWeight[ex.id]=v; saveCfg(); render(); openInfo(ex.id); toast('Sled weight saved'); };
+  row.appendChild(sv);
+  if(cur!=null){ const cl=el('button','btn s ghost','Clear'); cl.onclick=()=>{ delete CFG.sledWeight[ex.id]; saveCfg(); render(); openInfo(ex.id); toast('Sled weight cleared'); }; row.appendChild(cl); }
+  host.appendChild(row);
+}
 function drawBarEditor(host, ex){
   const def=ex.custom?(ex.bar||0):(BAR_DEFAULT[ex.id]||0), own=ex.custom?null:(CFG.barOverrides||{})[ex.id];
   let v=ex.bar||0, editing=false;
@@ -13727,6 +13766,14 @@ function drawBarEditor(host, ex){
     host.innerHTML=`<div class="qlab">Bar weight</div>
       <div class="row between sm"><span>${fmt(ex.bar||0)} lb</span><span class="dim tiny">${ex.custom?'your exercise':own!=null?'set by you · library says '+fmt(def)+' lb':'library default'}</span></div>
       <div class="anchor">Used to work out the plates, and shown in the set panel. Logged weights are totals, so past sets don't change.</div>`;
+    if(!editing&&implementOf(ex)==='smith'){
+      const c=el('div','chips'); c.style.marginTop='8px';
+      SMITH_BARS.forEach(([sv,lab])=>{ const b=el('button','chip',esc(lab)); b.style.cssText='font-size:12.5px;padding:6px 10px';
+        b.setAttribute('aria-pressed',Object.prototype.hasOwnProperty.call(CFG.barOverrides||{},ex.id)&&CFG.barOverrides[ex.id]===sv?'true':'false');
+        b.onclick=()=>{ CFG.barOverrides=CFG.barOverrides||{}; CFG.barOverrides[ex.id]=sv; saveCfg(); applyBarOverrides(); render(); openInfo(ex.id); toast('Smith bar: '+lab); };
+        c.appendChild(b); });
+      host.appendChild(c);
+    }
     if(!editing){
       const b=el('button','btn s','Change bar weight'); b.style.marginTop='8px';
       b.onclick=()=>{ editing=true; draw(); }; host.appendChild(b);
@@ -13742,7 +13789,7 @@ function drawBarEditor(host, ex){
     sv.onclick=()=>{
       if(ex.custom){ ex.bar=v; CFG.customEx=(CFG.customEx||[]).map(c=>c.id===ex.id?ex:c); }
       else{ CFG.barOverrides=CFG.barOverrides||{};
-        if(Math.abs(v-def)<1e-9) delete CFG.barOverrides[ex.id]; else CFG.barOverrides[ex.id]=v; }
+        if(Math.abs(v-def)<1e-9&&implementOf(ex)!=='smith') delete CFG.barOverrides[ex.id]; else CFG.barOverrides[ex.id]=v; }
       saveCfg(); applyBarOverrides(); render(); openInfo(ex.id); toast('Bar weight saved'); };
     host.appendChild(sv);
   };
@@ -14013,6 +14060,7 @@ function entryPanel(slot,idx){
   const lockAnd=(k,fn)=>v=>{ fn(v); draft.lock={...draft.lock,[k]:true}; draft.lockEx=slot.ex; rebalanceDraft(slot); renderWork(); };
   const bwc=bwClass(slot.ex);
   if(bwc&&bwStale()&&!(session&&session.bwAsked)) p.appendChild(bodyweightAsk(slot));
+  if(smithUnasked(ex)) p.appendChild(smithAsk(slot));
   p.appendChild(stepper(bwc?(bwc.mode==='assist'?'Assistance':'Added (0 = bodyweight)'):'Weight',draft.weight,weightStep(draft.unit),
     lockAnd('w',v=>{draft.weight=v;draft.alt=null;}),
     draft.unit,{wide:true,typeable:true,min:0,suggested:!L.w&&draft.sugW}));
@@ -14059,7 +14107,7 @@ function entryPanel(slot,idx){
     // use whichever plate set matches what's on screen, so the diagram works
     // in kg too rather than silently disappearing
     const setId = draft.unit==='kg' ? 'main_kg' : 'main_lb';
-    const barIn = draft.unit==='kg' ? Math.round(ex.bar/LB*2)/2 : ex.bar;
+    const barIn = draft.unit==='kg' ? barKg(ex.bar) : ex.bar;
     const sol=solvePlates(draft.weight,barIn,setId);
     p.appendChild(barSVG(sol));
     if(sol&&!sol.exact) p.appendChild(el('div','warnline',`Nearest loadable: ${fmt(sol.achieved)} ${draft.unit}`));
@@ -14078,7 +14126,10 @@ function entryPanel(slot,idx){
     p.appendChild(barSVG(sol));
     if(sol&&!sol.exact) p.appendChild(el('div','warnline',`Closest your plates make: ${fmt(sol.achieved/2)} ${draft.unit} per ${side}`));
     p.appendChild(el('div','plates', sol&&sol.plates.length?`${sol.plates.join(' + ')} per ${side}`:'No plates'));
-    p.appendChild(el('div','dim tiny','Plates only — the machine\'s own resistance isn\'t counted.'));
+    { const sled=(CFG.sledWeight||{})[ex.id];
+      p.appendChild(el('div','dim tiny',sled!=null
+        ?fmt(draft.weight)+' + '+fmt(draft.unit==='kg'?Math.round(sled/LB*2)/2:sled)+' sled ≈ '+fmt(draft.weight+(draft.unit==='kg'?Math.round(sled/LB*2)/2:sled))+' '+draft.unit+' moving — you log the plates; the sled is display only.'
+        :'Plates only — the machine\'s own resistance isn\'t counted. Know what it weighs empty? Add it on the info sheet.')); }
   }
   const cgE=classGrid(slot), typedE=draft.unit==='kg'?draft.weight*LB:draft.weight;
   const est=e1rm(cgE?sysOf(slot.ex,typedE,cgE.bw):typedE+bwOffset(ex),draft.reps);
