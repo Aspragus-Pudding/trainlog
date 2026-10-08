@@ -265,14 +265,21 @@ function checks(run){
    process ran out of memory on Windows (Oct 2026). */
 if(!ONLY){
   const {spawnSync}=require('child_process'); let bad=0;
+  // A persona that hangs fails the run, by name, instead of hanging it (Oct 2026: one did, once).
+  // 60 s at the default 26 weeks (a persona normally takes about 10), scaled for longer runs;
+  // SIM_PERSONA_TIMEOUT_MS overrides it (used to check the timeout itself fires).
+  const TIMEOUT_MS=+process.env.SIM_PERSONA_TIMEOUT_MS||Math.round(60000*Math.max(1,WEEKS/26));
   for(const key of Object.keys(PERSONAS)){
     // node on Windows occasionally crashes natively (no output, signal/139) under this load;
-    // a crash is retried, a failed check never is
-    let r; for(let t=0;t<3;t++){ r=spawnSync(process.execPath,[__filename,'--persona',key,...args],{stdio:['ignore','pipe','inherit'],env:process.env,maxBuffer:64*1024*1024});
-      if(r.status===0||/check\(s\) failed/.test(String(r.stdout||''))) break; }
+    // a crash is retried, a failed check never is, and neither is a timeout
+    let r, timedOut=false;
+    for(let t=0;t<3;t++){ r=spawnSync(process.execPath,[__filename,'--persona',key,...args],{stdio:['ignore','pipe','inherit'],env:process.env,maxBuffer:64*1024*1024,timeout:TIMEOUT_MS,killSignal:'SIGKILL'});
+      timedOut=!!(r.error&&r.error.code==='ETIMEDOUT');
+      if(timedOut||r.status===0||/check\(s\) failed/.test(String(r.stdout||''))) break; }
     const out=String(r.stdout||'').replace(/\n(all checks passed|\d+ check\(s\) failed)\s*$/,'\n');
     process.stdout.write(out);
-    if(r.status!==0) bad++;
+    if(timedOut) console.log('\n  ✗ persona "'+key+'" timed out after '+Math.round(TIMEOUT_MS/1000)+' s — stuck, not slow (one normally takes about 10 s)');
+    if(timedOut||r.status!==0) bad++;
   }
   console.log('\n'+(bad?bad+' persona(s) failed':'all checks passed'));
   process.exit(bad?1:0);
