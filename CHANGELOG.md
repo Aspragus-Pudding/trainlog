@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.59.1 — 2026-10-08
+- Fix: past sessions showed pull-ups, chin-ups and dips as a bare number, such as "60 lb" for 60 lb of assistance.
+- They now read "60 lb assist", "+20 lb" or "bodyweight", matching the set card.
+- The estimated max next to each of those sets is now worked out on what you actually lifted.
+
 ## 1.59.0 — 2026-10-08
 - The text slides are gone. New users get short hints during their first session, each pointing at the thing it describes, shown once and then gone.
 - Hints never cover Log set or the weight, reps and RPE controls. Tapping anywhere outside a hint closes it, and the tap still goes through. No hint appears while the rest timer is running.

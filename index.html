@@ -8703,7 +8703,7 @@ Automatic backup sends your log to a Google Sheet after each session, if you wer
 ### Setup link `[data-tour="set-setuplink"]`
 Setup link is where you paste the link you were given, which connects your backup sheet and the feedback notes in one step.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.59.0","lines":["The text slides are gone. New users get short hints during their first session, each pointing at the thing it describes, shown once and then gone.","Hints never cover Log set or the weight, reps and RPE controls. Tapping anywhere outside a hint closes it, and the tap still goes through. No hint appears while the rest timer is running.","A \"?\" at the top of each screen, and in Edit program, walks you through everything on that screen. Skip or Escape always closes it.","Lifts → How this works lists the tours, replays the first-session hints, and has the whole guide written out in one place."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.59.1","lines":["Fix: past sessions showed pull-ups, chin-ups and dips as a bare number, such as \"60 lb\" for 60 lb of assistance.","They now read \"60 lb assist\", \"+20 lb\" or \"bodyweight\", matching the set card.","The estimated max next to each of those sets is now worked out on what you actually lifted."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9270,7 +9270,7 @@ Setup link is where you paste the link you were given, which connects your backu
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.59.0';
+const APP_VERSION='1.59.1';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -17796,10 +17796,11 @@ function openSessionDetail(endEv){
     const ex=exById[id];
     html+=`<div class="qblock"><div class="qlab" style="margin-bottom:7px">${esc(ex?ex.name:id)}</div>`;
     list.forEach((s,i)=>{
-      const est=e1rm(toLb(s.weight),s.reps);
+      // setE1RM: system load for the bodyweight class (bodyweight ± what was on the machine)
+      const est=s.set_kind==='warmup'?null:setE1RM(s);
       html+=`<div class="row between sm" style="padding:3px 0">
         <span class="muted">${s.set_kind==='warmup'?'warmup':s.group&&s.group.pos>0?TECHNIQUES[s.group.kind].extend:'set '+(i+1)}</span>
-        <span>${fmt(s.weight.value)} ${s.weight.unit} × ${s.reps}${s.rpe?` @ ${s.rpe}`:''}${est&&s.set_kind!=='warmup'?` · ${fmt(est,0)}`:''}${modLabel(s.modifiers)?`<span class="dim tiny"> · ${esc(modLabel(s.modifiers))}</span>`:''}</span></div>`;
+        <span>${esc(typedLabel(s.exercise_id,s.weight))} × ${s.reps}${s.rpe?` @ ${s.rpe}`:''}${est&&s.set_kind!=='warmup'?` · ${fmt(est,0)}`:''}${modLabel(s.modifiers)?`<span class="dim tiny"> · ${esc(modLabel(s.modifiers))}</span>`:''}</span></div>`;
     });
     html+=`</div>`;
   });
