@@ -158,8 +158,12 @@ link before they start logging, and tell them to say no to any later prompt
 they weren't expecting.
 
 **Option B: manual backups.** They tap **Save backup** on the Lifts tab, which
-opens the share sheet straight into Files or iCloud. The app nags after six
-sessions without one. That's fine for a short alpha, but they will forget.
+opens the share sheet straight into Files or iCloud. When their newest backup
+of either kind (a saved file or a sheet sync) is over a week old, a card on the
+Progress tab and a prompt after each session remind them; "Not now" holds it
+off until it's due again. **Restore from backup** checks the file is a
+Trainlog backup before merging anything. That's fine for a short alpha, but
+they will forget.
 
 ## Collecting feedback
 

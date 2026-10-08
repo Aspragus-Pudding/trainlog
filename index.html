@@ -8703,7 +8703,7 @@ Automatic backup sends your log to a Google Sheet after each session, if you wer
 ### Setup link `[data-tour="set-setuplink"]`
 Setup link is where you paste the link you were given, which connects your backup sheet and the feedback notes in one step.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.59.1","lines":["Fix: past sessions showed pull-ups, chin-ups and dips as a bare number, such as \"60 lb\" for 60 lb of assistance.","They now read \"60 lb assist\", \"+20 lb\" or \"bodyweight\", matching the set card.","The estimated max next to each of those sets is now worked out on what you actually lifted."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.60.0","lines":["A card on the Progress tab reminds you to back up when your last backup, whether a saved file or your backup sheet, is over a week old. \"Not now\" puts it off until it's due again.","The reminder after a session follows the same rule, so the two never disagree. It used to count only sessions since your last saved file.","Restore from backup now checks the file is a Trainlog backup before merging anything. It reports any lines it couldn't read, and your log is untouched if the file is wrong.","Saving and restoring a backup file work without Google. The sheet stays optional."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9270,7 +9270,7 @@ Setup link is where you paste the link you were given, which connects your backu
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.59.1';
+const APP_VERSION='1.60.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -10825,7 +10825,7 @@ const DAYS=[
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
   profile:null,profileParams:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
-  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{},deprioritised:{muscles:[],patterns:[]},tour:{t1:'off',seen:{}}};
+  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{},deprioritised:{muscles:[],patterns:[]},tour:{t1:'off',seen:{}},backupReminderDismissed:null};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
    from the address bar so it isn't left sitting in history. Each writes
@@ -17199,9 +17199,10 @@ function openPost(){
     session=null; saveSession(); stopRest(); $('#dlg').close(); TAB='dash'; render(); toast('Session saved');
     if(endEv) openSessionSummary(endEv, score);
     if((CFG.syncUrl||'').trim()) syncNow(true);
-    else if(sessionsSinceExport()>=6) setTimeout(()=>{
-      if(confirm('It has been '+sessionsSinceExport()+' sessions since your last backup.\n\nSave one now?')) shareBackup();
-    },700);
+    else{ const due=backupReminder(); if(due) setTimeout(()=>{   // the same rule, and the same "not now", as the Progress reminder
+      if(confirm((due.last?'Your last backup was '+due.days+' days ago.':'You haven\'t saved a backup yet.')+'\n\nSave one now?')) shareBackup();
+      else{ CFG.backupReminderDismissed={for:due.last, at:new Date().toISOString()}; saveCfg(); }
+    },700); }
   };
   $('#pskip').onclick=()=>end(false); $('#pend').onclick=()=>end(true);
 }
@@ -17272,12 +17273,12 @@ function renderLifts(){
   lg.appendChild(el('div','row between sm',`<span class="muted">Version</span><span class="dim">${APP_VERSION}</span>`));
   const hw=el('button','btn ghost wide','How this works'); hw.dataset.tour='help'; hw.style.marginTop='10px'; hw.onclick=openGuide; lg.appendChild(hw);
 
-  const since=sessionsSinceExport();
-  if(since>=6){
+  const due=backupDue();
+  if(due){
     const warn=el('div','');
     warn.style.cssText='margin-top:11px;padding:11px;border-radius:9px;background:var(--warn-soft);border-left:3px solid var(--warn)';
     warn.innerHTML=`<div style="color:var(--warn);font-weight:640;font-size:14px">Back up your log</div>
-      <div class="muted tiny" style="margin-top:3px">${since} sessions since your last backup. Browser storage can be cleared without warning — a downloaded file cannot.</div>`;
+      <div class="muted tiny" style="margin-top:3px">${due.last?'Your last backup was '+due.days+' days ago.':'You haven\'t saved a backup yet.'} Browser storage can be cleared without warning — a file you keep, or your backup sheet, can't be.</div>`;
     lg.appendChild(warn);
   }
 
@@ -17491,6 +17492,15 @@ function classTrend(id){
 }
 function renderHist(){
   const v=$('#v-hist'); v.innerHTML='';
+  { const d=backupReminder(); if(d){
+      const c=el('div','card pad'); c.dataset.tour='backup-reminder'; c.style.borderLeft='3px solid var(--warn)';
+      c.innerHTML='<div style="font-weight:650">Back up your log</div><div class="muted tiny" style="margin-top:4px;line-height:1.5">'
+        +(d.last?'Your last backup was '+d.days+' days ago.':'You haven\'t saved a backup yet.')
+        +' Your log lives only on this phone, and browser storage can be cleared without warning. A file you keep in Files, or a backup sheet, can\'t be.</div>';
+      const row=el('div','row'); row.style.cssText='gap:7px;margin-top:10px';
+      const sv=el('button','btn pri s','Save backup'); sv.onclick=shareBackup;
+      const no=el('button','btn s ghost','Not now'); no.onclick=()=>{ CFG.backupReminderDismissed={for:d.last, at:new Date().toISOString()}; saveCfg(); render(); };
+      row.append(sv,no); c.appendChild(row); v.appendChild(c); } }
 
   // strength trends for goal lifts
   const goals=(CFG.goals||[]).filter(id=>exById[id]);
@@ -18799,10 +18809,26 @@ async function storageInfo(){
   }catch{}
   return out;
 }
-const sessionsSinceExport=()=>{
-  const last=Number(STORE.getItem('trainlog.lastExport')||0);
-  return LOG.filter(e=>e.type==='session_end'&&new Date(e.ts).getTime()>last).length;
-};
+/* Backups of either kind (batch F part 6, v1.60): a file you saved, or the
+   sheet. One is due when the newest of them is over a week old — or, with none
+   yet, a week after your first logged set. The Progress reminder can be put
+   off: "Not now" hides it until a newer backup goes stale, or for a week if
+   there's still none. Judgement default: 7 days. */
+const BACKUP_STALE_DAYS=7;
+const lastExportAt=()=>Number(STORE.getItem('trainlog.lastExport')||0);
+const lastBackupAt=()=>Math.max(lastExportAt(),lastSyncAt());
+function backupDue(){
+  const first=LOG.find(e=>e.type==='set'); if(!first) return null;      // nothing to lose yet
+  const last=lastBackupAt(), since=last||new Date(first.ts).getTime(), days=(Date.now()-since)/864e5;
+  return days>=BACKUP_STALE_DAYS?{last, days:Math.floor(days)}:null;
+}
+function backupReminder(){
+  if(DEMO) return null;
+  const d=backupDue(); if(!d) return null;
+  const x=CFG.backupReminderDismissed;
+  if(x&&x.for===d.last&&(Date.now()-new Date(x.at).getTime())/864e5<BACKUP_STALE_DAYS) return null;
+  return d;
+}
 
 /* A backup is the log PLUS the program. Exporting sets alone would restore
    your history but lose your roadmap, goals and split. */
@@ -18863,6 +18889,7 @@ function importBackup(text){
   let cfgIn=null; const incoming=[];
   for(const l of lines){
     let o; try{ o=JSON.parse(l); }catch{ continue; }
+    if(!o||typeof o!=='object'||typeof o.type!=='string') continue;   // only events (and the config) come in
     if(o.type==='config_snapshot'){ cfgIn=o.cfg; continue; }
     incoming.push(o);
   }
@@ -18876,6 +18903,20 @@ function importBackup(text){
   return {added:added.length, cfg:!!cfgIn, cfgData:cfgIn};
 }
 
+/* Both restores (a file, the sheet) come through here: check it's a Trainlog
+   backup before anything is merged, then the same importBackup() merge and
+   finishImport() tail. Nothing is written unless it passes. */
+function restoreFromText(text, from){
+  const where=from==='sheet'?'the sheet':'that file';
+  if(typeof text!=='string'||!text.trim()){ alert((from==='sheet'?'No backup found on the sheet yet.':'That file is empty.')+' Your log was not modified.'); return null; }
+  const lines=text.split('\n').filter(l=>l.trim());
+  const good=lines.filter(l=>{ try{ const o=JSON.parse(l); return !!o&&typeof o==='object'&&typeof o.type==='string'; }catch{ return false; } });
+  if(!good.length){ alert('That doesn\'t look like a Trainlog backup, so nothing was imported from '+where+'. Your log was not modified.'); return null; }
+  if(session&&!confirm('You have a session in progress. Restoring now will replace your log underneath it.\n\nFinish or end that session first. Continue anyway?')) return null;
+  const res=importBackup(text); res.skipped=lines.length-good.length;
+  finishImport(res);
+  return res;
+}
 /* Shared tail end of both restore paths (file + sheet): offer to restore the
    program config, then report what changed. */
 function finishImport(res){
@@ -18890,7 +18931,8 @@ function finishImport(res){
     saveCfg();
   }
   render();
-  alert(res.added?`Restored ${res.added} new event${res.added>1?'s':''}.`:'Nothing new in that backup — your log already had everything in it.');
+  alert((res.added?`Restored ${res.added} new event${res.added>1?'s':''}.`:'Nothing new in that backup — your log already had everything in it.')
+    +(res.skipped?` ${res.skipped} line${res.skipped>1?'s':''} couldn't be read and ${res.skipped>1?'were':'was'} skipped.`:''));
 }
 
 /* Fetches a script.google.com exec URL via JSONP. A plain cross-origin fetch()
@@ -18919,16 +18961,10 @@ async function restoreFromSheet(){
   if(DEMO){ alert('Demo mode never contacts your sheet. Your real data is not affected.'); return; }
   const url=(CFG.syncUrl||'').trim();
   if(!url) return;
-  if(session&&!confirm('You have a session in progress. Restoring now will replace your log underneath it.\n\nFinish or end that session first. Continue anyway?')) return;
   let text;
   try{ text=await jsonpFetch(url+'?action=fetch'); }
   catch(e){ alert('Could not reach your sheet — check your connection. Your local log was not modified.'); return; }
-  if(typeof text!=='string'||!text.trim()){ alert('No backup found on the sheet yet. Your local log was not modified.'); return; }
-  const lines=text.split('\n').filter(Boolean);
-  const parseable=lines.filter(l=>{ try{ JSON.parse(l); return true; }catch{ return false; } });
-  if(!parseable.length){ alert('That backup looked malformed and could not be read. Your local log was not modified.'); return; }
-  const res=importBackup(text);
-  finishImport(res);
+  restoreFromText(text,'sheet');
 }
 
 /* Self-update. A new build on the host is noticed on launch and hourly, but
@@ -19096,12 +19132,8 @@ $('#dlg').addEventListener('cancel',e=>e.preventDefault());
 $('#fileIn').onchange=e=>{
   const f=e.target.files&&e.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{
-    if(session&&!confirm('You have a session in progress. Restoring now will replace your log underneath it.\n\nFinish or end that session first. Continue anyway?')){ return; }
-    const res=importBackup(String(r.result));
-    finishImport(res);
-  };
-  r.onerror=()=>alert('Could not read that file.');
+  r.onload=()=>restoreFromText(String(r.result),'file');
+  r.onerror=()=>alert('Could not read that file. Your log was not modified.');
   r.readAsText(f); e.target.value='';
 };
 

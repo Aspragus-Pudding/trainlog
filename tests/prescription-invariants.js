@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -2683,6 +2683,43 @@ section('62. tutorial: docs/tutorial.md embedded, tiers, full sentences, real ta
   ok(missing.length===0,'every [data-tour] target in the guide exists in the app',missing.join(' '));
   ok(new Set(steps.map(st=>st.id)).size===steps.length,'step ids are unique (the first-session hints remember each one)','');
   console.log('  '+steps.length+' steps · first session '+(t1?t1.steps.length:0)+' · embedded = file · ≥ 8 words each · targets exist');
+}
+
+/* ─── 63. v1.60: backups without Sheets — one validated restore path, a weekly reminder ─── */
+section('63. backups: restore validates before merging; reminder when the last backup of either kind is a week old');
+{
+  const ev=[set('bench','a',185,5,8,10),set('bench','b',190,5,8,3)];
+  // restore: validated, merged, idempotent — from a file or the sheet, the same path
+  { const A=load(ev), before=JSON.stringify(A.sets());   // (A.LOG is the array as loaded; an import replaces it)
+    A.restoreFromText('not a backup at all\n{"hello":1}\n','file');
+    ok(JSON.stringify(A.sets())===before,'a file that isn\'t a Trainlog backup imports nothing (the log is untouched)','');
+    A.restoreFromText('','sheet');
+    ok(JSON.stringify(A.sets())===before,'an empty sheet imports nothing','');
+    const B=load([...ev,set('squat','c',225,5,8,2)]), text=B.backupText();
+    const r1=A.restoreFromText(text+'\ngarbage line\n','file');
+    ok(r1&&r1.added===1&&r1.skipped===1&&A.sets().some(e=>e.exercise_id==='squat'),'a real backup merges by event (1 new), and an unreadable line is skipped and counted',JSON.stringify(r1&&{added:r1.added,skipped:r1.skipped}));
+    const n=A.sets().length, r2=A.restoreFromText(text,'sheet');
+    ok(r2&&r2.added===0&&A.sets().length===n,'restoring the same backup again — file or sheet — changes nothing',''); }
+  // the reminder: either kind of backup counts; "not now" waits for the next one to go stale
+  { const A=load([]);
+    ok(A.backupDue()===null,'nothing logged: no reminder','');
+    const B=load(ev);   // first set 10 days ago, never backed up
+    const d=B.backupReminder();
+    ok(d&&d.last===0&&d.days>=7,'never backed up, first set over a week ago: the reminder shows',JSON.stringify(d));
+    B.STORE.setItem('trainlog.lastExport',String(Date.now()-3*864e5));
+    ok(B.backupReminder()===null,'a file saved 3 days ago: no reminder','');
+    B.STORE.setItem('trainlog.lastExport',String(Date.now()-9*864e5)); B.STORE.setItem('trainlog.lastSync',String(Date.now()-864e5));
+    ok(B.backupReminder()===null,'an old file but a sheet sync yesterday: no reminder (either kind counts)','');
+    B.STORE.setItem('trainlog.lastSync',String(Date.now()-8*864e5));
+    const due=B.backupReminder(); ok(due&&due.days===8,'the newest backup is 8 days old: the reminder shows',JSON.stringify(due));
+    B.getCFG().backupReminderDismissed={for:due.last,at:new Date().toISOString()};
+    ok(B.backupReminder()===null,'"Not now": hidden for this occurrence','');
+    B.getCFG().backupReminderDismissed={for:due.last,at:new Date(Date.now()-8*864e5).toISOString()};
+    ok(B.backupReminder()!==null,'still no new backup a week after "not now": it comes back','');
+    B.getCFG().backupReminderDismissed={for:due.last,at:new Date().toISOString()};
+    B.STORE.setItem('trainlog.lastExport',String(Date.now()-10*864e5+864e5*0)); B.STORE.setItem('trainlog.lastSync',String(Date.now()-7.5*864e5));
+    ok(B.backupReminder()!==null,'a newer backup that has gone stale since: a new occurrence, so it shows again',''); }
+  console.log('  restore: validated, merged by event, idempotent, same path for file and sheet · reminder: either kind, a week, "not now" per occurrence');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

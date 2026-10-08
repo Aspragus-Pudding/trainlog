@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.60.0 — 2026-10-08
+- A card on the Progress tab reminds you to back up when your last backup, whether a saved file or your backup sheet, is over a week old. "Not now" puts it off until it's due again.
+- The reminder after a session follows the same rule, so the two never disagree. It used to count only sessions since your last saved file.
+- Restore from backup now checks the file is a Trainlog backup before merging anything. It reports any lines it couldn't read, and your log is untouched if the file is wrong.
+- Saving and restoring a backup file work without Google. The sheet stays optional.
+
 ## 1.59.1 — 2026-10-08
 - Fix: past sessions showed pull-ups, chin-ups and dips as a bare number, such as "60 lb" for 60 lb of assistance.
 - They now read "60 lb assist", "+20 lb" or "bodyweight", matching the set card.
