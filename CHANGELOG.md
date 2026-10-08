@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.58.0 — 2026-10-07
+- New "Don't care about" in setup and Edit program, for muscles and for movements.
+- Muscles you don't care about are picked last. They still appear when nothing else fits the slot, and the preview says so.
+- Movements you don't care about give their accessory slots to another movement that trains the same muscles (pull-downs → a row that still hits your lats). Main lifts never move, and no muscle drops under its typical weekly range because of it.
+- The workout preview shows each change with a "your preference" chip and a one-tap Undo. Workouts you built or saved yourself are never changed, and neither are the suggested weights.
+
 ## 1.57.1 — 2026-10-07
 - Fix: the workout preview showed pull-ups, chin-ups and dips as the total load moved instead of the number you type. It now shows "100 lb assist", "+20 lb" or "bodyweight", matching the set card.
 - Fix: assisted movements no longer get a percentage warm-up ramp, which would have meant less assistance (a harder set) on a warm-up.

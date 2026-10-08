@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -2620,6 +2620,48 @@ section('60. equipment weights: bar, Smith, sled — never touch a logged event'
     ok(B.suggestFor(slm).lb===r0,'a sled weight never changes the suggestion (you log plates; it\'s display)',String(r0)); }
   ok(A.barKg(45)===20&&A.barKg(55)===25&&A.barKg(25)===11.5,'in kg a standard bar is 20 kg, the rest convert','');
   console.log('  bar weight → plate maths only · log untouched · Smith asked once per exercise · counterbalanced · sled display only · 20 kg bar');
+}
+
+/* ─── 61. v1.58: "don't care about this" — selection only ─── */
+section('61. deprioritise: muscles rank last, patterns hand over accessory slots, floors hold');
+{
+  const PATS=load([]).MOVEMENT_TYPES_LIST().map(t=>t.pattern);
+  const weekOf=(dep,extra)=>{ const A=load([]); const C=A.getCFG(); Object.assign(C,{goals:['bench','squat','deadlift'],deprioritised:dep},extra||{}); return {A,days:A.generatedDays()}; };
+  const tot=(A,days)=>{ const t={}; days.forEach(d=>d.slots.forEach(sl=>{ const ex=A.exById[sl.ex]; Object.entries(ex.vol||{}).forEach(([m,w])=>t[m]=(t[m]||0)+w*sl.sets); })); return t; };
+  const base=weekOf({muscles:[],patterns:[]}), bt=tot(base.A,base.days);
+  const prim=days=>days.map(d=>d.slots.filter(sl=>sl.role==='primary').map(sl=>sl.ex).join(',')).join('|');
+  let seed=58; const R=()=>{ seed^=seed<<13; seed>>>=0; seed^=seed>>17; seed^=seed<<5; seed>>>=0; return seed/4294967296; };
+  const combos=PATS.map(x=>[x]); for(let i=0;i<60;i++) combos.push(PATS.filter(()=>R()<0.25));
+  let primBad=[], floorBad=[], swaps=0;
+  combos.forEach(ps=>{ const w=weekOf({muscles:[],patterns:ps}), t=tot(w.A,w.days);
+    if(prim(w.days)!==prim(base.days)) primBad.push(ps.join('+'));
+    Object.keys(bt).forEach(m=>{ const r=w.A.ENGINE.weeklySets(m), floor=r?Math.min(bt[m],r[0]):bt[m]; if((t[m]||0)<floor-1e-9) floorBad.push(ps.join('+')+': '+m+' '+(t[m]||0)+' < '+floor); });
+    swaps+=w.days.flatMap(d=>d.slots).filter(sl=>sl.dep&&sl.dep.kind==='pattern').length; });
+  ok(primBad.length===0,'deprioritising a pattern never moves a primary slot ('+combos.length+' combinations)',primBad.slice(0,3).join(' | '));
+  ok(floorBad.length===0,'…and never drops a muscle\'s weekly sets under the bottom of its typical range (or under where it already was)',floorBad.slice(0,3).join(' | '));
+  ok(swaps>0,'the swaps really happen ('+swaps+' accessory slots handed over across the combinations)','');
+  // the example: pull-downs → a row that still trains lats; the chip says what moved
+  { const w=weekOf({muscles:[],patterns:['vertical_pull']}), sw=w.days.flatMap(d=>d.slots).filter(sl=>sl.dep&&sl.dep.fromPattern==='vertical_pull');
+    const kept=w.days.flatMap(d=>d.slots).filter(sl=>w.A.exById[sl.ex].pattern==='vertical_pull'&&sl.role!=='primary'&&!(sl.dep&&/kept/.test(sl.dep.kind)));
+    ok(sw.length>0&&sw.every(sl=>w.A.exById[sl.ex].pattern==='horizontal_pull'&&(w.A.exById[sl.ex].vol.lats||0)>=1&&/→/.test(sl.dep.why)),'pull-downs you don\'t care about become a row that still trains lats, and the preview says so',JSON.stringify(sw.map(sl=>sl.ex+': '+sl.dep.why)));
+    ok(kept.length===0,'no accessory vertical pull is left without a reason',JSON.stringify(kept.map(sl=>sl.ex))); }
+  // nothing else trains it: the slot stays and the chip says why
+  { const w=weekOf({muscles:[],patterns:['calf_raise']}), cs=w.days.flatMap(d=>d.slots).filter(sl=>w.A.exById[sl.ex].pattern==='calf_raise');
+    ok(cs.length>0&&cs.every(sl=>sl.role==='primary'||(sl.dep&&sl.dep.kind==='pattern-kept'&&/nothing else trains calves/.test(sl.dep.why))),'calf raises: nothing else trains calves directly, so the slot stays and says why',JSON.stringify(cs.map(sl=>sl.dep))); }
+  // muscles: ranked last where something else fits
+  { const w=weekOf({muscles:['rear_delts'],patterns:[]}), hp=w.days.flatMap(d=>d.slots).filter(sl=>w.A.exById[sl.ex].pattern==='horizontal_pull');
+    const rd=hp.filter(sl=>w.A.depByMuscle(w.A.exById[sl.ex]));
+    ok(rd.every(sl=>sl.dep&&sl.dep.kind==='muscle-kept'),'rear delts you don\'t care about: a rear-delt exercise only where nothing else fits, and then it says so',JSON.stringify(rd.map(sl=>sl.ex))); }
+  // a day you built is never touched
+  { const ov={slots:[{ex:'pulldown',role:'accessory',sets:3,reps:[8,12],rpe:8}]};
+    const w0=weekOf({muscles:[],patterns:[]}), id=w0.days[0].id;
+    const w=weekOf({muscles:['lats'],patterns:['vertical_pull']},{dayOverrides:{[id]:ov}});
+    ok(JSON.stringify(w.days[0].slots.map(sl=>sl.ex))==='["pulldown"]','a day you saved yourself is never re-picked',JSON.stringify(w.days[0].slots.map(sl=>sl.ex))); }
+  // selection only: the prescription for an exercise is identical with or without the preference
+  { const ev=[set('pulldown','a',150,10,8,3),set('lat_raise','b',20,15,8,3)];
+    const P=dep=>{ const A=load(ev); A.getCFG().deprioritised=dep; return ['pulldown','lat_raise'].map(ex=>{ const sl={ex,role:'accessory',reps:[8,12],rpe:8,sets:[],sets_target:3}; A.setSession({id:'D',slots:[sl],openIdx:0,adj:null,score:.7,ratings:{},startedAt:Date.now()}); const r=A.suggestFor(sl); return r.lb+'x'+r.pr.reps; }).join(' '); };
+    ok(P({muscles:[],patterns:[]})===P({muscles:['lats','side_delts'],patterns:['vertical_pull','abduction']}),'deprioritising never changes a prescription — only which exercise the app picks',''); }
+  console.log('  primary slots never move · weekly floors hold · pull-downs → rows · calves kept with a reason · muscles last · saved days untouched · prescriptions unchanged');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

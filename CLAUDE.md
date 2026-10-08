@@ -160,6 +160,13 @@ never swapped out mid-workout.
   (`bwInfoAt`; before the first reading, the first one, "assumed"). Never read
   `toLb(st.weight)` for pricing a class set. Handoffs between versions are
   proposals (`handoff` events → `classVersion`); goals stay on the movement.
+- **"Don't care about this" (v1.58):** `CFG.deprioritised` {muscles, patterns}.
+  Muscles rank last in `resolveEx` (only when every direct muscle is one you
+  don't care about). Patterns hand their ACCESSORY slots to another pattern
+  that trains the same muscle (`PATTERN_NEIGHBOURS` first) inside `buildDay`;
+  `applyDepFloor` undoes any swap that would leave a muscle under the bottom
+  of its typical range. Primary slots and saved days never move; it never
+  touches a prescription, a flag or the dial. Slots carry `dep` for the chip.
 - **`exPicker()`** is the one shared exercise picker (search + category chips +
   create-new). Swapping, adding, and goal-lift selection all route through it.
   Don't write a second bespoke picker — that's how mid-session swap ended up

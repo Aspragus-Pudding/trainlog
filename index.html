@@ -8536,7 +8536,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
   }
 }
 </script>
-<script type="application/json" id="whats-new">{"version":"1.57.1","lines":["Fix: the workout preview showed pull-ups, chin-ups and dips as the total load moved instead of the number you type. It now shows \"100 lb assist\", \"+20 lb\" or \"bodyweight\", matching the set card.","Fix: assisted movements no longer get a percentage warm-up ramp, which would have meant less assistance (a harder set) on a warm-up.","Session-length estimates use the same corrected numbers."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.58.0","lines":["New \"Don't care about\" in setup and Edit program, for muscles and for movements.","Muscles you don't care about are picked last. They still appear when nothing else fits the slot, and the preview says so.","Movements you don't care about give their accessory slots to another movement that trains the same muscles (pull-downs → a row that still hits your lats). Main lifts never move, and no muscle drops under its typical weekly range because of it.","The workout preview shows each change with a \"your preference\" chip and a one-tap Undo. Workouts you built or saved yourself are never changed, and neither are the suggested weights."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9103,7 +9103,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.57.1';
+const APP_VERSION='1.58.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -10478,9 +10478,29 @@ function newSlotFor(ex, role){
 
 /* Pick an exercise for a pattern+role. Goal lifts win a primary slot;
    otherwise rank by your own ratings, then by what you've actually used. */
-function resolveEx(pattern, role, used){
+/* "Don't care about this" (batch F part 3, v1.58). CFG.deprioritised: muscles rank
+   last in an auto-picked slot (an exercise counts only if every muscle it trains
+   directly is one you don't care about — a chin-up still trains lats); patterns
+   hand their accessory slots to another pattern that trains the same muscle
+   (buildDay), primary slots untouched, never leaving a muscle under the bottom
+   of its typical range (depFloor). Selection only — never a prescription, never
+   a workout you built, never a flag or the dial. */
+const depMuscles=()=>((CFG.deprioritised||{}).muscles)||[];
+const depPatterns=()=>((CFG.deprioritised||{}).patterns)||[];
+const directMuscles=ex=>Object.entries((ex&&ex.vol)||{}).filter(([,w])=>w>=1).map(([m])=>m);
+const depByMuscle=ex=>{ const d=depMuscles(), m=directMuscles(ex); return !!d.length&&!!m.length&&m.every(x=>d.includes(x)); };
+/* Which pattern takes a deprioritised pattern's accessory slot: the nearest
+   movement first (judgement default), then any other that trains the muscle directly. */
+const PATTERN_NEIGHBOURS={vertical_pull:['horizontal_pull'],horizontal_pull:['vertical_pull'],horizontal_press:['vertical_press','fly'],vertical_press:['horizontal_press'],
+  squat:['knee_extension','hinge'],hinge:['knee_flexion','squat'],knee_extension:['squat'],knee_flexion:['hinge'],elbow_flexion:['vertical_pull','horizontal_pull'],
+  elbow_extension:['horizontal_press','vertical_press'],fly:['horizontal_press'],abduction:['vertical_press']};
+const PATTERN_LABEL=Object.fromEntries(MOVEMENT_TYPES_LIST().map(t=>[t.pattern,t.short]));
+function MOVEMENT_TYPES_LIST(){ return [['horizontal_press','chest presses'],['vertical_press','shoulder presses'],['squat','squats'],['hinge','hinges'],['vertical_pull','pull-downs and pull-ups'],
+  ['horizontal_pull','rows'],['elbow_flexion','curls'],['elbow_extension','triceps work'],['abduction','lateral raises'],['knee_extension','leg extensions'],['knee_flexion','leg curls'],
+  ['calf_raise','calf raises'],['hip_abduction','hip abduction'],['hip_adduction','hip adduction'],['shrug','shrugs'],['trunk','ab work'],['fly','flyes']].map(([pattern,short])=>({pattern,short})); }
+function resolveEx(pattern, role, used, mus, o){
   // a named variant (incline, one-arm, a grip version) is auto-picked only once you've logged it
-  const pool=EX.filter(e=>e.pattern===pattern&&!used.has(e.id)&&!e.folded&&!e.manualOnly&&!(e.named&&!exposureCount(e.id)));
+  const pool=EX.filter(e=>e.pattern===pattern&&!used.has(e.id)&&!e.folded&&!e.manualOnly&&!(e.named&&!exposureCount(e.id))&&(!mus||(e.vol||{})[mus]>=1));
   if(!pool.length) return null;
   if(role==='primary'){
     const goal=pool.find(e=>(CFG.goals||[]).includes(e.id));
@@ -10495,7 +10515,7 @@ function resolveEx(pattern, role, used){
   // with no history every score ties, and library order put them first for new users
   // what you've actually done outranks the equipment answer (revealed preference): ten logged Smith
   // benches beat an unlogged barbell bench in a barbell gym. The equipment answer orders what you haven't done.
-  const score=e=>equipmentScore(e)+(e.specialty&&!exposureCount(e.id)?-500:0)+1000*(()=>{
+  const score=e=>(!(o&&o.ignoreDep)&&depByMuscle(e)?-1e9:0)+equipmentScore(e)+(e.specialty&&!exposureCount(e.id)?-500:0)+1000*(()=>{
     // a flag never steers the pick (the app warns, it doesn't decide) — exclusions above do
     const rs=LOG.filter(x=>x.type==='exercise_rating'&&x.exercise_id===e.id);
     if(rs.length>=3) return 100+rs.reduce((a,r)=>a+r.stimulus*2+r.enjoyment,0)/rs.length;
@@ -10507,6 +10527,7 @@ function resolveEx(pattern, role, used){
 /* Materialise one day from the split shape against the current block */
 function buildDay(tpl, phase){
   const used=new Set(), slots=[];
+  const id=tpl.name.toLowerCase().replace(/\s+/g,'_'), override=(CFG.dayOverrides||{})[id];
   // the phase's lead lift gets first claim on a primary slot
   const lead=phase&&phase.lead&&exById[phase.lead]?phase.lead:null;
   const easeOff=!!lastEarlyPain();
@@ -10517,6 +10538,26 @@ function buildDay(tpl, phase){
     if(!ex) return;
     if(bwClass(ex)){ const v=classVersion(ex.id); if(v!==ex.id&&!used.has(v)) ex=exById[v]; }   // the version you've switched to (handoff)
     used.add(ex.id);
+    const slot=make(pattern,role,ex);
+    // a muscle you don't care about ranked last: say so where it changed the pick, or where nothing else fit
+    if(role!=='primary'||!(CFG.goals||[]).length){
+      if(depByMuscle(ex)) slot.dep={kind:'muscle-kept', muscles:directMuscles(ex), why:'You don\'t care about '+directMuscles(ex).map(m=>ML[m].toLowerCase()).join(' and ')+', but nothing else fits this slot'};
+      else if(depMuscles().length){ const u2=new Set(used); u2.delete(ex.id); const free=resolveEx(pattern,role,u2,null,{ignoreDep:true});
+        if(free&&free.id!==ex.id&&depByMuscle(free)) slot.dep={kind:'muscle', muscles:directMuscles(free), why:'Picked over '+free.name+' — you don\'t care about '+directMuscles(free).map(m=>ML[m].toLowerCase()).join(' and ')}; }
+    }
+    // a pattern you don't care about: its accessory slot goes to another pattern that trains the same muscle
+    if(role!=='primary'&&depPatterns().includes(pattern)&&!override){
+      const m=directMuscles(ex)[0], order=[...(PATTERN_NEIGHBOURS[pattern]||[]),...MOVEMENT_TYPES_LIST().map(t=>t.pattern)];
+      let alt=null, altP=null;
+      for(const p of order){ if(p===pattern||depPatterns().includes(p)) continue; const e=m&&resolveEx(p,role,used,m); if(e){ alt=e; altP=p; break; } }
+      if(alt){ used.delete(ex.id); used.add(alt.id); const sw=make(altP,role,alt);
+        sw.dep={kind:'pattern', from:ex.id, fromPattern:pattern, muscle:m, why:'You don\'t care about '+(PATTERN_LABEL[pattern]||pattern)+': '+ex.name+' → '+alt.name+' (still '+ML[m].toLowerCase()+')'};
+        sw.depOrig=slot; slots.push(sw); return; }
+      slot.dep={kind:'pattern-kept', why:'Kept: you don\'t care about '+(PATTERN_LABEL[pattern]||pattern)+', but nothing else trains '+(m?ML[m].toLowerCase():'this')+' directly'};
+    }
+    slots.push(slot);
+  });
+  function make(pattern,role,ex){
     const sc=schemeFor(role,phase.type,phase.week,phase.weeks,ex,phase.taper);
     const refinedHyp=phase.refined&&phase.type==='hyp'&&!phase.onDeload;
     if(refinedHyp){
@@ -10540,19 +10581,17 @@ function buildDay(tpl, phase){
     // main lifts in strength blocks: one top set, the rest back-offs (§2.2)
     const topback=phase.type==='str'&&role==='primary'&&(CFG.goals||[]).includes(ex.id)&&mainEligible(ex)&&nSets>=2;
     const amrap=topback&&isRealizationWeek(phase);
-    slots.push({ex:ex.id, role, sets:amrap?1:nSets,
+    return {ex:ex.id, role, sets:amrap?1:nSets,
                 reps:sc.reps, rpe:sc.rpe, prio, joint:jointNote, repSrc:sc.repSrc, repMuscle:sc.repMuscle, repCapped:sc.repCapped,
                 ...(amrap?{structure:'amrap'}:topback?{structure:'topback', backoff:{n:nSets-1}}:{}),
                 ...(sc.ramp?{ramp:true}:{}), ...(sc.frozen?{frozen:sc.frozen}:{}),
                 // week 1: the last set of each isolation is an AMRAP — calibrates RPE (and feeds engine phase 2)
-                ...(refinedHyp&&phase.week===1&&role==='accessory'?{calib:true}:{})});
-  });
-  const id=tpl.name.toLowerCase().replace(/\s+/g,'_');
+                ...(refinedHyp&&phase.week===1&&role==='accessory'?{calib:true}:{})};
+  }
   // A permanently-saved edit to this day (see the preview's "also save to my
   // preset" toggle) replaces the generated slots outright; WEEKEDITS/PENDING
   // still layer temporary changes on top of whichever base this returns.
-  const override=(CFG.dayOverrides||{})[id];
-  return {id, name:tpl.name, slots:override?JSON.parse(JSON.stringify(override.slots)):slots};
+  return {id, name:tpl.name, slots:override?JSON.parse(JSON.stringify(override.slots)):slots, ...(override?{override:true}:{})};
 }
 /* Each roadmap block may carry its own week (b.week) or a preset (b.split,
    older); unset follows the program's (CFG.week, else the CFG.split preset).
@@ -10579,9 +10618,29 @@ function weekVolumeCap(days){
   }
   return days;
 }
+/* No pattern swap may leave a muscle's weekly sets under the bottom of its
+   typical range (or lower than it already was, if it started under). A swap
+   that would is undone, and its chip says why. */
+function applyDepFloor(days){
+  const sw=[]; days.forEach(d=>d.slots.forEach((sl,i)=>{ if(sl.depOrig) sw.push({d,i,sl}); }));
+  if(!sw.length) return days;
+  const tot=()=>{ const t={}; days.forEach(d=>d.slots.forEach(sl=>{ const ex=exById[sl.ex]; if(!ex) return; Object.entries(ex.vol||{}).forEach(([m,w])=>t[m]=(t[m]||0)+w*sl.sets); })); return t; };
+  sw.forEach(x=>{ x.d.slots[x.i]=x.sl.depOrig; }); const orig=tot();
+  sw.forEach(x=>{ x.d.slots[x.i]=x.sl; });
+  const floor=m=>{ const r=ENGINE.weeklySets(m); return r?Math.min(orig[m]||0,r[0]):(orig[m]||0)*0; };
+  for(let guard=0;guard<sw.length+1;guard++){
+    const t=tot(), low=Object.keys(orig).find(m=>(t[m]||0)<floor(m)-1e-9);
+    if(!low) break;
+    const x=sw.find(y=>y.d.slots[y.i]===y.sl&&(exById[y.sl.depOrig.ex].vol||{})[low]>0);
+    if(!x) break;
+    const back={...x.sl.depOrig, dep:{kind:'pattern-kept', why:'Kept: you don\'t care about '+(PATTERN_LABEL[x.sl.dep.fromPattern]||x.sl.dep.fromPattern)+', but moving it would leave '+ML[low].toLowerCase()+' under its typical range'}};
+    x.d.slots[x.i]=back;
+  }
+  return days;
+}
 function generatedDays(){
   const phase=currentPhase();
-  const days=weekVolumeCap(applyInterventions(addPracticeDays(addMaintenance(activeSplit().template.map(t=>buildDay(t,phase)), phase), phase), phase));
+  const days=weekVolumeCap(applyInterventions(addPracticeDays(addMaintenance(applyDepFloor(activeSplit().template.map(t=>buildDay(t,phase))), phase), phase), phase));
   if(phase&&phase.refined&&phase.type==='hyp'&&!phase.onDeload) days.forEach(capSessionVolume);
   return days;
 }
@@ -10599,7 +10658,7 @@ const DAYS=[
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
   profile:null,profileParams:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
-  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{}};
+  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{},deprioritised:{muscles:[],patterns:[]}};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
    from the address bar so it isn't left sitting in history. Each writes
@@ -12933,6 +12992,15 @@ function planCard(slot, key, controls){
     draw(); body.appendChild(wrap);
   }
   const fl=flagLine(slot,null); if(fl) body.appendChild(fl);
+  if(slot.dep){ const d=el('div','row'); d.style.cssText='gap:8px;align-items:baseline;margin-top:6px';
+    d.innerHTML='<span class="tiny" style="flex:none;padding:2px 8px;border-radius:99px;background:var(--card-2);color:var(--muted)">your preference</span><span class="dim tiny grow">'+esc(slot.dep.why)+'</span>';
+    const u=el('button','btn s ghost','Undo'); u.style.cssText='font-size:11.5px;padding:3px 8px;flex:none';
+    u.onclick=()=>{ const D=CFG.deprioritised||(CFG.deprioritised={muscles:[],patterns:[]});
+      if(slot.dep.fromPattern) D.patterns=(D.patterns||[]).filter(p=>p!==slot.dep.fromPattern);
+      else if(/^pattern/.test(slot.dep.kind)) D.patterns=(D.patterns||[]).filter(p=>p!==exById[slot.ex].pattern);
+      else D.muscles=(D.muscles||[]).filter(m=>!(slot.dep.muscles||[]).includes(m));
+      saveCfg(); render(); toast('Preference removed'); };
+    d.appendChild(u); body.appendChild(d); }
   const pct=pctOfBest(slot,lb);
   if(pct) body.appendChild(el('div','dim tiny',esc(pct))).style.marginTop='4px';
   body.appendChild(whyEl(explainRx(slot,pr,{idx:null,fresh:true}),key+':why:'+slot.ex));
@@ -13689,6 +13757,24 @@ function openInfo(exId){
   };
 }
 
+/* "Don't care about this": muscles (rank last when the app picks) and movement
+   patterns (their accessory slots go to another movement for the same muscles).
+   dep = {muscles:[], patterns:[]}, edited in place; onChange redraws. */
+function depChips(dep, onChange){
+  const box=el('div','');
+  box.appendChild(el('div','field','Muscles — the app picks other exercises first; these still appear when nothing else fits'));
+  const cm=el('div','chips');
+  MUSCLE_ORDER.forEach(m=>{ const on=dep.muscles.includes(m), b=el('button','chip',esc(ML[m])); b.style.cssText='font-size:12.5px;padding:6px 10px';
+    b.setAttribute('aria-pressed',on?'true':'false'); b.onclick=()=>{ dep.muscles=on?dep.muscles.filter(x=>x!==m):dep.muscles.concat(m); onChange(); }; cm.appendChild(b); });
+  box.appendChild(cm);
+  box.appendChild(el('div','field','Movements — their accessory slots go to another movement that trains the same muscles; main lifts never move')).style.marginTop='10px';
+  const cp=el('div','chips');
+  MOVEMENT_TYPES_LIST().forEach(t=>{ const on=dep.patterns.includes(t.pattern), b=el('button','chip',esc(t.short.charAt(0).toUpperCase()+t.short.slice(1))); b.style.cssText='font-size:12.5px;padding:6px 10px';
+    b.setAttribute('aria-pressed',on?'true':'false'); b.onclick=()=>{ dep.patterns=on?dep.patterns.filter(x=>x!==t.pattern):dep.patterns.concat(t.pattern); onChange(); }; cp.appendChild(b); });
+  box.appendChild(cp);
+  box.appendChild(el('div','dim tiny','Nothing is hidden: you can still add any of these yourself, and workouts you\'ve built or saved are never changed. A muscle never drops under its typical weekly range because of this.')).style.marginTop='8px';
+  return box;
+}
 /* Assist ratio: most assisted machines take off what the stack says (1:1); some
    are geared. Hidden behind a link unless you've set one. */
 function drawAssistRatio(host, ex){
@@ -17701,7 +17787,7 @@ function builderDefaults(rerun){
     experience:rerun?(CFG.experience||null):null, week:splitOf(programSplitSpec()).week, sessionLen:CFG.sessionLen||60,
     goals:[...new Set(CFG.goals||[])].filter(id=>exById[id]), est:{}, equipment:CFG.equipment||'mixed',
     // a fresh install's target is a placeholder made at load, not a date you chose
-    target:CFG.onboarded?(CFG.target||''):'', targetFixed:CFG.onboarded&&!!CFG.targetFixed, testDate:CFG.testDate||'', conds:normalizeConditions(CFG.conditions), excluded:[...(CFG.excludedEx||[])],
+    target:CFG.onboarded?(CFG.target||''):'', targetFixed:CFG.onboarded&&!!CFG.targetFixed, testDate:CFG.testDate||'', conds:normalizeConditions(CFG.conditions), excluded:[...(CFG.excludedEx||[])], dep:{muscles:[...((CFG.deprioritised||{}).muscles||[])],patterns:[...((CFG.deprioritised||{}).patterns||[])]},
     name:CFG.testerName||''};
 }
 const builderSteps=B=>B.path==='quick'?BUILDER_QUICK:BUILDER_FULL;
@@ -17741,7 +17827,7 @@ function applyBuilder(B, plan){
   // program's key and would drop pre-workout edits for nothing
   if(splitOf(programSplitSpec()).week.join()!==B.week.join()) CFG.week=[...B.week];
   CFG.sessionLen=B.sessionLen; CFG.goals=[...new Set(B.goals)]; CFG.equipment=B.equipment;
-  CFG.conditions=normalizeConditions(B.conds); CFG.excludedEx=[...new Set(B.excluded||[])]; CFG.testDate=B.testDate||null;
+  CFG.conditions=normalizeConditions(B.conds); CFG.excludedEx=[...new Set(B.excluded||[])]; if(B.dep) CFG.deprioritised=B.dep; CFG.testDate=B.testDate||null;
   if(!B.rerun) CFG.start=isoToday();
   if(B.target){ CFG.target=B.target; CFG.targetFixed=!!B.targetFixed; }
   else{ const t=new Date(); t.setDate(t.getDate()+plan.weeks*7); CFG.target=t.toISOString().slice(0,10); CFG.targetFixed=false; }
@@ -17860,7 +17946,12 @@ function drawBuilder(rerun){
     $('#bdt').onchange=e=>{ B.target=e.target.value; }; $('#bdf').onchange=e=>{ B.targetFixed=e.target.checked; }; $('#bdx').onchange=e=>{ B.testDate=e.target.value; };
   }
   if(step==='constraints') host.appendChild(conditionPicker(B.conds,n=>{ B.conds=n; openBuilder(); }));
-  if(step==='avoid') host.appendChild(B.conds.length?exclusionList(B.conds,B.excluded||[],n=>{ B.excluded=n; }):el('div','dim tiny','Nothing picked to work around, so nothing is flagged. You can add conditions later in Edit program.'));
+  if(step==='avoid'){
+    host.appendChild(B.conds.length?exclusionList(B.conds,B.excluded||[],n=>{ B.excluded=n; }):el('div','dim tiny','Nothing picked to work around, so nothing is flagged. You can add conditions later in Edit program.'));
+    B.dep=B.dep||{muscles:[],patterns:[]};
+    const dq=el('div','qblock'); dq.style.marginTop='14px'; dq.innerHTML='<div class="qlab">Anything you don\'t care about? <span class="dim tiny" style="font-weight:400">· optional</span></div>';
+    dq.appendChild(depChips(B.dep,()=>openBuilder())); host.appendChild(dq);
+  }
   if(step==='review'){
     const plan=builderPlan(B), list=el('div','qblock');
     const row=(b,i,dim)=>`<div style="padding:7px 0;border-top:1px solid var(--line);${dim?'opacity:.6':''}">
@@ -17936,7 +18027,7 @@ function openSettings(){
       tgt: CFG.target, srt: CFG.start, fixed: !!CFG.targetFixed,
       split: (s=>Array.isArray(s)?[...s]:s)(programSplitSpec()), syncUrl: CFG.syncUrl||'', feedbackUrl: CFG.feedbackUrl||'', testerName: CFG.testerName||'',
       energy: CFG.energy||'maintenance', conds: normalizeConditions(CFG.conditions), excluded: [...(CFG.excludedEx||[])],
-      jointUsual: {...(CFG.jointUsual||{})},
+      jointUsual: {...(CFG.jointUsual||{})}, dep:{muscles:[...((CFG.deprioritised||{}).muscles||[])],patterns:[...((CFG.deprioritised||{}).patterns||[])]},
       backoff: {...backoffCfg()}, autoIntervene: !!CFG.autoIntervene, dial: dialStated(null)
     };
   }
@@ -18171,6 +18262,7 @@ function openSettings(){
       host.appendChild(xb);
     }
 
+    { const dq=el('div','qblock'); dq.innerHTML='<div class="qlab">Don\'t care about</div>'; dq.appendChild(depChips(S.dep,()=>draw())); host.appendChild(dq); }
     // your usual lives on each condition's card; joints you've rated with no condition
     // picked (or with a usual already set) get it here instead
     // (before the consent screen is accepted the cards aren't shown, so every joint lands here)
@@ -18312,7 +18404,7 @@ function openSettings(){
     if(splitOf(S.split).key!==splitOf(programSplitSpec()).key){
       if(Array.isArray(S.split)) CFG.week=[...S.split]; else { CFG.split=S.split; CFG.week=null; }
     }
-    CFG.syncUrl=S.syncUrl; CFG.energy=S.energy; CFG.conditions=normalizeConditions(S.conds); CFG.excludedEx=[...new Set(S.excluded)]; CFG.jointUsual=S.jointUsual; CFG.backoff=S.backoff; CFG.autoIntervene=!!S.autoIntervene;
+    CFG.syncUrl=S.syncUrl; CFG.energy=S.energy; CFG.conditions=normalizeConditions(S.conds); CFG.excludedEx=[...new Set(S.excluded)]; CFG.jointUsual=S.jointUsual; CFG.deprioritised=S.dep; CFG.backoff=S.backoff; CFG.autoIntervene=!!S.autoIntervene;
     CFG.feedbackUrl=S.feedbackUrl; CFG.testerName=S.testerName;
     if(JSON.stringify(ROADMAP.map(b=>[b.type,b.weeks,b.week||b.split||null]))!==JSON.stringify(S.draft.map(b=>[b.type,b.weeks,b.week||b.split||null]))||splitOf(S.split).key!==splitOf(programSplitSpec()).key)
       append({type:'program_edit',what:'settings'});
