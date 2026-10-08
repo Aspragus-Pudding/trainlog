@@ -8536,7 +8536,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
   }
 }
 </script>
-<script type="application/json" id="whats-new">{"version":"1.57.0","lines":["The first time a Smith machine exercise comes up, the app asks what its bar weighs (15, 20, 25 lb, or counterbalanced ≈ 0) and remembers it for that exercise. You can change it on the info sheet.","Plate-loaded machines can have their empty sled or arm weight set on the info sheet. The set card then shows plates + sled as a rough total. You still log the plates, so your history doesn't change.","In kg, a standard bar is shown as 20 kg."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.57.1","lines":["Fix: the workout preview showed pull-ups, chin-ups and dips as the total load moved instead of the number you type. It now shows \"100 lb assist\", \"+20 lb\" or \"bodyweight\", matching the set card.","Fix: assisted movements no longer get a percentage warm-up ramp, which would have meant less assistance (a harder set) on a warm-up.","Session-length estimates use the same corrected numbers."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9103,7 +9103,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.57.0';
+const APP_VERSION='1.57.1';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -12888,7 +12888,7 @@ const SET_TIME_S=45, WARMUP_RUNG_S=40;
 function estSessionLength(day){
   let secs=0;
   day.slots.forEach(slot=>{
-    const lb=nextPrescription(slot).lb;
+    const lb=previewRx(slot).lb;
     secs+=warmupRamp(slot,lb||0).length*WARMUP_RUNG_S;
     secs+=slot.sets*(SET_TIME_S+(REST_BY_ROLE[slot.role]||120));
   });
@@ -12899,9 +12899,15 @@ function estSessionLength(day){
    collapsed, and the explanation line. Both the training-tab preview and the
    "Preview workout" sheet call this, so they can't drift apart. */
 const WARM_OPEN=new Set();
+/* The preview's prescription (no session yet): nextPrescription, handed back as the
+   number you type for the bodyweight class (it prices on system load). */
+function previewRx(slot){
+  const pr=nextPrescription(slot);
+  return bwClass(slot.ex)&&pr&&pr.lb!=null?classTypedRx(slot,{pr,lb:pr.lb,trace:[]}).pr:pr;
+}
 function planCard(slot, key, controls){
-  const ex=exById[slot.ex], pr=nextPrescription(slot), lb=pr.lb;
-  const loadTxt=isBW(ex)?(lb?'+'+fmt(lb,0)+' lb':'bodyweight'):(lb!=null?fmt(lb,0)+' lb':'—');
+  const ex=exById[slot.ex], pr=previewRx(slot), lb=pr.lb;
+  const loadTxt=bwClass(ex)?(lb==null?'—':typedLabel(slot.ex,{value:lb,unit:'lb'})):isBW(ex)?(lb?'+'+fmt(lb,0)+' lb':'bodyweight'):(lb!=null?fmt(lb,0)+' lb':'—');
   const reps=lb!=null&&pr.reps!=null?String(pr.reps):fmtRange(slot.reps);
   const {box,body}=exCard(slot,{rx:lb!=null?{lb,reps:pr.reps}:null});
   for(let j=0;j<slot.sets;j++){
@@ -14333,7 +14339,8 @@ function openEditEvent(slot,orig,title){
    3+ on this pattern also extends the ramp, on top of readiness. */
 function warmupRamp(slot, workingLb){
   const ex=exById[slot.ex];
-  if(!workingLb||ex.load==='bodyweight'||isStackLike(ex)) return [];
+  // an assisted movement warms up with more assistance, not a percentage of it — no ramp offered
+  if(!workingLb||ex.load==='bodyweight'||isStackLike(ex)||(bwClass(ex)&&bwClass(ex).mode==='assist')) return [];
   const score = session&&session.score!=null ? session.score : 0.7;
   const jointExtend = slot.joint&&slot.joint.level>=2;
   let steps;

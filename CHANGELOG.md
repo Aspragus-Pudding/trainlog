@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.57.1 — 2026-10-07
+- Fix: the workout preview showed pull-ups, chin-ups and dips as the total load moved instead of the number you type. It now shows "100 lb assist", "+20 lb" or "bodyweight", matching the set card.
+- Fix: assisted movements no longer get a percentage warm-up ramp, which would have meant less assistance (a harder set) on a warm-up.
+- Session-length estimates use the same corrected numbers.
+
 ## 1.57.0 — 2026-10-07
 - The first time a Smith machine exercise comes up, the app asks what its bar weighs (15, 20, 25 lb, or counterbalanced ≈ 0) and remembers it for that exercise. You can change it on the info sheet.
 - Plate-loaded machines can have their empty sled or arm weight set on the info sheet. The set card then shows plates + sled as a rough total. You still log the plates, so your history doesn't change.
