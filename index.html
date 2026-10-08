@@ -150,6 +150,10 @@ section{display:none;padding-top:14px} section.on{display:block}
 .volnum{width:52px;text-align:right;font-size:12.5px;color:var(--muted);flex:none}
 
 dialog{border:none;padding:0;background:transparent;max-width:540px;width:calc(100% - 20px);color:var(--ink)}
+.tourspot{position:fixed;border-radius:12px;pointer-events:none;z-index:2147483000;box-shadow:0 0 0 200vmax var(--backdrop);outline:2px solid var(--accent);outline-offset:2px;transition:top .15s,left .15s,width .15s,height .15s}
+.tourspot.light{box-shadow:0 0 0 200vmax color-mix(in srgb, var(--backdrop) 40%, transparent)}
+.tourcard{position:fixed;left:12px;right:12px;max-width:440px;margin:0 auto;z-index:2147483001;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;color:var(--ink);box-shadow:0 10px 30px color-mix(in srgb, var(--backdrop) 60%, transparent)}
+.tourcard h3{font-size:16px;margin:0 0 6px}.tourcard p{font-size:14px;line-height:1.5;margin:0;color:var(--muted)}
 dialog::backdrop{background:var(--backdrop,rgba(6,8,12,.78))}
 dialog:focus,dialog:focus-visible{outline:none}
 /* the builder's Back / Next / accept row stays on screen however long the step
@@ -205,6 +209,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
       <div class="day" id="dy">Dashboard</div>
     </div>
     <div class="ctxbtns">
+      <button class="notebtn" id="tourBtn" aria-label="Show me around this screen" style="font-weight:700;font-size:17px">?</button>
       <button class="notebtn" id="noteBtn" aria-label="Quick note">✎</button>
       <button class="skipbtn" id="skipTop" hidden>Leave ›</button>
     </div>
@@ -8536,7 +8541,169 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
   }
 }
 </script>
-<script type="application/json" id="whats-new">{"version":"1.58.0","lines":["New \"Don't care about\" in setup and Edit program, for muscles and for movements.","Muscles you don't care about are picked last. They still appear when nothing else fits the slot, and the preview says so.","Movements you don't care about give their accessory slots to another movement that trains the same muscles (pull-downs → a row that still hits your lats). Main lifts never move, and no muscle drops under its typical weekly range because of it.","The workout preview shows each change with a \"your preference\" chip and a one-tap Undo. Workouts you built or saved yourself are never changed, and neither are the suggested weights."]}</script>
+<script type="text/markdown" id="tutorial-md"># How Trainlog works
+
+Trainlog builds your program, suggests the weight and reps for every set, and adjusts as you log. Every number it suggests can explain itself, and nothing it proposes happens until you accept it. Your log stays on your phone.
+
+This guide is also the app's tour. Each heading below is one step, and the "?" at the top of each screen walks you through that screen's part of it.
+
+## Your first session {tier:1}
+
+### Start your first session `[data-tour="start"]`
+Your first session is ready to go whenever you are at the gym. The app keeps your place in the program by sessions rather than by days, so a missed day never skips a workout.
+
+### The check-in `[data-tour="checkin"]`
+Before each workout the check-in asks how you slept, how you feel and how sore you are. Three means normal, and only low answers change anything, mostly by lightening the work for the muscles that are sore.
+
+### An exercise `#v-work .ex` {when:session}
+Each exercise is a card. Open it to see the suggested weight and reps for your first set, worked out from your history and today's check-in.
+
+### Weight and reps `[data-tour="weight"]`
+The amber numbers are suggestions, and you can change either one before logging. Change the weight and the reps recompute to hit the target effort, or the other way round, and whatever you set turns white.
+
+### How hard it was `[data-tour="rpe"]`
+RPE is how hard the set was: ten means nothing left, nine means one rep left, and eight means about two. The next set is priced from what you enter here, so an honest number works better than an ambitious one.
+
+### Why this number `[data-tour="why"]`
+This line says why the numbers are what they are. Tap it to see every step behind the suggestion, from your last set to today's check-in.
+
+### Finish `[data-tour="finish"]`
+When you are done, finish the session here. It asks a couple of optional questions about how it went and saves everything to your log.
+
+### Progress `nav [data-tab="hist"]` {after:first-session}
+The Progress tab is where your lifts' trends, the reasons behind each suggestion and how well the suggestions fit you build up over your next few sessions.
+
+## Dashboard {tab:dash}
+
+### Your target date `[data-tour="dash-hero"]`
+The top card counts down to your target date, projected from how often you actually train rather than from the calendar. Miss sessions and the date moves out; train more often and it comes closer. The bars underneath are your blocks in order.
+
+### Proposals `[data-tour="proposals"]`
+Cards here are proposals, such as a deload week, a change for a lift that has stalled, or switching between the assisted and unassisted version of an exercise. Nothing changes until you accept one, and declining hides the card for a while.
+
+### Start training `[data-tour="start"]`
+Start training opens today's workout. The app picks the day from your rotation, not from the weekday, so the program carries on from wherever you left it.
+
+### Today's bands `[data-tour="dash-bands"]`
+This card sums up today in four words, Green, Yellow, Orange and Red, for readiness, for each joint against how it usually feels, and for fatigue. Each line says what the app is doing about it, so a band never changes anything without telling you. The readiness score itself only sets how long your warm-up is.
+
+### Volume this week `[data-tour="dash-volume"]`
+Volume counts hard sets per muscle this week, with half credit for muscles an exercise trains indirectly. The ticks mark a typical range, and those numbers are judgement defaults rather than measured limits.
+
+### Your phases `[data-tour="dash-phases"]`
+Your phases lists the blocks of your program in order, with the one you are in highlighted. Their dates are worked out from your sessions, so they shift if you train more or less often than planned.
+
+### Recent bests `[data-tour="dash-bests"]`
+Recent bests shows the best estimated one-rep max for each lift you have logged. It is an estimate from your sets, and it is more reliable from heavy sets of a few reps than from long ones.
+
+### Edit program `[data-tour="edit-program"]`
+Edit program is where you change your blocks, goals, schedule, conditions and preferences. After a program change the next session is a calibrating one, with no step up in load while it settles.
+
+## Workout {tab:work}
+
+### Each exercise `#v-work .ex`
+Each exercise is a card, and tapping it opens the set panel. The order is a suggestion, and the card's controls let you move, swap or add exercises without changing your program.
+
+### Weight and reps `[data-tour="weight"]`
+The weight and reps are suggested in amber. Change either one and the other recomputes to hit the target effort. For pull-ups, chin-ups, dips and assisted machines you type what is on the machine, and the line underneath shows what you are actually lifting.
+
+### RPE `[data-tour="rpe"]`
+RPE records how hard the set was: ten means nothing left, nine one rep left, and eight about two. The next suggestion is built from it, so be honest rather than ambitious.
+
+### Why these numbers `[data-tour="why"]`
+The line under the numbers says why they are what they are. Tap it to see each step: your last set, readiness, a sore muscle, a joint, a focused deload, the dial, and the guards that stop a single session from jumping too far.
+
+### Log set `[data-tour="logset"]`
+Log set saves the set and starts the rest timer. During the session you can tap a logged set to edit or delete it, and the change is recorded as a correction rather than by rewriting the original.
+
+### Set types `[data-tour="technique"]`
+Set types change how a set is done and logged: straight sets, myo-reps, rest-pause, drop sets and all-out sets. Tap a type to read what it means before you use it.
+
+### Modify `[data-tour="modify"]`
+Modify records how you did the exercise, such as a pause, a tempo, a shorter range, a grip, straps or the bar position. A modified version keeps its own history, so it never distorts the normal one.
+
+### The rest timer `#rest`
+The rest timer runs after each set and lets you know when it is time to go again. It sits at the bottom of the screen, and the page leaves room so it never covers the Log set button.
+
+### Finish session `[data-tour="finish"]`
+Finish session saves the workout. It asks how your joints felt on the exercises that matter for them and lets you add a diary note, and both are optional.
+
+### Leave a note `#noteBtn`
+The pencil at the top sends a note to whoever gave you the app, from any screen. Use it for anything that looks wrong or confusing, and it records which screen you were on.
+
+## Lifts {tab:lifts}
+
+### Your main lifts `#v-lifts .card`
+Your main lifts each have a card with the current estimate, the typical weekly set range for the muscle they train, and how they progress. Every exercise also has an info sheet, opened from its workout card or the library, which holds its history, coaching cues, your setup notes, its smallest jump, any warnings and the dial for that exercise.
+
+### The library `[data-tour="library"]`
+The library holds every built-in exercise, searchable by name, muscle or equipment, so typing smith, cable or band works. You can add your own exercise too, and if it is a version of a built-in one it inherits that exercise's cues and warnings.
+
+### Your data `[data-tour="data"]`
+Your data stays on this phone. This card shows how much is stored and which version of the app you are running.
+
+### Save a backup `[data-tour="backup"]`
+Save backup hands a copy of your whole log to the share sheet, so you can keep it in Files or anywhere else. Do it now and then, because browser storage can be cleared without warning.
+
+### Restore `[data-tour="restore"]`
+Restore from backup reads a backup file and merges it in event by event. Importing the same file twice changes nothing, and it never deletes anything newer.
+
+### This guide `[data-tour="help"]`
+How this works opens these tours again, along with this whole guide written out in one place.
+
+## Progress {tab:hist}
+
+### Your main lifts `[data-tour="goal-card"]`
+Each main lift has a card with its estimated max over time, its recent best sets, and its training max during strength blocks. For pull-ups, chin-ups and dips it also shows the lift as a share of your bodyweight and the next milestone.
+
+### Why these numbers `[data-tour="why-numbers"]`
+Why these numbers lists, for your last session, every step that shaped each suggestion. If the dial has moved away from your setting because of what you have been lifting, it says so here.
+
+### How well the suggestions fit `[data-tour="accuracy"]`
+Suggestions measures how well the app fits you: how often you lifted the suggested load, how often your reps landed within two, and how often the effort was on target. Going lighter on a bad day is fine, because this measures fit rather than obedience.
+
+### Weekly volume `[data-tour="hist-volume"]`
+Weekly volume shows your hard sets per week over the last twelve weeks, so you can see a block build up and a deload drop off.
+
+### Readiness over time `[data-tour="hist-readiness"]`
+Readiness plots your check-in score session by session. A run of falling scores is one of the signals behind a deload proposal.
+
+### Joints over time `[data-tour="hist-joints"]`
+Joints shows how each joint has felt over your recent sessions, compared with how it usually feels. The joint ladder uses the same ratings to hold or lighten the load on the movements that use that joint.
+
+### Notes `[data-tour="notes"]`
+Notes collects what you have sent with the pencil, and you can mark each one done once it has been dealt with.
+
+### Sessions `[data-tour="sessions"]`
+Sessions lists every workout you have logged. Tap one to see its sets, how long it took and any diary entries you wrote.
+
+## Edit program {screen:settings}
+
+### Your blocks `[data-tour="set-blocks"]`
+Your blocks are the phases of the program in order. You can change a block's type, length, deload and focus muscles here, or rerun the program builder for a fresh plan.
+
+### Energy balance `[data-tour="set-energy"]`
+Energy balance tells the app whether you are eating to gain, maintain or lose weight. In a deficit it plans fewer sets, because recovery genuinely drops.
+
+### The dial `[data-tour="set-dial"]`
+The dial sets how hard suggestions push, one step either way. If your lifting keeps disagreeing with it at the right effort, it drifts a notch toward what you actually do and tells you on the Progress tab.
+
+### What you're working around `[data-tour="set-conditions"]`
+This is where you pick any injuries or conditions. Exercises that load them get a warning but are never blocked, and each condition's card holds its red-flag checks, an optional phase plan, and how that joint usually feels.
+
+### Not included automatically `[data-tour="set-exclusions"]`
+These are flagged exercises you have chosen to keep out of generated workouts. You can always add them yourself, and you can include them again here at any time.
+
+### Don't care about `[data-tour="set-dep"]`
+Don't care about lets you put muscles and movements last. Muscles you pick are chosen last, and movements give their accessory slots to another movement that trains the same muscles, without any muscle dropping under its typical weekly range.
+
+### Automatic backup `[data-tour="set-backup"]`
+Automatic backup sends your log to a Google Sheet after each session, if you were given a sheet address. Leave it blank and back up by hand from the Lifts tab instead.
+
+### Setup link `[data-tour="set-setuplink"]`
+Setup link is where you paste the link you were given, which connects your backup sheet and the feedback notes in one step.
+</script>
+<script type="application/json" id="whats-new">{"version":"1.59.0","lines":["The text slides are gone. New users get short hints during their first session, each pointing at the thing it describes, shown once and then gone.","Hints never cover Log set or the weight, reps and RPE controls. Tapping anywhere outside a hint closes it, and the tap still goes through. No hint appears while the rest timer is running.","A \"?\" at the top of each screen, and in Edit program, walks you through everything on that screen. Skip or Escape always closes it.","Lifts → How this works lists the tours, replays the first-session hints, and has the whole guide written out in one place."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9103,7 +9270,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.58.0';
+const APP_VERSION='1.59.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -10658,7 +10825,7 @@ const DAYS=[
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
   profile:null,profileParams:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
-  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{},deprioritised:{muscles:[],patterns:[]}};
+  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{},deprioritised:{muscles:[],patterns:[]},tour:{t1:'off',seen:{}}};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
    from the address bar so it isn't left sitting in history. Each writes
@@ -12226,6 +12393,7 @@ function render(){
   }
   LAST_RENDER_TAB=TAB;
   if(keepY!=null) window.scrollTo(0,keepY);
+  setTimeout(tourTick,60);
 }
 function renderInner(){
   const p=currentPhase();
@@ -12348,7 +12516,7 @@ function renderDash(){
   const _mlc=mainLiftRateCard();
   const differs=proj&&tgtDate&&Math.abs(proj.behindDays)>=1;
 
-  const hero=el('div','card pad');
+  const hero=el('div','card pad');hero.dataset.tour='dash-hero';
   hero.innerHTML=`<div style="text-align:center;margin-bottom:6px">
       <div class="count">${proj?proj.days:'—'} Days Out</div>
       <div class="countsub">${proj?'Projected '+longDate(proj.end):tgtDate?longDate(tgtDate):'No target set'}</div>
@@ -12376,7 +12544,7 @@ function renderDash(){
     </div>
     <div style="height:5px;background:var(--card-2);border-radius:3px;overflow:hidden;margin-top:10px">
       <div style="height:100%;width:${Math.round(p.week/p.weeks*100)}%;background:${TYPE_COLOR[p.type]};border-radius:3px"></div></div>`;
-  const go=el('button','btn go wide','Start training  →');
+  const go=el('button','btn go wide','Start training  →');go.dataset.tour='start';
   go.style.marginTop='12px'; go.onclick=()=>{TAB='work';render();};
   today.appendChild(go); v.appendChild(today);
 
@@ -12396,7 +12564,7 @@ function renderDash(){
   const lastReadiness=[...LOG].reverse().find(e=>e.type==='readiness');
   const bands=dashBands(lastReadiness);
   if(lastReadiness||bands.some(b=>b.joint)){
-    const rc=el('div','card pad');
+    const rc=el('div','card pad');rc.dataset.tour='dash-bands';
     let head='';
     if(lastReadiness){
       const score=readinessScoreFromEvent(lastReadiness);
@@ -12418,6 +12586,7 @@ function renderDash(){
 
   const vol=volumeThisWeek(), keys=Object.keys(LANDMARKS).filter(m=>vol[m]);
   const c=el('div','card pad');
+  c.dataset.tour='dash-volume';
   c.appendChild(el('div','row between','<span style="font-weight:650">Volume this week</span><span class="dim tiny">hard sets</span>'));
   if(!keys.length) c.appendChild(el('div','empty','Nothing logged this week yet.<br>Sets appear here against your landmarks.'));
   else{
@@ -12434,7 +12603,7 @@ function renderDash(){
   }
   v.appendChild(c);
 
-  const cl=el('div','card pad');
+  const cl=el('div','card pad');cl.dataset.tour='dash-phases';
   cl.appendChild(el('div','row between','<span style="font-weight:650">Your phases</span><span class="dim tiny">'+roadmapWeeks()+' weeks total</span>'));
   let acc=0;
   ROADMAP.forEach((b,i)=>{
@@ -12454,7 +12623,7 @@ function renderDash(){
 
   const prs=sets().filter(x=>isPRSet(x.id)).slice(-4).reverse();
   if(prs.length){
-    const cp=el('div','card pad');
+    const cp=el('div','card pad');cp.dataset.tour='dash-bests';
     cp.appendChild(el('div','row between','<span style="font-weight:650">Recent bests</span><span class="dim tiny">estimated 1RM</span>'));
     prs.forEach(x=>{
       const ex=exById[x.exercise_id], v2=setE1RM(x);
@@ -12465,7 +12634,7 @@ function renderDash(){
     v.appendChild(cp);
   }
 
-  const s=el('button','btn ghost wide','Edit program'); s.onclick=openSettings; v.appendChild(s);
+  const s=el('button','btn ghost wide','Edit program'); s.onclick=openSettings;s.dataset.tour='edit-program'; v.appendChild(s);
   v.appendChild(el('div','dim tiny','Trainlog v'+APP_VERSION+' — include this in any bug report')).style.cssText='text-align:center;margin:14px 0 4px';
 }
 
@@ -12793,7 +12962,7 @@ function renderWork(){
   addEx.onclick=openSessionAdd; v.appendChild(addEx);
   renderRehab(v);
   renderRehabPlan(v);
-  const fin=el('button','btn go wide','Finish session'); fin.onclick=openPost; v.appendChild(fin);
+  const fin=el('button','btn go wide','Finish session'); fin.dataset.tour='finish'; fin.onclick=openPost; v.appendChild(fin);
   const ee=el('button','btn ghost wide','End early'); ee.style.marginTop='8px';
   ee.onclick=openEndEarly; v.appendChild(ee);
 }
@@ -13023,7 +13192,7 @@ function renderPreview(v){
     <div style="font-size:27px;font-weight:790;letter-spacing:-.03em;margin:1px 0 2px">${esc(day.name)}</div>
     <div class="muted sm">${day.slots.length} exercises · ${day.slots.reduce((a,s)=>a+s.sets,0)} working sets${day.slots.length?' · ~'+estSessionLength(day)+' min (estimate)':''}</div>
     <div class="dim tiny" style="margin-top:5px">Based on how things stand now — the check-in may adjust this.</div>`;
-  const go=el('button','btn go wide', day.slots.length?'Start training  →':'No exercises — check your split');
+  const go=el('button','btn go wide', day.slots.length?'Start training  →':'No exercises — check your split');go.dataset.tour='start';
   go.style.marginTop='13px';
   if(day.slots.length) go.onclick=()=>{ startSession(day); PENDING=null; savePending(); }; else go.disabled=true;
   head.appendChild(go);
@@ -14153,9 +14322,9 @@ function entryPanel(slot,idx){
   const bwc=bwClass(slot.ex);
   if(bwc&&bwStale()&&!(session&&session.bwAsked)) p.appendChild(bodyweightAsk(slot));
   if(smithUnasked(ex)) p.appendChild(smithAsk(slot));
-  p.appendChild(stepper(bwc?(bwc.mode==='assist'?'Assistance':'Added (0 = bodyweight)'):'Weight',draft.weight,weightStep(draft.unit),
+  p.appendChild(tagTour(stepper(bwc?(bwc.mode==='assist'?'Assistance':'Added (0 = bodyweight)'):'Weight',draft.weight,weightStep(draft.unit),
     lockAnd('w',v=>{draft.weight=v;draft.alt=null;}),
-    draft.unit,{wide:true,typeable:true,min:0,suggested:!L.w&&draft.sugW}));
+    draft.unit,{wide:true,typeable:true,min:0,suggested:!L.w&&draft.sugW}),'weight'));
   if(bwc){ const bw=latestBodyweight(), t=draft.unit==='kg'?draft.weight*LB:draft.weight;
     p.appendChild(el('div','dim tiny',bw==null?'Log your bodyweight to see what you\'re lifting.'
       :(bwc.mode==='assist'?fmt(draft.weight)+' assist':t>0?'+'+fmt(draft.weight)+' added':'bodyweight')+' → lifting '+fmt(sysOf(slot.ex,t,bw),0)+' lb'
@@ -14163,12 +14332,12 @@ function entryPanel(slot,idx){
   const g=el('div','stepgrid'); g.style.marginTop='8px';
   g.appendChild(stepper('Reps',draft.reps,1,lockAnd('r',v=>{draft.reps=v;}),
     null,{typeable:true,min:1,max:100,suggested:!L.r&&draft.sugR}));
-  g.appendChild(stepper('RPE',draft.rpe,.5,lockAnd('rpe',v=>{draft.rpe=v;}),
-    null,{typeable:true,min:5,max:10}));
+  g.appendChild(tagTour(stepper('RPE',draft.rpe,.5,lockAnd('rpe',v=>{draft.rpe=v;}),
+    null,{typeable:true,min:5,max:10}),'rpe'));
   p.appendChild(g);
   p.appendChild(sessionRangeEl(slot)).style.marginTop='4px';
   {
-    const mb=el('button','warmtog',(modLabel(slot.modifiers)?'Modified: '+modLabel(slot.modifiers):'Pause, tempo, range or grip')+' ▸');
+    const mb=el('button','warmtog',(modLabel(slot.modifiers)?'Modified: '+modLabel(slot.modifiers):'Pause, tempo, range or grip')+' ▸');mb.dataset.tour='modify';
     mb.onclick=()=>openModifierEditor(slot.ex, slot.modifiers, mods=>{
       if(mods) slot.modifiers=mods; else delete slot.modifiers;
       seedDraft(slot); saveSession(); $('#dlg').close(); renderWork();
@@ -14192,7 +14361,7 @@ function entryPanel(slot,idx){
     p.appendChild(back);
   }else if(draft.suggested){
     p.appendChild(el('div','sugnote','Suggested — change either number and the other recomputes.'));
-    if(draft.why) p.appendChild(whyEl(draft.why,'e:'+slot.ex));
+    if(draft.why) p.appendChild(tagTour(whyEl(draft.why,'e:'+slot.ex),'why'));
   }
 
   if(ex.load==='barbell'&&ex.plateSet){
@@ -14232,7 +14401,7 @@ function entryPanel(slot,idx){
     d.style.margin='9px 0 2px'; p.appendChild(d);
   }
   // technique picker
-  const tp=el('div','chips'); tp.style.margin='11px 0 0';
+  const tp=el('div','chips'); tp.style.margin='11px 0 0';tp.dataset.tour='technique';
   Object.entries(TECHNIQUES).forEach(([k,t])=>{
     const c=el('button','chip',t.name);
     c.style.cssText='font-size:12.5px;padding:6px 11px';
@@ -14288,7 +14457,7 @@ function entryPanel(slot,idx){
   fl.querySelector('input').onchange=e=>{ draft.failed=e.target.checked; };
   p.appendChild(fl);
   const act=el('div','row'); act.style.marginTop='11px';
-  const log=el('button','btn pri grow',T.extend?`Log top set`:isTopBack(slot)&&!topSetOf(slot)?'Log top set':'Log set');
+  const log=tagTour(el('button','btn pri grow',T.extend?`Log top set`:isTopBack(slot)&&!topSetOf(slot)?'Log top set':'Log set'),'logset');
   log.onclick=()=>logSet(slot,idx,'straight');
   const warm=el('button','btn s','Warmup'); warm.onclick=()=>logSet(slot,idx,'warmup');
   act.append(log,warm);
@@ -15014,7 +15183,7 @@ function activeProposals(){
   return out;
 }
 function proposalCards(){
-  const ps=activeProposals(), box=el('div','');
+  const ps=activeProposals(), box=el('div','');if(ps.length) box.dataset.tour='proposals';
   ps.forEach(p=>{
     const c=el('div','card pad'); c.style.borderLeft='3px solid var(--accent)';
     c.innerHTML=`<div style="font-weight:650;margin-bottom:4px">${esc(p.title)}</div><div class="muted sm" style="line-height:1.5">${esc(p.body)}</div>`;
@@ -16815,7 +16984,7 @@ function jointChips(hostSel,store){
 
 function openCheckin(){
   const st={bodyweight:null,sleep:3,motivation:3,recovery:3,sore:{},joints:{}};
-  sheet(`<h2 style="font-size:26px;margin-bottom:14px">Readiness check-in</h2><div id="ck"></div>
+  sheet(`<h2 data-tour="checkin" style="font-size:26px;margin-bottom:14px">Readiness check-in</h2><div id="ck"></div>
     <div class="row" style="gap:8px">
       <button class="btn ghost grow" id="ckskip">Skip</button>
       <button class="btn go grow" id="ckgo">Start training</button></div>`);
@@ -17080,7 +17249,7 @@ function renderLifts(){
     c.appendChild(g2); v.appendChild(c);
   });
 
-  const libc=el('div','card pad');
+  const libc=el('div','card pad');libc.dataset.tour='library';
   const nCustom=(CFG.customEx||[]).length;
   libc.innerHTML=`<div class="row between" style="margin-bottom:4px">
       <span style="font-weight:650">Exercise library</span>
@@ -17093,7 +17262,7 @@ function renderLifts(){
   libc.appendChild(nb);
   v.appendChild(libc);
 
-  const lg=el('div','card pad');
+  const lg=el('div','card pad');lg.dataset.tour='data';
   lg.innerHTML='<div style="font-weight:650;margin-bottom:9px">Your data</div>';
   lg.appendChild(el('div','row between sm',`<span class="muted">Events</span><span>${LOG.length}</span>`));
   lg.appendChild(el('div','row between sm',`<span class="muted">Working sets</span><span>${sets().filter(s=>s.set_kind!=='warmup').length}</span>`));
@@ -17101,7 +17270,7 @@ function renderLifts(){
   const stat=el('div','row between sm',`<span class="muted">Storage</span><span class="dim" id="stg">checking…</span>`);
   lg.appendChild(stat);
   lg.appendChild(el('div','row between sm',`<span class="muted">Version</span><span class="dim">${APP_VERSION}</span>`));
-  const hw=el('button','btn ghost wide','How this works'); hw.style.marginTop='10px'; hw.onclick=()=>openTutorial(0); lg.appendChild(hw);
+  const hw=el('button','btn ghost wide','How this works'); hw.dataset.tour='help'; hw.style.marginTop='10px'; hw.onclick=openGuide; lg.appendChild(hw);
 
   const since=sessionsSinceExport();
   if(since>=6){
@@ -17117,14 +17286,14 @@ function renderLifts(){
     lg.appendChild(el('div','row between sm',
       `<span class="muted">Auto-sync</span><span class="dim">${ls?'last '+new Date(ls).toLocaleDateString(undefined,{month:'short',day:'numeric'}):'not yet'}</span>`));
 
-  const dl=el('button','btn pri wide','Save backup'); dl.style.marginTop='12px';
+  const dl=el('button','btn pri wide','Save backup'); dl.dataset.tour='backup'; dl.style.marginTop='12px';
   dl.onclick=shareBackup; lg.appendChild(dl);
   if((CFG.syncUrl||'').trim()){
     const sy=el('button','btn ghost wide','Send to sheet now'); sy.style.marginTop='8px';
     sy.onclick=()=>syncNow(false).then(()=>render()); lg.appendChild(sy);
   }
 
-  const imp=el('button','btn ghost wide','Restore from backup'); imp.style.marginTop='8px';
+  const imp=el('button','btn ghost wide','Restore from backup'); imp.dataset.tour='restore'; imp.style.marginTop='8px';
   imp.onclick=()=>$('#fileIn').click(); lg.appendChild(imp);
   if((CFG.syncUrl||'').trim()){
     const rs=el('button','btn ghost wide','Restore from sheet'); rs.style.marginTop='8px';
@@ -17327,7 +17496,7 @@ function renderHist(){
   const goals=(CFG.goals||[]).filter(id=>exById[id]);
   goals.forEach(id=>{
     const ex=exById[id], ser=e1rmSeries(id);
-    const c=el('div','card pad');
+    const c=el('div','card pad'); c.dataset.tour='goal-card';
     const first=ser[0], last=ser[ser.length-1];
     const delta=(first&&last&&ser.length>1)?last.v-first.v:null;
     c.appendChild(el('div','row between',`
@@ -17380,7 +17549,7 @@ function renderHist(){
     const firsts=new Map(); if(lastSid) LOG.forEach(e=>{ if(e.type==='set'&&e.session_id===lastSid&&e.suggestion&&!firsts.has(e.exercise_id)) firsts.set(e.exercise_id,e); });
     const drift=dialDriftLines(), fdc=focusedDeloadCard();
     if(firsts.size||drift.length){
-      const cw=el('div','card pad'); cw.appendChild(el('div','row between','<span style="font-weight:650">Why these numbers</span><span class="dim tiny">last session</span>'));
+      const cw=el('div','card pad'); cw.dataset.tour='why-numbers'; cw.appendChild(el('div','row between','<span style="font-weight:650">Why these numbers</span><span class="dim tiny">last session</span>'));
       drift.forEach(x=>cw.appendChild(el('div','sm',esc(x.text))).style.cssText='margin-top:6px;color:var(--accent)');
       [...firsts.values()].forEach(e=>{ const lines=traceLines(e.suggestion.trace);
         const r=el('div',''); r.style.cssText='padding:7px 0;border-top:1px solid var(--line);margin-top:6px';
@@ -17393,7 +17562,7 @@ function renderHist(){
   // is the engine learning? suggestion accuracy by week
   {
     const acc=suggestionAccuracy(), tot=acc.reduce((a,b)=>({n:a.n+b.n,taken:a.taken+b.taken,on:a.on+b.on,rated:a.rated+b.rated,repsN:a.repsN+(b.repsN||0),repsNear:a.repsNear+(b.repsNear||0)}),{n:0,taken:0,on:0,rated:0,repsN:0,repsNear:0});
-    const ca=el('div','card pad');
+    const ca=el('div','card pad');ca.dataset.tour='accuracy';
     ca.appendChild(el('div','row between','<span style="font-weight:650">Suggestions</span><span class="dim tiny">is it learning?</span>'));
     if(tot.n<10) ca.appendChild(el('div','empty','Fills in once a few weeks of sets carry the suggestion they were given.'));
     else{
@@ -17412,7 +17581,7 @@ function renderHist(){
   }
   // weekly volume history
   const wk=weeklyVolumeSeries(12).filter(w=>w.sets>0);
-  const cv=el('div','card pad');
+  const cv=el('div','card pad');cv.dataset.tour='hist-volume';
   cv.appendChild(el('div','row between','<span style="font-weight:650">Weekly volume</span><span class="dim tiny">last 12 weeks</span>'));
   if(wk.length<2){
     cv.appendChild(el('div','empty','Two weeks of logging and this fills in.'));
@@ -17436,7 +17605,7 @@ function renderHist(){
   // display below so the two read consistently side by side
   const rSer=readinessSeries();
   if(rSer.length){
-    const cr=el('div','card pad');
+    const cr=el('div','card pad');cr.dataset.tour='hist-readiness';
     const last=rSer[rSer.length-1];
     cr.appendChild(el('div','row between',
       `<span style="font-weight:650">Readiness</span>
@@ -17447,7 +17616,7 @@ function renderHist(){
   }
 
   // joints
-  const cj=el('div','card pad');
+  const cj=el('div','card pad');cj.dataset.tour='hist-joints';
   cj.appendChild(el('div','row between','<span style="font-weight:650">Joints</span><span class="dim tiny">rolling, last 6 sessions</span>'));
   const flagged=JOINTS.map(j=>({j,t:jointTrend(j,6)})).filter(x=>x.t.score>0);
   if(!flagged.length){
@@ -17479,7 +17648,7 @@ function renderHist(){
 
   // notes
   const rep=notesReport();
-  const cn=el('div','card pad');
+  const cn=el('div','card pad');cn.dataset.tour='notes';
   cn.appendChild(el('div','row between',
     `<span style="font-weight:650">Notes</span><span class="dim tiny">${rep?rep.count+' open':'none open'}</span>`));
   if(!rep){
@@ -17542,7 +17711,7 @@ function renderHist(){
 
   // session history
   const ends=LOG.filter(e=>e.type==='session_end').slice(-30).reverse();
-  const cs=el('div','card');
+  const cs=el('div','card'); cs.dataset.tour='sessions';
   cs.appendChild(el('div','srowlab',`Sessions · ${LOG.filter(e=>e.type==='session_end').length} logged`));
   if(!ends.length) cs.appendChild(el('div','empty','No finished sessions yet.'));
   ends.forEach(e=>{
@@ -17882,7 +18051,7 @@ function drawBuilder(rerun){
     // Kilograms is hidden for now: the engine prices in lb and kg isn't carried through every
     // screen yet. Per-exercise kg (machines labelled in kg) still works from the set card.
     navBtn(B.rerun?'Cancel':'Skip setup','ghost',()=>{ if(B.rerun){ BUILDER=null; $('#dlg').close(); return; }
-      B.path='quick'; const plan=builderPlan(B); applyBuilder(B,plan); BUILDER=null; $('#dlg').close(); TAB='dash'; render(); if(!CFG.introSeen) setTimeout(()=>openTutorial(0),250); });
+      B.path='quick'; const plan=builderPlan(B); applyBuilder(B,plan); BUILDER=null; $('#dlg').close(); TAB='dash'; render(); if(!CFG.introSeen) startFirstRun(); });
     return;
   }
   if(step==='goal'){
@@ -17976,7 +18145,7 @@ function drawBuilder(rerun){
     navBtn(B.rerun?'Replace the rest of my program':'Use this program','pri',()=>{
       applyBuilder(B,plan); BUILDER=null; SETTINGS_DRAFT=null; $('#dlg').close(); TAB='dash'; render();
       toast(B.rerun?'Program rebuilt — your logged history is unchanged':'Program ready');
-      if(!CFG.introSeen) setTimeout(()=>openTutorial(0),250);
+      if(!CFG.introSeen) startFirstRun();
     });
     return;
   }
@@ -17986,26 +18155,137 @@ function drawBuilder(rerun){
 }
 
 /* ---------- Tutorial (spec §4.1) — six short cards, once, reachable from Lifts ---------- */
-function openTutorial(i){
-  const fb=!!(CFG.feedbackUrl||'').trim(), sync=!!(CFG.syncUrl||'').trim();
-  const cards=[
-    ['The check-in adjusts today\'s session','Before each workout it asks how you slept and how you feel. 3 means normal. It can lighten a session; it never adds to one.'],
-    ['Amber numbers are suggestions','Change anything before logging. Change the weight and the reps recompute, or the other way round — what you set turns white.'],
-    ['RPE','How hard a set was: 10 = nothing left, 8 = about two reps in reserve.'],
-    ['Every number explains itself','The line under each set says why it says what it says. Tap it for the detail.'],
-    ['Notes, setup and cues','The ✎ at the top sends feedback'+(fb?' to the person who gave you this app':'')+'. Setup notes and your own cues live in each exercise\'s info — they show on the card.'],
-    ['Your data stays on this device',sync?'It\'s also backed up to your sheet after each session.':'Back it up from the Lifts tab now and then — if the phone goes, so does the log.']];
-  const k=Math.max(0,Math.min(cards.length-1,i||0)), [t,b]=cards[k];
-  sheet(`<div class="dim tiny" style="margin-bottom:8px">${k+1} of ${cards.length}</div>
-    <h2 style="font-size:22px;margin-bottom:8px">${esc(t)}</h2>
-    <div class="muted sm" style="line-height:1.55;margin-bottom:16px">${esc(b)}</div>
-    <div class="row" style="gap:8px">
-      ${k?'<button class="btn ghost grow" id="tutb">Back</button>':'<button class="btn ghost grow" id="tuts">Skip</button>'}
-      <button class="btn ${k===cards.length-1?'go':'pri'} grow" id="tutn">${k===cards.length-1?'Got it':'Next'}</button></div>`);
-  const done=()=>{ CFG.introSeen=true; saveCfg(); $('#dlg').close(); render(); };
-  if($('#tutb')) $('#tutb').onclick=()=>openTutorial(k-1);
-  if($('#tuts')) $('#tuts').onclick=done;
-  $('#tutn').onclick=()=>k===cards.length-1?done():openTutorial(k+1);
+/* ---------- Guided tours (batch F part 4, v1.59) ----------
+   docs/tutorial.md is the source: each "##" is a tour (tier:1 the first session;
+   tab:… a screen; screen:settings Edit program) and each "###" a step, its target
+   in backticks. It's embedded byte-for-byte and doubles as the user guide.
+   One engine: dim the screen, cut out the target, a card with the step. It never
+   traps: taps pass through the dimming, a tap outside the card dismisses it (and
+   still reaches what you tapped), Skip and Escape always close, and a step whose
+   target isn't on screen is skipped.
+   Tier 1 follows your real first session: each hint appears once, when its
+   target first shows up, never while the rest timer runs, and never on top of
+   Log set or the steppers. Tier 2 is the "?" on each screen. */
+const tagTour=(n,name)=>{ if(n&&n.setAttribute) n.setAttribute('data-tour',name); return n; };
+function parseTutorial(md){
+  const out={intro:'',sections:[]}; let sec=null, st=null; const intro=[];
+  const attrs=t=>{ const m=t.match(/\{([^}]*)\}\s*$/), o={}; if(m) m[1].split(',').forEach(kv=>{ const [k,v]=kv.split(':').map(x=>x.trim()); if(k) o[k]=v==null?true:v; }); return o; };
+  const strip=t=>t.replace(/\{[^}]*\}\s*$/,'').trim();
+  String(md||'').split('\n').forEach(line=>{
+    if(/^## /.test(line)){ sec={title:strip(line.slice(3)).trim(),attrs:attrs(line),steps:[]}; out.sections.push(sec); st=null; return; }
+    if(/^### /.test(line)&&sec){ const raw=line.slice(4), m=raw.match(/`([^`]+)`/);
+      const title=strip(raw.replace(/`[^`]*`/,'')).trim();
+      st={id:(sec.attrs.tab||sec.attrs.screen||'t'+sec.attrs.tier)+':'+title.toLowerCase().replace(/[^a-z0-9]+/g,'-'),title,sel:m?m[1]:null,attrs:attrs(raw),body:''};
+      sec.steps.push(st); return; }
+    if(/^# /.test(line)) return;
+    const t=line.trim();
+    if(st) st.body=(st.body?st.body+' ':'')+t; else if(!sec&&t) intro.push(t); else if(!sec) intro.push('');
+  });
+  out.sections.forEach(x=>x.steps.forEach(y=>{ y.body=y.body.replace(/\s+/g,' ').trim(); }));
+  out.intro=intro.join('\n').trim();
+  return out;
+}
+const TUTORIAL=(()=>{ try{ return parseTutorial(document.getElementById('tutorial-md').textContent); }catch{ return {intro:'',sections:[]}; } })();
+const tourSection=k=>TUTORIAL.sections.find(x=>x.attrs.tab===k||x.attrs.screen===k||(k==='first'&&String(x.attrs.tier)==='1'))||null;
+let TOUR=null;   // {tier, steps, i, target} — one at a time
+function tourEl(sel){
+  if(!sel) return null;
+  try{ return [...document.querySelectorAll(sel)].find(e=>{ const r=e.getBoundingClientRect(); return r.width>0&&r.height>0&&!e.closest('dialog:not([open])'); })||null; }catch{ return null; }
+}
+const tourInView=e=>{ const r=e.getBoundingClientRect(); return r.bottom>40&&r.top<innerHeight-40; };
+/* Elements a hint must never sit on: Log set, the steppers, the rest bar. */
+const TOUR_PROTECT='[data-tour="logset"],[data-tour="weight"],[data-tour="rpe"],.stepgrid,#rest.on';
+function tourLayerFor(target){ const d=$('#dlg'); return d&&d.open&&d.contains(target)?d:document.body; }
+function tourEnd(){ const L=document.getElementById('tourLayer'); if(L) L.remove(); document.removeEventListener('pointerdown',tourOutside,true); document.removeEventListener('keydown',tourKey,true); TOUR=null; }
+function tourOutside(e){
+  const c=document.getElementById('tourCard'); if(c&&c.contains(e.target)) return;
+  // a tap anywhere else dismisses the hint — and still goes through to whatever was tapped
+  if(TOUR&&TOUR.tier===1) tourSeen(TOUR.step.id);
+  tourEnd();
+}
+function tourKey(e){ if(e.key==='Escape'){ if(TOUR&&TOUR.tier===1) tourSeen(TOUR.step.id); tourEnd(); } }
+function tourSeen(id){ const t=CFG.tour||(CFG.tour={t1:'off',seen:{}}); t.seen=t.seen||{}; t.seen[id]=true;
+  // the first-session hints end with the first session: the Progress hint is the last one
+  const sec=tourSection('first'), st=sec&&sec.steps.find(x=>x.id===id); if(st&&st.attrs.after==='first-session'&&t.t1==='on') t.t1='done';
+  saveCfg(); }
+function tourShow(step, target, buttons, light){
+  tourEnd(); TOUR={...(TOUR||{}), step, target};
+  const host=tourLayerFor(target), L=el('div',''); L.id='tourLayer';
+  const spot=el('div','tourspot'+(light?' light':'')); L.appendChild(spot);
+  const card=el('div','tourcard'); card.id='tourCard'; card.setAttribute('role','dialog'); card.setAttribute('aria-label',step.title);
+  card.innerHTML='<h3>'+esc(step.title)+'</h3><p>'+esc(step.body)+'</p>';
+  const row=el('div','row'); row.style.cssText='gap:7px;margin-top:11px;flex-wrap:wrap;justify-content:flex-end';
+  buttons.forEach(([label,fn,kind])=>{ const b=el('button','btn s'+(kind?' '+kind:''),esc(label)); b.onclick=e=>{ e.stopPropagation(); fn(); }; row.appendChild(b); });
+  card.appendChild(row); L.appendChild(card); host.appendChild(L);
+  tourPlace();
+  setTimeout(()=>{ document.addEventListener('pointerdown',tourOutside,true); document.addEventListener('keydown',tourKey,true); },0);
+}
+function tourPlace(){
+  const L=document.getElementById('tourLayer'); if(!L||!TOUR) return;
+  const t=TOUR.target; if(!t||!document.contains(t)){ tourEnd(); return; }
+  const r=t.getBoundingClientRect(), pad=5, spot=L.querySelector('.tourspot'), card=L.querySelector('.tourcard');
+  Object.assign(spot.style,{top:(r.top-pad)+'px',left:(r.left-pad)+'px',width:(r.width+pad*2)+'px',height:(r.height+pad*2)+'px'});
+  const ch=card.offsetHeight, H=innerHeight, gap=10;
+  const avoid=[r,...[...document.querySelectorAll(TOUR_PROTECT)].filter(e=>e!==t&&!t.contains(e)).map(e=>e.getBoundingClientRect())];
+  const clash=top=>avoid.some(a=>top<a.bottom+4&&top+ch>a.top-4);
+  const cands=[r.bottom+gap, r.top-gap-ch, 12, H-ch-12].filter(y=>y>=8&&y+ch<=H-8);
+  const top=cands.find(y=>!clash(y))??cands[0]??12;
+  card.style.top=top+'px';
+}
+/* Tier 2: the screen's tour, on demand. */
+function startTour(key){
+  const sec=tourSection(key);
+  const steps=sec?sec.steps.filter(st=>tourEl(st.sel)):[];
+  if(!steps.length){ toast('Nothing to show on this screen yet'); return; }
+  TOUR={tier:2, steps, i:0}; tourStep();
+}
+function tourStep(){
+  if(!TOUR||TOUR.tier!==2) return;
+  const st=TOUR.steps[TOUR.i], t=st&&tourEl(st.sel);
+  if(!st){ tourEnd(); return; }
+  if(!t){ if(TOUR.i<TOUR.steps.length-1){ TOUR.i++; return tourStep(); } tourEnd(); return; }
+  t.scrollIntoView({block:'center'});
+  const last=TOUR.i===TOUR.steps.length-1, n=TOUR.i;
+  setTimeout(()=>{ if(!TOUR) return; const keep={...TOUR};
+    tourShow({...st,title:st.title+'  ·  '+(n+1)+' of '+keep.steps.length},t,[
+      ...(n?[['Back',()=>{ TOUR=keep; TOUR.i=n-1; tourStep(); },'ghost']]:[]),
+      ['Skip',()=>tourEnd(),'ghost'],
+      [last?'Done':'Next',()=>{ if(last){ tourEnd(); return; } TOUR=keep; TOUR.i=n+1; tourStep(); },'pri']]);
+    TOUR={...keep, step:st, target:t}; tourPlace(); },160);
+}
+/* Tier 1: the first session's hints, each once, when its target first shows up. */
+function startFirstRun(){ CFG.introSeen=true; CFG.tour={t1:'on',seen:{}}; saveCfg(); setTimeout(tourTick,300); }
+function tourTick(){
+  if(TOUR){ tourPlace(); return; }
+  const tt=CFG.tour; if(!tt||tt.t1!=='on'||DEMO_QUIET) return;
+  if(document.body.classList.contains('resting')) return;          // a hint waits for the rest timer
+  const sec=tourSection('first'); if(!sec) return;
+  const pending=sec.steps.filter(st=>!(tt.seen||{})[st.id]);
+  if(!pending.length){ tt.t1='done'; saveCfg(); return; }
+  for(const st of pending){
+    if(st.attrs.after==='first-session'&&!LOG.some(e=>e.type==='session_end'&&!e.cancelled)) continue;
+    if(st.attrs.when==='session'&&!session) continue;
+    const t=tourEl(st.sel); if(!t||!tourInView(t)) continue;
+    TOUR={tier:1};
+    tourShow(st,t,[["Don't show again",()=>{ tt.t1='off'; saveCfg(); tourEnd(); },'ghost'],['Got it',()=>{ tourSeen(st.id); tourEnd(); setTimeout(tourTick,250); },'pri']],true);
+    TOUR={tier:1, step:st, target:t};
+    return;
+  }
+}
+/* "How this works": the tours, the first-session hints again, and the whole guide. */
+function openGuide(){
+  const tabs=[['dash','Dashboard'],['work','Workout'],['lifts','Lifts'],['hist','Progress']];
+  let html='<h2 style="font-size:22px;margin-bottom:6px">How this works</h2><div class="muted sm" style="line-height:1.55;margin-bottom:12px">'+esc(TUTORIAL.intro.split('\n')[0]||'')+'</div>'
+    +'<div class="qblock"><div class="qlab">Show me around</div><div class="chips" id="gTours"></div><div class="dim tiny" style="margin-top:6px">The ? at the top of each screen does the same for that screen.</div></div>'
+    +'<div class="qblock"><button class="btn s" id="gFirst">Replay the first-session hints</button></div>'
+    +'<div class="qblock" id="gDoc"><div class="qlab">The whole guide</div></div><button class="btn ghost wide" id="gClose">Close</button>';
+  sheet(html);
+  tabs.forEach(([k,lab])=>{ const b=el('button','chip',esc(lab)); b.onclick=()=>{ $('#dlg').close(); TAB=k; render(); setTimeout(()=>startTour(k),250); }; $('#gTours').appendChild(b); });
+  $('#gFirst').onclick=()=>{ startFirstRun(); $('#dlg').close(); TAB='dash'; render(); toast('The first-session hints will show again as you go'); };
+  $('#gClose').onclick=()=>$('#dlg').close();
+  const doc=$('#gDoc');
+  TUTORIAL.sections.forEach(x=>{ doc.appendChild(el('div','sm','<b>'+esc(x.title)+'</b>')).style.marginTop='12px';
+    x.steps.forEach(y=>{ const p=el('div','tiny'); p.style.cssText='margin-top:6px;line-height:1.5'; p.innerHTML='<span style="font-weight:600">'+esc(y.title)+'.</span> <span class="muted">'+esc(y.body)+'</span>'; doc.appendChild(p); }); });
 }
 /* Wipe everything back to a true first-run state. For testing the new-user
    flow, and for handing the app to someone else on a shared device. */
@@ -18033,7 +18313,7 @@ function openSettings(){
   }
   const S=SETTINGS_DRAFT;
 
-  sheet(`<h2 style="font-size:22px;margin-bottom:3px">Your program</h2>
+  sheet(`<div class="row between" style="align-items:flex-start"><h2 style="font-size:22px;margin-bottom:3px">Your program</h2><button class="notebtn" id="setTour" aria-label="Show me around Edit program" style="font-weight:700;font-size:17px">?</button></div>
     <div class="muted tiny" style="margin-bottom:15px">Blocks are an order, not dates. Change a length and everything after it shifts.</div>
     <div id="rm"></div>
     <button class="btn pri wide" id="rmsave" style="margin-top:4px">Save program</button>
@@ -18104,7 +18384,7 @@ function openSettings(){
     });
     host.appendChild(gl);
 
-    const bl=el('div','qblock');
+    const bl=el('div','qblock');bl.dataset.tour='set-blocks';
     bl.innerHTML=`<div class="qlab">Blocks <span class="dim tiny" style="font-weight:400">· ${S.draft.reduce((a,b)=>a+blockLen(b),0)} weeks total</span></div>`;
     S.draft.forEach((b,i)=>{
       const row=el('div',''); row.style.cssText='padding:12px 0;border-top:1px solid var(--line)';
@@ -18225,7 +18505,7 @@ function openSettings(){
     addRow.append(add,addD); bl.appendChild(addRow);
     host.appendChild(bl);
 
-    const en=el('div','qblock');
+    const en=el('div','qblock');en.dataset.tour='set-energy';
     en.innerHTML=`<div class="qlab">Energy balance</div>
       <div class="field">Changes generated volume and the readiness bar. Recoverable volume genuinely drops in a deficit.</div>`;
     const enc=el('div','chips');
@@ -18238,7 +18518,7 @@ function openSettings(){
     en.appendChild(el('div','anchor',ENERGY[S.energy].note));
     host.appendChild(en);
 
-    const cd=el('div','qblock');
+    const cd=el('div','qblock');cd.dataset.tour='set-conditions';
     cd.innerHTML=`<div class="qlab">What you're working around</div>
       <div class="field">Flags exercises that load the at-risk position. It only ever warns — it never removes an option or decides for you.</div>`;
     const usual={map:S.jointUsual, set:(j,v)=>{ if(v) S.jointUsual[j]=v; else delete S.jointUsual[j]; draw(); }};
@@ -18251,7 +18531,7 @@ function openSettings(){
     }
     host.appendChild(cd);
     if(S.conds.length||S.excluded.length){
-      const xb=el('div','qblock');
+      const xb=el('div','qblock');xb.dataset.tour='set-exclusions';
       xb.innerHTML='<div class="qlab">Not included automatically</div><div class="field">Ticked exercises are never put in your program by the app. Everything else flagged stays in, with a warning. Your choice either way.</div>';
       xb.appendChild(exclusionList(S.conds,S.excluded,n=>{ S.excluded=n; }));
       // exclusions that aren't flagged any more still show, so they can be undone
@@ -18262,7 +18542,7 @@ function openSettings(){
       host.appendChild(xb);
     }
 
-    { const dq=el('div','qblock'); dq.innerHTML='<div class="qlab">Don\'t care about</div>'; dq.appendChild(depChips(S.dep,()=>draw())); host.appendChild(dq); }
+    { const dq=el('div','qblock'); dq.dataset.tour='set-dep'; dq.innerHTML='<div class="qlab">Don\'t care about</div>'; dq.appendChild(depChips(S.dep,()=>draw())); host.appendChild(dq); }
     // your usual lives on each condition's card; joints you've rated with no condition
     // picked (or with a usual already set) get it here instead
     // (before the consent screen is accepted the cards aren't shown, so every joint lands here)
@@ -18279,7 +18559,7 @@ function openSettings(){
       host.appendChild(ub);
     }
 
-    const sy=el('div','qblock');
+    const sy=el('div','qblock');sy.dataset.tour='set-backup';
     sy.innerHTML=`<div class="qlab">Automatic backup</div>
       <div class="field">Paste the Google Apps Script URL from the setup guide. Every finished session then writes your whole log to that sheet.</div>
       <input type="text" id="syncu" value="${esc(S.syncUrl)}" placeholder="https://script.google.com/macros/s/..."
@@ -18290,7 +18570,7 @@ function openSettings(){
       if(v&&!SCRIPT_URL_RE.test(v)){ toast('That isn\'t an Apps Script web app address (it ends in /exec). Not changed.'); e.target.value=S.syncUrl; return; }
       S.syncUrl=v; };
     {
-      const sl=el('div','qblock');
+      const sl=el('div','qblock');sl.dataset.tour='set-setuplink';
       sl.innerHTML=`<div class="qlab">Setup link</div>
         <div class="field">Got a setup link from whoever gave you this app? Paste it here. On iPhone the home-screen app doesn't share Safari's storage, so a link opened in Safari doesn't reach it.</div>
         <input type="text" id="slink" placeholder="https://…?feedback=…" style="width:100%;background:var(--card-2);border:none;border-radius:9px;color:var(--ink);padding:11px;font:inherit;font-size:13px">`;
@@ -18331,7 +18611,7 @@ function openSettings(){
     }
     // the dial: stated intent, reconciled with what you actually lift (batch E §4)
     {
-      const dl=el('div','qblock');
+      const dl=el('div','qblock'); dl.dataset.tour='set-dial';
       dl.innerHTML='<div class="qlab">How hard should suggestions push?</div><div class="field">A starting bias of one step either way. If you keep lifting more (or less) than suggested at the right effort, it drifts a notch toward that and tells you on the Progress tab. You can set it per exercise on its info sheet too.</div>';
       dl.appendChild(dialChips(S.dial,v=>{ S.dial=v; draw(); })); host.appendChild(dl);
     }
@@ -18396,6 +18676,7 @@ function openSettings(){
   draw();
 
   $('#rmclose').onclick=()=>{ SETTINGS_DRAFT=null; $('#dlg').close(); };
+  if($('#setTour')) $('#setTour').onclick=()=>startTour('settings');
   $('#rmsave').onclick=()=>{
     S.draft.forEach(b=>b.label=TYPE_NAME[b.type]);
     CFG.roadmap=S.draft; CFG.goals=[...new Set(S.goals)]; CFG.target=S.tgt; CFG.start=S.srt; CFG.targetFixed=!!S.fixed;
@@ -18688,8 +18969,10 @@ function initUpdates(){
 
 function sheet(html){
   try{
+    if(TOUR) tourEnd();
     $('#dlgBody').innerHTML=html;
     const d=$('#dlg'); if(!d.open) d.showModal();
+    setTimeout(tourTick,120);
   }catch(err){
     console.error('sheet failed', err);
     $('#dlgBody').innerHTML=`<div style="text-align:center;padding:10px">
@@ -18752,7 +19035,7 @@ function tickRest(){
 }
 function stopRest(){ clearInterval(restIv); restIv=null; clearTimeout(restHide); restHide=null;
   document.body.classList.remove('resting'); rest={endsAt:0,total:0,label:'',fired:false};
-  saveRest(); $('#rest').classList.remove('on'); }
+  saveRest(); $('#rest').classList.remove('on'); setTimeout(tourTick,400); }
 function restoreRest(){
   try{ const r=JSON.parse(STORE.getItem(LS_REST)||'null');
     if(r&&r.endsAt>Date.now()){ rest=r; showRest(); } else STORE.removeItem(LS_REST);
@@ -18773,6 +19056,9 @@ let tT; function toast(m){ if(DEMO_QUIET) return; const t=$('#toast'); t.textCon
 
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();});
 $('#noteBtn').onclick=()=>openNote();
+$('#tourBtn').onclick=()=>startTour(TAB);
+window.addEventListener('scroll',()=>{ clearTimeout(window._tourScroll); window._tourScroll=setTimeout(tourTick,180); },{passive:true});
+window.addEventListener('resize',()=>{ if(TOUR) tourPlace(); });
 $('#skipTop').onclick=()=>openAbandon();
 
 /* Two genuinely different intentions, so they're two options rather than one

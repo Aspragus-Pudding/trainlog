@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.59.0 — 2026-10-08
+- The text slides are gone. New users get short hints during their first session, each pointing at the thing it describes, shown once and then gone.
+- Hints never cover Log set or the weight, reps and RPE controls. Tapping anywhere outside a hint closes it, and the tap still goes through. No hint appears while the rest timer is running.
+- A "?" at the top of each screen, and in Edit program, walks you through everything on that screen. Skip or Escape always closes it.
+- Lifts → How this works lists the tours, replays the first-session hints, and has the whole guide written out in one place.
+
 ## 1.58.0 — 2026-10-07
 - New "Don't care about" in setup and Edit program, for muscles and for movements.
 - Muscles you don't care about are picked last. They still appear when nothing else fits the slot, and the preview says so.
