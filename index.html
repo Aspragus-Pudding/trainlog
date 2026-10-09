@@ -8703,7 +8703,7 @@ Automatic backup sends your log to a Google Sheet after each session, if you wer
 ### Setup link `[data-tour="set-setuplink"]`
 Setup link is where you paste the link you were given, which connects your backup sheet and the feedback notes in one step.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.60.0","lines":["A card on the Progress tab reminds you to back up when your last backup, whether a saved file or your backup sheet, is over a week old. \"Not now\" puts it off until it's due again.","The reminder after a session follows the same rule, so the two never disagree. It used to count only sessions since your last saved file.","Restore from backup now checks the file is a Trainlog backup before merging anything. It reports any lines it couldn't read, and your log is untouched if the file is wrong.","Saving and restoring a backup file work without Google. The sheet stays optional."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.60.1","lines":["During a workout, logged pull-ups, chin-ups and dips now say what was on the machine: \"60 lb assist\", \"+20 lb\" or \"bodyweight\".","The \"Last time\" line and \"Last logged\" on the info sheet read the same way.","\"Last time\" compares on what you actually lift, so less assistance today shows as an up arrow."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9270,7 +9270,7 @@ Setup link is where you paste the link you were given, which connects your backu
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.60.0';
+const APP_VERSION='1.60.1';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -12690,11 +12690,15 @@ function srowEl(o){
 function lastTimeHtml(slot, rx){
   const tr=slotTrack(slot), lp=lastPerformance(tr.ex,tr.sig);
   if(!lp) return '<div class="lasttime dim">'+(tr.sig?'First time '+esc(modLabel(slot.modifiers)||'with this modifier'):'First time on this lift')+'</div>';
-  const st=lp.set, L=toLb(st.weight), w=fmt(st.weight.value)+(st.weight.unit==='kg'?' kg':'');
+  // the bodyweight class says what was on the machine, and compares on what was lifted (system load)
+  const cls=bwClass(slot.ex), st=lp.set, bwN=cls?latestBodyweight():null, sysCmp=cls&&bwN!=null&&engLb(st)!=null;
+  const w=cls?typedLabel(st.exercise_id,st.weight):fmt(st.weight.value)+(st.weight.unit==='kg'?' kg':'');
+  const L=sysCmp?engLb(st):toLb(st.weight);
   let arrow='';
   if(rx&&rx.lb!=null){
-    if(rx.lb>L+0.01) arrow='↑ '+fmt(rx.lb,0)+' × '+rx.reps;
-    else if(rx.lb<L-0.01) arrow='↓ '+fmt(rx.lb,0)+' × '+rx.reps;
+    const R=sysCmp?sysOf(slot.ex,rx.lb,bwN):rx.lb, rt=cls?typedLabel(slot.ex,{value:rx.lb,unit:'lb'}):fmt(rx.lb,0);
+    if(R>L+0.01) arrow='↑ '+rt+' × '+rx.reps;
+    else if(R<L-0.01) arrow='↓ '+rt+' × '+rx.reps;
     else if(rx.reps>st.reps) arrow='↑ '+rx.reps+' reps';
     else if(rx.reps<st.reps) arrow='↓ '+rx.reps+' reps';
     else arrow='same again';
@@ -12938,7 +12942,7 @@ function renderWork(){
     for(let j=0;j<Math.max(slot.sets_target,slot.sets.length);j++){
       const s=slot.sets[j];
       body.appendChild(srowEl({idx:j+1, done:!!s, empty:!s,
-        load:s?fmt(s.weight.value)+' '+s.weight.unit+' × '+s.reps+(s.failed?' · missed':''):'—',
+        load:s?typedLabel(s.exercise_id||slot.ex,s.weight)+' × '+s.reps+(s.failed?' · missed':''):'—',
         pr:s&&isPRSet(s.id),
         badge:s?(s.group&&s.group.pos>0?TECHNIQUES[s.group.kind].extend:(s.role==='backoff'?'back-off':s.role==='top'?'top · RPE '+s.rpe:(s.rpe?'RPE '+s.rpe:'warmup')))
           :(isTopBack(slot)?(j===0?'top · RPE '+slot.rpe:'back-off'):isMaint(slot)&&j===0?'top · RPE '+MAINT_TOP.rpe:slot.calib&&j===slot.sets_target-1?'AMRAP':'RPE '+slot.rpe),
@@ -13866,7 +13870,7 @@ function openInfo(exId){
     ${ex.plateLoaded&&!ex.custom?'<div class="qblock" id="isled"></div>':''}
     <div class="qblock"><div class="qlab">Your history</div>
       <div class="row between sm"><span class="muted">Best estimated 1RM</span><span>${b?fmt(b.v,0)+' lb':'—'}</span></div>
-      <div class="row between sm"><span class="muted">Last logged</span><span>${last?`${fmt(last.weight.value)} ${last.weight.unit} × ${last.reps}`:'—'}</span></div>
+      <div class="row between sm"><span class="muted">Last logged</span><span>${last?`${esc(typedLabel(last.exercise_id||exId,last.weight))} × ${last.reps}`:'—'}</span></div>
       <div class="row between sm"><span class="muted">Sessions performed</span><span>${exposureCount(exId)}</span></div>
       <div class="row" style="gap:6px;margin-top:9px"><button class="btn s" id="ihist">History and diary</button><button class="btn s" id="idiary">Add diary entry</button></div>
       ${(d=>d&&sets().some(x=>x.exercise_id===exId)?'<div class="anchor" style="margin-top:8px">The library now has <b>'+esc(d.name)+'</b>. <button class="btn s" id="idup" style="margin-left:4px">Use the built-in and keep my history</button></div>':'')(builtinTwin(exId))}

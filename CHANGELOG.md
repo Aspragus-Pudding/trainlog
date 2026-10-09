@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.60.1 — 2026-10-08
+- During a workout, logged pull-ups, chin-ups and dips now say what was on the machine: "60 lb assist", "+20 lb" or "bodyweight".
+- The "Last time" line and "Last logged" on the info sheet read the same way.
+- "Last time" compares on what you actually lift, so less assistance today shows as an up arrow.
+
 ## 1.60.0 — 2026-10-08
 - A card on the Progress tab reminds you to back up when your last backup, whether a saved file or your backup sheet, is over a week old. "Not now" puts it off until it's due again.
 - The reminder after a session follows the same rule, so the two never disagree. It used to count only sessions since your last saved file.
