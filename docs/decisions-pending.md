@@ -52,3 +52,42 @@ card) now, or with the redesign?
 **Chosen:** with the redesign (H5), as you said, so the layout is done once.
 
 **To undo:** nothing to undo. It's a scheduling choice.
+
+---
+
+## D3. A tester README, separate from ALPHA.md
+
+**Question:** the brief said the tester README replaces ALPHA.md where they
+overlap. ALPHA.md is your guide to setting testers up; the README is for the
+testers themselves.
+
+**Chosen:** a new `README.md` for testers (install, first session, notes,
+data, updates, what to do if something breaks). ALPHA.md stays as your setup
+guide, unchanged except where it describes backups.
+
+**To undo:** delete `README.md`, or merge it into ALPHA.md.
+
+---
+
+## D4. The Lifts tab shows your goal lifts only
+
+**Question:** the Lifts tab always added Transformer bar squat and overhead
+press cards, for everyone. They were your picks.
+
+**Chosen:** only each person's own goal lifts. With none picked, it says how to
+pick them. You lose the overhead press card unless it's one of your goal lifts.
+
+**To undo:** in `index.html`, search for `goalIds` in `renderLifts` and add
+the ids back.
+
+---
+
+## D5. "Copy all for Claude Code" becomes "Copy all notes"
+
+**Question:** the button showed for anyone without a tester link, with a line
+about Claude Code.
+
+**Chosen:** renamed "Copy all notes", and the Claude Code line removed. The
+copied text is unchanged, so it still pastes into Claude Code the same way.
+
+**To undo:** search for `Copy all notes` in `index.html`.

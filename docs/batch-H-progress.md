@@ -18,7 +18,7 @@ in `docs/decisions-pending.md`.
 | Step | State | Version / commit | Notes |
 |---|---|---|---|
 | 1 bodyweight display | done | v1.60.1 (c4ac241) | + v1.60.2: the 21 machines placed by guess (D1) |
-| 2 Part 8 | not started | | |
+| 2 Part 8 | done | v1.60.3 | docs/features.md, README.md; two maintainer-only leaks fixed (D4, D5); MEV/MRV wording left for H2 |
 | 3 H1 | not started | | |
 | 4 H2 | not started | | |
 | 5 H3 | not started | | |

@@ -8703,7 +8703,7 @@ Automatic backup sends your log to a Google Sheet after each session, if you wer
 ### Setup link `[data-tour="set-setuplink"]`
 Setup link is where you paste the link you were given, which connects your backup sheet and the feedback notes in one step.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.60.2","lines":["Every machine in the library is now marked plate-loaded or selectorised (pin and stack). Some of these are best guesses; tell us if yours is the other kind.","The plate-loaded ones, such as the incline machine chest press, seated calf raise and chest-supported row, now show the plate calculator and the sled-weight option on their set card.","Suggested weights don't change."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.60.3","lines":["The Lifts tab now shows your own main lifts only. Before, it always added two lifts that were the maintainer's picks.","In Progress → Notes, the copy button is now \"Copy all notes\".","New for testers: a short README covering how to install, your first session, how to send notes and what updates do."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9270,7 +9270,7 @@ Setup link is where you paste the link you were given, which connects your backu
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.60.2';
+const APP_VERSION='1.60.3';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -17236,7 +17236,10 @@ function openRating(exId){
 /* ═══ LIFTS ═══ */
 function renderLifts(){
   const v=$('#v-lifts'); v.innerHTML='';
-  (CFG.goals||[]).concat(['ssb_squat','ohp']).filter((x,i,a)=>a.indexOf(x)===i).forEach(id=>{
+  // your own goal lifts only (the maintainer's two extras used to show for everyone — docs/features.md)
+  const goalIds=(CFG.goals||[]).filter((x,i,a)=>a.indexOf(x)===i&&exById[x]);
+  if(!goalIds.length) v.appendChild(el('div','card pad','<div class="empty">No main lifts picked yet. Choose up to three in Edit program, and each gets a card here.</div>'));
+  goalIds.forEach(id=>{
     if(!exById[id]) return;
     const ex=exById[id], b=bestE1RM(id), c=el('div','card');
     const head=el('div','pad',`<div class="exname">${esc(ex.name)}</div>
@@ -17699,7 +17702,7 @@ function renderHist(){
       more.style.marginTop='10px'; more.onclick=()=>{ NOTES_SHOW_ALL=!NOTES_SHOW_ALL; render(); };
       cn.appendChild(more);
     }
-    const cp=el('button','btn pri wide','Copy all for Claude Code');
+    const cp=el('button','btn pri wide','Copy all notes');
     cp.style.marginTop='12px'; if(isTester()) cp.hidden=true;
     cp.onclick=async()=>{
       const r=notesReport(); if(!r) return;
@@ -17712,8 +17715,6 @@ function renderHist(){
       }
     };
     cn.appendChild(cp);
-    if(!isTester()) cn.appendChild(el('div','dim tiny','Formatted and ready to paste into Claude Code.'))
-      .style.marginTop='7px';
   }
   v.appendChild(cn);
 

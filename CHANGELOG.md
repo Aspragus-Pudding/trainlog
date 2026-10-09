@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.60.3 — 2026-10-08
+- The Lifts tab now shows your own main lifts only. Before, it always added two lifts that were the maintainer's picks.
+- In Progress → Notes, the copy button is now "Copy all notes".
+- New for testers: a short README covering how to install, your first session, how to send notes and what updates do.
+
 ## 1.60.2 — 2026-10-08
 - Every machine in the library is now marked plate-loaded or selectorised (pin and stack). Some of these are best guesses; tell us if yours is the other kind.
 - The plate-loaded ones, such as the incline machine chest press, seated calf raise and chest-supported row, now show the plate calculator and the sled-weight option on their set card.
