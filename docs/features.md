@@ -20,6 +20,7 @@ everyone.
 | Target date countdown and block bars | everyone | top card |
 | Proposals (deload, stall fixes, handoffs, focused-deload steps, exclusions) | everyone | cards under the top card, only when there's one |
 | What's new card after an update | everyone | top, once per version |
+| Today's plan (what the app is doing to today's workout, and why) | everyone | after the check-in; then a dashboard card for the rest of the day |
 | Main lifts and how each one progresses | everyone | Main lifts card |
 | Start training | everyone | the training card |
 | This week's sessions | everyone | This week card |

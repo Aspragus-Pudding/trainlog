@@ -91,3 +91,50 @@ about Claude Code.
 copied text is unchanged, so it still pastes into Claude Code the same way.
 
 **To undo:** search for `Copy all notes` in `index.html`.
+
+---
+
+## D6. Today's plan is kept for the day as a snapshot
+
+**Question:** the briefing must be reachable from the dashboard for the rest of
+the day. Rebuilding it later gives different numbers once sets are logged.
+
+**Chosen:** it's built once, right after the check-in, and the snapshot is kept
+for that day (`CFG.todayBriefing`). It's a record of what you were shown, like
+the suggestion saved with each set. The next day's check-in replaces it.
+
+**To undo:** delete the "Today's plan" card block in `renderDash` (search
+`data-tour='briefing'`). The briefing after the check-in still works.
+
+---
+
+## D7. A warning with a suggested swap goes under "Holding back"
+
+**Question:** your spec lists "condition flags with a swap suggestion" under
+Holding back, but a flagged exercise can still be stepping up (bench +10 lb
+with an elbow-angle warning).
+
+**Chosen:** it's listed under Holding back, as specified, with its real change
+(+10 lb) and the warning. The top line counts it separately ("1 carries a
+warning with a suggested swap"), so it never claims a step back that isn't
+happening.
+
+**To undo:** in `briefRow` (index.html), drop `||flagSwap` from the hold test
+to list flagged exercises in their own direction's group.
+
+---
+
+## D8. Each row is compared with the set its suggestion was priced from
+
+**Question:** "what changes" can be measured against last session's heaviest
+set (what the card's "Last time" line shows) or against the set the engine
+actually priced from. They differ when the first set is a maintenance top set
+or a top set, and comparing with the wrong one made rows contradict their own
+reason ("+20 lb" next to "it repeats").
+
+**Chosen:** the set the suggestion was priced from, so each row and its "why"
+always agree. The card's "Last time" line still shows last session's heaviest
+set; on those slots the two can show different numbers.
+
+**To undo:** in `briefRow`, use `lastPerformance(...)` instead of
+`lastSetFor(...)`.

@@ -19,7 +19,7 @@ in `docs/decisions-pending.md`.
 |---|---|---|---|
 | 1 bodyweight display | done | v1.60.1 (c4ac241) | + v1.60.2: the 21 machines placed by guess (D1) |
 | 2 Part 8 | done | v1.60.3 | docs/features.md, README.md; two maintainer-only leaks fixed (D4, D5); MEV/MRV wording left for H2 |
-| 3 H1 | not started | | |
+| 3 H1 | done | v1.61.0 | briefing after check-in + dashboard card; §64 (300 random days match their traces); D6–D8 |
 | 4 H2 | not started | | |
 | 5 H3 | not started | | |
 | 6 H4 | not started | | |

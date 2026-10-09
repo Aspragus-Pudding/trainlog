@@ -35,6 +35,9 @@ The Progress tab is where your lifts' trends, the reasons behind each suggestion
 ### Your target date `[data-tour="dash-hero"]`
 The top card counts down to your target date, projected from how often you actually train rather than from the calendar. Miss sessions and the date moves out; train more often and it comes closer. The bars underneath are your blocks in order.
 
+### Today's plan `[data-tour="briefing"]`
+After your check-in, Today's plan says what the app is doing to the workout and why: what it is holding back, what it is pushing, and what changed. Tap it to see it again, and tap any exercise in it for every step behind its numbers.
+
 ### Proposals `[data-tour="proposals"]`
 Cards here are proposals, such as a deload week, a change for a lift that has stalled, or switching between the assisted and unassisted version of an exercise. Nothing changes until you accept one, and declining hides the card for a while.
 

@@ -8578,6 +8578,9 @@ The Progress tab is where your lifts' trends, the reasons behind each suggestion
 ### Your target date `[data-tour="dash-hero"]`
 The top card counts down to your target date, projected from how often you actually train rather than from the calendar. Miss sessions and the date moves out; train more often and it comes closer. The bars underneath are your blocks in order.
 
+### Today's plan `[data-tour="briefing"]`
+After your check-in, Today's plan says what the app is doing to the workout and why: what it is holding back, what it is pushing, and what changed. Tap it to see it again, and tap any exercise in it for every step behind its numbers.
+
 ### Proposals `[data-tour="proposals"]`
 Cards here are proposals, such as a deload week, a change for a lift that has stalled, or switching between the assisted and unassisted version of an exercise. Nothing changes until you accept one, and declining hides the card for a while.
 
@@ -8703,7 +8706,7 @@ Automatic backup sends your log to a Google Sheet after each session, if you wer
 ### Setup link `[data-tour="set-setuplink"]`
 Setup link is where you paste the link you were given, which connects your backup sheet and the feedback notes in one step.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.60.3","lines":["The Lifts tab now shows your own main lifts only. Before, it always added two lifts that were the maintainer's picks.","In Progress → Notes, the copy button is now \"Copy all notes\".","New for testers: a short README covering how to install, your first session, how to send notes and what updates do."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.61.0","lines":["New: Today's plan. After the check-in, one screen says what the app is doing to today's workout and why: what's held back, what steps up, what changed, and what's on plan.","Each exercise in it opens every step behind its numbers. Tap Start to begin.","It stays on the dashboard for the rest of the day.","It only explains. Nothing in it changes your workout that wasn't already changed."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9270,7 +9273,7 @@ Setup link is where you paste the link you were given, which connects your backu
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.60.3';
+const APP_VERSION='1.61.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -10830,7 +10833,7 @@ const DAYS=[
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
   profile:null,profileParams:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
-  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{},deprioritised:{muscles:[],patterns:[]},tour:{t1:'off',seen:{}},backupReminderDismissed:null};
+  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{},deprioritised:{muscles:[],patterns:[]},tour:{t1:'off',seen:{}},backupReminderDismissed:null,todayBriefing:null};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
    from the address bar so it isn't left sitting in history. Each writes
@@ -12512,6 +12515,9 @@ function renderDash(){
   const v=$('#v-dash'); v.innerHTML='';
   autoApplyInterventions();
   { const wn=whatsNewCard(); if(wn) v.appendChild(wn); }
+  { const b=todayBriefing(); if(b){ const c=el('button','card pad'); c.dataset.tour='briefing'; c.style.cssText='display:block;width:100%;text-align:left';
+      c.innerHTML='<div class="row between"><span style="font-weight:650">Today\'s plan</span><span class="dim tiny">'+esc(b.day||'')+' ›</span></div><div class="sm" style="margin-top:5px;line-height:1.45">'+esc(b.top)+'</div>';
+      c.onclick=()=>openBriefing(b); v.appendChild(c); } }
   v.appendChild(proposalCards());
   activeRehabPlans().forEach(({e,plan})=>v.appendChild(rehabPlanCard(e,plan,true)));
   const p=currentPhase(), proj=programProjection();
@@ -17042,9 +17048,120 @@ function openCheckin(){
       applyReadinessSets(session);
     }
     session.prep=buildPrep({slots:session.slots}, session.readiness).map(m=>({...m,done:false}));
-    seedDraft(session.slots[0]); saveSession();
-    $('#dlg').close(); render();
+    seedDraft(session.slots[0]);
+    // what the app is doing to today's workout, and why — before the first exercise
+    session.briefing=buildBriefing(session); CFG.todayBriefing=session.briefing; saveCfg(); saveSession();
+    render(); openBriefing(session.briefing,{start:true});
   };
+}
+/* ---------- Today's plan (batch H1, v1.61) ----------
+   After the check-in, before the first exercise: what the app is doing to the
+   workout today and why. Built only from the modifier traces of each slot's
+   first-set suggestion (the same suggestFor() the set panel uses) — no engine
+   logic of its own. Each exercise lands in one group: Holding back (a hold
+   modifier fired, or the number is below last time), Pushing (it rises),
+   Changed (swap, range fit, preference, new, bodyweight), or On plan. Every
+   modifier that changed a number appears exactly once, on its exercise's row
+   (§64). It explains; the only actions are the existing ones. The snapshot is
+   kept for the day (CFG.todayBriefing) so the dashboard can reopen it — a record
+   of what you were shown, like the suggestion stored with each set. */
+const BRIEF_HOLD=['joint_ladder','local_soreness','focused_deload','sick_day','calibrating','global_readiness'];
+const BRIEF_CHANGE=['range_fit','bodyweight'];
+const BRIEF_WHY={joint_ladder:t=>t.reason.split(':')[0]+' flared', local_soreness:t=>t.reason.split(':')[0].toLowerCase(), focused_deload:()=>'focused deload',
+  sick_day:()=>'sick day', calibrating:()=>'new program settling in', global_readiness:()=>'low sleep or motivation', ceiling:()=>'capped at your recent form',
+  one_step:()=>'one step at a time', floor:()=>'kept near your recent best', both_up:()=>'load and reps never both rise', dial:()=>'your dial setting',
+  range_fit:()=>'fitted to your rep range', bodyweight:()=>'bodyweight changed, same load'};
+const briefDay=()=>new Date().toISOString().slice(0,10);   // (demo mode's Date already runs on its own clock)
+function briefRow(slot){
+  const ex=exById[slot.ex]; if(!ex) return null;
+  const s0=slot.sets.length?{...slot,sets:[]}:slot;
+  const r=suggestFor(s0), tr=r.trace||[], cls=bwClass(slot.ex);
+  // compared with the set the suggestion is priced from, so the row never contradicts its own reason
+  // (a maintenance top set is priced on the top-set track — the same view suggestFor uses)
+  const basis=isMaint(slot)&&!topSetOf(slot)?maintTopView(slot):slot, tk=slotTrack(basis), last=lastSetFor(tk.ex,tk.sig,priceClass(basis));
+  const fired=[...new Set(tr.filter(t=>t.changed&&t.id!=='progression').map(t=>t.id))];   // once per modifier (the ladder can hold AND cut)
+  if(tr.some(t=>t.id==='range_fit')&&!fired.includes('range_fit')) fired.push('range_fit');
+  const f=flagFor(slot.ex,slot.modifiers), flagSwap=isWarning(f)&&f.swap?f:null;
+  const sys=v=>v==null?null:v;
+  const now=r.lb==null?null:(cls&&r.pr.sys!=null?r.pr.sys:r.lb), then=last?engLb(last):null;
+  const L=r.lb, R=r.pr?r.pr.reps:null, lastTyped=last?toLb(last.weight):null;
+  const fmtL=v=>cls?typedLabel(slot.ex,{value:v,unit:'lb'}):fmt(v,0)+' lb';
+  let dir=0; if(now!=null&&then!=null){ if(now>then+1e-6) dir=1; else if(now<then-1e-6) dir=-1; else if(R!=null&&R>last.reps) dir=1; else if(R!=null&&R<last.reps) dir=-1; }
+  const tags=[]; if(slot.swapped) tags.push('swap'); if(slot.dep&&slot.dep.kind==='pattern') tags.push('preference'); if(!last) tags.push('new');
+  let group;
+  if(fired.some(id=>BRIEF_HOLD.includes(id))||dir<0||flagSwap) group='hold';
+  else if(dir>0) group='push';
+  else if(fired.length) group=fired.every(id=>BRIEF_CHANGE.includes(id))?'changed':'hold';
+  else if(tags.length) group='changed';
+  else group='plan';
+  const mods=[...fired]; if(dir!==0&&!mods.length) mods.push('progression'); else if(dir>0&&!mods.includes('progression')) mods.push('progression');
+  if(flagSwap) mods.push('condition_flag');
+  // what changes
+  let change='';
+  if(L==null) change='pick a weight';
+  else if(!last) change='first time · '+fmtL(L)+' × '+R;
+  else if(Math.abs((now||0)-(then||0))>1e-6){ const d=Math.round((L-lastTyped)*10)/10;
+    change=cls?fmtL(L)+' (was '+typedLabel(last.exercise_id,last.weight)+')':(d>0?'+':'−')+fmt(Math.abs(d),1)+' lb → '+fmtL(L); }
+  else if(R!==last.reps) change=(R>last.reps?'+':'−')+Math.abs(R-last.reps)+' rep'+(Math.abs(R-last.reps)>1?'s':'')+' → '+R;
+  else change='held at '+fmtL(L)+' × '+R;
+  // why, in a few words
+  const why=[];
+  mods.forEach(id=>{ if(id==='progression') why.push(dir>0?((r.pr.src||'').includes('top of range')?'you hit the top of the range last time':'last time had reps to spare'):'last time was harder than aimed');
+    else if(id==='condition_flag') why.push((f.why||'a warning')+' — could swap for '+f.swap.name);
+    else { const t=tr.find(x=>x.id===id); why.push(BRIEF_WHY[id]?BRIEF_WHY[id](t||{reason:''}):id.replace(/_/g,' ')); } });
+  if(tags.includes('swap')) why.push('you swapped it in');
+  if(tags.includes('preference')&&slot.dep) why.push(slot.dep.why);
+  if(tags.includes('new')&&!mods.length) why.push('no history yet, so the first set calibrates');
+  return {ex:slot.ex, name:ex.name, group, change, why:why.join(' · '), mods, tags, trace:[...(r.pr&&r.pr.note?[r.pr.note]:[]),...traceLines(tr)], dir, flagOnly:group==='hold'&&dir>=0&&mods.every(m=>m==='condition_flag'||m==='progression')};
+}
+function briefTop(rows){
+  const all=rows.flatMap(r=>r.mods), cap=x=>x.charAt(0).toUpperCase()+x.slice(1);
+  const rest=' Everything else is on plan.';
+  if(all.includes('sick_day')) return 'Sick day: everything one step lighter, today only.';
+  const j=rows.find(r=>r.mods.includes('joint_ladder'));
+  if(j){ const sl=session&&session.slots.find(x=>x.ex===j.ex), jn=sl&&sl.joint?sl.joint:null;
+    const lv=jn?jn.level:3, what=lv>=5?'isn\'t progressing':lv>=4?'is 10% lighter':'is held at last time\'s weights';
+    return cap(jn?jn.joint:'a joint')+'\'s flared, so '+(jn?jn.joint:'that')+' work '+what+'.'+rest; }
+  const fd=rows.find(r=>r.mods.includes('focused_deload')); if(fd) return 'Focused deload on '+fd.name.toLowerCase()+': it stays at the lighter load.'+rest;
+  const so=rows.find(r=>r.mods.includes('local_soreness')); if(so) return cap(so.why.split(' · ')[0])+', so that work is lighter today.'+rest;
+  if(all.includes('calibrating')) return 'First session after a program change: no step-ups while it settles.';
+  if(all.includes('global_readiness')) return 'Low sleep or motivation: no step-ups today, but nothing lighter.';
+  const back=rows.filter(r=>r.group==='hold'&&!r.flagOnly).length, flagged=rows.filter(r=>r.flagOnly).length, push=rows.filter(r=>r.group==='push'||(r.flagOnly&&r.dir>0)).length;
+  const bits=[];
+  if(back) bits.push(back+' exercise'+(back>1?'s':'')+' step'+(back>1?'':'s')+' back after last time.');
+  if(push) bits.push(push+' step-up'+(push>1?'s':'')+' planned.');
+  if(flagged) bits.push(flagged+' carr'+(flagged>1?'y':'ies')+' a warning with a suggested swap.');
+  if(back||flagged) return bits.join(' ')+rest;
+  if(push) return 'Normal session, with '+push+' step-up'+(push>1?'s':'')+' planned.';
+  return 'Normal session.';
+}
+function buildBriefing(sess){
+  const rows=(sess&&sess.slots||[]).map(briefRow).filter(Boolean);
+  const G=[['hold','Holding back'],['push','Pushing'],['changed','Changed']];
+  return {date:briefDay(), day:sess&&sess.dayName||'', top:briefTop(rows),
+    groups:G.map(([key,title])=>({key,title,rows:rows.filter(r=>r.group===key)})).filter(g=>g.rows.length),
+    onPlan:rows.filter(r=>r.group==='plan')};
+}
+const todayBriefing=()=>{ const b=(session&&session.briefing)||CFG.todayBriefing; return b&&b.date===briefDay()?b:null; };
+function openBriefing(b, o){
+  o=o||{}; if(!b) return;
+  const rowHtml=(r,i,g)=>'<button class="btn wide" data-brief="'+g+':'+i+'" style="text-align:left;margin-top:6px"><div class="row between" style="gap:8px"><span style="font-weight:620">'+esc(r.name)+'</span><span class="sm" style="flex:none">'+esc(r.change)+'</span></div>'
+    +(r.why?'<div class="dim tiny" style="font-weight:400;margin-top:2px">'+esc(r.why)+'</div>':'')+'</button>';
+  let html='<h2 style="font-size:22px;margin-bottom:4px">Today\'s plan</h2><div class="muted tiny" style="margin-bottom:10px">'+esc(b.day||'')+'</div>'
+    +'<div class="sm" style="line-height:1.5;margin-bottom:12px">'+esc(b.top)+'</div>';
+  b.groups.forEach(g=>{ html+='<div class="qblock"><div class="qlab">'+esc(g.title)+'</div>'+g.rows.map((r,i)=>rowHtml(r,i,g.key)).join('')+'</div>'; });
+  if(b.onPlan.length&&b.groups.length) html+='<div class="qblock"><button class="warmtog" id="brPlanTog">'+b.onPlan.length+' on plan ▸</button><div id="brPlan" hidden>'+b.onPlan.map((r,i)=>rowHtml(r,i,'plan')).join('')+'</div></div>';
+  html+='<div class="dim tiny" style="margin:4px 0 12px">Tap an exercise to see every step behind its numbers.</div>'
+    +'<button class="btn '+(o.start?'go':'ghost')+' wide" id="brGo">'+(o.start?'Start':'Close')+'</button>';
+  sheet(html);
+  const find=k=>{ const [g,i]=k.split(':'); const list=g==='plan'?b.onPlan:(b.groups.find(x=>x.key===g)||{rows:[]}).rows; return list[+i]; };
+  document.querySelectorAll('#dlg [data-brief]').forEach(btn=>btn.onclick=()=>{ const r=find(btn.dataset.brief); if(!r) return;
+    sheet('<h2 style="font-size:20px;margin-bottom:4px">'+esc(r.name)+'</h2><div class="sm" style="margin-bottom:10px">'+esc(r.change)+'</div>'
+      +'<div class="qblock"><div class="qlab">Why these numbers</div>'+(r.trace.length?r.trace.map(t=>'<div class="sm" style="margin-top:4px;line-height:1.45">'+esc(t)+'</div>').join(''):'<div class="dim sm">Nothing changed it — it repeats the plan.</div>')+'</div>'
+      +'<button class="btn ghost wide" id="brBack">Back to today\'s plan</button>');
+    $('#brBack').onclick=()=>openBriefing(b,o); });
+  if($('#brPlanTog')) $('#brPlanTog').onclick=()=>{ const p=$('#brPlan'); p.hidden=!p.hidden; $('#brPlanTog').textContent=b.onPlan.length+' on plan '+(p.hidden?'▸':'▾'); };
+  $('#brGo').onclick=()=>{ $('#dlg').close(); if(o.start){ TAB='work'; render(); } };
 }
 /* Stopping early is a legitimate outcome, and WHY matters. Pain gets carried
    into the next session; being busy does not. */

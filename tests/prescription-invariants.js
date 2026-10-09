@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -2723,6 +2723,56 @@ section('63. backups: restore validates before merging; reminder when the last b
     B.STORE.setItem('trainlog.lastExport',String(Date.now()-10*864e5+864e5*0)); B.STORE.setItem('trainlog.lastSync',String(Date.now()-7.5*864e5));
     ok(B.backupReminder()!==null,'a newer backup that has gone stale since: a new occurrence, so it shows again',''); }
   console.log('  restore: validated, merged by event, idempotent, same path for file and sheet · reminder: either kind, a week, "not now" per occurrence');
+}
+
+/* ─── 64. v1.61: "Today's plan" — built from the traces, nothing more ─── */
+section('64. briefing: rows match the modifier traces; an all-neutral day says only "Normal session."');
+{
+  const T8={target:{reps:[8,12],rpe:8}};
+  const mk=(ex,lo,hi,T)=>({ex,role:'accessory',reps:[lo||8,hi||12],rpe:T||8,sets:[],sets_target:3});
+  const sess=(A,slots,rd)=>{ const S={id:'BR',dayName:'Full body A',slots,openIdx:0,readiness:rd||{sleep:3,motivation:3,recovery:3,sore:{},joints:{}},adj:null,score:.7,ratings:{},startedAt:Date.now()}; A.setSession(S); return S; };
+  const hist=(ex,w,r,rpe)=>[set(ex,'h1',w,r,rpe,6,T8),{type:'session_end',id:'e1'+ex,ts:day(5.99),session_id:'h1',joints:{}},set(ex,'h2',w,r,rpe,3,T8),{type:'session_end',id:'e2'+ex,ts:day(2.99),session_id:'h2',joints:{}}];
+  // all neutral: every exercise holds exactly → only "Normal session."
+  { const A=load([...hist('incline_machine',80,10,8),...hist('preacher',35,10,8)]), S=sess(A,[mk('incline_machine'),mk('preacher')]);
+    const b=A.buildBriefing(S);
+    ok(b.top==='Normal session.'&&b.groups.length===0&&b.onPlan.length===2,'an all-neutral day: "Normal session." and nothing else listed',JSON.stringify({top:b.top,groups:b.groups.map(g=>g.key)})); }
+  // the named cases
+  { const A=load(hist('incline_machine',80,10,8)), S=sess(A,[mk('incline_machine')],{sleep:3,motivation:3,recovery:1,sore:{},joints:{}});
+    ok(A.buildBriefing(S).top==='Sick day: everything one step lighter, today only.','a 1 on the check-in: the sick-day top line',A.buildBriefing(S).top); }
+  { const A=load(hist('incline_machine',80,12,6)), sl=mk('incline_machine'); sl.joint={joint:'shoulder',level:3}; const S=sess(A,[sl]);
+    const b=A.buildBriefing(S);
+    ok(/^Shoulder's flared, so shoulder work is held at last time's weights\. Everything else is on plan\.$/.test(b.top)&&b.groups[0].key==='hold'&&b.groups[0].rows[0].mods.includes('joint_ladder'),'a joint at level 3: "Shoulder\'s flared…", the press under Holding back',JSON.stringify({top:b.top,rows:b.groups.map(g=>g.rows)})); }
+  { const A=load(hist('pulldown',150,12,6)), S=sess(A,[mk('pulldown')]);
+    const b=A.buildBriefing(S), row=(b.groups.find(g=>g.key==='push')||{rows:[]}).rows[0];
+    ok(row&&/^\+10 lb → 160 lb$/.test(row.change)&&/top of the range last time/.test(row.why),'a step-up: "Lat pulldown +10 lb — you hit the top of the range last time"',JSON.stringify(row)); }
+  { const A=load(hist('incline_machine',80,10,8)), n=A.LOG.length, S=sess(A,[mk('incline_machine')]); A.buildBriefing(S);
+    ok(A.LOG.length===n,'building the briefing writes nothing to the log',''); }
+  // randomised: every modifier that changed a number appears exactly once; nothing appears that didn't fire
+  { let seed=164; const R=()=>{ seed^=seed<<13; seed>>>=0; seed^=seed>>17; seed^=seed<<5; seed>>>=0; return seed/4294967296; };
+    const pick=a=>a[Math.floor(R()*a.length)];
+    const EXS=[['bench',185],['incline_machine',80],['preacher',35],['leg_press',360],['pulldown',150],['machine_raise',50]];
+    let runs=0, bad=[];
+    for(let run=0;run<300;run++){
+      const ev=[], slots=[]; const n=1+Math.floor(R()*3);
+      for(let k=0;k<n;k++){ const [ex,base]=EXS[(run+k)%EXS.length]; const L=Math.round(base*(0.9+R()*0.2)/5)*5;
+        for(let q=0;q<2+Math.floor(R()*3);q++){ const sid='r'+run+'_'+k+'_'+q; ev.push(set(ex,sid,L,6+Math.floor(R()*8),pick([6,7,8,8,9,10]),20-q*4,T8),{type:'session_end',id:'e'+sid,ts:day(20-q*4-0.01),session_id:sid,joints:{}}); }
+        const sl=mk(ex); const lvl=pick([null,null,3,4]); if(lvl) sl.joint={joint:'shoulder',level:lvl}; slots.push(sl); }
+      if(R()<0.2) ev.push({type:'program_edit',id:'pe'+run,ts:day(1),what:'x'});
+      if(R()<0.2) ev.push({type:'focused_deload_start',id:'fd'+run,ts:day(1),fd_id:'f'+run,exercises:[slots[0].ex],level:'cut10',weeks:2,dpw:5});
+      ev.sort((a,b)=>a.ts<b.ts?-1:1);
+      const A=load(ev), rd={sleep:pick([1,2,3,3]),motivation:pick([2,3,3]),recovery:pick([1,3,3,3]),sore:{},joints:{}};
+      const S=sess(A,slots,rd); const groups=A.soreGroupsFor({slots}); if(R()<0.3){ rd.sore=Object.fromEntries(groups.map(g=>[g,pick([1,2,3])])); S.adj=A.physicalCut(rd,groups); }
+      const b=A.buildBriefing(S), rows=[...b.groups.flatMap(g=>g.rows),...b.onPlan]; runs++;
+      if(rows.length!==slots.length) bad.push('rows '+rows.length+' vs slots '+slots.length);
+      slots.forEach(sl=>{ const r=A.suggestFor(sl), fired=[...new Set((r.trace||[]).filter(t=>t.changed&&t.id!=='progression').map(t=>t.id))];
+        const mine=rows.filter(x=>x.ex===sl.ex), mods=mine.flatMap(x=>x.mods);
+        fired.forEach(id=>{ const c=mods.filter(m=>m===id).length; if(c!==1) bad.push(sl.ex+': '+id+' appears '+c+'×'); });
+        const allowed=new Set([...fired,'progression','range_fit','condition_flag']);
+        mods.forEach(m=>{ if(!allowed.has(m)) bad.push(sl.ex+': '+m+' listed but did not fire'); });
+        if(mine.some(x=>x.group==='plan')&&fired.length) bad.push(sl.ex+' on plan despite '+fired.join(',')); });
+    }
+    ok(bad.length===0,'300 random days: each exercise listed once, every modifier that changed a number appears exactly once on its row, none that didn\'t fire',bad.slice(0,4).join(' | ')); }
+  console.log('  neutral → "Normal session." · sick day · joint flared · step-up row · writes nothing · 300 random days match their traces');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
