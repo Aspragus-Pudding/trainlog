@@ -29,9 +29,16 @@ in `docs/decisions-pending.md`.
 
 Maintainer export as of 8 Oct (169 sets): load mean |error| 5.0 lb, reps 2.0, exact load 90. Every version in this run must be IDENTICAL (nothing here touches prescriptions). v1.62.0: every number identical; only the "basis" text column differs ("from e1RM" → "from your estimated max"), compared with that column cut. Script: scratchpad btcompare.sh <ref>.
 
+## Merged
+
+H3–H5 were merged to main once (bf84262), as v1.65.0. At that point:
+- all suites passed (66,817 checks);
+- the headless new-user walk passed for all three personas;
+- the backtest was identical to main.
+
 ## Half-finished
 
-(nothing yet)
+(nothing)
 
 ## Checks to run before every commit
 
