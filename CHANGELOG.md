@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.65.1 — 2026-10-09
+- RPE is back: set badges, the set panel and every explanation say RPE again.
+- Dark is the default again on every phone. For the light look, enter the code LIGHT in Edit program → Have a code?
+- Setup no longer offers "Get fit and toned". Skip the goal question and you get size first.
+
 ## 1.65.0 — 2026-10-09
 - A cleaner look, with a light mode that follows your phone. Theme codes still work.
 - New setup for new users: Build it for me or Build it together, with a preview of the whole plan before anything is saved.

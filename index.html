@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F4F5F7" data-default="#F4F5F7">
 <meta name="theme-color" content="#0B0D12" data-default="#0B0D12">
 <title>Trainlog</title>
 <style>
@@ -38,22 +37,6 @@
   /* touch and the bottom edge: every tap target 44px; content stays 80px clear of the tab bar's edge */
   --tap:44px; --safe-bottom:calc(80px + env(safe-area-inset-bottom));
 }
-/* Light mode (Calm): follows the phone. A theme code still wins — its tokens
-   come later in the page at the same specificity. The status bar is always
-   white text (black-translucent), so the clock sits on an accent band. */
-@media (prefers-color-scheme: light){
-  :root{
-    --bg:#F4F5F7; --card:#FFFFFF; --card-2:#EEF0F3; --line:#E3E6EB;
-    --ink:#12151A; --muted:#5A626F; --dim:#8A919D;
-    --hyp:#2F6FEB; --str:#C46F00; --peak:#D9344F; --deload:#7A818C;
-    --accent:#2F6FEB; --on-accent:#fff; --accent-soft:rgba(47,111,235,.10);
-    --warn:#C46F00; --warn-soft:rgba(196,111,0,.10); --danger:#D9344F; --go:#1F8F4C; --skip:#D9344F; --ok:#1F9D55; --steel:#9AA1AC;
-    --pr:#C46F00; --on-pr:#fff; --caution:#B89400;
-    --bar:rgba(244,245,247,.94); --backdrop:rgba(18,21,26,.42);
-    --e-1:0 1px 2px rgba(16,24,40,.05),0 0 0 1px rgba(16,24,40,.05); --e-2:0 16px 40px rgba(16,24,40,.18);
-  }
-  :root:not([data-themed]) header{background:linear-gradient(to bottom,var(--accent) env(safe-area-inset-top),var(--bar) env(safe-area-inset-top))}
-}
 /* Other directions (docs/design.md): switching is one line, DESIGN_DIRECTION in
    the script, which sets data-direction. Each is tokens plus a few component
    styles; nothing else in the app changes. Not used today. */
@@ -66,10 +49,6 @@
   --accent:#F08F6E;--on-accent:#2A140C;--accent-soft:rgba(240,143,110,.16);--ok:#8CC79A;--caution:#F1CF6A;--warn:#F2A35A;--danger:#F07178;
   --sp-3:14px;--sp-4:18px;--sp-5:26px;--r:24px;--r-s:12px;--r-btn:999px;--r-l:30px;--tap:48px;
   --font:ui-rounded,"SF Pro Rounded",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-@media (prefers-color-scheme: light){
-  :root[data-direction="log"]{--bg:#FFFFFF;--card:#F6F7F8;--card-2:#ECEEF0;--line:#DADDE1;--ink:#0A0B0C;--muted:#555C66;--dim:#8B919A;--accent:#4F7A00;--on-accent:#fff;--accent-soft:rgba(79,122,0,.10);--caution:#B38F00;--warn:#D06A00;--danger:#D21F3C}
-  :root[data-direction="warm"]{--bg:#FBF6F0;--card:#FFFFFF;--card-2:#F4ECE3;--line:#EADFD3;--ink:#2E2420;--muted:#7A6A60;--dim:#A89788;--accent:#D9623F;--on-accent:#fff;--accent-soft:rgba(217,98,63,.11);--ok:#4F8F5E;--caution:#B8901A;--warn:#C9741F;--danger:#C9424B;--e-1:0 2px 10px rgba(120,80,50,.08)}
-}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink)}
 body.resting main{padding-bottom:64px}
@@ -8782,7 +8761,7 @@ Each exercise is a card. Open it to see the suggested weight and reps for your f
 The amber numbers are suggestions, and you can change either one before logging. Change the weight and the reps recompute to hit the target effort, or the other way round, and whatever you set turns white.
 
 ### How hard it was `[data-tour="rpe"]`
-Effort is how hard the set was: ten means nothing left, nine means one rep left, and eight means about two. The next set is priced from what you enter here, so an honest number works better than an ambitious one.
+RPE is how hard the set was: ten means nothing left, nine means one rep left, and eight means about two. The next set is priced from what you enter here, so an honest number works better than an ambitious one.
 
 ### Why this number `[data-tour="why"]`
 This line says why the numbers are what they are. Tap it to see every step behind the suggestion, from your last set to today's check-in.
@@ -8828,10 +8807,10 @@ Edit program is where you change your blocks, goals, schedule, conditions and pr
 Each exercise is a card, and tapping it opens the set panel. The order is a suggestion, and the card's controls let you move, swap or add exercises without changing your program.
 
 ### Weight and reps `[data-tour="weight"]`
-The weight and reps are suggested in amber. Change either one and the other recomputes to hit the target effort. For pull-ups, chin-ups, dips and assisted machines you type what is on the machine, and the line underneath shows what you are actually lifting.
+The weight and reps are suggested in amber. Change either one and the other recomputes to hit the target RPE. For pull-ups, chin-ups, dips and assisted machines you type what is on the machine, and the line underneath shows what you are actually lifting.
 
-### Effort `[data-tour="rpe"]`
-Effort records how hard the set was: ten means nothing left, nine one rep left, and eight about two. The next suggestion is built from it, so be honest rather than ambitious.
+### RPE `[data-tour="rpe"]`
+RPE records how hard the set was: ten means nothing left, nine one rep left, and eight about two. The next suggestion is built from it, so be honest rather than ambitious.
 
 ### Why these numbers `[data-tour="why"]`
 The line under the numbers says why they are what they are. Tap it to see each step: your last set, readiness, a sore muscle, a joint, a focused deload, how hard suggestions push, and the guards that stop a single session from jumping too far.
@@ -8937,15 +8916,15 @@ The app reads this file: each `##` is an entry. Keep the three lines under it
 `node tools/embed-guide.js`, which copies this file into the app along with
 the guide.
 
-## Effort
-- In the app: effort
-- Also called: RPE (rate of perceived exertion)
-- Means: How hard a set was, from 1 to 10. 10 means you couldn't have done another rep; 9 means one more was left; 8 means two; 7 means three. Each set has a target effort, and the next set is adjusted from the effort you log.
+## RPE
+- In the app: RPE
+- Also called: effort, rate of perceived exertion
+- Means: How hard a set was, from 1 to 10. 10 means you couldn't have done another rep; 9 means one more was left; 8 means two; 7 means three. Each set has a target RPE, and the next set is adjusted from the RPE you log.
 
 ## Reps in reserve
 - In the app: reps in reserve
 - Also called: RIR
-- Means: How many more reps you could have done before failing. It's the other side of effort: effort 8 is about 2 reps in reserve.
+- Means: How many more reps you could have done before failing. It's the other side of RPE: RPE 8 is about 2 reps in reserve.
 
 ## Estimated max
 - In the app: estimated max
@@ -9095,7 +9074,7 @@ the guide.
 ## Effort ramp
 - In the app: effort ramp
 - Also called: RIR progression
-- Means: In newer size blocks, the target effort rises week by week: compound lifts from 7 to 9, isolation exercises from 7 to 10.
+- Means: In newer size blocks, the target RPE rises week by week: compound lifts from 7 to 9, isolation exercises from 7 to 10.
 
 ## Warm-up
 - In the app: warm-up
@@ -9117,7 +9096,7 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.65.0","lines":["A cleaner look, with a light mode that follows your phone. Theme codes still work.","New setup for new users: Build it for me or Build it together, with a preview of the whole plan before anything is saved.","Every screen uses the same few text sizes and spacings, and every button is big enough to tap easily.","Lifts → How this works is a searchable guide: what to do when your shoulder hurts, you missed a week, or you want to push harder, plus every setting.","Edit program shows blocks as cards and your week as a strip; a condition's card has a focused-deload button."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.65.1","lines":["RPE is back: set badges, the set panel and every explanation say RPE again.","Dark is the default again on every phone. For the light look, enter the code LIGHT in Edit program → Have a code?","Setup no longer offers \"Get fit and toned\". Skip the goal question and you get size first."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9684,7 +9663,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.65.0';
+const APP_VERSION='1.65.1';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -11333,6 +11312,16 @@ const THEME_TOKENS=['bg','card','card-2','line','ink','muted','dim','hyp','str',
   'accent','on-accent','accent-soft','warn','warn-soft','danger','go','skip','ok','steel','pr','on-pr','bar','backdrop','r','font'];
 const BOW_MASK="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20'%3E%3Cpath d='M12 8C9 3 2 1 2 6s7 6 10 2zM12 8c3-5 10-7 10-2s-7 6-10 2zM11 9l-4 9 3-1 2 2 1-9zM13 9l4 9-3-1-2 2-1-9z'/%3E%3Ccircle cx='12' cy='8' r='2.2'/%3E%3C/svg%3E\") center/contain no-repeat";
 const THEMES=[
+  {code:'LIGHT', name:'Light', blurb:'The standard look on a light background.',
+   tokens:{bg:'#F4F5F7','card':'#FFFFFF','card-2':'#EEF0F3',line:'#E3E6EB',ink:'#12151A',muted:'#5A626F',dim:'#8A919D',
+     hyp:'#2F6FEB',str:'#C46F00',peak:'#D9344F',deload:'#7A818C','on-block':'#FFFFFF',
+     accent:'#2F6FEB','on-accent':'#FFFFFF','accent-soft':'rgba(47,111,235,.10)',
+     warn:'#C46F00','warn-soft':'rgba(196,111,0,.10)',danger:'#D9344F',go:'#1F8F4C',skip:'#D9344F',ok:'#1F9D55',caution:'#B89400',
+     steel:'#9AA1AC',pr:'#C46F00','on-pr':'#FFFFFF',bar:'rgba(244,245,247,.94)',backdrop:'rgba(18,21,26,.42)',r:'14px',
+     font:'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'},
+   // light background under a white status bar: an accent band behind the clock keeps it readable
+   css:`:root{--e-1:0 1px 2px rgba(16,24,40,.05),0 0 0 1px rgba(16,24,40,.05);--e-2:0 16px 40px rgba(16,24,40,.18)}
+     header{background:linear-gradient(to bottom,var(--accent) env(safe-area-inset-top),var(--bar) env(safe-area-inset-top))}`},
   {code:'GIRLYPOP', name:'Girlypop', blurb:'Soft pink, hot-pink accent, bows.',
    tokens:{bg:'#FFF0F5','card':'#FFFFFF','card-2':'#FFE3EE',line:'#F5C6D8',ink:'#3A1F2D',muted:'#80526A',dim:'#A87990',
      hyp:'#7C62D9',str:'#C8661F',peak:'#23887E',deload:'#9C8792','on-block':'#FFFFFF',
@@ -11702,7 +11691,7 @@ function bestSetRows(exId, limit, sig){
   list.forEach(b=>{
     const r=el('div','row between sm'); r.style.cssText='padding:var(--sp-1) 0;border-top:1px solid var(--line)';
     const d=new Date(b.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'});
-    r.innerHTML=`<span class="grow">${esc(typedLabel(b.exercise_id,b.weight))} × ${b.reps}${b.rpe!=null?' at effort '+b.rpe:''}${b.pr?'<span class="pr">PR</span>':''}</span>
+    r.innerHTML=`<span class="grow">${esc(typedLabel(b.exercise_id,b.weight))} × ${b.reps}${b.rpe!=null?' at RPE '+b.rpe:''}${b.pr?'<span class="pr">PR</span>':''}</span>
       <span class="dim tiny" style="flex:none;text-align:right">${b.e1!=null?'estimated max '+fmt(b.e1,0)+' · ':''}${d}</span>`;
     box.appendChild(r);
   });
@@ -12275,12 +12264,12 @@ function coarseHold(slot, L0, R0, RPE0, failed){
   if(frac<COARSE_STEP) return null;
   const reps=Math.max(lo,Math.min(hi,R0-1));
   return {lb:L0, reps, src:'harder than aimed · step too coarse to cut',
-    note:`Last set ${fmt(L0,0)} × ${R0} at effort ${RPE0} was a little over target effort ${slot.rpe}. One step down (${fmt(L0,0)} → ${fmt(dn,0)}) is ${Math.round(frac*100)}% of the load — too big a cut for that, so the load holds`
-      +(reps<R0?` and reps drop to ${reps}`:` at ${reps} reps, the bottom of your range`)+`. A load cut needs effort ${Math.min(10,slot.rpe+CUT_NEEDS_RPE)} or more, or a missed rep.`};
+    note:`Last set ${fmt(L0,0)} × ${R0} at RPE ${RPE0} was a little over target RPE ${slot.rpe}. One step down (${fmt(L0,0)} → ${fmt(dn,0)}) is ${Math.round(frac*100)}% of the load — too big a cut for that, so the load holds`
+      +(reps<R0?` and reps drop to ${reps}`:` at ${reps} reps, the bottom of your range`)+`. A load cut needs RPE ${Math.min(10,slot.rpe+CUT_NEEDS_RPE)} or more, or a missed rep.`};
 }
 function rpeDeltaStep(slot, L0, R0, RPE0, T, failed){
   const lo=slot.reps[0], hi=slot.reps[1];
-  const lastTxt=`${fmt(L0,0)} × ${R0} at effort ${RPE0}`;
+  const lastTxt=`${fmt(L0,0)} × ${R0} at RPE ${RPE0}`;
   const delta=T-RPE0;                          // >0 easier than aimed, <0 harder
   if(Math.abs(delta)<=RPE_HOLD_TOL){
     // "hold" means repeat the last set — landing exactly at the ceiling at
@@ -12294,12 +12283,12 @@ function rpeDeltaStep(slot, L0, R0, RPE0, T, failed){
     const big=stepTooBig(slot,L0,R0,up,rr,lastTxt); if(big) return big;
     const reps=rr==null?lo:Math.min(hi,rr);
     return {lb:up, reps, src:'hit top of range · load up',
-      note:`Last set ${lastTxt} was right on target but already past the top of the ${lo}–${hi} range, so load goes up one step, to ${reps} reps${rr==null?'':' (what that set says the new load is worth at effort '+T+')'}.`};
+      note:`Last set ${lastTxt} was right on target but already past the top of the ${lo}–${hi} range, so load goes up one step, to ${reps} reps${rr==null?'':' (what that set says the new load is worth at RPE '+T+')'}.`};
   }
   if(delta>0){
     const g=Math.max(1,Math.round(delta)), proposed=R0+g;
     if(proposed<=hi) return {lb:L0, reps:proposed, src:'reps in reserve',
-      note:`Last set ${lastTxt} — about ${g} rep${g===1?'':'s'} in reserve left against target effort ${T}, so same load, ${proposed} reps.`};
+      note:`Last set ${lastTxt} — about ${g} rep${g===1?'':'s'} in reserve left against target RPE ${T}, so same load, ${proposed} reps.`};
     // §2.5 increment-aware: below the top of the range and the next step is
     // more than 5% of the load — reach the top of the range at this load first
     const up=stepUp(slot,L0);
@@ -12309,14 +12298,14 @@ function rpeDeltaStep(slot, L0, R0, RPE0, T, failed){
     const big=stepTooBig(slot,L0,R0,up,rr,lastTxt); if(big) return big;
     const reps=rr==null?lo:Math.min(hi,rr);
     return {lb:up, reps, src:'hit top of range · load up',
-      note:`Last set ${lastTxt} — hit the top of the ${lo}–${hi} range with reserve left, so load goes up one step, to ${reps} reps${rr==null?'':' (what that set says the new load is worth at effort '+T+')'}.`};
+      note:`Last set ${lastTxt} — hit the top of the ${lo}–${hi} range with reserve left, so load goes up one step, to ${reps} reps${rr==null?'':' (what that set says the new load is worth at RPE '+T+')'}.`};
   }
   const g=Math.max(1,Math.round(-delta)), proposed=R0-g;
   if(proposed>=lo) return {lb:L0, reps:proposed, src:'harder than aimed',
-    note:`Last set ${lastTxt} was harder than target effort ${T}, so same load, ${proposed} reps.`};
+    note:`Last set ${lastTxt} was harder than target RPE ${T}, so same load, ${proposed} reps.`};
   const ch=coarseHold(slot,L0,R0,RPE0,failed); if(ch) return ch;
   return {lb:stepDown(slot,L0), reps:lo, src:'harder than aimed · load down',
-    note:`Last set ${lastTxt} was harder than target effort ${T}, and ${lo} is already the floor of the range, so load drops one step and reps reset to ${lo}.`};
+    note:`Last set ${lastTxt} was harder than target RPE ${T}, and ${lo} is already the floor of the range, so load drops one step and reps reset to ${lo}.`};
 }
 /* RPE-delta stepping already reacts to any drop in RPE, so it covers most
    progress on its own — a flat suggestion only happens when nothing actually
@@ -12426,14 +12415,14 @@ function rebalance(slot, d){
     const lb0=d.unit==='kg'?d.weight*LB:d.weight, lb=cg?sysOf(slot.ex,lb0,cg.bw):lb0;
     const rtf=rtfFromPct((lb+off)/ref.e1*100);
     if(rtf==null) return {field, priced:false, T, note:(lb+off)>ref.e1
-      ?'That\'s past your estimated max — no rep count hits effort '+T+' there.'
+      ?'That\'s past your estimated max — no rep count hits RPE '+T+' there.'
       :'Too light to price: more than 16 reps from failure.'};
     const reps=Math.floor(rtf-(10-T)+1e-9);
-    if(reps<1) return {field, priced:false, T, note:'At this load even one rep would be harder than effort '+T+'.'};
+    if(reps<1) return {field, priced:false, T, note:'At this load even one rep would be harder than RPE '+T+'.'};
     return {field, priced:true, T, reps, out:reps<lo?'below':reps>hi?'above':null, est};
   }
   const lf=loadFor(ref.e1,d.reps,T);
-  if(lf==null) return {field, priced:false, T, note:d.reps+' reps at effort '+T+' is past what the chart can price.'};
+  if(lf==null) return {field, priced:false, T, note:d.reps+' reps at RPE '+T+' is past what the chart can price.'};
   const added=Math.max(0,lf-off);
   const weight=cg?classTyped(slot,cg,lf,'floor'):d.unit==='kg'?Math.floor(added/LB*2+1e-9)/2:gridFloor(slot,added);
   return {field, priced:true, T, weight, out:d.reps<lo?'below':d.reps>hi?'above':null, est};
@@ -12520,8 +12509,8 @@ function nextPrescription(slot){
   if(lb>L0+1e-6&&edge>R0) lb=L0;                     // never more load AND more reps
   const rng=fmtRange(slot.reps);
   return {...r, lb, reps:edge, src:'priced for your range',
-    note:'Last set '+fmt(L0,0)+' × '+R0+' at effort '+last.rpe+(R0<lo||R0>hi?' was outside your '+rng+' range':' leaves the next set outside your '+rng+' range')
-      +', so it\'s priced to '+edge+' reps at effort '+T+': '+fmt(lb,0)+'.'};
+    note:'Last set '+fmt(L0,0)+' × '+R0+' at RPE '+last.rpe+(R0<lo||R0>hi?' was outside your '+rng+' range':' leaves the next set outside your '+rng+' range')
+      +', so it\'s priced to '+edge+' reps at RPE '+T+': '+fmt(lb,0)+'.'};
 }
 function nextPrescriptionCore(slot){
   const ex=exById[slot.ex], tr=slotTrack(slot), cls=priceClass(slot);
@@ -12535,7 +12524,7 @@ function nextPrescriptionCore(slot){
     const ref=lastSetFor(tr.ex,'');
     return {lb:null, reps:lo, src:null, firstMod:true,
       note:'First time '+modLabel(slotTrack(slot).sig?mergeMods(ex.folded&&ex.folded.modifiers,slot.modifiers):null)+' — pick a weight.'
-        +(ref?' Without it you last did '+fmt(toLb(ref.weight),0)+' × '+ref.reps+(ref.rpe!=null?' at effort '+ref.rpe:'')+'.':'')
+        +(ref?' Without it you last did '+fmt(toLb(ref.weight),0)+' × '+ref.reps+(ref.rpe!=null?' at RPE '+ref.rpe:'')+'.':'')
         +' Once you log a set it has its own history.'};
   }
   if(!last){
@@ -12544,22 +12533,22 @@ function nextPrescriptionCore(slot){
       // priced for the top of the range, so it is prescribed for the top of the range
       const p=pct1RM(hi+(10-slot.rpe))||70;
       return {lb:loadable(slot,Math.max(0,b.v*p/100-off)), reps:hi, src:b.stated?'from your estimate':'from your estimated max',
-        note:`No sets logged yet, so the load is ${fmt(p,0)}% of your ${b.stated?'stated':'estimated'} max (${fmt(b.v,0)}), the usual figure for ${hi} reps at effort ${slot.rpe}, and it is prescribed for those ${hi} reps.`+noBw};
+        note:`No sets logged yet, so the load is ${fmt(p,0)}% of your ${b.stated?'stated':'estimated'} max (${fmt(b.v,0)}), the usual figure for ${hi} reps at RPE ${slot.rpe}, and it is prescribed for those ${hi} reps.`+noBw};
     }
     return {lb:null, reps:lo, src:null, note:'No sets logged and no starting estimate, so there is nothing to base a load on.'};
   }
   const L0=engLb(last), R0=last.reps, RPE0=last.rpe;
-  const lastTxt=`${fmt(L0,0)} × ${R0}${RPE0!=null?' at effort '+RPE0:''}`;
+  const lastTxt=`${fmt(L0,0)} × ${R0}${RPE0!=null?' at RPE '+RPE0:''}`;
 
   // Within-session fatigue: only when the last set is from THIS session (we are
   // predicting the next set), and only once your own data supports it.
   const {T,rise,fat}=aimFor(slot);             // effort to aim the next set at
   const fatigue=fat?{n:fat.n,sessions:fat.sessions,mean:fat.mean,rise,applied:rise>0}:null;
-  const fatTxt=rise>0?` Aimed at effort ${T} rather than ${slot.rpe}: your later sets on this exercise run about ${rise} harder on the effort scale at the same load (${fat.n} same-load set pairs, ${fat.sessions} sessions).`:'';
+  const fatTxt=rise>0?` Aimed at RPE ${T} rather than ${slot.rpe}: your later sets on this exercise run about ${rise} RPE harder at the same load (${fat.n} same-load set pairs, ${fat.sessions} sessions).`:'';
   const done=o=>({...o, note:(o.note||'')+noBw+fatTxt, fatigue});
   const hold=(src,note)=>done({lb:L0,reps:R0,src,note});     // exactly what was lifted, never snapped to the grid
 
-  if(RPE0==null) return hold('last session',`Last set ${lastTxt} had no effort rating, so it repeats.`);
+  if(RPE0==null) return hold('last session',`Last set ${lastTxt} had no RPE, so it repeats.`);
 
   if(isChartFree(ex)) return done(rpeDeltaStep(slot,L0,R0,RPE0,T,!!last.failed));
 
@@ -12585,10 +12574,10 @@ function nextPrescriptionCore(slot){
       const c=cands[0];
       if(c&&c.kind==='load'){ const ch=coarseHold(slot,L0,R0,RPE0,!!last.failed); if(ch) return done(ch); }
       if(c) return done({lb:c.lb,reps:c.reps,src:'from your estimated max',
-        note:`Last set ${lastTxt} was harder than effort ${T}, so ${c.kind==='load'?`load drops to ${fmt(c.lb,0)} for the same ${c.reps} reps`:`the load holds at ${fmt(L0,0)} and reps drop to ${c.reps}, because one step down (${fmt(stepDown(slot,L0),0)}) would be far too light`}.`});
+        note:`Last set ${lastTxt} was harder than RPE ${T}, so ${c.kind==='load'?`load drops to ${fmt(c.lb,0)} for the same ${c.reps} reps`:`the load holds at ${fmt(L0,0)} and reps drop to ${c.reps}, because one step down (${fmt(stepDown(slot,L0),0)}) would be far too light`}.`});
     }
     return done({lb:L0,reps:Math.max(1,Math.min(R0-1,hi)),src:'harder than aimed · one rep fewer',
-      note:`Last set ${lastTxt} was harder than effort ${T}${offChart?`, and ${fmt(rtf,0)} reps-to-failure is past the ${CHART_MAX_RTF} the chart covers so it can't be priced`:''}. Same load, one rep fewer.`});
+      note:`Last set ${lastTxt} was harder than RPE ${T}${offChart?`, and ${fmt(rtf,0)} reps-to-failure is past the ${CHART_MAX_RTF} the chart covers so it can't be priced`:''}. Same load, one rep fewer.`});
   }
   if(dir===0) return hold('last session',`Last set ${lastTxt} was right on target, so it repeats.`);
 
@@ -12599,7 +12588,7 @@ function nextPrescriptionCore(slot){
     if(overridden&&lastWasProbe(tr.ex,tr.sig,cls)) return hold('holding at what you\'ve set',
       `You've logged below the last few suggestions and the last one was already a probe, so this holds ${lastTxt}.`);
     return done({lb:L0,reps:R0+1,src:overridden?'probe · +1 rep':'last session',
-      note:`Last set ${lastTxt} was easier than effort ${T} and below the ${hi}-rep ceiling, so same load, one more rep.`});
+      note:`Last set ${lastTxt} was easier than RPE ${T} and below the ${hi}-rep ceiling, so same load, one more rep.`});
   }
   const ready=RPE0<=7.5;
   if(!ready&&overridden){
@@ -12636,8 +12625,8 @@ function nextPrescriptionCore(slot){
   const stepTxt=`${fmt(L0,0)} → ${fmt(lb,0)}`;
   const why=offChart
     ?`Last set ${lastTxt} was too light to price: ${fmt(rtf,0)} reps-to-failure is past the ${CHART_MAX_RTF} the chart covers. Load goes up one step (${stepTxt}) and reps restart at ${reps}.`
-    :`Last set ${lastTxt} was easier than effort ${T} at the top of the range. Load goes to ${fmt(lb,0)} for ${reps} reps`
-      +(useRate?`, following your recent rate (+${fmt(rate,1)} lb per session).`:`, the load ${reps===lo?`${lo} reps`:`those ${reps} reps`} at effort ${T} would take, given that set.`)
+    :`Last set ${lastTxt} was easier than RPE ${T} at the top of the range. Load goes to ${fmt(lb,0)} for ${reps} reps`
+      +(useRate?`, following your recent rate (+${fmt(rate,1)} lb per session).`:`, the load ${reps===lo?`${lo} reps`:`those ${reps} reps`} at RPE ${T} would take, given that set.`)
       +(forced&&capBinds?` The largest single step allowed (${capTxt} of the load) is smaller than this exercise's smallest jump (${ex.inc} lb), so it takes one step anyway.`
         :forced&&raw!=null?` That works out under this exercise's smallest jump (${ex.inc} lb), so it takes one step.`
         :` A single step is capped at ${capTxt}.`);
@@ -12906,7 +12895,7 @@ function mainLiftRateCard(){
       stop.onclick=()=>{ if(confirm('Stop this intervention? Nothing logged changes.')){ stopIntervention(act,'stopped'); render(); } };
       a.appendChild(stop); c.appendChild(a); }
     const sc=rpeScatter(id);
-    if(sc) c.appendChild(el('div','dim tiny','Same weight is feeling quite different session to session (effort '+sc.spread+' apart at '+fmt(sc.lb,0)+') — worth some lighter practice sets and a video. A rough heuristic, not a measurement.')).style.cssText='margin-top:-3px;padding-bottom:var(--sp-1)';
+    if(sc) c.appendChild(el('div','dim tiny','Same weight is feeling quite different session to session (RPE '+sc.spread+' apart at '+fmt(sc.lb,0)+') — worth some lighter practice sets and a video. A rough heuristic, not a measurement.')).style.cssText='margin-top:-3px;padding-bottom:var(--sp-1)';
   });
   return c;
 }
@@ -13184,7 +13173,7 @@ function lastTimeHtml(slot, rx){
     else if(rx.reps<st.reps) arrow='↓ '+rx.reps+' reps';
     else arrow='same again';
   }
-  return '<div class="lasttime">Last time: '+w+' × '+st.reps+(st.rpe!=null?' · effort '+st.rpe:'')+' · '+esc(lp.when)
+  return '<div class="lasttime">Last time: '+w+' × '+st.reps+(st.rpe!=null?' · RPE '+st.rpe:'')+' · '+esc(lp.when)
     +(arrow?' <span class="lastarrow">· today '+arrow+'</span>':'')+'</div>';
 }
 function exCard(slot,o){
@@ -13197,12 +13186,12 @@ function exCard(slot,o){
     +(slot.role==='primary'?' <span class="leadbadge">Lead lift</span>':'')+'</div>'
     +(modLabel(slot.modifiers)?'<div class="exmod">'+esc(modLabel(slot.modifiers))+'</div>':'')
     +'<div class="exmeta">'+(isMaint(slot)
-        ?'1 '+term('strength-upkeep','top set')+' × '+fmtRange(MAINT_TOP.reps)+' at '+term('effort')+' '+MAINT_TOP.rpe+' · then '+Math.max(1,n-1)+' × '+fmtRange(slot.reps)+' at effort '+slot.rpe
+        ?'1 '+term('strength-upkeep','top set')+' × '+fmtRange(MAINT_TOP.reps)+' at '+term('rpe')+' '+MAINT_TOP.rpe+' · then '+Math.max(1,n-1)+' × '+fmtRange(slot.reps)+' at RPE '+slot.rpe
         :slot.structure==='amrap'
         ?'Test set: one '+term('all-out-set')+', as many reps as you can · aim for '+slot.reps[1]+'+'
         :isTopBack(slot)
-        ?term('top-set','Top set')+' × '+fmtRange(slot.reps)+' at '+term('effort')+' '+slot.rpe+' · then '+Math.max(1,n-1)+' '+term('back-off-sets','back-off'+(n-1===1?'':'s'))+' −'+Math.round(backoffCfg().drop*100)+'%'
-        :n+' sets × '+fmtRange(slot.reps)+' reps · '+term('effort')+' '+slot.rpe)+(slot.swapped?' · swapped':'')
+        ?term('top-set','Top set')+' × '+fmtRange(slot.reps)+' at '+term('rpe')+' '+slot.rpe+' · then '+Math.max(1,n-1)+' '+term('back-off-sets','back-off'+(n-1===1?'':'s'))+' −'+Math.round(backoffCfg().drop*100)+'%'
+        :n+' sets × '+fmtRange(slot.reps)+' reps · '+term('rpe')+' '+slot.rpe)+(slot.swapped?' · swapped':'')
     +(slot.prio?' · priority':'')
     +(slot.joint?' · <span style="color:var(--warn)">'+esc(slot.joint.joint)+': '+esc(slot.joint.msg)+'</span>':'')+'</div>'
     +(o.lastTime===false?'':lastTimeHtml(slot,o.rx))
@@ -13424,8 +13413,8 @@ function renderWork(){
       body.appendChild(srowEl({idx:j+1, done:!!s, empty:!s,
         load:s?typedLabel(s.exercise_id||slot.ex,s.weight)+' × '+s.reps+(s.failed?' · missed':''):'—',
         pr:s&&isPRSet(s.id),
-        badge:s?(s.group&&s.group.pos>0?TECHNIQUES[s.group.kind].extend:(s.role==='backoff'?'back-off':s.role==='top'?'top · effort '+s.rpe:(s.rpe?'effort '+s.rpe:'warmup')))
-          :(isTopBack(slot)?(j===0?'top · effort '+slot.rpe:'back-off'):isMaint(slot)&&j===0?'top · effort '+MAINT_TOP.rpe:slot.calib&&j===slot.sets_target-1?'all-out':'effort '+slot.rpe),
+        badge:s?(s.group&&s.group.pos>0?TECHNIQUES[s.group.kind].extend:(s.role==='backoff'?'back-off':s.role==='top'?'top · RPE '+s.rpe:(s.rpe?'RPE '+s.rpe:'warmup')))
+          :(isTopBack(slot)?(j===0?'top · RPE '+slot.rpe:'back-off'):isMaint(slot)&&j===0?'top · RPE '+MAINT_TOP.rpe:slot.calib&&j===slot.sets_target-1?'all-out':'RPE '+slot.rpe),
         badgeOn:!!s, chev:!!s,
         onclick:s?()=>openEditSet(slot,j):null, aria:s?'Edit set '+(j+1):null}));
     }
@@ -13505,7 +13494,7 @@ function openWeekPreview(openDayId){
     row.innerHTML=`<div class="row between">
         <span class="grow"><div style="font-weight:600;font-size:var(--fs-2)">${esc(ex?ex.name:sl.ex)}${
           f&&f.level!=='note'?`<span style="color:${f.level==='red'?'var(--danger)':f.level==='ok'?'var(--ok)':'var(--warn)'}"> ${f.level==='red'?'▲':f.level==='ok'?'✓':'●'}</span>`:''}${isExcluded(sl.ex)?' <span class="dim tiny">· not auto-included</span>':''}</div>
-          <div class="dim tiny">${sl.sets} × ${sl.reps[0]===sl.reps[1]?sl.reps[0]:sl.reps[0]+'–'+sl.reps[1]} at effort ${sl.rpe}${sl.role?' · '+sl.role:''}</div></span>
+          <div class="dim tiny">${sl.sets} × ${sl.reps[0]===sl.reps[1]?sl.reps[0]:sl.reps[0]+'–'+sl.reps[1]} at RPE ${sl.rpe}${sl.role?' · '+sl.role:''}</div></span>
       </div>`;
     const ctl=el('div','row'); ctl.style.cssText='gap:var(--sp-2);margin-top:var(--sp-2);flex-wrap:wrap';
     const mk=(lab,aria,fn)=>{ const b=el('button','btn s',lab); b.setAttribute('aria-label',aria); b.onclick=fn; return b; };
@@ -13627,7 +13616,7 @@ function planCard(slot, key, controls){
       body.appendChild(srowEl({idx:j+1, load:fmt(backoffLoad(slot,lb),0)+' lb × '+reps, badge:'back-off'}));
       continue;
     }
-    body.appendChild(srowEl({idx:j+1, load:loadTxt+' × '+reps, badge:(isTopBack(slot)||isMaint(slot))&&j===0?'top · effort '+(isMaint(slot)?MAINT_TOP.rpe:slot.rpe):'effort '+slot.rpe}));
+    body.appendChild(srowEl({idx:j+1, load:loadTxt+' × '+reps, badge:(isTopBack(slot)||isMaint(slot))&&j===0?'top · RPE '+(isMaint(slot)?MAINT_TOP.rpe:slot.rpe):'RPE '+slot.rpe}));
   }
   const ramp=lb!=null?warmupRamp(slot,lb):[];
   if(ramp.length){
@@ -13717,7 +13706,7 @@ function renderPreview(v){
   if(recent.length){
     const r=el('div','card pad'); r.appendChild(el('div','field','Recent'));
     recent.forEach(x=>r.appendChild(el('div','row between sm',
-      `<span>${esc(x.day_name||'Session')}</span><span class="dim tiny">${new Date(x.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}${x.session_rpe?' · effort '+x.session_rpe:''}</span>`)));
+      `<span>${esc(x.day_name||'Session')}</span><span class="dim tiny">${new Date(x.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}${x.session_rpe?' · RPE '+x.session_rpe:''}</span>`)));
     v.appendChild(r);
   }
 }
@@ -14816,7 +14805,7 @@ function entryPanel(slot,idx){
   const g=el('div','stepgrid'); g.style.marginTop='var(--sp-2)';
   g.appendChild(stepper('Reps',draft.reps,1,lockAnd('r',v=>{draft.reps=v;}),
     null,{typeable:true,min:1,max:100,suggested:!L.r&&draft.sugR}));
-  g.appendChild(tagTour(stepper('Effort',draft.rpe,.5,lockAnd('rpe',v=>{draft.rpe=v;}),
+  g.appendChild(tagTour(stepper('RPE',draft.rpe,.5,lockAnd('rpe',v=>{draft.rpe=v;}),
     null,{typeable:true,min:5,max:10}),'rpe'));
   p.appendChild(g);
   p.appendChild(sessionRangeEl(slot)).style.marginTop='var(--sp-1)';
@@ -14831,11 +14820,11 @@ function entryPanel(slot,idx){
   if(draftLocked()){
     const r=draft.rebal, rng=fmtRange(slot.reps);
     let msg;
-    if(L.rpe) msg='Effort changed — that\'s what gets logged, so nothing recomputes now.';
+    if(L.rpe) msg='RPE changed — that\'s what gets logged, so nothing recomputes now.';
     else if(L.w&&L.r) msg='Both numbers are yours — nothing recomputes.';
     else if(r&&r.priced) msg=(r.field==='reps'
-        ?'Reps worked out for '+fmt(draft.weight)+' '+draft.unit+' at effort '+r.T
-        :'Weight worked out for '+draft.reps+' reps at effort '+r.T)
+        ?'Reps worked out for '+fmt(draft.weight)+' '+draft.unit+' at RPE '+r.T
+        :'Weight worked out for '+draft.reps+' reps at RPE '+r.T)
       +(r.out?' — '+(r.field==='reps'?r.out+' your '+rng+' range at this load':'outside your '+rng+' range'):'')+'.'+(r.est||'');
     else msg=(r&&r.note)||'';
     if(msg) p.appendChild(el('div','sugnote',esc(msg)));
@@ -14897,7 +14886,7 @@ function entryPanel(slot,idx){
   if(draft.tech!=='straight'&&draft.tech!=='amrap'&&TECH_HELP[draft.tech]) p.appendChild(el('div','dim tiny',esc(TECH_HELP[draft.tech]))).style.marginTop='var(--sp-2)';
   if(draft.tech==='amrap'){
     const f0=flagFor(slot.ex,slot.modifiers), f=isWarning(f0)?f0:null, heavyBar=ex.load==='barbell'&&familyOf(ex)!=='isolation';
-    p.appendChild(el('div','dim tiny','All-out: as many reps as you can at this weight, stopping when the next rep would break form. Logged at effort 10 — it shows the app how your effort ratings line up with reps actually left. It doesn\'t change your training max or push up your next sets.'
+    p.appendChild(el('div','dim tiny','All-out: as many reps as you can at this weight, stopping when the next rep would break form. Logged at RPE 10 — it shows the app how your RPE ratings line up with reps actually left. It doesn\'t change your training max or push up your next sets.'
       +(heavyBar?' <span style="color:var(--warn)">On a heavy barbell lift this carries more risk — machines and isolation work are the safer place for it.</span>':'')
       +(f?' <span style="color:var(--warn)">'+esc(f.why)+'.</span>':''))).style.marginTop='var(--sp-2)';
   }
@@ -14981,7 +14970,7 @@ function sessionRangeEl(slot){
   const draw=()=>{
     w.innerHTML='';
     const row=el('div','row between');
-    row.appendChild(el('span','dim tiny','Target '+fmtRange(slot.reps)+' reps at '+term('effort')+' '+slot.rpe+(slot.repSrc==='session'?' · this session only':'')));
+    row.appendChild(el('span','dim tiny','Target '+fmtRange(slot.reps)+' reps at '+term('rpe')+' '+slot.rpe+(slot.repSrc==='session'?' · this session only':'')));
     const b=el('button','',SESSION_RANGE_OPEN.has(slot)?'Done':'Change range for today');
     b.style.cssText='font-size:var(--fs-1);color:var(--dim);text-decoration:underline';
     b.onclick=()=>{ if(SESSION_RANGE_OPEN.has(slot)) SESSION_RANGE_OPEN.delete(slot); else SESSION_RANGE_OPEN.add(slot); draw(); };
@@ -15033,7 +15022,7 @@ function openEditEvent(slot,orig,title){
     host.appendChild(stepper('Weight',st.weight,exById[slot.ex].inc,v=>{st.weight=Math.max(0,v);draw();},st.unit,{wide:true}));
     const g=el('div',isWarm?'':'stepgrid'); g.style.cssText='margin:var(--sp-2) 0 var(--sp-3)';
     g.appendChild(stepper('Reps',st.reps,1,v=>{st.reps=Math.max(1,v);draw();}));
-    if(!isWarm) g.appendChild(stepper('Effort',st.rpe,.5,v=>{st.rpe=Math.min(10,Math.max(5,v));draw();}));
+    if(!isWarm) g.appendChild(stepper('RPE',st.rpe,.5,v=>{st.rpe=Math.min(10,Math.max(5,v));draw();}));
     host.appendChild(g);
     const est=e1rm(st.unit==='kg'?st.weight*LB:st.weight, st.reps);
     if(est&&!isWarm) host.appendChild(el('div','muted tiny',`Estimated max ${fmt(est,0)} lb · ${conf(st.reps)} confidence`));
@@ -15184,31 +15173,31 @@ function explainRx(slot, pr, o){
     detail.push('Rep range '+fmtRange(slot.reps)+" was set on this exercise, overriding the block's range.");
   }else{
     parts.push(bn+' block');
-    detail.push('Rep range '+fmtRange(slot.reps)+' at effort '+slot.rpe+' comes from the '+bn+' block'+(p.weeks?' (week '+p.week+' of '+p.weeks+')':'')+' for '+(slot.role==='accessory'?'an accessory':'a '+(slot.role||'working'))+' lift.');
+    detail.push('Rep range '+fmtRange(slot.reps)+' at RPE '+slot.rpe+' comes from the '+bn+' block'+(p.weeks?' (week '+p.week+' of '+p.weeks+')':'')+' for '+(slot.role==='accessory'?'an accessory':'a '+(slot.role||'working'))+' lift.');
   }
   if(isTopBack(slot)){
     const c=backoffCfg(), n=(slot.backoff&&slot.backoff.n)||Math.max(1,(slot.sets_target||slot.sets)-1);
     if(pr.src==='back-off') parts.push('back-off '+pr.backoffK+(c.mode==='fixed'?' of '+pr.backoffN:'')+' · '+Math.round(c.drop*100)+'% under your top set');
-    else if(pr.lb!=null) parts.push('Top set: '+fmt(pr.lb,0)+' × '+pr.reps+' at effort '+slot.rpe+' · back-offs: '+n+' × '+pr.reps+' at '+fmt(backoffLoad(slot,pr.lb),0));
+    else if(pr.lb!=null) parts.push('Top set: '+fmt(pr.lb,0)+' × '+pr.reps+' at RPE '+slot.rpe+' · back-offs: '+n+' × '+pr.reps+' at '+fmt(backoffLoad(slot,pr.lb),0));
   }
   // 2. where the number came from
   if(pr.src==='back-off'||pr.amrap){ if(pr.amrap) parts.push(pr.src); if(pr.note) detail.push(pr.note); return {line:parts.join(' · '), detail}; }
   if(slot.ramp&&!pr.maint){ const tw=trainingWeeksOf(p);
-    detail.push('Effort ramps across the block: week '+p.week+' of '+tw+' is effort '+slot.rpe+' ('+(10-slot.rpe)+' reps in reserve). Compounds go from 3 in reserve to 1, isolations from 3 to 0 — closer to failure as the block goes on.'); }
+    detail.push('Effort ramps across the block: week '+p.week+' of '+tw+' is RPE '+slot.rpe+' ('+(10-slot.rpe)+' reps in reserve). Compounds go from 3 in reserve to 1, isolations from 3 to 0 — closer to failure as the block goes on.'); }
   if(slot.frozen) detail.push('Sets held at last week\'s count: your '+(ML[slot.frozen]||slot.frozen).toLowerCase()+' work dropped in performance two sessions running, so more sets would likely add fatigue, not growth.');
   if(slot.ivNote) detail.push(slot.ivNote+'.');
-  if(slot.structure==='practice') parts.push('practice · effort '+slot.rpe);
+  if(slot.structure==='practice') parts.push('practice · RPE '+slot.rpe);
   if(slot.capped) detail.push('One or more sets removed to keep '+(ML[slot.capped.muscle]||slot.capped.muscle).toLowerCase()+' at about '+slot.capped.cap+' sets this session — past that, extra sets in one session add little (judgement default).');
   if(pr.calibAmrap) parts.push('last set: all-out, as many reps as you can');
-  if(pr.maint){ parts.unshift('strength upkeep: 1 top set this week at effort '+MAINT_TOP.rpe);
-    detail.push('One heavy set a week on each main lift keeps strength expression from fading during a hypertrophy block; your usual hypertrophy sets follow it. How long strength holds without it is uncertain (Grade D), as are the 3–5 reps and effort 7.5.'); }
+  if(pr.maint){ parts.unshift('strength upkeep: 1 top set this week at RPE '+MAINT_TOP.rpe);
+    detail.push('One heavy set a week on each main lift keeps strength expression from fading during a hypertrophy block; your usual hypertrophy sets follow it. How long strength holds without it is uncertain (Grade D), as are the 3–5 reps and RPE 7.5.'); }
   if(pr.src) parts.push(pr.src==='last session'?'from your last set':pr.src);
   else parts.push('no history yet');
   if(pr.note) detail.push(pr.note);
   // within-session fatigue, from your own history
   if(pr.fatigue){
     const f=pr.fatigue;
-    if(f.applied) parts.push('fatigue −'+f.rise+' effort · '+f.n+' pairs, '+f.sessions+' sessions');
+    if(f.applied) parts.push('fatigue −'+f.rise+' RPE · '+f.n+' pairs, '+f.sessions+' sessions');
     else detail.push('Fatigue adjustment: none yet. '+f.n+' of '+FATIGUE_MIN_PAIRS+' same-load set pairs across '+f.sessions+' of '+FATIGUE_MIN_SESSIONS+' sessions logged for this exercise'
       +(f.n>=FATIGUE_MIN_PAIRS&&f.sessions>=FATIGUE_MIN_SESSIONS?' — enough data, but your later sets do not run harder on average.':'.'));
   }
@@ -15298,7 +15287,7 @@ function suggestForSys(slot){
   if(slot.structure==='amrap'&&!slot.sets.length) return only(amrapRx(slot),'all-out test set');
   if(allOutNext(slot)){
     const base=nextPrescription(slot);
-    return only({...base, calibAmrap:true, note:(base.note||'')+' Last set: as many reps as you can at this load — an all-out set, so the app learns how your effort ratings line up with reps left. Week 1 only.'},'calibration');
+    return only({...base, calibAmrap:true, note:(base.note||'')+' Last set: as many reps as you can at this load — an all-out set, so the app learns how your RPE ratings line up with reps left. Week 1 only.'},'calibration');
   }
   if(isMaint(slot)&&!topSetOf(slot)){
     const v=maintTopView(slot), m=fastRx(v, nextPrescription(v), o);
@@ -15428,7 +15417,7 @@ function backoffRx(slot){
   const k=slot.sets.filter(x=>x.role==='backoff').length+1, n=(slot.backoff&&slot.backoff.n)||Math.max(1,slot.sets_target-1);
   return {lb, reps:top.reps, src:'back-off', backoffK:k, backoffN:n,
     note:'Back-off '+k+(c.mode==='fixed'?' of '+n:'')+': '+Math.round(c.drop*100)+'% under the top set you logged ('+fmt(L,0)+' × '+top.reps+'), same reps.'
-      +(c.mode==='fatigue'?' Keep going at this load until it feels as hard as the top set (effort '+(top.rpe??'—')+'), at most '+(n+2)+' back-offs.':'')
+      +(c.mode==='fatigue'?' Keep going at this load until it feels as hard as the top set (RPE '+(top.rpe??'—')+'), at most '+(n+2)+' back-offs.':'')
       +' The 8% default and the count are judgement defaults.'};
 }
 
@@ -15710,7 +15699,7 @@ function fastRx(slot, pr, o){
   if(!same||same.miss) return pr;
   const L0=same.load, R=Math.max(lo,Math.min(hi,same.set.reps));
   return {...pr, lb:stepUp(slot,L0), reps:R, src:'adding load each session', fast:true,
-    note:'Last time '+fmt(L0,0)+' × '+same.set.reps+(same.set.rpe!=null?' at effort '+same.set.rpe:'')+' hit its target, so the load goes up one step at '+R+' reps. This lift keeps adding load each session until it misses twice in a row, then it moves to the normal progression on its own. (Judgement default: one step, two misses.)'};
+    note:'Last time '+fmt(L0,0)+' × '+same.set.reps+(same.set.rpe!=null?' at RPE '+same.set.rpe:'')+' hit its target, so the load goes up one step at '+R+' reps. This lift keeps adding load each session until it misses twice in a row, then it moves to the normal progression on its own. (Judgement default: one step, two misses.)'};
 }
 
 /* ---------- Fatigue-triggered deloads (spec §3.6) ----------
@@ -15800,7 +15789,7 @@ function deloadSignals(){
   const measured=EX.filter(ex=>!ex.rehab).map(ex=>({ex, d:rpeDrift(ex.id)})).filter(x=>x.d!=null);
   const drifted=measured.filter(x=>x.d>=1);
   if(drifted.some(x=>goals.includes(x.ex.id))||(drifted.length>=2&&drifted.length>=Math.ceil(measured.length/3)))
-    out.push({k:'rpe', strong:true, text:'the same weights feel at least 1 point of effort harder than 2–3 weeks ago ('+drifted.slice(0,3).map(x=>x.ex.name).join(', ')+')'});
+    out.push({k:'rpe', strong:true, text:'the same weights feel at least 1 RPE harder than 2–3 weeks ago ('+drifted.slice(0,3).map(x=>x.ex.name).join(', ')+')'});
   const hot=JOINTS.filter(j=>jointLevel(jointTrend(j,6))>=3);
   if(hot.length) out.push({k:'joint', strong:true, text:'your '+hot.join(' and ')+' '+(hot.length>1?'have':'has')+' flared enough that loads are held'});
   if(weeksWithoutDeload()>=10) out.push({k:'weeks', strong:false, text:'it has been 10 or more weeks since a deload'});
@@ -15936,7 +15925,7 @@ const STALL_TABLES=[
     signal:{video:'Did your hips rise before the bar?'},
     recommendation:'Tempo squat (3 seconds down) and a technique check on video',
     options:[{modifiers:{tempo:'3-1-0'}, reps:[5,5], rpe:7}]},
-  {family:'squat', sticking:null, handled:'step0', cause:'Fails only in late sets, effort rising at the same load — fatigue', recommendation:'Deload, then resume'},
+  {family:'squat', sticking:null, handled:'step0', cause:'Fails only in late sets, RPE rising at the same load — fatigue', recommendation:'Deload, then resume'},
   {family:'squat', sticking:null, handled:'joint', cause:'Pain-limited', recommendation:'Box, tempo, belt squat or leg press while under the pain threshold'},
   {family:'hinge', sticking:'off_floor', cause:'Leg drive at the start, or the set-up position', grade:'C',
     signal:{log:'deficit deadlift falling against your deadlift', ask:'Couldn\'t break the floor?'},
@@ -16187,8 +16176,8 @@ function stopIntervention(s, reason){
   return append({type:'intervention_end', start_id:s.ev.id, exercise_id:s.ev.exercise_id, reason:reason||'stopped'});
 }
 const IV_TEXT={
-  volume:'Practice sets on this lift: about 40% more sets, at effort 6.5',
-  frequency:'One more day a week of this lift, as practice sets at effort 6.5',
+  volume:'Practice sets on this lift: about 40% more sets, at RPE 6.5',
+  frequency:'One more day a week of this lift, as practice sets at RPE 6.5',
   variant:'A targeted variant in place of about 40% of this lift\'s sets',
   specialization:'Specialization: this lift on up to 4 days a week, your other main lifts at about a third of their sets'
 };
@@ -16211,13 +16200,13 @@ function stallCard(exId){
     accept:{label:'Got it', fn:()=>{}}, decline:{label:'Hide'}};
   if(plan.kind==='fatigue'||plan.kind==='recovering') return null;   // the deload card says it, with the stall named
   if(plan.kind==='hard'){ const dpw=sessionsPerWeek()||5; return {id:base+'hard', snoozeDays:7, title:nm+': tired, not stuck?',
-    body:nm+' has had '+since+', and '+[plan.over!=null?'its last three sessions came in about '+(Math.round(plan.over*2)/2)+' harder on the effort scale than planned':'',plan.rdrop!=null?'your readiness this week is about '+Math.round(plan.rdrop)+' points under the month before':''].filter(Boolean).join(', and ')+'. That points to fatigue, so the first step is recovery, not more work: a deload is '+dpw+' lighter sessions, then the block carries on. If it still has not moved after that, the app suggests more practice. The thresholds are judgement defaults.',
+    body:nm+' has had '+since+', and '+[plan.over!=null?'its last three sessions came in about '+(Math.round(plan.over*2)/2)+' RPE harder than planned':'',plan.rdrop!=null?'your readiness this week is about '+Math.round(plan.rdrop)+' points under the month before':''].filter(Boolean).join(', and ')+'. That points to fatigue, so the first step is recovery, not more work: a deload is '+dpw+' lighter sessions, then the block carries on. If it still has not moved after that, the app suggests more practice. The thresholds are judgement defaults.',
     accept:{label:'Deload this week', fn:()=>{ append({type:'deload_start',sessions:dpw,reasons:['stall_effort']}); deloadStopsVolume(); toast('Deload week on — the next '+dpw+' sessions are lighter'); }},
     decline:{label:'Not now'}}; }
   const dpw=sessionsPerWeek()||5, start=()=>{ startIntervention(exId,plan); toast('Started — '+nm); };
   if(plan.step===1) return {id:base+'1', snoozeDays:14, title:nm+' has stalled — more practice?',
-    body:nm+' has had '+since+'. Step 1 is more of the lift itself: '+(plan.kind==='frequency'?'it is trained under twice a week, so one more day a week of it':'about 40% more sets')+' as practice sets at effort 6.5, for '+IV_WEEKS+' weeks. Frequency and volume have the best evidence of anything for a stalled lift (A–B).'
-      +(plan.worked?' This has worked for you on this lift type before.':'')+' The 40%, effort and length are judgement defaults.',
+    body:nm+' has had '+since+'. Step 1 is more of the lift itself: '+(plan.kind==='frequency'?'it is trained under twice a week, so one more day a week of it':'about 40% more sets')+' as practice sets at RPE 6.5, for '+IV_WEEKS+' weeks. Frequency and volume have the best evidence of anything for a stalled lift (A–B).'
+      +(plan.worked?' This has worked for you on this lift type before.':'')+' The 40%, RPE and length are judgement defaults.',
     accept:{label:'Start for '+IV_WEEKS+' weeks', fn:start}, decline:{label:'Not now'}};
   if(plan.step===2){
     const dx=plan.dx, rs=(plan.ratios||[]);
@@ -16235,14 +16224,14 @@ function stallCard(exId){
           :dx.src==='typical'?'No answers yet on where it slows, so this aims at the usual sticking region for this lift ('+(STICK_LABEL[dx.region]||dx.region).toLowerCase()+'). '
           :'No clear sticking point, so this is the general option. ')
         +(row?row.recommendation+'. Likely cause: '+row.cause.charAt(0).toLowerCase()+row.cause.slice(1)+'. ':'')
-        +variantName(exId,o)+' replaces about 40% of your '+nm+' sets for '+IV_WEEKS+' weeks, '+o.reps[0]+(o.reps[1]!==o.reps[0]?'–'+o.reps[1]:'')+' reps at effort '+o.rpe+'. '
+        +variantName(exId,o)+' replaces about 40% of your '+nm+' sets for '+IV_WEEKS+' weeks, '+o.reps[0]+(o.reps[1]!==o.reps[0]?'–'+o.reps[1]:'')+' reps at RPE '+o.rpe+'. '
         +'Evidence for targeting a sticking point is weak ('+(row&&row.grade||'D')+'); the 40% and length are judgement defaults.',
       accept:{label:'Start for '+IV_WEEKS+' weeks', fn:start}, decline:{label:'Not now'}};
   }
   if(plan.step===4){
     const sub=addedExposureFor(exId);
     return {id:base+'4', snoozeDays:28, title:nm+': a specialization block?',
-      body:'Practice and a targeted variant have not moved '+nm+'. A specialization block trains it on up to 4 days a week, mostly 4–6 reps at effort 7.5, with your other main lifts at about a third of their sets, for '+IV_WEEKS+' weeks.'
+      body:'Practice and a targeted variant have not moved '+nm+'. A specialization block trains it on up to 4 days a week, mostly 4–6 reps at RPE 7.5, with your other main lifts at about a third of their sets, for '+IV_WEEKS+' weeks.'
         +(sub!==exId?' Because of what you are working around, the extra days use '+exById[sub].name+', not more of the barbell lift.':'')
         +' Retest 4–8 weeks after — specialization gains are often temporary. Grade C/D.',
       accept:{label:'Start for '+IV_WEEKS+' weeks', fn:start}, decline:{label:'Not now'}};
@@ -16318,7 +16307,7 @@ function addPracticeDays(days, phase){
   [...new Set(CFG.goals||[])].filter(id=>exById[id]&&mainEligible(exById[id])).forEach(id=>{
     const at=days.map(d=>d.slots.find(x=>x.ex===id&&!x.iv)).filter(Boolean);
     const last=at.filter(sl=>!sl.structure).pop();
-    if(at.length>=3&&last){ last.structure='practice'; last.rpe=IV_PRACTICE_RPE; last.ivNote='Practice day: the same lift at effort 6.5, to groove it without the fatigue of a hard session'; }
+    if(at.length>=3&&last){ last.structure='practice'; last.rpe=IV_PRACTICE_RPE; last.ivNote='Practice day: the same lift at RPE 6.5, to groove it without the fatigue of a hard session'; }
   });
   return days;
 }
@@ -16714,7 +16703,7 @@ const ENGINE={
     focused_deload:{scope:'exercise', max:'pinned at hold / −10% / −20% of the load at the start', expires:'1–3 weeks + ramp-back'},
     condition_flag:{scope:'exercise', max:'display only — never changes the number', expires:'while the condition is picked'},
     calibrating:{scope:'global', max:'no load step up', expires:'first session after a program, block or profile change'},
-    ceiling:{scope:'exercise', max:'load ≤ what the estimated max supports at the target reps and effort', expires:'n/a — guard'},
+    ceiling:{scope:'exercise', max:'load ≤ what the estimated max supports at the target reps and RPE', expires:'n/a — guard'},
     one_step:{scope:'exercise', max:'load moves ≤ one increment per session', expires:'n/a — guard'},
     floor:{scope:'exercise', max:'load ≥ 85% of the best completed load in the last 6 sessions', expires:'n/a — guard'},
     both_up:{scope:'exercise', max:'load and reps never both rise; load and sets never both rise', expires:'n/a — guard'},
@@ -17057,7 +17046,7 @@ function runModifiers(slot, base, o){
     // ceiling with the app's ±1 RPE "on target" window, so one step up after an on-target set
     // (fast progression, double progression) isn't frozen — it's there to stop runaways
     const ceil=ceilingFor(slot,pr.reps,Math.min(10,T+1));
-    if(ceil!=null&&pr.lb>ceil+1e-6&&!isBW(ex)){ const c=gridFloor(slot,ceil); if(c<pr.lb){ pr={...pr,lb:Math.max(c,0)}; rec('ceiling',true,'Capped at what your recent sets support for '+pr.reps+' reps (within 1 of effort '+T+')',pr); } }
+    if(ceil!=null&&pr.lb>ceil+1e-6&&!isBW(ex)){ const c=gridFloor(slot,ceil); if(c<pr.lb){ pr={...pr,lb:Math.max(c,0)}; rec('ceiling',true,'Capped at what your recent sets support for '+pr.reps+' reps (within 1 RPE of '+T+')',pr); } }
     if(pr.lb>L0+1e-6&&pr.reps>R0){ pr=lo>R0?{...pr,lb:L0}:{...pr,reps:R0}; rec('both_up',true,'Load and reps never both go up',pr); }
     if(pr.lb>L0+1e-6&&slot.baseSets!=null&&(slot.sets_target||slot.sets)>slot.baseSets){ pr={...pr,lb:L0}; rec('both_up',true,'Extra sets today, so the load holds',pr); }
   }
@@ -17301,7 +17290,7 @@ function techniqueBlock(slot){
   const sp=stickingPending(slot);
   if(sp){
     const q=el('div','qblock'); q.style.cssText='margin:var(--sp-2) 0 0;border-left:3px solid var(--warn)';
-    q.innerHTML='<div class="qlab">Where did it slow down?</div><div class="dim tiny">That set was '+(sp.set.failed?'a missed rep':'effort '+sp.set.rpe)+'. One tap — it helps work out what to change if this lift stalls.</div>';
+    q.innerHTML='<div class="qlab">Where did it slow down?</div><div class="dim tiny">That set was '+(sp.set.failed?'a missed rep':'RPE '+sp.set.rpe)+'. One tap — it helps work out what to change if this lift stalls.</div>';
     const ch=el('div','chips'); ch.style.marginTop='var(--sp-2)';
     sp.options.forEach(o=>{ const b=el('button','chip',esc(STICK_LABEL[o]||o)); b.style.cssText='font-size:var(--fs-1);padding:var(--sp-2) var(--sp-2)';
       b.onclick=()=>{ append({type:'sticking_report',exercise_id:slot.ex,session_id:session.id,set_id:sp.set.id,region:o,
@@ -18220,7 +18209,7 @@ function renderHist(){
     if(tot.n<10) ca.appendChild(el('div','empty','Fills in once a few weeks of sets carry the suggestion they were given.'));
     else{
       const p=(a,b)=>b?Math.round(a/b*100)+'%':'—';
-      ca.appendChild(el('div','sm',`Lifted as suggested <b>${p(tot.taken,tot.n)}</b> of ${tot.n} sets · reps within 2 of suggested <b>${p(tot.repsNear,tot.repsN)}</b> · on target (effort within 1) when you lifted the load: <b>${p(tot.on,tot.rated)}</b>`)).style.marginTop='var(--sp-2)';
+      ca.appendChild(el('div','sm',`Lifted as suggested <b>${p(tot.taken,tot.n)}</b> of ${tot.n} sets · reps within 2 of suggested <b>${p(tot.repsNear,tot.repsN)}</b> · on target (RPE within 1) when you lifted the load: <b>${p(tot.on,tot.rated)}</b>`)).style.marginTop='var(--sp-2)';
       const wks=acc.filter(w=>w.n>=3);
       const ch=pctLines([
         {color:'var(--accent)', pts:wks.map(w=>Math.round(w.taken/w.n*100))},
@@ -18371,7 +18360,7 @@ function renderHist(){
     b.style.cssText='width:100%;text-align:left;padding:var(--sp-3) var(--sp-4);border-top:1px solid var(--line)';
     b.innerHTML=`<div class="row between">
       <span class="grow"><div style="font-weight:600">${esc(e.day_name||'Session')}</div>
-        <div class="dim tiny">${new Date(e.ts).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})} · ${n} sets${e.session_rpe?' · effort '+e.session_rpe:''}${e.duration_s?' · '+Math.round(e.duration_s/60)+' min':''}</div>
+        <div class="dim tiny">${new Date(e.ts).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})} · ${n} sets${e.session_rpe?' · RPE '+e.session_rpe:''}${e.duration_s?' · '+Math.round(e.duration_s/60)+' min':''}</div>
         ${e.ended_early?`<div class="tiny" style="color:var(--warn)">ended early · ${esc(e.reason)}</div>`:''}</span>
       <span class="dim">›</span></div>`;
     b.onclick=()=>openSessionDetail(e);
@@ -18441,7 +18430,7 @@ function openSessionDetail(endEv){
   let html=`<h2 style="font-size:var(--fs-4);margin-bottom:2px">${esc(endEv.day_name||'Session')}</h2>
     <div class="muted tiny" style="margin-bottom:var(--sp-2)">${new Date(endEv.ts).toLocaleString(undefined,{weekday:'long',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'})}</div>
     <div class="row" style="gap:var(--sp-3);margin-bottom:var(--sp-3);flex-wrap:wrap">
-      ${endEv.session_rpe?`<span class="sm"><span class="dim">Session effort</span> <b>${endEv.session_rpe}</b></span>`:''}
+      ${endEv.session_rpe?`<span class="sm"><span class="dim">Session RPE</span> <b>${endEv.session_rpe}</b></span>`:''}
       ${dur?`<span class="sm"><span class="dim">Time</span> <b>${dur}</b></span>`:''}
       ${tonnage?`<span class="sm"><span class="dim">Moved</span> <b>${Math.round(tonnage).toLocaleString()} lb</b></span>`:''}
       ${endEv.ended_early?`<span class="sm" style="color:var(--warn)">ended early · ${esc(endEv.reason)}</span>`:''}
@@ -18822,8 +18811,7 @@ function drawBuilder(rerun){
 let ONB=null;
 const ONB_Q=['goal','history','schedule','equipment','body','around','priorities','lifts'];
 const ONB_T=['split','days','reps','blocks'];
-const ONB_GOALS=[{k:'toned', profile:'size_first', label:'Get fit and toned', blurb:'Build some muscle and feel fitter. A size-first program with no strength tests.'}]
-  .concat(PROFILE_ORDER.map(k=>({k, profile:k, label:PROFILES[k].label, blurb:PROFILES[k].blurb})));
+const ONB_GOALS=PROFILE_ORDER.map(k=>({k, profile:k, label:PROFILES[k].label, blurb:PROFILES[k].blurb}));
 const ONB_HISTORY=[['new','New to lifting','Under six months, or starting again after a long break'],['novice',EXPERIENCE.novice.label,'Weight goes up most times you train'],
   ['intermediate',EXPERIENCE.intermediate.label,'A new best every few weeks'],['advanced',EXPERIENCE.advanced.label,'A new best every few months']];
 const ONB_GYMS=[['mixed','A bit of everything','A typical commercial gym'],['barbell','Barbell gym','Racks, platforms and free weights'],
@@ -18853,12 +18841,12 @@ function onbDefaults(existing){
 }
 /* Every answer with its default filled in. Pure. */
 function onbResolve(O){
-  const a=O.a, g=ONB_GOALS.find(x=>x.k===a.goal)||ONB_GOALS.find(x=>x.k==='toned');
+  const a=O.a, g=ONB_GOALS.find(x=>x.k===a.goal)||ONB_GOALS.find(x=>x.k==='size_first');   // skipped: size first
   const days=Math.max(WEEK_MIN,Math.min(WEEK_MAX,a.days||3));
   const st=WEEK_STYLES.find(x=>x.k===(O.t.style||ONB_AUTO_STYLE[days])&&(x.min||WEEK_MIN)<=days)||WEEK_STYLES[0];
   const gym=a.gym||'mixed';
   const repRanges={};
-  return {goal:g.k, toned:g.k==='toned', profile:g.profile, params:g.k==='toned'?{testEvery:0,peaks:'no'}:{},
+  return {goal:g.k, profile:g.profile, params:{},
     history:a.history||'new', experience:a.history==='intermediate'||a.history==='advanced'?a.history:'novice',
     days, minutes:a.minutes||60, style:st.k, week:st.make(days), gym, have:a.have||ONB_HAVE_DEFAULT[gym],
     bw:a.bw>0?a.bw:null, conds:a.conds.slice(), excluded:a.excluded.slice(), emphasis:a.emphasis.slice(0,3), dep:{muscles:[...a.dep.muscles],patterns:[...a.dep.patterns]},
@@ -18930,7 +18918,7 @@ function onbReasons(R, plan, days){
   const nm=id=>exById[id]?exById[id].name:id;
   const flagged=R.conds.length?likelyFlaggedFor(R.conds).length:0, mins=onbMinutes(days);
   return {
-    goal:R.toned?'Toned means building some muscle and feeling fitter. This is a size-first program with no strength tests. How lean you look depends mostly on eating, which this app doesn\'t track.':PROFILES[R.profile].blurb,
+    goal:PROFILES[R.profile].blurb,
     week:R.days+' days a week, '+splitOf(R.week).name.toLowerCase()+'. '+ONB_STYLE_NOTE[R.style][0]+'. A starting point; every day can be changed.',
     progress:R.experience==='novice'?'Your main lifts start by adding a step each session while they keep hitting the target. Two misses in a row and a lift moves to the slower progression on its own.'
       :'Your lifts build reps across their range, then the weight goes up. A lift that starts climbing fast again speeds up on its own.',
@@ -19022,7 +19010,6 @@ function drawOnboardingStep(){
   }
   if(step==='goal'){
     ONB_GOALS.forEach(g=>card(a.goal===g.k,g.label,g.blurb,()=>{ a.goal=g.k; drawOnboarding(); }));
-    if(a.goal==='toned') host.appendChild(el('div','anchor','How lean you look depends mostly on eating, which this app doesn\'t track. The program builds the muscle.'));
   }
   if(step==='history') ONB_HISTORY.forEach(([k,l,sub])=>card(a.history===k,l,sub,()=>{ a.history=k; drawOnboarding(); }));
   if(step==='schedule'){
@@ -19169,7 +19156,7 @@ function parseTutorial(md){
   const out={intro:'',sections:[]}; let sec=null, st=null; const intro=[];
   const attrs=t=>{ const m=t.match(/\{([^}]*)\}\s*$/), o={}; if(m) m[1].split(',').forEach(kv=>{ const [k,v]=kv.split(':').map(x=>x.trim()); if(k) o[k]=v==null?true:v; }); return o; };
   const strip=t=>t.replace(/\{[^}]*\}\s*$/,'').trim();
-  String(md||'').split('\n').forEach(line=>{
+  String(md||'').split(/\r?\n/).forEach(line=>{
     if(/^## /.test(line)){ sec={title:strip(line.slice(3)).trim(),attrs:attrs(line),steps:[]}; out.sections.push(sec); st=null; return; }
     if(/^### /.test(line)&&sec){ const raw=line.slice(4), m=raw.match(/`([^`]+)`/);
       const title=strip(raw.replace(/`[^`]*`/,'')).trim();
@@ -19217,7 +19204,7 @@ const icon=(name,label)=>ICONS[name]?'<svg class="ic" viewBox="0 0 24 24" fill="
 const glossKey=t=>String(t).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 function parseGlossary(md){
   const out={}; let cur=null; const F={'In the app':'label','Also called':'also','Means':'means'};
-  String(md||'').split('\n').forEach(line=>{
+  String(md||'').split(/\r?\n/).forEach(line=>{
     if(/^## /.test(line)){ const name=line.slice(3).trim(); cur={key:glossKey(name),name,label:'',also:'',means:''}; out[cur.key]=cur; return; }
     const m=cur&&line.match(/^- (In the app|Also called|Means):\s*(.*)$/); if(m) cur[F[m[1]]]=m[2].trim();
   });
@@ -19351,7 +19338,7 @@ let GUIDE_Q='';
 function openGuide(){
   const tabs=[['dash','Dashboard'],['work','Workout'],['lifts','Lifts'],['hist','Progress']];
   sheet('<h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-2)">How this works</h2>'
-    +'<input type="search" id="gQ" placeholder="Search: a sore shoulder, missed a week, effort…" aria-label="Search the guide" style="width:100%;background:var(--surface-2);border:none;border-radius:var(--r-btn);color:var(--ink);padding:var(--sp-3);font:inherit;margin-bottom:var(--sp-3)">'
+    +'<input type="search" id="gQ" placeholder="Search: a sore shoulder, missed a week, RPE…" aria-label="Search the guide" style="width:100%;background:var(--surface-2);border:none;border-radius:var(--r-btn);color:var(--ink);padding:var(--sp-3);font:inherit;margin-bottom:var(--sp-3)">'
     +'<div id="gRes"></div>'
     +'<div class="qblock"><div class="qlab">Show me around</div><div class="chips" id="gTours"></div><div class="dim tiny" style="margin-top:var(--sp-2)">The ? at the top of each screen does the same for that screen.</div>'
     +'<button class="btn s" id="gFirst" style="margin-top:var(--sp-3)">Replay the first-session hints</button></div>'

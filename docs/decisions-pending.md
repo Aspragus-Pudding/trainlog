@@ -163,6 +163,8 @@ the readiness card always was, and says "No check-in yet today."
 
 ## D10. "Effort" replaces "RPE" everywhere on screen
 
+**Reversed in v1.65.1, at your request.** Every on-screen string says RPE again, and the glossary entry is "RPE" (also called effort).
+
 **Question:** the glossary label for RPE is "effort". Some lifters know RPE and
 might prefer it on set badges.
 
@@ -265,6 +267,8 @@ planned set.
 
 ## D17. Light mode follows the phone
 
+**Reversed in v1.65.1, at your request.** Dark is the default on every phone. The light look is the theme code LIGHT, with the same light values.
+
 **Question:** the spec asks for light and dark screenshots, but the app had
 dark only.
 
@@ -295,6 +299,8 @@ makes them visibly 44 px.
 ---
 
 ## D19. "Get fit and toned" is size first, with no strength tests
+
+**Reversed in v1.65.1, at your request.** The option is gone from setup. A skipped goal question gives size first.
 
 **Question:** the spec maps "toned" to size-first with general-fitness
 defaults, but doesn't say which defaults.

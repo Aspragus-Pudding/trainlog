@@ -26,7 +26,7 @@ point of this test, so send them freely, even small ones.
   3 means normal; only low answers change anything.
 - **Amber numbers are suggestions.** Change the weight and the reps
   recompute, or the other way round.
-- **Effort (RPE)** is how hard the set was: 10 means nothing left, 8 means
+- **RPE** is how hard the set was: 10 means nothing left, 8 means
   about two reps left. Be honest; the next set is priced from it.
 - Your very first set of an exercise has no suggestion. Pick something you
   can do for the target reps, and the app takes it from there.

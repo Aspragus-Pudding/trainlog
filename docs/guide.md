@@ -170,7 +170,7 @@ Each exercise is a card. Open it to see the suggested weight and reps for your f
 The amber numbers are suggestions, and you can change either one before logging. Change the weight and the reps recompute to hit the target effort, or the other way round, and whatever you set turns white.
 
 ### How hard it was `[data-tour="rpe"]`
-Effort is how hard the set was: ten means nothing left, nine means one rep left, and eight means about two. The next set is priced from what you enter here, so an honest number works better than an ambitious one.
+RPE is how hard the set was: ten means nothing left, nine means one rep left, and eight means about two. The next set is priced from what you enter here, so an honest number works better than an ambitious one.
 
 ### Why this number `[data-tour="why"]`
 This line says why the numbers are what they are. Tap it to see every step behind the suggestion, from your last set to today's check-in.
@@ -216,10 +216,10 @@ Edit program is where you change your blocks, goals, schedule, conditions and pr
 Each exercise is a card, and tapping it opens the set panel. The order is a suggestion, and the card's controls let you move, swap or add exercises without changing your program.
 
 ### Weight and reps `[data-tour="weight"]`
-The weight and reps are suggested in amber. Change either one and the other recomputes to hit the target effort. For pull-ups, chin-ups, dips and assisted machines you type what is on the machine, and the line underneath shows what you are actually lifting.
+The weight and reps are suggested in amber. Change either one and the other recomputes to hit the target RPE. For pull-ups, chin-ups, dips and assisted machines you type what is on the machine, and the line underneath shows what you are actually lifting.
 
-### Effort `[data-tour="rpe"]`
-Effort records how hard the set was: ten means nothing left, nine one rep left, and eight about two. The next suggestion is built from it, so be honest rather than ambitious.
+### RPE `[data-tour="rpe"]`
+RPE records how hard the set was: ten means nothing left, nine one rep left, and eight about two. The next suggestion is built from it, so be honest rather than ambitious.
 
 ### Why these numbers `[data-tour="why"]`
 The line under the numbers says why they are what they are. Tap it to see each step: your last set, readiness, a sore muscle, a joint, a focused deload, how hard suggestions push, and the guards that stop a single session from jumping too far.

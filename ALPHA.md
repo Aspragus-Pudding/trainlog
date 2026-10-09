@@ -50,7 +50,7 @@ mid-session.
 The first run is the setup (v1.64):
 - **Three ways in:** Build it for me (recommended), Build it together, or
   Restore from a backup (a file or their sheet).
-- **Eight questions, each skippable:** goal (including "Get fit and toned"),
+- **Eight questions, each skippable:** goal,
   how long they've been lifting, days and minutes, gym and equipment,
   bodyweight, anything to work around, priorities, and optional main lifts.
 - **Build it together** adds the split, an exercise for each slot, rep ranges

@@ -9,15 +9,15 @@ The app reads this file: each `##` is an entry. Keep the three lines under it
 `node tools/embed-guide.js`, which copies this file into the app along with
 the guide.
 
-## Effort
-- In the app: effort
-- Also called: RPE (rate of perceived exertion)
-- Means: How hard a set was, from 1 to 10. 10 means you couldn't have done another rep; 9 means one more was left; 8 means two; 7 means three. Each set has a target effort, and the next set is adjusted from the effort you log.
+## RPE
+- In the app: RPE
+- Also called: effort, rate of perceived exertion
+- Means: How hard a set was, from 1 to 10. 10 means you couldn't have done another rep; 9 means one more was left; 8 means two; 7 means three. Each set has a target RPE, and the next set is adjusted from the RPE you log.
 
 ## Reps in reserve
 - In the app: reps in reserve
 - Also called: RIR
-- Means: How many more reps you could have done before failing. It's the other side of effort: effort 8 is about 2 reps in reserve.
+- Means: How many more reps you could have done before failing. It's the other side of RPE: RPE 8 is about 2 reps in reserve.
 
 ## Estimated max
 - In the app: estimated max
@@ -167,7 +167,7 @@ the guide.
 ## Effort ramp
 - In the app: effort ramp
 - Also called: RIR progression
-- Means: In newer size blocks, the target effort rises week by week: compound lifts from 7 to 9, isolation exercises from 7 to 10.
+- Means: In newer size blocks, the target RPE rises week by week: compound lifts from 7 to 9, isolation exercises from 7 to 10.
 
 ## Warm-up
 - In the app: warm-up

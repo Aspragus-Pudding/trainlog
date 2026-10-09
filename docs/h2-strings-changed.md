@@ -1,5 +1,8 @@
 # H2: strings changed (v1.62.0)
 
+**v1.65.1:** RPE is back on screen at your request (decision D10, reversed).
+The "Effort (RPE)" section below is history; everything else still applies.
+
 The audit of every visible string against `docs/glossary.md`. Each group gives
 the rule, how many places it touched, and examples. Comments and stored data
 were not touched; old suggestion notes already saved with your sets keep their

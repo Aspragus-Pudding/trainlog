@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark','THEMES'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -214,7 +214,7 @@ section('5. within-session fatigue');
       ok(p.fatigue&&p.fatigue.applied&&p.fatigue.rise===1,'fatigue not applied when ready',JSON.stringify(p.fatigue));
       ok(p.lb<135||(p.lb===135&&p.reps<8),'fatigue: 7.5 + 1.0 expected rise vs RPE 8 should not push load up',JSON.stringify(p));
       const line=A.explainRx(slot,p,{fresh:false}).line;
-      ok(/fatigue −1 effort · 10 pairs, 5 sessions/.test(line),'fatigue sample size missing from the explanation line',line);
+      ok(/fatigue −1 RPE · 10 pairs, 5 sessions/.test(line),'fatigue sample size missing from the explanation line',line);
       console.log('  '+sessions+' sessions -> applied:',line);
     }else{
       ok(!p.fatigue.applied,'fatigue applied below the threshold',JSON.stringify(p.fatigue));
@@ -1620,7 +1620,7 @@ section('42. stall engine');
   A=mk(hist('squat'));
   p=A.stallPlan('squat');
   ok(p&&p.step===1&&p.kind==='volume','trained twice a week: step 1 is more sets',JSON.stringify(p&&{s:p.step,k:p.kind}));
-  card=A.stallCard('squat'); ok(card&&/effort 6.5/.test(card.body)&&/judgement defaults/.test(card.body),'the card says what, why, how long, and that the numbers are judgement defaults','');
+  card=A.stallCard('squat'); ok(card&&/RPE 6.5/.test(card.body)&&/judgement defaults/.test(card.body),'the card says what, why, how long, and that the numbers are judgement defaults','');
   A=mk(hist('squat',{perWeek:1}));
   p=A.stallPlan('squat'); ok(p&&p.kind==='frequency','trained once a week: step 1 adds a day',JSON.stringify(p&&p.kind));
   // one active intervention per lift; derived, never stored
@@ -2849,7 +2849,7 @@ section('65. plain language: no band names, no raw ids, glossary labels on scree
   ok(errs.length===0,'every screen renders without an error',errs.slice(0,3).join(' | '));
   ok(Object.values(screens).every(t=>t.replace(/\s+/g,' ').trim().length>40),'and each one has text to scan',Object.entries(screens).filter(([,t])=>t.trim().length<=40).map(([k])=>k).join(', '));
   const SCAN=[['a bare band name',/\b(Green|Yellow|Orange|Red)\b/],['a raw internal id',/\b[a-z]+(?:_[a-z0-9]+)+\b/],
-    ['raw jargon (the glossary label is used instead)',/\b(RPE|e1RM|1RM|MEV|MRV|AMRAP|RIR|mesocycle|landmarks?)\b/],['a ladder level',/\b(ladder level|at level \d)/i]];
+    ['raw jargon (the glossary label is used instead)',/\b(e1RM|1RM|MEV|MRV|AMRAP|RIR|mesocycle|landmarks?)\b/],['a ladder level',/\b(ladder level|at level \d)/i]];
   SCAN.forEach(([what,re])=>{ const hits=[];
     Object.entries(screens).forEach(([k,t])=>t.split('\n').forEach(l=>{ const m=l.match(re); if(m) hits.push(k+': "'+m[0]+'" in "'+l.trim().slice(0,80)+'"'); }));
     ok(hits.length===0,'no screen shows '+what,hits.slice(0,3).join(' | ')); });
@@ -2884,11 +2884,12 @@ section('66. design system: tokens, type scale, light mode, directions, componen
   ok(sizes.length===5&&new Set(sizes.map(m=>m[2])).size===5,'the type scale is five sizes',sizes.map(m=>m[2]).join('/'));
   ok(/--tap\s*:\s*(4[4-9]|[5-9]\d)px/.test(rootBlock)&&/--safe-bottom\s*:\s*calc\((8\d|9\d)px/.test(rootBlock),'touch targets are at least 44px; the bottom keeps at least 80px clear','');
   ok(/body\{[^}]*\}/.test(css)&&/padding-bottom:var\(--safe-bottom\)/.test(css)&&/\.btn\{[^}]*min-height:var\(--tap\)/.test(css),'the page pads by --safe-bottom and every button is --tap tall','');
-  const light=css.match(/@media \(prefers-color-scheme: light\)\{\s*:root\{([^}]*)\}/);
-  const COL=['--bg','--card','--card-2','--line','--ink','--muted','--dim','--accent','--ok','--caution','--warn','--danger'];
-  ok(light&&COL.every(t=>light[1].includes(t+':')),'a light mode redefines every colour token',light?COL.filter(t=>!light[1].includes(t+':')).join(', '):'no light block');
+  ok(!/prefers-color-scheme: light/.test(css),'dark is the default whatever the phone says (v1.65.1)','');
+  const LT=(load([]).THEMES||[]).find(t=>t.code==='LIGHT');
+  const COL=['bg','card','card-2','line','ink','muted','dim','accent','ok','caution','warn','danger'];
+  ok(LT&&COL.every(k=>LT.tokens[k]),'the light look is the LIGHT theme code, with every colour token',LT?COL.filter(k=>!LT.tokens[k]).join(', '):'no LIGHT theme');
   ['log','warm'].forEach(d=>{ const blocks=[...css.matchAll(new RegExp(':root\\[data-direction="'+d+'"\\]\\{([^}]*)\\}','g'))];
-    ok(blocks.length>=2&&blocks.every(b=>['--bg','--card','--ink','--accent'].every(t=>b[1].includes(t+':'))),'direction "'+d+'" is a token set, dark and light',String(blocks.length)); });
+    ok(blocks.length>=1&&blocks.every(b=>['--bg','--card','--ink','--accent'].every(t=>b[1].includes(t+':'))),'direction "'+d+'" is a token set',String(blocks.length)); });
   // components on tokens: outside the token blocks the stylesheet names no hex colours
   const rules=css.replace(/:root(\[[^\]]*\])?\{[^}]*\}/g,'').replace(/@media \(prefers-color-scheme: light\)\{[\s\S]*?\n\}/g,'');
   const hex=rules.match(/#[0-9a-fA-F]{3,8}\b/g)||[];
@@ -2943,7 +2944,6 @@ section('67. onboarding: every answer set builds a valid program; nothing is wri
         if(!ex||ex.folded||ex.manualOnly) bad.push(tag+': '+sl.ex+' not generatable');
         if(R.excluded.includes(sl.ex)&&sl.role!=='primary') bad.push(tag+': excluded '+sl.ex+' picked');
         if(!(sl.sets>=1)||!(sl.reps[0]<=sl.reps[1])) bad.push(tag+': bad scheme '+JSON.stringify(sl)); }); });
-    if(g.k==='toned'&&plan.blocks.some(b=>b.realize)) bad.push(tag+': toned has a strength test');
   }))));
   ok(combos===A.ONB_GOALS.length*A.ONB_HISTORY.length*5*A.ONB_GYMS.length&&bad.length===0,combos+' answer combinations: each builds blocks and a full week of real exercises',bad.slice(0,4).join(' | '));
   ok(A.getCFG()===keepC&&A.getRM()===keepR&&A.getLOG().length===0,'previewing never leaves the program swapped (globals restored) and writes nothing','');
@@ -2951,9 +2951,9 @@ section('67. onboarding: every answer set builds a valid program; nothing is wri
   { const O=A.onbDefaults(false); Object.assign(O.a,{goal:'size_first', days:3, gym:'dumbbell'}); const {R,plan}=A.onbPlan(O), days=A.onbDays(R,plan);
     const all=days.flatMap(d=>d.slots), okIm=all.filter(sl=>['dumbbell','kettlebell','bodyweight','band'].includes(A.implementOf(A.exById[sl.ex])));
     ok(okIm.length>=all.length*0.8,'dumbbells only: at least 80% of the exercises use what a dumbbell gym has',okIm.length+' of '+all.length); }
-  // the toned goal: size first, no strength tests, said plainly
-  { const O=A.onbDefaults(false); O.a.goal='toned'; const {R,plan}=A.onbPlan(O);
-    ok(R.profile==='size_first'&&R.params.testEvery===0&&plan.blocks.every(b=>!b.realize)&&plan.reasons.every(r=>!/tests every block/.test(r)),'"Get fit and toned" is size first with no strength tests, and the reasons say so',plan.reasons.join(' | ')); }
+  // the goals are the five profiles (no "Get fit and toned" since v1.65.1); skipping the question gives size first
+  { const O=A.onbDefaults(false); const {R}=A.onbPlan(O);
+    ok(A.ONB_GOALS.length===5&&!A.ONB_GOALS.some(g=>/toned/i.test(g.label))&&R.profile==='size_first'&&JSON.stringify(R.params)==='{}','setup offers the five profiles; a skipped goal is size first',A.ONB_GOALS.map(g=>g.k).join(',')); }
   // nothing is written until you start: walk every screen of both paths
   { const B=mkLoad([]); const before=JSON.stringify(B.store);
     B.openOnboarding(false); const O=B.getONB();
@@ -3021,7 +3021,7 @@ section('68. screen pass: the guide covers every setting, search works, sizes ar
   const first=q=>(A.guideSearch(q)[0]||{});
   ok(/hurts/.test(first('shoulder hurts').title||''),'searching "shoulder hurts" finds the joint task first',first('shoulder hurts').title);
   ok(/missed a week/i.test(first('missed week').title||''),'"missed week" finds "I missed a week"',first('missed week').title);
-  ok(A.guideSearch('effort').some(e=>e.group==='words'&&e.title==='Effort'),'the glossary is searchable too','');
+  ok(A.guideSearch('rpe').some(e=>e.group==='words'&&e.title==='RPE'),'the glossary is searchable too','');
   ok(A.guideSearch('zzqqxx').length===0&&A.guideSearch('').length===entries.length+Object.keys(A.GLOSSARY).length,'nonsense finds nothing; an empty search lists everything','');
   // sizes are tokens: no raw font size in a component style or an inline style (theme codes excepted)
   const css=html.slice(html.indexOf('<style>')+7,html.indexOf('</style>')).replace(/:root(\[[^\]]*\])?\{[^}]*\}/g,'');

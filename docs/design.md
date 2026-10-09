@@ -33,8 +33,8 @@ Neither was clearly better, so the default (Calm) stands.
 
 **Switching direction later:** set `DESIGN_DIRECTION` in `index.html` to
 `'log'` or `'warm'`. Each direction is a set of token overrides plus a few
-component styles in the stylesheet (`:root[data-direction=…]`, light and
-dark). No screen code changes.
+component styles in the stylesheet (`:root[data-direction=…]`). No screen
+code changes.
 
 ## Tokens
 
@@ -57,9 +57,10 @@ Block colours (`--hyp`, `--str`, `--peak`, `--deload`) only appear where the
 colour means a block type. The four dots map one to one: no change → ok,
 careful → caution, held → warn, lighter → stop (`BAND_COLOR`).
 
-**Light mode** follows the phone's setting. A theme code overrides it. The
-status bar always has white text (the app runs full screen), so in light mode
-the clock sits on a band of the accent colour.
+**Dark is the default**, whatever the phone's setting. The light values above
+are the **LIGHT** theme code (Edit program → Have a code?). The status bar
+always has white text (the app runs full screen), so that theme puts the clock
+on a band of the accent colour.
 
 ### Type: five sizes, no others
 

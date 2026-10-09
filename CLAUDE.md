@@ -310,11 +310,11 @@ never swapped out mid-workout.
   score appears only in the detail sheet (`openReadiness`/`readinessRows`).
   On-screen words use the label in `docs/glossary.md`; `term(key)` makes one
   tappable. §65 renders the screens and fails on bare band names, raw ids or
-  jargon (RPE, e1RM, MEV…). Bands stay as internal values.
+  jargon (e1RM, MEV…). RPE is the in-app label (v1.65.1). Bands stay as internal values.
 - **Design system (H3, v1.63).** `docs/design.md`: colour roles (`--surface`,
   `--text`, `--accent`, `--ok`, `--caution`, `--warn`, `--stop`, aliases of the theme
   tokens), five type sizes `--fs-1…5`, `--sp-*`, `--r-*`, `--e-1/2`, `--tap` 44px,
-  `--safe-bottom`. Light mode follows the phone; a theme code wins.
+  `--safe-bottom`. Dark is the default; the light look is the LIGHT theme code.
   `DESIGN_DIRECTION` switches to the log/warm token sets. Icons only via
   `icon(name)` from `ICONS` (≤24; tab bar, set card actions, condition card).
   §66 fails on a raw colour in component styles or a sixth type size.
