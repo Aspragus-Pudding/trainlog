@@ -8703,7 +8703,7 @@ Automatic backup sends your log to a Google Sheet after each session, if you wer
 ### Setup link `[data-tour="set-setuplink"]`
 Setup link is where you paste the link you were given, which connects your backup sheet and the feedback notes in one step.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.60.1","lines":["During a workout, logged pull-ups, chin-ups and dips now say what was on the machine: \"60 lb assist\", \"+20 lb\" or \"bodyweight\".","The \"Last time\" line and \"Last logged\" on the info sheet read the same way.","\"Last time\" compares on what you actually lift, so less assistance today shows as an up arrow."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.60.2","lines":["Every machine in the library is now marked plate-loaded or selectorised (pin and stack). Some of these are best guesses; tell us if yours is the other kind.","The plate-loaded ones, such as the incline machine chest press, seated calf raise and chest-supported row, now show the plate calculator and the sled-weight option on their set card.","Suggested weights don't change."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9270,7 +9270,7 @@ Setup link is where you paste the link you were given, which connects your backu
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.60.1';
+const APP_VERSION='1.60.2';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -9950,7 +9950,11 @@ const LIGHT_DROP=['spine_axial_heavy','hinge_heavy','elbow_flex_loaded_heavy','m
 const IMPLEMENT_OF={ssb_squat:'specialty',transformer_hinge:'specialty',transformer_low_bar:'specialty',transformer_high_bar:'specialty',
   transformer_front:'specialty',transformer_goblet:'specialty',trap_bar:'specialty',skullcrusher:'specialty',kb_swing:'kettlebell',
   pec_deck:'selector',assisted_pullup:'selector',pin_chest_press:'selector',pin_incline_press:'selector',pin_tri_dip:'selector',pin_preacher:'selector',
-  incline_machine:'machine',machine_press:'machine',chest_row:'machine',machine_row:'machine',machine_ohp:'machine'};
+  // the 21 the library couldn't place, by best guess (Oct 2026; docs/decisions-pending.md D1 — correct any that are wrong)
+  incline_machine:'plate',chest_row:'plate',seated_calf:'plate',belt_rdl:'plate',
+  machine_press:'selector',machine_row:'selector',machine_ohp:'selector',leg_curl:'selector',lying_curl:'selector',leg_ext:'selector',
+  calf:'selector',stand_m_calf:'selector',m_oh_tri:'selector',m_rd_fly:'selector',sw_rd_fly:'selector',multihip_abd:'selector',
+  seated_abd:'selector',seated_add:'selector',stand_m_raise:'selector',seat_m_raise:'selector',machine_raise:'selector'};
 const BAR_TYPE_OF={ssb_squat:'transformer',transformer_hinge:'transformer',transformer_low_bar:'transformer',transformer_high_bar:'transformer',
   transformer_front:'transformer',transformer_goblet:'transformer',trap_bar:'trap',skullcrusher:'ez'};
 function implementOf(ex){
@@ -10180,6 +10184,7 @@ function applyLibraryModel(){
   EX.forEach(ex=>{
     if(ex.custom) return;
     ex.implement=implementOf(ex);
+    if(ex.implement==='plate'&&!ex.plateLoaded) ex.plateLoaded=true;   // plate calculator + sled weight on the set card (display only)
     if(!ex.barType&&BAR_TYPE_OF[ex.id]) ex.barType=BAR_TYPE_OF[ex.id];
     if(ex.gen){ const p=exById[ex.parent]; if(p){ if(!ex.family&&p.family) ex.family=p.family; if(!ex.sticking&&p.sticking) ex.sticking=p.sticking.slice(); } }
   });

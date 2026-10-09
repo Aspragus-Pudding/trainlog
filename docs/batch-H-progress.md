@@ -17,13 +17,17 @@ in `docs/decisions-pending.md`.
 
 | Step | State | Version / commit | Notes |
 |---|---|---|---|
-| 1 bodyweight display | in progress | | |
+| 1 bodyweight display | done | v1.60.1 (c4ac241) | + v1.60.2: the 21 machines placed by guess (D1) |
 | 2 Part 8 | not started | | |
 | 3 H1 | not started | | |
 | 4 H2 | not started | | |
 | 5 H3 | not started | | |
 | 6 H4 | not started | | |
 | 7 H5 | not started | | |
+
+## Backtest baseline for this run
+
+Maintainer export as of 8 Oct (169 sets): load mean |error| 5.0 lb, reps 2.0, exact load 90. Every version in this run must be IDENTICAL (nothing here touches prescriptions). Script: scratchpad btcompare.sh <ref>.
 
 ## Half-finished
 

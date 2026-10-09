@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.60.2 — 2026-10-08
+- Every machine in the library is now marked plate-loaded or selectorised (pin and stack). Some of these are best guesses; tell us if yours is the other kind.
+- The plate-loaded ones, such as the incline machine chest press, seated calf raise and chest-supported row, now show the plate calculator and the sled-weight option on their set card.
+- Suggested weights don't change.
+
 ## 1.60.1 — 2026-10-08
 - During a workout, logged pull-ups, chin-ups and dips now say what was on the machine: "60 lb assist", "+20 lb" or "bodyweight".
 - The "Last time" line and "Last logged" on the info sheet read the same way.
