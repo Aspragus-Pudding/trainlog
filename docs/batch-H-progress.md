@@ -23,7 +23,7 @@ in `docs/decisions-pending.md`.
 | 4 H2 | done | v1.62.0 | glossary (docs/glossary.md, embedded, tap-for-definition), readiness card + detail sheet, status dots, every string audited (docs/h2-strings-changed.md); §65 renders 12 screens and scans them; D9–D15 |
 | 5 H3 | done | v1.63.0 (branch redesign) | mockups + 18 shots in docs/design/, Calm chosen (D16), docs/design.md, tokens + light mode + directions + components on tokens, 16 icons; §66; D16–D18 |
 | 6 H4 | done | v1.64.0 (branch redesign) | onboarding: 3 ways in, 8 questions, together steps, preview, apply; slotPicks + equipmentHave (inert for existing users); backup after first session; §67 (480 answer sets); persona walk + previews in docs/design/; D19–D26 |
-| 7 H5 | not started | | |
+| 7 H5 | done | v1.65.0 (branch redesign) | every screen on tokens; set-card icons; Part 7 (block cards + sparklines, week strip, condition card with focused deload, rehab/prep order); docs/guide.md (tasks + every setting + tours) and a searchable How this works; §68; before/after shots in docs/design/before, after; D27–D28 |
 
 ## Backtest baseline for this run
 

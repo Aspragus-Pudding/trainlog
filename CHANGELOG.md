@@ -6,6 +6,13 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.65.0 — 2026-10-09
+- A cleaner look, with a light mode that follows your phone. Theme codes still work.
+- New setup for new users: Build it for me or Build it together, with a preview of the whole plan before anything is saved.
+- Every screen uses the same few text sizes and spacings, and every button is big enough to tap easily.
+- Lifts → How this works is a searchable guide: what to do when your shoulder hurts, you missed a week, or you want to push harder, plus every setting.
+- Edit program shows blocks as cards and your week as a strip; a condition's card has a focused-deload button.
+
 ## 1.64.0 — 2026-10-08
 - New setup: Build it for me, Build it together, or Restore from a backup. Eight short questions, each skippable.
 - Build it together lets you choose the split, an exercise for each slot, rep ranges and block lengths, with a suggestion at every step.

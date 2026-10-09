@@ -2,7 +2,158 @@
 
 Trainlog builds your program, suggests the weight and reps for every set, and adjusts as you log. Every number it suggests can explain itself, and nothing it proposes happens until you accept it. Your log stays on your phone.
 
-This guide is also the app's tour. Each heading below is one step, and the "?" at the top of each screen walks you through that screen's part of it.
+This guide starts with what to do when something comes up, then every setting, then a tour of each screen. The screen tours are also the app's tours: the "?" at the top of each screen walks you through its part. In the app, Lifts → How this works searches all of it.
+
+## When something comes up {guide:tasks}
+
+### My shoulder, knee or another joint hurts
+Rate it in the check-in under "Anything hurting?", and after an exercise when the app asks. A rating above your usual holds or lightens only the movements that load that joint, and everything else carries on as planned. If it keeps flaring, the dashboard offers a focused deload for those exercises, and Edit program → What you're working around shows how the joint is doing against your usual. Pain during a set has its own button on the set card, with advice on whether to carry on. The app warns and suggests swaps but never stops you, and anything on a condition's "see a professional" list is worth getting checked.
+
+### I'm sore today
+Mark the sore area in the check-in. Only the exercises that train that muscle start lighter, with a set fewer on the first two of them, and the rest of the session is unchanged. If soreness already cut that work last session without a missed rep since, it doesn't cut again.
+
+### I slept badly or I'm feeling rough
+A 2 for sleep, motivation or rest of life means nothing steps up today, and a 1 means a sick day: everything one step lighter, today only. Your warm-up gets longer too. None of it carries over to your next session.
+
+### I want to push harder
+Set Edit program → How hard suggestions push to "push a bit" or "push me", for everything, or on one exercise's info sheet. Each notch moves suggestions by one step. If you keep lifting heavier than suggested, the app moves the setting a notch on its own and says so on the Progress tab.
+
+### I want to take it easier
+The same setting works the other way: "ease off" or "hold me back" holds suggestions where they would have stepped up. For a few exercises only, start a focused deload from the exercise's info sheet, and everything else carries on.
+
+### I missed a week
+Nothing is lost. The program counts sessions, not dates, so it picks up at the day you missed. The target date on the dashboard moves out to match your pace. Your first sessions back are worked out from your last sets, so log the effort honestly and the next suggestion adjusts if a lift feels heavy.
+
+### A lift has stalled
+When a main lift goes a few weeks without a new best while you're training it every week, the dashboard says so and proposes a stall fix. It checks the simple causes first, then suggests more practice of the lift itself. Nothing starts until you accept, and each fix has an undo.
+
+### I need a lighter week
+The app proposes a deload when the signs show: readiness falling, the same weights feeling harder, or a flared joint. You can also add one yourself in Edit program → Blocks with "Deload week at the end".
+
+### My gym doesn't have an exercise
+Tap the swap button on the exercise card and pick another, by muscle or by name. Anything you log comes first from then on. To change what the app assumes your gym has, use Set up a new program on the Lifts tab, and your logged sets stay.
+
+### I want to change my program
+Edit program changes blocks, days, goal lifts and preferences, and the next session settles in with no step-up in load. On the Lifts tab, "Rebuild with the program builder" rebuilds the rest of the program from where you are, and "Set up a new program" starts a fresh one from its first block, keeping every logged set.
+
+### Pull-ups or dips are too hard
+Use an assisted version and type the assistance the machine shows. The app tracks it as total load against your bodyweight, and when you're strong enough it proposes the next version, such as less assistance or bodyweight only.
+
+### I'm losing or gaining weight
+Set Edit program → Energy balance to deficit or surplus. A deficit trims volume a little, because recovery drops; a surplus allows a little more. Log your bodyweight at check-ins so pull-ups and dips stay priced right.
+
+### I want to keep my data safe
+Lifts → Save backup makes a file you can keep in Files, and a backup sheet saves one automatically after each session. Restoring merges event by event and never deletes anything newer. The app reminds you after your first session, and again whenever a week passes without a backup.
+
+### Something looks wrong
+Tap the pencil at the top of any screen to leave a note about what broke, what was confusing, or an idea. Every suggestion also has a "Why these numbers" view showing each step behind it, which is the quickest way to see where a number came from.
+
+## Every setting {guide:settings}
+
+### Blocks
+Each block has a type (hypertrophy or strength), a length in weeks, an optional deload week at the end, a lead lift and up to three focus muscles. The small lines show each week's sets and intensity across the block. Change a length and everything after it shifts.
+
+### Your week
+How many days you train and what kind each day is: full body, upper, lower, push, pull or legs. Days run in order and repeat. A block can have its own week instead of the program's.
+
+### Goal lifts, ranked
+Up to three main lifts get priority, their own strength tracking and the tests in strength blocks. The first one leads; rotate it across blocks rather than chasing all three at once.
+
+### Dates
+Your target date, whether it's fixed, and an optional test date. If you fall behind, the app offers to move a date that isn't fixed. Blocks are an order, not dates, so they keep their length.
+
+### Strength : size balance
+The share of strength blocks against hypertrophy blocks, set by the goal you picked in setup. More strength means more heavy blocks and more frequent strength tests.
+
+### Energy balance
+Deficit, maintenance or surplus. It trims or adds a little volume, because what you can recover from changes with how much you eat. The multipliers are judgement defaults.
+
+### How hard suggestions push
+From "hold me back" to "push me", one step either way on every suggestion. If you keep lifting heavier or lighter than suggested, it moves a notch on its own and says so on the Progress tab.
+
+### Back-off sets
+In strength blocks, main lifts get one top set, then lighter back-off sets. Choose a fixed number of back-offs, or keep going until one feels as hard as the top set, at most two more than the plan.
+
+### When a main lift stalls
+Off by default: the app proposes a stall fix on the dashboard and waits for you. Turn on starting automatically and it begins the fix itself, always with an undo card.
+
+### What you're working around
+Pick any injuries or conditions. Exercises that load them carry a warning and a suggested swap, and are never removed unless you say so. Each condition's card shows how the joint is doing against your usual, the exercises it flags in your program, a focused deload for them, red-flag checks and an optional phase plan.
+
+### Not included automatically
+Exercises you've chosen to keep out of generated sessions, usually because of a condition. They're still in the library, and you can add one to a workout any time.
+
+### Don't care about
+Muscles or movements you'd rather not spend time on. Muscles are picked last; a movement's accessory slots go to another movement that trains the same muscle, as long as no muscle drops under its typical weekly sets.
+
+### Joints without a condition
+How a joint normally feels for you when you haven't picked a condition for it. Ratings at your usual only lengthen the warm-up; only ratings above it change loads.
+
+### Setup checklists you've hidden
+The short "before your first set" checklists you turned off for an exercise. Turn any of them back on here.
+
+### Automatic backup
+The address of a backup sheet. When it's set, your log is sent there after each session, and Lifts → Restore from sheet can bring it back. Leave it empty to keep backups as files.
+
+### Setup link
+Paste the setup link you were given to connect your notes and your backup sheet in one step. It's needed because the home-screen app doesn't share Safari's storage.
+
+### Your name on notes
+The name signed on notes you send with the pencil, so the person who set up the app knows who they're from.
+
+### Theme code
+Have a code? A theme code changes the app's colours. Reset goes back to the standard look, which follows your phone's light or dark setting.
+
+### Delete my conditions and pain ratings
+Removes your conditions and stops every past pain and joint rating from counting. The log itself is never rewritten; a marker records the point from which old ratings are ignored.
+
+### Coaching cues
+On an exercise's info sheet: short cues for good form, plus a note for your shoulder if you've picked shoulder instability.
+
+### Your setup notes and cues
+Your own notes for an exercise, such as seat height, grip or a cue that works for you. They show on the exercise card every time.
+
+### Diary for this exercise
+The diary notes you have written for this exercise, newest first, so you can see what you noticed last time.
+
+### Warnings and suggested swaps
+If an exercise loads something you're working around, its info sheet says why, suggests a swap, and shows "fine for you so far" once your own ratings say it suits you.
+
+### Not included automatically, per exercise
+Keep one exercise out of generated sessions from its info sheet. It stays in the library, and you can still add it yourself.
+
+### Rep range for this exercise
+Save your own rep range for an exercise. It's used in every block except deloads, and you can reset it to the default.
+
+### Smallest jump
+The smallest weight you can add on this exercise, from your plates or the machine's stack. Suggestions step by it.
+
+### Bar weight
+The weight of the bar on barbell and Smith exercises, so plate maths and suggestions match your gym's bar.
+
+### Sled or arm weight
+For plate-loaded machines: what the machine weighs empty, if you know it. You still log the plates, and the set card shows plates plus sled as a rough total.
+
+### Assist ratio
+For assisted machines: how much of the number on the stack actually comes off your bodyweight. Most machines are one to one, so it stays hidden unless you open it.
+
+### How hard it should push here
+The same setting as How hard suggestions push, for one exercise only.
+
+### Focused deload
+Hold one or more exercises at a lighter load for a few sessions while everything else carries on. The app proposes the ramp back; it never moves on by itself.
+
+### History, best estimated max, sessions
+Every session's best set for this exercise, your best estimated max, and how many sessions you've done it in.
+
+### Move this history to another exercise
+Logged this under the wrong exercise? Move its history to the right one, and undo it if needed. Estimated max, bests and suggestions follow.
+
+### The library now has … (merging your own exercise)
+If you made a custom exercise and the library has since added the same one, this merges your history into the built-in exercise.
+
+### Rename / Edit this custom exercise
+Change a custom exercise's name, equipment or muscles. Its history stays with it.
 
 ## Your first session {tier:1}
 
@@ -109,7 +260,7 @@ Save backup hands a copy of your whole log to the share sheet, so you can keep i
 Restore from backup reads a backup file and merges it in event by event. Importing the same file twice changes nothing, and it never deletes anything newer.
 
 ### This guide `[data-tour="help"]`
-How this works opens these tours again, along with this whole guide written out in one place.
+How this works searches this whole guide: what to do when something comes up, every setting, and each screen. It also starts the screen tours again.
 
 ## Progress {tab:hist}
 

@@ -407,3 +407,51 @@ marked in kilograms can still be switched per exercise on the set card.
 Setup says so.
 
 **To undo:** add a units question once kg is carried through the engine.
+
+---
+
+## D27. One guide file: tasks, then every setting, then the tours
+
+**Question:** "expand docs/tutorial.md into docs/guide.md… tours stay generated
+from their sections."
+
+**Chosen:** the tutorial became `docs/guide.md`, in three parts:
+1. **When something comes up:** 14 tasks, such as my shoulder hurts, I want
+   to push harder, or I missed a week.
+2. **Every setting:** one entry for each setting in `docs/features.md`.
+3. **The screen tours:** as before. The "?" tours still come only from this
+   part.
+
+Lifts → How this works searches all of it, and the glossary too. It's one
+file to keep up to date, and a test fails if a setting in features.md has no
+entry.
+
+**To undo:** delete the two new parts from `docs/guide.md` and run
+`node tools/embed-guide.js`.
+
+---
+
+## D28. Small calls in the screen pass
+
+- **Sizes and spacing:** every inline size moved to the nearest token, for
+  example 13 px to 14 and 11 px to 12. Hairline offsets (1–2 px), large layout
+  sizes and negative margins kept their exact values.
+- **Icons:** the set card's move, info, swap and rate buttons use the icon set
+  (a star was added for rating; 17 icons). Edit program's reorder buttons stay
+  as text arrows, because icons are limited to the tab bar, set card actions
+  and the condition card.
+- **Prep exercises:** they have no "feel it" or cue text in the library, so
+  each shows where you'll feel it from the area it targets ("around your
+  shoulder"). Rehab exercises show what it is, where to feel it, and the first
+  cue, with more cues one tap away.
+- **Copy:** the countdown says "119 days to go" instead of "119 Days Out"
+  (sentence case and plain words). "Last time" says "effort 8" instead of a
+  bare "@ 8".
+- **Fixed on the way:**
+  - Unlogged set rows were 86 px tall. A class name clashed with the empty
+    state.
+  - The goal-lift rank number sat on its own line.
+  - The header text touched the screen edge.
+
+**To undo any one:** it's a single place in index.html; search for the old
+copy or class.

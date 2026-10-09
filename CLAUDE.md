@@ -24,8 +24,8 @@ AppsScript.gs           Google Sheets backup receiver (lives in Apps Script, not
 FeedbackScript.gs       append-only receiver for testers' notes (CFG.feedbackUrl), never readable back
 CHANGELOG.md            what changed per version, newest first; the top entry is embedded as the in-app "What's new" card
 tools/embed-changelog.js   copies CHANGELOG.md's top entry into index.html
-docs/tutorial.md        the user guide AND the in-app tours (each ### is a step, target in backticks); embedded byte-for-byte
-tools/embed-tutorial.js    copies docs/tutorial.md into index.html (§62 fails if they differ, or a step body is under 8 words)
+docs/guide.md           the user guide, by task ("When something comes up"), every setting, and the in-app tours (screen sections; each ### a step, target in backticks); embedded byte-for-byte
+tools/embed-guide.js       copies docs/guide.md and docs/glossary.md into index.html (§62 fails if they differ, or an entry is under 8 words)
 tools/library-report.js    the library by implement, and every generated entry whose tags/flags differ from its parent (with the reason)
 README.md               for testers: install, first session, notes, data, updates
 docs/features.md        every screen and setting, who it is for, where it lives (the guide must cover every setting)
@@ -39,7 +39,7 @@ tests/simulate.js       persona simulator: made-up lifters train through the rea
 docs/calibration-plan.md   phase-2 personal-calibration spec, not yet implemented
 docs/coaching-cues.json    per-exercise coaching cues — the editable source (see below)
 docs/design.md          the design system: tokens, components, icons, copy (Calm; directions in docs/design/)
-docs/glossary.md        one name per idea, plain definition, in-app label; embedded (tools/embed-tutorial.js) for tap-for-definition
+docs/glossary.md        one name per idea, plain definition, in-app label; embedded (tools/embed-guide.js) for tap-for-definition
 docs/h2-strings-changed.md the H2 audit: every on-screen string changed for plain language
 docs/injuries.json      injury & condition library — the editable source (research schema + avoid[].level)
 docs/injuries.derived.json  built from it by tools/derive-injuries.js (umbrellas = own tags + children's CORE tags)
@@ -291,6 +291,11 @@ never swapped out mid-workout.
 - **`PENDING`** holds pre-workout plan edits until the session starts.
 - **Readiness** drives load adjustment (discrete tiers) and warmup length
   (continuous score). Adjustments are downward-only by design.
+- **Guide (H5, v1.65).** `docs/guide.md` has three parts: `## … {guide:tasks}`,
+  `## … {guide:settings}`, then the screen tours (`{tab:…}`, `{screen:settings}`,
+  `{tier:1}`). Only screen sections become tours. `guideSearch()` searches
+  it plus the glossary (Lifts → How this works). §68 fails if a setting in
+  `docs/features.md` has no guide entry.
 - **Onboarding (H4, v1.64).** `openOnboarding()`; `ONB` is the draft (answers
   `a`, together-choices `t`) — Back and switching paths keep it. `onbPlan()` →
   the sequencer; `onbWith()` previews with globals swapped in a try/finally;
