@@ -38,6 +38,7 @@ tests/prospective.js    engine phase 2 check: were suggestions taken, did they l
 tests/simulate.js       persona simulator: made-up lifters train through the real app for months (node tests/simulate.js)
 docs/calibration-plan.md   phase-2 personal-calibration spec, not yet implemented
 docs/coaching-cues.json    per-exercise coaching cues — the editable source (see below)
+docs/design.md          the design system: tokens, components, icons, copy (Calm; directions in docs/design/)
 docs/glossary.md        one name per idea, plain definition, in-app label; embedded (tools/embed-tutorial.js) for tap-for-definition
 docs/h2-strings-changed.md the H2 audit: every on-screen string changed for plain language
 docs/injuries.json      injury & condition library — the editable source (research schema + avoid[].level)
@@ -297,6 +298,13 @@ never swapped out mid-workout.
   On-screen words use the label in `docs/glossary.md`; `term(key)` makes one
   tappable. §65 renders the screens and fails on bare band names, raw ids or
   jargon (RPE, e1RM, MEV…). Bands stay as internal values.
+- **Design system (H3, v1.63).** `docs/design.md`: colour roles (`--surface`,
+  `--text`, `--accent`, `--ok`, `--caution`, `--warn`, `--stop`, aliases of the theme
+  tokens), five type sizes `--fs-1…5`, `--sp-*`, `--r-*`, `--e-1/2`, `--tap` 44px,
+  `--safe-bottom`. Light mode follows the phone; a theme code wins.
+  `DESIGN_DIRECTION` switches to the log/warm token sets. Icons only via
+  `icon(name)` from `ICONS` (≤24; tab bar, set card actions, condition card).
+  §66 fails on a raw colour in component styles or a sixth type size.
 - **Colours are tokens, and themes override them.** `THEMES` (theme codes,
   `CFG.theme`) swaps the `:root` custom properties; a new theme is one object.
   Never hardcode a colour. Use `--accent` for interface (buttons, selection,

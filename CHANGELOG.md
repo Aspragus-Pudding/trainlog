@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.63.0 — 2026-10-08
+- The look is now one design system (docs/design.md): five text sizes, one set of spacings and colours, and every button at least 44 px tall to tap.
+- Light mode: the app follows your phone's light or dark setting. Theme codes still override it.
+- The status dots use four fixed colours, from no change to lighter.
+- On the redesign branch; it ships together with the new setup and the screen pass.
+
 ## 1.62.0 — 2026-10-08
 - Plain language: statuses now say what they do ("Shoulder: pressing, pulling and raises held at last time's load") with a small coloured dot, instead of Green, Yellow, Orange or Red.
 - The readiness card shows today's plan's top line. Tap it for each check-in answer and what it does, sore muscles and joints with the exercises they touch, and the readiness score.

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trainlog mockup · Calm</title>
+<!-- H3 mockup: The current minimal feel with clearer hierarchy, more whitespace and stronger type contrast. Real demo-persona data (shoulder flare, week 8). Screens: ?screen=dashboard|set|program; ?mode=light|dark. -->
+<style>:root{--font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --bg:#0B0D12;--surface:#16191F;--surface-2:#1F232B;--line:#2A2F39;--bar:rgba(11,13,18,.95);--text:#F2F4F8;--muted:#8E95A3;--dim:#5B6370;
+  --accent:#4C8DFF;--on-accent:#fff;--accent-soft:rgba(76,141,255,.16);--ok:#4ADE80;--caution:#F2D04B;--warn:#E8A33D;--stop:#E8546B;--hyp:#4C8DFF;--str:#E8A33D;
+  --fs-1:12px;--fs-2:14px;--fs-3:16px;--fs-4:22px;--fs-5:28px;--w-title:760;--w-num:780;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;--gutter:16px;--card-pad:18px;
+  --r-s:8px;--r-btn:12px;--r:14px;--r-l:20px;--r-pill:999px;--e-1:none;--e-2:0 16px 40px rgba(0,0,0,.45);--tap:44px}
+ @media (prefers-color-scheme:light){:root:not([data-mode=dark]){--bg:#F4F5F7;--surface:#FFFFFF;--surface-2:#EEF0F3;--line:#E3E6EB;--bar:rgba(244,245,247,.94);--text:#12151A;--muted:#5A626F;--dim:#8A919D;
+  --accent:#2F6FEB;--accent-soft:rgba(47,111,235,.10);--ok:#1F9D55;--caution:#B89400;--warn:#C46F00;--stop:#D9344F;--hyp:#2F6FEB;--str:#C46F00;--e-1:0 1px 2px rgba(16,24,40,.05),0 0 0 1px rgba(16,24,40,.04)}}
+ :root[data-mode=light]{--bg:#F4F5F7;--surface:#FFFFFF;--surface-2:#EEF0F3;--line:#E3E6EB;--bar:rgba(244,245,247,.94);--text:#12151A;--muted:#5A626F;--dim:#8A919D;
+  --accent:#2F6FEB;--accent-soft:rgba(47,111,235,.10);--ok:#1F9D55;--caution:#B89400;--warn:#C46F00;--stop:#D9344F;--hyp:#2F6FEB;--str:#C46F00;--e-1:0 1px 2px rgba(16,24,40,.05),0 0 0 1px rgba(16,24,40,.04)}
+ .card h3{font-size:var(--fs-3)}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:var(--fs-3);line-height:1.45;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;background:none;border:0;padding:0}
+.ic{width:20px;height:20px;flex:none}
+.top{padding:calc(var(--sp-4) + 8px) var(--gutter) var(--sp-3);background:var(--bar);border-bottom:1px solid var(--line)}
+.eyebrow{font-size:var(--fs-1);color:var(--muted);font-weight:600}
+.title{font-size:var(--fs-4);font-weight:var(--w-title);letter-spacing:-.02em;line-height:1.15;margin-top:2px}
+main{padding:var(--sp-4) var(--gutter) 100px}
+.card{background:var(--surface);border-radius:var(--r);padding:var(--card-pad);margin-bottom:var(--sp-3);box-shadow:var(--e-1)}
+.card h3{font-size:var(--fs-3);font-weight:650;margin:0}
+.row{display:flex;align-items:center;gap:var(--sp-2)}.between{justify-content:space-between}.grow{flex:1;min-width:0}
+.muted{color:var(--muted)}.dim{color:var(--dim)}.s{font-size:var(--fs-2)}.xs{font-size:var(--fs-1)}
+.lead{font-size:var(--fs-3);line-height:1.45;margin-top:var(--sp-2)}
+.status{display:flex;gap:10px;align-items:baseline;margin-top:var(--sp-2);font-size:var(--fs-2);line-height:1.4}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;transform:translateY(-1px)}
+.ok{background:var(--ok)}.caution{background:var(--caution)}.warn{background:var(--warn)}.stop{background:var(--stop)}
+.btn{min-height:var(--tap);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 var(--sp-4);border-radius:var(--r-btn);font-weight:650;font-size:var(--fs-3)}
+.btn.primary{background:var(--accent);color:var(--on-accent)}.btn.secondary{background:var(--surface-2);color:var(--text)}
+.btn.quiet{color:var(--accent);padding:0 var(--sp-2)}.btn.destructive{color:var(--stop);background:transparent;border:1px solid var(--line)}
+.btn.wide{width:100%}.btn.small{min-height:36px;font-size:var(--fs-2);padding:0 var(--sp-3)}
+.chip{display:inline-flex;align-items:center;min-height:36px;padding:0 var(--sp-3);border-radius:var(--r-pill);background:var(--surface-2);font-size:var(--fs-2);font-weight:600;color:var(--muted)}
+.chip.on{background:var(--accent-soft);color:var(--accent)}
+.seg{display:flex;background:var(--surface-2);border-radius:var(--r-btn);padding:3px;gap:3px}.seg button{flex:1;min-height:38px;border-radius:calc(var(--r-btn) - 3px);font-size:var(--fs-2);font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--e-1)}
+.list .li{display:flex;align-items:center;gap:var(--sp-3);min-height:var(--tap);padding:var(--sp-2) 0;border-top:1px solid var(--line)}.list .li:first-child{border-top:0}
+.label{font-size:var(--fs-1);color:var(--muted);font-weight:650;margin:var(--sp-5) 0 var(--sp-2)}
+.strip{display:flex;gap:5px;margin-top:var(--sp-2)}.strip span{flex:1;height:6px;border-radius:3px;background:var(--surface-2)}.strip span.done{background:var(--accent)}
+.stepper{display:flex;align-items:stretch;background:var(--surface-2);border-radius:var(--r-btn);overflow:hidden;min-height:64px}
+.stepper button{width:48px;font-size:24px;color:var(--muted)}.stepper .val{flex:1;text-align:center;align-self:center}
+.stepper .num{font-size:var(--fs-5);font-weight:var(--w-num);letter-spacing:-.03em;line-height:1}.stepper .lab{font-size:var(--fs-1);color:var(--dim);margin-top:2px;white-space:nowrap}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--sp-2)}
+.srow{display:flex;align-items:center;gap:var(--sp-3);min-height:40px}.sidx{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:var(--fs-1);font-weight:650;background:var(--surface-2);color:var(--muted);flex:none}
+.srow.current .sidx{background:var(--accent);color:var(--on-accent)}.sload{font-weight:650}.srow.planned .sload{color:var(--dim);font-weight:500}
+.badge{margin-left:auto;font-size:var(--fs-1);font-weight:650;padding:4px 9px;border-radius:var(--r-s);background:var(--surface-2);color:var(--muted)}
+.srow.current .badge{background:var(--accent-soft);color:var(--accent)}
+.iconbtn{width:var(--tap);height:var(--tap);display:grid;place-items:center;color:var(--muted);border-radius:var(--r-s)}
+.term{border-bottom:1px dotted currentColor}
+.help{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--line);font-size:12px;color:var(--muted);font-weight:700;margin-left:6px}
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--bar);border-top:1px solid var(--line);padding-bottom:20px;backdrop-filter:blur(12px)}
+.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 6px;font-size:11px;font-weight:600;color:var(--dim);min-height:var(--tap)}
+.tabs button.on{color:var(--accent)}.tabs .ic{width:22px;height:22px}
+.bars{margin-top:var(--sp-2)}.vb{display:flex;align-items:center;gap:var(--sp-2);margin-top:6px;font-size:var(--fs-2)}.vb .nm{width:86px;flex:none}.vb .tr{flex:1;height:8px;border-radius:4px;background:var(--surface-2);position:relative;overflow:hidden}.vb .fl{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:4px}.vb .tk{position:absolute;top:0;bottom:0;width:1px;background:var(--text);opacity:.35}.vb .n{width:34px;text-align:right;color:var(--muted)}
+.tl{display:flex;gap:3px;margin:var(--sp-2) 0 var(--sp-1)}.tl span{height:8px;border-radius:4px}.hyp{background:var(--hyp)}.str{background:var(--str)}
+.plates{display:flex;gap:4px;align-items:center;margin-top:var(--sp-2)}.plate{display:grid;place-items:center;border-radius:4px;background:var(--surface-2);font-size:11px;font-weight:700;color:var(--muted);width:30px}
+.cond{display:flex;gap:var(--sp-3);align-items:flex-start}.cond .ic{color:var(--warn);margin-top:2px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:var(--fs-1);color:var(--muted);margin-top:var(--sp-3)}.legend span{display:flex;align-items:center;gap:5px}</style></head><body>
+<script>
+const DIR="calm";
+const DATA={"date":"Thursday, October 8","block":"Hypertrophy","type":"hyp","week":8,"weeks":9,"day":"Full body A","daysToTarget":120,"target":"February 5","readiness":{"top":"Shoulder's flared, so shoulder work isn't progressing. Everything else is on plan.","rows":[{"band":"Red","what":"Shoulder","does":"pressing, pulling and raises held at last time's weight and reps until it settles (rated a step over your usual)","sub":false},{"band":"Green","what":"Wrist, Elbow, Low back, Hip, Knee, Ankle","does":"at or under your usual, no change","sub":true},{"band":"Yellow","what":"Fatigue","does":"a deload is suggested, your call; stall fixes add no work while this shows","sub":false}],"date":"Oct 8"},"plan":{"top":"Shoulder's flared, so shoulder work isn't progressing. Everything else is on plan.","groups":[{"title":"Holding back","rows":[{"name":"Back squat","change":"−5 lb → 235 lb","why":"last time was harder than aimed"},{"name":"Barbell bench press","change":"−20 lb → 165 lb","why":"shoulder flared badly · keep elbows near 45° — flared and wide puts you in the at-risk position — could swap for Barbell bench press — board"},{"name":"Neutral cable row","change":"−10 lb → 130 lb","why":"shoulder flared badly"}]},{"title":"Pushing","rows":[{"name":"Incline DB curl","change":"+1 rep → 12","why":"last time had reps to spare"},{"name":"Standing calf raise","change":"+2 reps → 13","why":"last time had reps to spare"}]}],"onPlan":0},"proposal":{"title":"Take a deload week?","body":"Because your shoulder has flared enough that loads are held. A deload is 5 lighter sessions — fewer sets, easier loads — in place of a normal week, then the block carries on. The thresholds are judgement defaults."},"thisWeek":{"done":3,"planned":5},"lifts":[{"name":"Back squat","est":277},{"name":"Deadlift","est":323},{"name":"Barbell bench press","est":207}],"volume":[{"m":"Biceps","v":14.5,"lo":10,"hi":24},{"m":"Side delts","v":14,"lo":10,"hi":24},{"m":"Triceps","v":13,"lo":10,"hi":24},{"m":"Upper back","v":12,"lo":10,"hi":20},{"m":"Chest","v":10,"lo":10,"hi":20}],"exercises":[{"name":"Back squat","lead":true,"line":"Strength upkeep: 1 top set × 3–5 at effort 7.5, then 7 × 6–8 at effort 9","rx":"235 × 5","change":"−5 lb"},{"name":"Barbell bench press","line":"6 sets × 8–12 reps · effort 9","rx":"165 × 4","change":"−20 lb → 165 lb"},{"name":"Neutral cable row","line":"5 sets × 8–12 reps · effort 9","rx":"130 × 11","change":"−10 lb → 130 lb"},{"name":"Incline DB curl","line":"6 sets × 8–15 reps · effort 9.5","rx":"45 × 12","change":"+1 rep → 12"},{"name":"Standing calf raise","line":"6 sets × 10–15 reps · effort 9.5","rx":"160 × 13","change":"+2 reps → 13"}],"set":{"name":"Back squat","impl":"Barbell","lead":true,"last":"240 × 5 · effort 8","setNo":1,"of":8,"kind":"Top set","weight":235,"reps":5,"effort":7.5,"why":"From your estimated max (277 lb)","note":"Last set 240 × 5 at effort 8 was harder than effort 7.5, so load drops to 235 for the same 5 reps.","ramp":[{"lb":45,"reps":8,"bar":true},{"lb":90,"reps":5,"bar":false},{"lb":140,"reps":4,"bar":false},{"lb":185,"reps":2,"bar":false}],"plates":[45,45,5],"bar":45,"rows":[{"i":1,"load":"235 × 5","badge":"top · effort 7.5","state":"current"},{"i":2,"load":"6–8 reps","badge":"effort 9","state":"planned"},{"i":3,"load":"6–8 reps","badge":"effort 9","state":"planned"},{"i":4,"load":"6–8 reps","badge":"effort 9","state":"planned"},{"i":5,"load":"6–8 reps","badge":"effort 9","state":"planned"},{"i":6,"load":"6–8 reps","badge":"effort 9","state":"planned"},{"i":7,"load":"6–8 reps","badge":"effort 9","state":"planned"},{"i":8,"load":"6–8 reps","badge":"effort 9","state":"planned"}]},"program":{"blocks":[{"i":1,"type":"hyp","name":"Hypertrophy","weeks":9,"deload":false,"cur":true},{"i":2,"type":"str","name":"Strength","weeks":3,"deload":false,"cur":false},{"i":3,"type":"hyp","name":"Hypertrophy","weeks":9,"deload":false,"cur":false},{"i":4,"type":"str","name":"Strength","weeks":3,"deload":false,"cur":false}],"days":["Full body A","Full body B","Full body C","Full body D","Full body E"],"goals":["Back squat","Deadlift","Barbell bench press"],"condition":{"name":"Anterior shoulder instability","usual":"mild","note":"Exercises that load the arm out to the side and rotated back carry a warning. Nothing is removed; you decide."},"dial":"standard","dialOpts":["hold me back","ease off","standard","push a bit","push me"],"backoff":"A fixed number of sets","backoffOpts":["A fixed number of sets","Until it feels like the top set"],"energy":"Maintenance","energyOpts":["Deficit","Maintenance","Surplus"]}};
+const ICON={"dash":"<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1.5\"/></svg>","work":"<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 8v8M19 8v8M8 6v12M16 6v12M8 12h8\"/></svg>","lifts":"<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"4\" y=\"3\" width=\"16\" height=\"18\" rx=\"2\"/><path d=\"M8 8h8M8 12h8M8 16h4\"/></svg>","prog":"<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 19V5M4 19h16\"/><path d=\"M7 15l4-5 3 3 5-7\"/></svg>","swap":"<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7 7h11l-3-3M17 17H6l3 3\"/></svg>","info":"<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 11v5M12 8h.01\"/></svg>","move":"<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01\"/></svg>","shield":"<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z\"/><path d=\"M9 12l2 2 4-4\"/></svg>","sun":"<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4\"/></svg>","cal":"<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M8 3v4M16 3v4\"/></svg>","up":"<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 19V5M6 11l6-6 6 6\"/></svg>","hold":"<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 12h12\"/></svg>"};
+
+const Q=new URLSearchParams(location.search), SCREEN=Q.get('screen')||'dashboard';
+if(Q.get('mode')) document.documentElement.dataset.mode=Q.get('mode');
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const BAND={Green:'ok',Yellow:'caution',Orange:'warn',Red:'stop'};
+const W=DIR==='warm', L=DIR==='log';
+const icon=k=>ICON[k]||'';
+const tabs=on=>'<nav class="tabs">'+[['dash','Dashboard'],['work','Workout'],['lifts','Lifts'],['prog','Progress']].map(([k,t])=>'<button class="'+(k===on?'on':'')+'">'+icon(k)+t+'</button>').join('')+'</nav>';
+function statusRows(rows){ return rows.map(r=>'<div class="status"><span class="dot '+BAND[r.band]+'"></span><span><b>'+esc(r.what)+':</b> <span class="muted">'+esc(r.does)+'</span></span></div>').join(''); }
+function dashboard(){
+  const d=DATA, r=d.readiness;
+  let h='<header class="top"><div class="eyebrow">'+(L?'WK '+d.week+'/'+d.weeks+' · '+d.block.toUpperCase():esc(d.block)+' · week '+d.week+' of '+d.weeks)+'</div><div class="title">'+(W?'Good morning':'Dashboard')+'</div></header><main>';
+  if(L){
+    h+='<div class="stats"><div class="stat"><div class="k">Target</div><div class="v">'+d.daysToTarget+'<small>d</small></div></div><div class="stat"><div class="k">Week</div><div class="v">'+d.thisWeek.done+'<small>/'+d.thisWeek.planned+'</small></div></div><div class="stat"><div class="k">Block</div><div class="v">'+d.week+'<small>/'+d.weeks+'</small></div></div><div class="stat"><div class="k">Warm-up</div><div class="v" style="font-size:15px;padding-top:4px">STD</div></div></div>';
+  }
+  h+='<section class="card"><div class="row between"><h3>'+(W?'<span class="inl">'+icon('sun')+'</span>':'')+'Readiness</h3><span class="xs dim">checked in '+r.date+' ›</span></div>'
+    +'<div class="lead">'+(W?'Your shoulder’s flared, so shoulder work stays where it was today. Everything else is on plan.':esc(r.top))+'</div>'+statusRows(r.rows)
+    +'<div class="row" style="margin-top:var(--sp-3);gap:var(--sp-2)"><button class="btn primary small">Today’s plan ›</button>'+(L?'':'<button class="btn quiet small">Details</button>')+'</div></section>';
+  // training card
+  h+='<section class="card"><div class="row between"><div><div class="xs muted">'+(L?'NEXT':'Next session')+'</div><div class="title" style="font-size:var(--fs-4)">'+esc(d.day)+'</div></div>'+(L?'<div class="mono xs muted">5 EX · ~60 MIN</div>':'<div class="s muted">5 exercises · about 60 min</div>')+'</div>';
+  if(L) h+='<table class="tbl" style="margin-top:8px"><tr><th>Exercise</th><th class="r">Today</th><th class="r">Δ</th></tr>'+d.exercises.map(e=>'<tr><td>'+esc(e.name)+'</td><td class="r mono">'+esc(e.rx)+'</td><td class="r mono" style="color:'+(/^\+/.test(e.change)?'var(--accent)':/^−/.test(e.change)?'var(--warn)':'var(--muted)')+'">'+esc(e.change||'=')+'</td></tr>').join('')+'</table>';
+  h+='<button class="btn primary wide" style="margin-top:var(--sp-3)">'+(W?'Let’s train':'Start training')+'</button>';
+  h+='<div class="row between xs muted" style="margin-top:var(--sp-3)"><span>This week</span><span>'+d.thisWeek.done+' of '+d.thisWeek.planned+' sessions</span></div><div class="strip">'+Array.from({length:d.thisWeek.planned},(_,i)=>'<span class="'+(i<d.thisWeek.done?'done':'')+'"></span>').join('')+'</div></section>';
+  // proposal
+  const p=d.proposal; h+='<section class="card" style="border-left:3px solid var(--accent)"><h3>'+esc(W?'How about a lighter week?':p.title)+'</h3><div class="s muted" style="margin-top:6px">'+esc(p.body)+'</div><div class="row" style="margin-top:var(--sp-3)"><button class="btn primary small">Deload this week</button><button class="btn secondary small">Not now</button></div></section>';
+  // main lifts
+  h+='<section class="card"><div class="row between"><h3>Main lifts</h3><span class="xs dim"><span class="term">estimated max</span></span></div>'
+    +(L?'<table class="tbl" style="margin-top:6px">'+d.lifts.map(x=>'<tr><td>'+esc(x.name)+'</td><td class="r mono" style="font-size:17px;font-weight:700">'+x.est+'<span class="xs muted"> lb</span></td></tr>').join('')+'</table>'
+      :'<div class="list" style="margin-top:4px">'+d.lifts.map(x=>'<div class="li"><span class="grow">'+esc(x.name)+'</span><b style="font-size:var(--fs-3)">'+x.est+'</b><span class="xs muted">lb</span></div>').join('')+'</div>')+'</section>';
+  if(L||!W){ h+='<section class="card"><div class="row between"><h3>Volume this week</h3><span class="xs dim"><span class="term">hard sets</span></span></div><div class="bars">'+d.volume.map(v=>{ const sc=v.hi*1.25; return '<div class="vb"><span class="nm">'+esc(v.m)+'</span><span class="tr"><span class="fl" style="width:'+Math.min(100,v.v/sc*100)+'%"></span><span class="tk" style="left:'+(v.lo/sc*100)+'%"></span><span class="tk" style="left:'+(v.hi/sc*100)+'%"></span></span><span class="n">'+v.v+'</span></div>'; }).join('')+'</div><div class="xs dim" style="margin-top:8px">Ticks mark the <span class="term">typical weekly sets</span>: a starting range, not a limit.</div></section>'; }
+  return h+'</main>'+tabs('dash');
+}
+function setCard(){
+  const s=DATA.set;
+  let h='<header class="top"><div class="eyebrow">'+(L?'FULL BODY A · 1/5':'Full body A · exercise 1 of 5')+'</div><div class="title">'+esc(s.name)+'</div></header><main>';
+  h+='<section class="card"><div class="row between" style="align-items:flex-start"><div class="grow"><div class="xs" style="color:var(--str);font-weight:700">'+(L?'LEAD LIFT · BARBELL':'Lead lift · Barbell')+'</div>'
+    +'<div class="s muted" style="margin-top:4px">'+(W?'<span class="inl">'+icon('cal')+'</span>':'')+'Last time '+esc(s.last)+' · 2 days ago</div></div>'
+    +'<div class="row" style="gap:0">'+'<button class="iconbtn" aria-label="Swap">'+icon('swap')+'</button><button class="iconbtn" aria-label="Info">'+icon('info')+'</button></div></div>'
+    +'<div class="s" style="margin-top:var(--sp-2)"><span class="term">Strength upkeep</span>: 1 <span class="term">top set</span> × 3–5 at <span class="term">effort</span> 7.5, then 7 × 6–8 at effort 9</div>';
+  if(L){
+    h+='<div style="margin-top:var(--sp-4)" class="row between"><div class="xs muted">SET 1/8 · TOP</div><div class="xs mono" style="color:var(--accent)">TARGET 3–5 @ EFFORT 7.5</div></div>'
+      +'<div class="readout" style="margin-top:6px"><span class="big">'+s.weight+'</span><span class="x">lb ×</span><span class="big">'+s.reps+'</span><span class="x">· '+s.effort+'</span></div>';
+  }
+  h+='<div class="grid2" style="margin-top:var(--sp-4)"><div class="stepper"><button>−</button><div class="val"><div class="num">'+s.weight+'</div><div class="lab">Weight (lb)</div></div><button>+</button></div>'
+    +'<div class="stepper"><button>−</button><div class="val"><div class="num">'+s.reps+'</div><div class="lab">Reps</div></div><button>+</button></div></div>'
+    +'<div class="stepper" style="margin-top:var(--sp-2);min-height:52px"><button>−</button><div class="val"><div class="num" style="font-size:var(--fs-4)">'+s.effort+'</div><div class="lab">Effort <span class="help" style="width:16px;height:16px;font-size:10px">?</span></div></div><button>+</button></div>'
+    +'<div class="plates xs muted">Per side '+s.plates.map(p=>'<span class="plate" style="height:'+(p>=45?30:p>=25?24:18)+'px">'+p+'</span>').join('')+'<span style="margin-left:6px">on a '+s.bar+' lb bar</span></div>'
+    +'<button class="btn primary wide" style="margin-top:var(--sp-4);min-height:52px;font-size:17px">'+(W?'Log this set':'Log set')+'</button>'
+    +'<div class="xs muted" style="margin-top:var(--sp-3)">'+(W?'Why 235? ':'')+esc(s.why)+' ›</div></section>';
+  // sets
+  h+='<section class="card"><div class="row between"><h3>Sets</h3><button class="btn quiet small">Warm-up ▸</button></div>';
+  if(L) h+='<table class="tbl" style="margin-top:4px"><tr><th>#</th><th>Target</th><th>Last</th><th class="r">Effort</th></tr>'+s.rows.map(r=>'<tr class="'+r.state+'"><td class="mono">'+r.i+'</td><td class="mono">'+(r.i===1?'235 × 3–5':'6–8')+'</td><td class="mono muted">'+(r.i===1?'240 × 5':'200 × 8')+'</td><td class="r mono">'+(r.i===1?'7.5':'9')+'</td></tr>').join('')+'</table>';
+  else h+=s.rows.slice(0,5).map(r=>'<div class="srow '+r.state+'"><span class="sidx">'+r.i+'</span><span class="sload">'+esc(r.load)+'</span><span class="badge">'+esc(r.badge)+'</span></div>').join('')+'<div class="xs dim" style="margin-top:4px">+3 more back-off sets</div>';
+  h+='</section>';
+  h+='<section class="card"><h3>Warm-up</h3><div class="s muted" style="margin-top:4px">'+s.ramp.map(r=>(r.bar?'bar':r.lb)+' × '+r.reps).join('  ·  ')+'</div></section>';
+  return h+'</main>'+tabs('work');
+}
+function program(){
+  const p=DATA.program;
+  let h='<header class="top"><div class="eyebrow">'+(L?'SETTINGS':'Settings')+'</div><div class="title">Edit program</div></header><main>';
+  const total=p.blocks.reduce((t,b)=>t+b.weeks,0);
+  h+='<div class="label">'+(L?'BLOCKS · '+total+' WK':'Blocks')+'</div><section class="card"><div class="tl">'+p.blocks.map(b=>'<span class="'+b.type+'" style="flex:'+b.weeks+';opacity:'+(b.cur?1:.45)+'"></span>').join('')+'</div>'
+    +'<div class="list">'+p.blocks.map(b=>'<div class="li"><span class="dot" style="background:var(--'+b.type+')"></span><span class="grow">'+(L?'B'+b.i+' ':'Block '+b.i+' · ')+esc(b.name)+(b.cur?' <span class="xs" style="color:var(--accent);font-weight:700">'+(L?'NOW':'· now')+'</span>':'')+'</span><span class="s muted">'+b.weeks+(L?' wk':' weeks')+'</span><span class="dim">›</span></div>').join('')+'</div>'
+    +'<div class="row between s" style="margin-top:var(--sp-2)"><span class="muted">Target date</span><b>'+DATA.target+' 2027</b></div></section>';
+  h+='<div class="label">'+(L?'YOUR WEEK':'Your week')+'</div><section class="card"><div class="s muted">5 days a week, full body</div><div class="row" style="flex-wrap:wrap;margin-top:var(--sp-2)">'+p.days.map(d=>'<span class="chip on">'+esc(d)+'</span>').join('')+'</div></section>';
+  h+='<div class="label">'+(L?'GOAL LIFTS':'Goal lifts')+'</div><section class="card"><div class="list">'+p.goals.map((g,i)=>'<div class="li"><span class="sidx">'+(i+1)+'</span><span class="grow">'+esc(g)+'</span><button class="iconbtn" aria-label="Reorder">'+icon('move')+'</button></div>').join('')+'</div></section>';
+  h+='<div class="label">'+(L?'HOW HARD SUGGESTIONS PUSH':'How hard suggestions push')+'<span class="help">?</span></div><section class="card"><div class="seg">'+p.dialOpts.map(o=>'<button class="'+(o===p.dial?'on':'')+'">'+esc(o)+'</button>').join('')+'</div><div class="xs muted" style="margin-top:var(--sp-2)">One step either way. It moves a notch if you keep lifting heavier or lighter than suggested, and says so.</div></section>';
+  h+='<div class="label">'+(L?'WORKING AROUND':'What you’re working around')+'</div><section class="card"><div class="cond">'+icon('shield')+'<div class="grow"><b>'+esc(p.condition.name)+'</b><div class="s muted" style="margin-top:2px">'+esc(p.condition.note)+'</div><div class="row s" style="margin-top:var(--sp-2)"><span class="muted">Your usual</span><span class="chip on">'+p.condition.usual+'</span></div></div></div><button class="btn secondary small" style="margin-top:var(--sp-3)">Add a condition</button></section>';
+  h+='<div class="label">'+(L?'BACK-OFF SETS':'Back-off sets')+'</div><section class="card"><div class="row" style="flex-wrap:wrap">'+p.backoffOpts.map(o=>'<span class="chip '+(o===p.backoff?'on':'')+'">'+esc(o)+'</span>').join('')+'</div></section>';
+  h+='<div class="label">'+(L?'ENERGY BALANCE':'Energy balance')+'</div><section class="card"><div class="seg">'+p.energyOpts.map(o=>'<button class="'+(o===p.energy?'on':'')+'">'+esc(o)+'</button>').join('')+'</div></section>';
+  h+='<button class="btn primary wide" style="margin-top:var(--sp-4)">Save program</button>';
+  return h+'</main>'+tabs('dash');
+}
+document.body.innerHTML=({dashboard,set:setCard,program}[SCREEN]||dashboard)();
+</script>
+</body></html>

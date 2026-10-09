@@ -243,3 +243,51 @@ warm-up row states the actual result and the score: "Warm-up: standard
    sore muscles.
 
 Neither changes a number. **To undo:** not recommended; both were wrong.
+
+---
+
+## D16. Design direction: Calm
+
+**Question:** three directions were mocked up with the same real demo data
+(`docs/design/`, 390 px, light and dark): Calm, Training-log and Warm.
+
+**Chosen:** Calm, the default. Its set card at 390 px is the clearest: weight,
+reps, effort, then Log set, with nothing repeated. Training-log shows the same
+numbers twice (a big readout above the steppers), and its uppercase labels slow
+reading. Warm's rounded steppers wrap their labels at this width. One
+Training-log idea is worth a later look: a "last time" column beside each
+planned set.
+
+**To undo / switch:** set `DESIGN_DIRECTION` in index.html to `'log'` or
+`'warm'`. Both are kept as token sets in the stylesheet.
+
+---
+
+## D17. Light mode follows the phone
+
+**Question:** the spec asks for light and dark screenshots, but the app had
+dark only.
+
+**Chosen:** a light version of the Calm tokens that follows the phone's
+setting. A theme code still overrides it. Because the app runs full screen
+with white status-bar text, light mode puts the clock on a thin band of the
+accent colour (the Girlypop theme already does the same).
+
+**To undo:** delete the `@media (prefers-color-scheme: light)` block after
+`:root` in index.html. Everything goes back to dark.
+
+---
+
+## D18. Smaller controls keep a 44 px tap area
+
+**Question:** 44 px touch targets would make chips, small buttons and icon
+buttons visibly huge.
+
+**Chosen:** they keep their size to look at (chips and small buttons 36 px,
+icon buttons 36 px), with an invisible extension to 44 px for the finger.
+Chip rows are spaced 8 px apart so the tap areas never overlap.
+Segmented controls hold up to 3 words, or up to 5 short numbers (the check-in
+scales). Longer lists use chips; a 5-word segmented control wraps at 390 px.
+
+**To undo:** `min-height:var(--tap)` on `.chip`, `.btn.s` and `.iconbtn`
+makes them visibly 44 px.

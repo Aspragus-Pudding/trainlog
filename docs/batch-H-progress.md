@@ -21,7 +21,7 @@ in `docs/decisions-pending.md`.
 | 2 Part 8 | done | v1.60.3 | docs/features.md, README.md; two maintainer-only leaks fixed (D4, D5); MEV/MRV wording left for H2 |
 | 3 H1 | done | v1.61.0 | briefing after check-in + dashboard card; §64 (300 random days match their traces); D6–D8 |
 | 4 H2 | done | v1.62.0 | glossary (docs/glossary.md, embedded, tap-for-definition), readiness card + detail sheet, status dots, every string audited (docs/h2-strings-changed.md); §65 renders 12 screens and scans them; D9–D15 |
-| 5 H3 | not started | | |
+| 5 H3 | done | v1.63.0 (branch redesign) | mockups + 18 shots in docs/design/, Calm chosen (D16), docs/design.md, tokens + light mode + directions + components on tokens, 16 icons; §66; D16–D18 |
 | 6 H4 | not started | | |
 | 7 H5 | not started | | |
 

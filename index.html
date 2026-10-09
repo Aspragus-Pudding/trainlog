@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0B0D12">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F4F5F7" data-default="#F4F5F7">
+<meta name="theme-color" content="#0B0D12" data-default="#0B0D12">
 <title>Trainlog</title>
 <style>
 :root{
@@ -21,28 +22,73 @@
   --warn:#E8A33D; --warn-soft:rgba(232,163,61,.1); --danger:#E8546B; --sug:var(--warn);
   --go:#2FA84F; --skip:#FF453A; --ok:#4ADE80; --steel:#6E7787;
   --pr:#E8A33D; --on-pr:#111;
-  --bar:rgba(11,13,18,.95); --backdrop:rgba(6,8,12,.78); --r:12px;
+  --bar:rgba(11,13,18,.95); --backdrop:rgba(6,8,12,.78); --r:14px;
   --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  /* ── design system (docs/design.md). Colour roles are aliases of the theme
+     tokens above, so every theme code keeps working; caution is the one new
+     colour (the "careful" dot). Direction: Calm. */
+  --surface:var(--card); --surface-2:var(--card-2); --text:var(--ink);
+  --caution:#F2D04B; --stop:var(--danger);
+  /* type: five sizes, no others */
+  --fs-1:12px; --fs-2:14px; --fs-3:16px; --fs-4:22px; --fs-5:28px;
+  /* spacing, radius, elevation */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px;
+  --r-s:8px; --r-btn:12px; --r-l:20px; --r-pill:999px;
+  --e-1:none; --e-2:0 16px 40px rgba(0,0,0,.45);
+  /* touch and the bottom edge: every tap target 44px; content stays 80px clear of the tab bar's edge */
+  --tap:44px; --safe-bottom:calc(80px + env(safe-area-inset-bottom));
+}
+/* Light mode (Calm): follows the phone. A theme code still wins — its tokens
+   come later in the page at the same specificity. The status bar is always
+   white text (black-translucent), so the clock sits on an accent band. */
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#F4F5F7; --card:#FFFFFF; --card-2:#EEF0F3; --line:#E3E6EB;
+    --ink:#12151A; --muted:#5A626F; --dim:#8A919D;
+    --hyp:#2F6FEB; --str:#C46F00; --peak:#D9344F; --deload:#7A818C;
+    --accent:#2F6FEB; --on-accent:#fff; --accent-soft:rgba(47,111,235,.10);
+    --warn:#C46F00; --warn-soft:rgba(196,111,0,.10); --danger:#D9344F; --go:#1F8F4C; --skip:#D9344F; --ok:#1F9D55; --steel:#9AA1AC;
+    --pr:#C46F00; --on-pr:#fff; --caution:#B89400;
+    --bar:rgba(244,245,247,.94); --backdrop:rgba(18,21,26,.42);
+    --e-1:0 1px 2px rgba(16,24,40,.05),0 0 0 1px rgba(16,24,40,.05); --e-2:0 16px 40px rgba(16,24,40,.18);
+  }
+  :root:not([data-themed]) header{background:linear-gradient(to bottom,var(--accent) env(safe-area-inset-top),var(--bar) env(safe-area-inset-top))}
+}
+/* Other directions (docs/design.md): switching is one line, DESIGN_DIRECTION in
+   the script, which sets data-direction. Each is tokens plus a few component
+   styles; nothing else in the app changes. Not used today. */
+:root[data-direction="log"]{--bg:#050506;--card:#0E0F11;--card-2:#191B1F;--line:#24272D;--ink:#F4F5F6;--muted:#9097A1;--dim:#5E646D;
+  --accent:#C8F03C;--on-accent:#0B0D04;--accent-soft:rgba(200,240,60,.13);--caution:#F5D547;--warn:#FF9F2E;--danger:#FF4D5E;
+  --fs-1:11px;--fs-2:13px;--fs-3:15px;--fs-4:20px;--fs-5:30px;--sp-3:9px;--sp-4:12px;--sp-5:18px;--r:8px;--r-s:4px;--r-btn:6px;--r-l:10px;--r-pill:4px;--e-1:inset 0 0 0 1px var(--line)}
+:root[data-direction="log"] .qlab,:root[data-direction="log"] .field,:root[data-direction="log"] nav button{text-transform:uppercase;letter-spacing:.08em}
+:root[data-direction="log"] .num,:root[data-direction="log"] .sload,:root[data-direction="log"] .snum{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+:root[data-direction="warm"]{--bg:#1B1715;--card:#262120;--card-2:#322B28;--line:#3B3330;--ink:#F6EEE8;--muted:#B9AAA0;--dim:#857670;
+  --accent:#F08F6E;--on-accent:#2A140C;--accent-soft:rgba(240,143,110,.16);--ok:#8CC79A;--caution:#F1CF6A;--warn:#F2A35A;--danger:#F07178;
+  --sp-3:14px;--sp-4:18px;--sp-5:26px;--r:24px;--r-s:12px;--r-btn:999px;--r-l:30px;--tap:48px;
+  --font:ui-rounded,"SF Pro Rounded",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@media (prefers-color-scheme: light){
+  :root[data-direction="log"]{--bg:#FFFFFF;--card:#F6F7F8;--card-2:#ECEEF0;--line:#DADDE1;--ink:#0A0B0C;--muted:#555C66;--dim:#8B919A;--accent:#4F7A00;--on-accent:#fff;--accent-soft:rgba(79,122,0,.10);--caution:#B38F00;--warn:#D06A00;--danger:#D21F3C}
+  :root[data-direction="warm"]{--bg:#FBF6F0;--card:#FFFFFF;--card-2:#F4ECE3;--line:#EADFD3;--ink:#2E2420;--muted:#7A6A60;--dim:#A89788;--accent:#D9623F;--on-accent:#fff;--accent-soft:rgba(217,98,63,.11);--ok:#4F8F5E;--caution:#B8901A;--warn:#C9741F;--danger:#C9424B;--e-1:0 2px 10px rgba(120,80,50,.08)}
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink)}
 body.resting main{padding-bottom:64px}
 body.updating main{padding-bottom:84px}
 body{font-family:var(--font);
-  font-size:16px;line-height:1.45;font-variant-numeric:tabular-nums;
-  padding-bottom:calc(70px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
+  font-size:var(--fs-3);line-height:1.45;font-variant-numeric:tabular-nums;
+  padding-bottom:var(--safe-bottom);-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;font-variant-numeric:tabular-nums}
 h1,h2,h3{margin:0;font-weight:750;letter-spacing:-0.022em}
-.wrap{max-width:600px;margin:0 auto;padding:0 14px}
+.wrap{max-width:600px;margin:0 auto;padding:0 var(--sp-4)}
 
 header{position:sticky;top:0;z-index:20;background:var(--bar);
   backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
-.ctx{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 0 11px}
-.phase{font-size:13px;font-weight:650}
+.ctx{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);padding:10px var(--sp-4) 11px}
+.phase{font-size:var(--fs-1);font-weight:650}
 .phase.hyp{color:var(--hyp)} .phase.str{color:var(--str)}
 .phase.peak{color:var(--peak)} .phase.deload{color:var(--deload)}
-.wk{font-size:13.5px;color:var(--muted);margin-top:-1px}
-.day{font-size:22px;font-weight:780;letter-spacing:-.03em;margin-top:1px}
+.wk{font-size:var(--fs-2);color:var(--muted);margin-top:-1px}
+.day{font-size:var(--fs-4);font-weight:780;letter-spacing:-.03em;margin-top:1px}
 .skipbtn{color:var(--skip);font-size:15px;font-weight:600;align-self:center}
 .ctxbtns{display:flex;align-items:center;gap:14px;flex:none}
 .notebtn{color:var(--dim);font-size:19px;align-self:center;line-height:1}
@@ -50,77 +96,85 @@ header{position:sticky;top:0;z-index:20;background:var(--bar);
 nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--bar);
   backdrop-filter:blur(14px);border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom);display:flex}
-nav button{flex:1;padding:10px 0 11px;font-size:11.5px;color:var(--dim);
+nav button{flex:1;padding:10px 0 11px;font-size:var(--fs-1);color:var(--dim);min-height:var(--tap);
   display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:550}
 nav button .ic{width:21px;height:21px}
 nav button[aria-current="page"]{color:var(--accent)}
 nav button:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
 
-section{display:none;padding-top:14px} section.on{display:block}
-.card{background:var(--card);border-radius:var(--r);margin-bottom:11px;overflow:hidden}
-.pad{padding:15px}
-.muted{color:var(--muted)} .dim{color:var(--dim)} .tiny{font-size:12.5px} .sm{font-size:13.5px}
+section{display:none;padding-top:var(--sp-4)} section.on{display:block}
+.card{background:var(--surface);border-radius:var(--r);margin-bottom:var(--sp-3);overflow:hidden;box-shadow:var(--e-1)}
+.pad{padding:var(--sp-4)}
+.li{display:flex;align-items:center;gap:var(--sp-3);min-height:var(--tap);padding:var(--sp-2) 0;border-top:1px solid var(--line)}.li:first-child{border-top:0}
+.muted{color:var(--muted)} .dim{color:var(--dim)} .tiny{font-size:var(--fs-1)} .sm{font-size:var(--fs-2)}
 .row{display:flex;align-items:center;gap:10px} .between{justify-content:space-between}
-.grow{flex:1;min-width:0} .hr{height:1px;background:var(--line);margin:13px 0}
-.stack{display:flex;flex-direction:column;gap:9px}
+.grow{flex:1;min-width:0} .hr{height:1px;background:var(--line);margin:var(--sp-3) 0}
+.stack{display:flex;flex-direction:column;gap:var(--sp-2)}
 
-.btn{background:var(--card-2);border-radius:10px;padding:12px 15px;font-size:15px;font-weight:600}
+/* buttons: .btn is secondary; .pri/.primary, .ghost (secondary outline), .quiet, .danger/.destructive.
+   Every button is at least 44px tall to tap; .s is smaller to look at, not to hit. */
+.btn{background:var(--surface-2);border-radius:var(--r-btn);padding:var(--sp-2) var(--sp-4);min-height:var(--tap);font-size:var(--fs-3);font-weight:600;position:relative}
 .btn:active{background:var(--line)}
-.btn.go{background:var(--go);color:var(--on-accent)} .btn.pri{background:var(--accent);color:var(--on-accent)}
-.btn.wide{width:100%;text-align:center} .btn.s{padding:8px 12px;font-size:13.5px}
+.btn.go{background:var(--go);color:var(--on-accent)} .btn.pri,.btn.primary{background:var(--accent);color:var(--on-accent)}
+.btn.wide{width:100%;text-align:center} .btn.s{padding:var(--sp-1) var(--sp-3);font-size:var(--fs-2);min-height:36px}
+.btn.s::after{content:'';position:absolute;inset:-4px 0}
 .btn.ghost{background:transparent;border:1px solid var(--line)}
+.btn.quiet{background:transparent;color:var(--accent);padding-left:var(--sp-2);padding-right:var(--sp-2)}
+.btn.danger,.btn.destructive{background:transparent;color:var(--stop);border:1px solid var(--line)}
 .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-.seg{display:flex;border:1.5px solid var(--accent);border-radius:9px;overflow:hidden}
-.seg button{flex:1;padding:10px 0;font-size:15px;font-weight:600;color:var(--accent);border-right:1.5px solid var(--accent)}
-.seg button:last-child{border-right:none}
+.seg{display:flex;background:var(--surface-2);border-radius:var(--r-btn);padding:3px;gap:3px}
+.seg button{flex:1;min-height:38px;padding:0 var(--sp-1);border-radius:calc(var(--r-btn) - 3px);font-size:var(--fs-3);font-weight:600;color:var(--muted);position:relative}
+.seg button::after{content:'';position:absolute;inset:-3px 0}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
-.anchor{font-size:12.5px;color:var(--muted);margin-top:7px;min-height:17px}
-.qblock{background:var(--card);border-radius:var(--r);padding:14px;margin-bottom:11px}
-.qlab{font-size:15px;font-weight:600;margin-bottom:10px;line-height:1.35}
+.anchor{font-size:var(--fs-1);color:var(--muted);margin-top:var(--sp-2);min-height:17px}
+.qblock{background:var(--surface);border-radius:var(--r);padding:var(--sp-4);margin-bottom:var(--sp-3);box-shadow:var(--e-1)}
+.qlab{font-size:var(--fs-3);font-weight:650;margin-bottom:var(--sp-3);line-height:1.35}
 
-.legend{display:flex;gap:14px;font-size:11.5px;margin-top:9px;flex-wrap:wrap}
+.legend{display:flex;gap:var(--sp-3);font-size:var(--fs-1);margin-top:var(--sp-2);flex-wrap:wrap}
 .legend span{display:flex;align-items:center;gap:5px;color:var(--muted)}
 .term{border-bottom:1px dotted currentColor;cursor:help}
 .termtip{position:fixed;left:12px;right:12px;max-width:440px;margin:0 auto;z-index:2147483002;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;color:var(--ink);box-shadow:0 10px 30px color-mix(in srgb, var(--backdrop) 60%, transparent)}
-.termtip .termname{font-weight:650;font-size:15px}.termtip p{font-size:14px;line-height:1.5;margin:4px 0 6px;color:var(--muted)}
-.status{display:flex;gap:9px;align-items:baseline;margin-top:6px;font-size:14px;line-height:1.4}.status.sub{font-size:12.5px;margin-top:3px}
+.termtip .termname{font-weight:650;font-size:var(--fs-3)}.termtip p{font-size:var(--fs-2);line-height:1.5;margin:var(--sp-1) 0 var(--sp-2);color:var(--muted)}
+.help{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--line);font-size:var(--fs-1);font-weight:700;color:var(--muted);vertical-align:1px;margin-left:var(--sp-1);position:relative}.help::after{content:'';position:absolute;inset:-12px}
+.status{display:flex;gap:var(--sp-2);align-items:baseline;margin-top:var(--sp-2);font-size:var(--fs-2);line-height:1.4}.status.sub{font-size:var(--fs-1);margin-top:var(--sp-1)}
 .sdot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none;transform:translateY(-1px)}
 .sw{width:9px;height:9px;border-radius:2px;display:block}
-.count{font-size:38px;font-weight:800;letter-spacing:-.035em;line-height:1.05}
-.countsub{font-size:13.5px;color:var(--muted);margin-top:2px}
+.count{font-size:var(--fs-5);font-weight:800;letter-spacing:-.035em;line-height:1.05}
+.countsub{font-size:var(--fs-2);color:var(--muted);margin-top:2px}
 
-.ex{background:var(--card);border-radius:var(--r);margin-bottom:11px;overflow:hidden}
-.exhead{display:flex;align-items:flex-start;gap:10px;padding:14px 15px 11px;width:100%;text-align:left}
-.exname{font-size:17px;font-weight:700;letter-spacing:-.018em}
-.exmeta{font-size:13px;color:var(--muted);margin-top:2px}
+.ex{background:var(--surface);border-radius:var(--r);margin-bottom:var(--sp-3);overflow:hidden;box-shadow:var(--e-1)}
+.exhead{display:flex;align-items:flex-start;gap:var(--sp-2);padding:var(--sp-4) var(--sp-4) var(--sp-3);width:100%;text-align:left}
+.exname{font-size:var(--fs-3);font-weight:700;letter-spacing:-.018em}
+.exmeta{font-size:var(--fs-2);color:var(--muted);margin-top:2px}
 .exicons{display:flex;gap:4px;flex:none}
-.iconbtn{width:30px;height:30px;display:grid;place-items:center;color:var(--muted);border-radius:7px}
-.exbody{padding:0 15px 15px}
-.exmod{font-size:12.5px;color:var(--accent);font-weight:600;margin-top:2px}
-.exnote{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4;white-space:pre-line;overflow-wrap:anywhere}
+.iconbtn{width:36px;height:36px;display:grid;place-items:center;color:var(--muted);border-radius:var(--r-s);position:relative}.iconbtn::after{content:'';position:absolute;inset:-4px}
+.iconbtn .ic{width:20px;height:20px}
+.exbody{padding:0 var(--sp-4) var(--sp-4)}
+.exmod{font-size:var(--fs-1);color:var(--accent);font-weight:600;margin-top:2px}
+.exnote{font-size:var(--fs-1);color:var(--muted);margin-top:3px;line-height:1.4;white-space:pre-line;overflow-wrap:anywhere}
 
-.srow{display:flex;align-items:center;gap:11px;padding:7px 0}
-.sidx{width:26px;height:26px;border-radius:50%;background:var(--card-2);color:var(--muted);
-  display:grid;place-items:center;font-size:12.5px;font-weight:600;flex:none}
+.srow{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;min-height:var(--tap)}
+.sidx{width:26px;height:26px;border-radius:50%;background:var(--surface-2);color:var(--muted);
+  display:grid;place-items:center;font-size:var(--fs-1);font-weight:600;flex:none}
 .sidx.done{background:var(--accent);color:var(--on-accent)}
-.sload{font-size:14.5px;font-weight:600;color:var(--accent)}
+.sload{font-size:var(--fs-3);font-weight:600;color:var(--accent)}
 .sload.empty{color:var(--dim);font-weight:500}
-.sbadge{margin-left:auto;background:var(--card-2);color:var(--muted);border-radius:7px;
-  padding:5px 10px;font-size:12px;font-weight:600;flex:none}
+.sbadge{margin-left:auto;background:var(--surface-2);color:var(--muted);border-radius:var(--r-s);
+  padding:var(--sp-1) var(--sp-2);font-size:var(--fs-1);font-weight:600;flex:none}
 .sbadge.on{background:var(--accent-soft);color:var(--accent)}
 .del{color:var(--dim);padding:3px 5px;font-size:17px;flex:none}
 
-.step{display:flex;align-items:stretch;background:var(--card-2);border-radius:10px;overflow:hidden}
-.step button{width:44px;min-width:38px;font-size:22px;color:var(--muted);flex:0 0 auto}
+.step{display:flex;align-items:stretch;background:var(--surface-2);border-radius:var(--r-btn);overflow:hidden;min-height:60px}
+.step button{width:var(--tap);min-width:38px;font-size:var(--fs-4);color:var(--muted);flex:0 0 auto}
 .step button:active{background:var(--line);color:var(--ink)}
 .step .val{flex:1;min-width:0;text-align:center;padding:9px 2px}
-.step .num{font-size:23px;font-weight:750;letter-spacing:-.028em;line-height:1.12;
+.step .num{font-size:var(--fs-4);font-weight:750;letter-spacing:-.028em;line-height:1.12;
   white-space:nowrap;overflow:hidden}
-.step.wide .num{font-size:28px}
-.stepgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.step.wide .num{font-size:var(--fs-5)}
+.stepgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--sp-2)}
 .numin{width:100%;background:transparent;border:none;color:var(--ink);text-align:center;
-  font:inherit;font-size:23px;font-weight:750;letter-spacing:-.028em;padding:0;
+  font:inherit;font-size:var(--fs-4);font-weight:750;letter-spacing:-.028em;padding:0;
   -moz-appearance:textfield}
 .numin::-webkit-outer-spin-button,.numin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .numin:focus{outline:none}
@@ -134,7 +188,7 @@ section{display:none;padding-top:14px} section.on{display:block}
 .whyline{font-size:12px;color:var(--muted);text-align:left;padding:2px 0;line-height:1.4}
 .whydetail{font-size:12px;color:var(--dim);margin:3px 0 2px;padding-left:9px;border-left:2px solid var(--line);line-height:1.45}
 .whydetail div+div{margin-top:4px}
-.step .lab{font-size:11px;color:var(--dim)}
+.step .lab{font-size:var(--fs-1);color:var(--dim);white-space:nowrap}
 .bar{width:100%;height:70px;display:block;margin:4px 0 3px}
 .plates{font-size:12.5px;color:var(--muted)}
 .warnline{font-size:12.5px;color:var(--warn)}
@@ -165,7 +219,7 @@ dialog:focus,dialog:focus-visible{outline:none}
    is — the review used to push it below the fold, where it read as missing */
 .bldnav{gap:8px;position:sticky;bottom:-17px;margin:6px -17px -17px;padding:10px 17px 17px;
   background:var(--card);border-top:1px solid var(--line);z-index:2}
-.sheet{background:var(--card);border-radius:16px;padding:17px;max-height:84vh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.sheet{background:var(--surface);border-radius:var(--r-l);padding:var(--sp-4);box-shadow:var(--e-2);max-height:84vh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .hdrnote{color:var(--muted);font-size:17px;padding:4px 8px;align-self:center}
 .hdrnote:active{color:var(--ink)}
 .rest{position:fixed;left:0;right:0;bottom:calc(70px + env(safe-area-inset-bottom));z-index:40;
@@ -185,16 +239,17 @@ dialog:focus,dialog:focus-visible{outline:none}
 .upd button{background:rgba(255,255,255,.22);border-radius:8px;padding:8px 13px;
   font-size:13.5px;font-weight:650;flex:none}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));
-  background:var(--card-2);padding:9px 16px;border-radius:999px;font-size:13.5px;z-index:60;
+  background:var(--surface-2);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-pill);font-size:var(--fs-2);box-shadow:var(--e-2);z-index:60;
   opacity:0;pointer-events:none;transition:opacity .16s}
 .toast.on{opacity:1}
-.empty{padding:26px 12px;text-align:center;color:var(--muted);font-size:14px;line-height:1.65}
-.field{font-size:12.5px;color:var(--dim);margin-bottom:7px}
-.chip{border:1px solid var(--line);background:var(--card-2);border-radius:999px;
-  padding:7px 13px;font-size:14px;color:var(--muted)}
+.empty{padding:var(--sp-5) var(--sp-3);text-align:center;color:var(--muted);font-size:var(--fs-2);line-height:1.6}
+.field{font-size:var(--fs-1);color:var(--dim);margin-bottom:var(--sp-2)}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:var(--r-pill);
+  padding:var(--sp-1) var(--sp-3);min-height:36px;font-size:var(--fs-2);color:var(--muted);position:relative}
+.chip::after{content:'';position:absolute;inset:-4px 0}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:600}
-.chip.warn[aria-pressed="true"]{background:var(--danger);border-color:var(--danger)}
-.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip.warn[aria-pressed="true"]{background:var(--stop);border-color:var(--stop)}
+.chips{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
 input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:9px;
   color:var(--ink);padding:11px;font:inherit}
 .wsel{flex:1;min-width:0;background:var(--card-2);color:var(--ink);border:none;border-radius:9px;padding:9px 10px;font:inherit;font-size:15px}
@@ -8902,7 +8957,7 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.62.0","lines":["Plain language: statuses now say what they do (\"Shoulder: pressing, pulling and raises held at last time's load\") with a small coloured dot, instead of Green, Yellow, Orange or Red.","The readiness card shows today's plan's top line. Tap it for each check-in answer and what it does, sore muscles and joints with the exercises they touch, and the readiness score.","One name for each idea: RPE is now \"effort\", e1RM \"estimated max\", MEV/MRV \"typical weekly sets\". Dotted words can be tapped for a definition.","The dashboard's phases are now called blocks, the same word Edit program uses."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.63.0","lines":["The look is now one design system (docs/design.md): five text sizes, one set of spacings and colours, and every button at least 44 px tall to tap.","Light mode: the app follows your phone's light or dark setting. Theme codes still override it.","The status dots use four fixed colours, from no change to lighter.","On the redesign branch; it ships together with the new setup and the screen pass."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9469,7 +9524,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.62.0';
+const APP_VERSION='1.63.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -11185,8 +11240,9 @@ function applyTheme(){
     THEME=t; THEME_ON=code;
     let st=document.getElementById('themecss');
     if(!st){ st=document.createElement('style'); st.id='themecss'; document.head.appendChild(st); }
-    st.textContent=t?':root{'+THEME_TOKENS.map(k=>'--'+k+':'+t.tokens[k]).join(';')+'}\n'+(t.css||''):'';
-    const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content',t?t.tokens.bg:'#0B0D12');
+    st.textContent=t?':root{'+THEME_TOKENS.map(k=>'--'+k+':'+t.tokens[k]).join(';')+(t.tokens.caution?';--caution:'+t.tokens.caution:';--caution:color-mix(in srgb,var(--warn) 55%,#F5D547)')+'}\n'+(t.css||''):'';
+    if(t) document.documentElement.dataset.themed=code; else delete document.documentElement.dataset.themed;
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.setAttribute('content',t?t.tokens.bg:m.getAttribute('data-default')||'#0B0D12'));
   }catch(err){ console.error('theme failed', err); }
 }
 function themeToast(m){
@@ -16492,7 +16548,7 @@ const CUT_NAME={sick_day:'sick-day',local_soreness:'soreness',joint_ladder:'join
 function bandOf(score100){ for(const [min,name] of ENGINE.BAND) if(score100>=min) return name; return 'Red'; }
 const BAND_ORDER=['Green','Yellow','Orange','Red'];
 const worseBand=(a,b)=>BAND_ORDER[Math.max(BAND_ORDER.indexOf(a),BAND_ORDER.indexOf(b))];
-const BAND_COLOR={Green:'var(--ok)', Yellow:'var(--warn)', Orange:'color-mix(in srgb, var(--warn), var(--danger))', Red:'var(--danger)'};
+const BAND_COLOR={Green:'var(--ok)', Yellow:'var(--caution)', Orange:'var(--warn)', Red:'var(--stop)'};   // design system roles: ok, caution, warn, stop
 /* What the ladder does at each level — the bands' action line for joints. */
 const JOINT_BAND={1:'Green',2:'Yellow',3:'Orange',4:'Red',5:'Red'};
 /* What the ladder does, in words, naming the work it touches (JOINT_PATTERNS). */
@@ -18593,6 +18649,31 @@ const TUTORIAL=(()=>{ try{ return parseTutorial(document.getElementById('tutoria
    term(key) puts the glossary's label (or the given text) on screen with a
    dotted underline; tapping it shows the definition in a small card that any
    other tap dismisses. It never navigates or changes anything. */
+/* Design direction (docs/design.md): 'calm' is the default look; 'log' and
+   'warm' are kept as token sets in the stylesheet. Switching is this one line. */
+const DESIGN_DIRECTION='calm';
+try{ if(DESIGN_DIRECTION!=='calm') document.documentElement.dataset.direction=DESIGN_DIRECTION; }catch{}
+/* The icon set: inline SVG paths on a 24 grid, 1.9 stroke. Used only for the
+   tab bar, set card actions and the condition card. At most 24. */
+const ICONS={
+  dashboard:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  workout:'<path d="M5 8v8M19 8v8M8 6v12M16 6v12M8 12h8"/>',
+  lifts:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/>',
+  progress:'<path d="M4 19V5M4 19h16"/><path d="M7 15l4-5 3 3 5-7"/>',
+  swap:'<path d="M7 7h11l-3-3M17 17H6l3 3"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  up:'<path d="M12 19V5M6 11l6-6 6 6"/>',
+  down:'<path d="M12 5v14M6 13l6 6 6-6"/>',
+  remove:'<path d="M6 6l12 12M18 6L6 18"/>',
+  add:'<path d="M12 5v14M5 12h14"/>',
+  note:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>',
+  more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+  check:'<path d="M5 12l5 5L19 7"/>',
+  timer:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/>',
+  shield:'<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+  plan:'<path d="M9 5h11M9 12h11M9 19h11M4 5h.01M4 12h.01M4 19h.01"/>'
+};
+const icon=(name,label)=>ICONS[name]?'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"'+(label?' role="img" aria-label="'+esc(label)+'"':' aria-hidden="true"')+'>'+ICONS[name]+'</svg>':'';
 const glossKey=t=>String(t).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 function parseGlossary(md){
   const out={}; let cur=null; const F={'In the app':'label','Also called':'also','Means':'means'};
