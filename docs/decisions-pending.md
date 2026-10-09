@@ -243,3 +243,215 @@ warm-up row states the actual result and the score: "Warm-up: standard
    sore muscles.
 
 Neither changes a number. **To undo:** not recommended; both were wrong.
+
+---
+
+## D16. Design direction: Calm
+
+**Question:** three directions were mocked up with the same real demo data
+(`docs/design/`, 390 px, light and dark): Calm, Training-log and Warm.
+
+**Chosen:** Calm, the default. Its set card at 390 px is the clearest: weight,
+reps, effort, then Log set, with nothing repeated. Training-log shows the same
+numbers twice (a big readout above the steppers), and its uppercase labels slow
+reading. Warm's rounded steppers wrap their labels at this width. One
+Training-log idea is worth a later look: a "last time" column beside each
+planned set.
+
+**To undo / switch:** set `DESIGN_DIRECTION` in index.html to `'log'` or
+`'warm'`. Both are kept as token sets in the stylesheet.
+
+---
+
+## D17. Light mode follows the phone
+
+**Question:** the spec asks for light and dark screenshots, but the app had
+dark only.
+
+**Chosen:** a light version of the Calm tokens that follows the phone's
+setting. A theme code still overrides it. Because the app runs full screen
+with white status-bar text, light mode puts the clock on a thin band of the
+accent colour (the Girlypop theme already does the same).
+
+**To undo:** delete the `@media (prefers-color-scheme: light)` block after
+`:root` in index.html. Everything goes back to dark.
+
+---
+
+## D18. Smaller controls keep a 44 px tap area
+
+**Question:** 44 px touch targets would make chips, small buttons and icon
+buttons visibly huge.
+
+**Chosen:** they keep their size to look at (chips and small buttons 36 px,
+icon buttons 36 px), with an invisible extension to 44 px for the finger.
+Chip rows are spaced 8 px apart so the tap areas never overlap.
+Segmented controls hold up to 3 words, or up to 5 short numbers (the check-in
+scales). Longer lists use chips; a 5-word segmented control wraps at 390 px.
+
+**To undo:** `min-height:var(--tap)` on `.chip`, `.btn.s` and `.iconbtn`
+makes them visibly 44 px.
+
+---
+
+## D19. "Get fit and toned" is size first, with no strength tests
+
+**Question:** the spec maps "toned" to size-first with general-fitness
+defaults, but doesn't say which defaults.
+
+**Chosen:** the size-first profile with strength tests turned off. Its
+strength blocks stay (heavier weeks are good general training), but none ends
+in a test. The goal screen and the preview say that how lean you look depends
+mostly on eating, which the app doesn't track. It defaults to 3 full-body
+days if the schedule question is skipped.
+
+**To undo:** in index.html, change the `toned` entry in `ONB_GOALS`, or the
+`params` line in `onbResolve`.
+
+---
+
+## D20. Minutes per session are a guide, not a cap
+
+**Question:** what should "minutes per session" change?
+
+**Chosen:** the preview estimates a session's length: 2.5 minutes a set with
+rest, plus 8 minutes of warm-up, both judgement defaults. If that's over your
+time by more than 10 minutes, it says to skip the last exercise on a short
+day. The program itself doesn't trim sessions, because a hidden cap would
+change existing users' programs too.
+
+**To undo / change:** `ONB_MINUTES_PER_SET` and `ONB_WARMUP_MIN` in index.html.
+
+---
+
+## D21. Equipment specifics order the exercises; they never remove one
+
+**Question:** "gym type, then specifics." The engine only knew the gym type.
+
+**Chosen:** the specifics are saved as `CFG.equipmentHave`. An exercise
+whose equipment isn't ticked is picked last, not removed, the same as
+"dumbbells only". Anything you've logged still comes first. It's unset for
+everyone who hasn't been through the new setup, so their programs don't
+change.
+
+**To undo:** delete `haveScore` from `equipmentScore` in index.html.
+
+---
+
+## D22. Build it together: what you choose is saved per slot
+
+**Question:** saving chosen exercises as "saved day edits" would freeze their
+sets and reps, so they'd stop following the blocks.
+
+**Chosen:** a new setting, `CFG.slotPicks` (day, slot, exercise). The
+generator uses your exercise for that slot, and sets, reps and effort still
+follow the block. Rep-range choices apply only to non-main lifts, as
+per-exercise ranges, because main lifts must follow the block (heavier in
+strength blocks).
+
+**To undo:** delete the `picks` lines in `buildDay`. Programs then pick
+exercises as before.
+
+---
+
+## D23. "Set up a new program" for existing users
+
+**Chosen:**
+- **What it does:** runs the same setup, starting from your current answers.
+  Start restarts the program from its first block today.
+- **What it keeps:** every logged set, how each of your lifts progresses
+  (fast or standard, so a lift on standard is never sent back to fast), and
+  any saved day edits.
+- **Where it lives:** a button at the bottom of Lifts, next to "Rebuild with
+  the program builder". That button still rebuilds only the rest of the
+  current program.
+
+**To undo:** remove the "Set up a new program" button in `renderLifts`.
+
+---
+
+## D24. In setup, the condition picker hides red flags and phase plans
+
+**Question:** the condition cards can start a phase plan and record red
+flags. Both write straight away, before you've confirmed anything.
+
+**Chosen:** setup shows the conditions, consent and "leave these out". Red
+flags and phase plans are in Edit program afterwards. Consent itself is
+stored when you agree, as it always has been: it's a statement you made, not
+part of the program.
+
+**To undo:** drop `{setup:true}` from the `conditionPicker` call in
+`drawOnboardingStep`.
+
+---
+
+## D25. Backups come after the first session
+
+**Chosen:** the first session's summary has a "Keep a backup" block, with
+Save a backup or Use a sheet. Until you've made one, the Progress and Lifts
+reminder shows from then on, instead of waiting a week. Setup itself asks
+nothing about backups.
+
+**To undo:** delete the `first:true` line in `backupDue` and the
+"Keep a backup" block in `openSessionSummary`.
+
+---
+
+## D26. Units stay pounds in setup
+
+**Question:** "bodyweight and units."
+
+**Chosen:** pounds, as the alpha already decided. The engine prices in
+pounds, and kilograms isn't carried through every screen yet. Machines
+marked in kilograms can still be switched per exercise on the set card.
+Setup says so.
+
+**To undo:** add a units question once kg is carried through the engine.
+
+---
+
+## D27. One guide file: tasks, then every setting, then the tours
+
+**Question:** "expand docs/tutorial.md into docs/guide.md… tours stay generated
+from their sections."
+
+**Chosen:** the tutorial became `docs/guide.md`, in three parts:
+1. **When something comes up:** 14 tasks, such as my shoulder hurts, I want
+   to push harder, or I missed a week.
+2. **Every setting:** one entry for each setting in `docs/features.md`.
+3. **The screen tours:** as before. The "?" tours still come only from this
+   part.
+
+Lifts → How this works searches all of it, and the glossary too. It's one
+file to keep up to date, and a test fails if a setting in features.md has no
+entry.
+
+**To undo:** delete the two new parts from `docs/guide.md` and run
+`node tools/embed-guide.js`.
+
+---
+
+## D28. Small calls in the screen pass
+
+- **Sizes and spacing:** every inline size moved to the nearest token, for
+  example 13 px to 14 and 11 px to 12. Hairline offsets (1–2 px), large layout
+  sizes and negative margins kept their exact values.
+- **Icons:** the set card's move, info, swap and rate buttons use the icon set
+  (a star was added for rating; 17 icons). Edit program's reorder buttons stay
+  as text arrows, because icons are limited to the tab bar, set card actions
+  and the condition card.
+- **Prep exercises:** they have no "feel it" or cue text in the library, so
+  each shows where you'll feel it from the area it targets ("around your
+  shoulder"). Rehab exercises show what it is, where to feel it, and the first
+  cue, with more cues one tap away.
+- **Copy:** the countdown says "119 days to go" instead of "119 Days Out"
+  (sentence case and plain words). "Last time" says "effort 8" instead of a
+  bare "@ 8".
+- **Fixed on the way:**
+  - Unlogged set rows were 86 px tall. A class name clashed with the empty
+    state.
+  - The goal-lift rank number sat on its own line.
+  - The header text touched the screen edge.
+
+**To undo any one:** it's a single place in index.html; search for the old
+copy or class.

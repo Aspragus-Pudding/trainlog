@@ -47,12 +47,18 @@ next launch and offers the update banner, and it never swaps the app out
 mid-session.
 
 **A fresh install starts clean.** No goal lifts, no program, no conditions.
-The first run is the program builder:
-- **Quick path:** goal, days per week, main lifts, equipment, and anything
-  they're working around.
-- **Full path:** adds experience and dates.
-- Both end on a review of the blocks it will build, each with a one-line
-  reason.
+The first run is the setup (v1.64):
+- **Three ways in:** Build it for me (recommended), Build it together, or
+  Restore from a backup (a file or their sheet).
+- **Eight questions, each skippable:** goal (including "Get fit and toned"),
+  how long they've been lifting, days and minutes, gym and equipment,
+  bodyweight, anything to work around, priorities, and optional main lifts.
+- **Build it together** adds the split, an exercise for each slot, rep ranges
+  and block lengths, with "Fill the rest for me" at every step.
+- **Both end on a preview** with a reason for each part and "Customize this".
+  Nothing is saved until **Start first session**. No starting weights are
+  asked.
+- **Backups:** the app offers one after the first session.
 
 Then six short cards explain the basics. They're under *How this works* on
 the Lifts tab.

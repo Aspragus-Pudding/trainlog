@@ -9,8 +9,10 @@ point of this test, so send them freely, even small ones.
 1. Open the link you were sent in **Safari**.
 2. Tap **Share**, then **Add to Home Screen**, and open the app from the new
    icon.
-3. Go through the setup questions. It takes about three minutes, and you can
-   skip anything you don't know.
+3. Choose **Build it for me** (recommended) or **Build it together**, and
+   answer the questions. It takes a few minutes, and you can skip anything you
+   don't know. You see the whole plan, with a reason for each part, before
+   anything is saved. **Start first session** begins your first workout.
 4. In the app, go to **Edit program**, scroll to **Setup link**, paste the same
    link, tap **Apply**, then **Save**. This connects your notes (and your
    backup sheet, if you were given one). It's needed because the home-screen
@@ -28,6 +30,8 @@ point of this test, so send them freely, even small ones.
   about two reps left. Be honest; the next set is priced from it.
 - Your very first set of an exercise has no suggestion. Pick something you
   can do for the target reps, and the app takes it from there.
+- After your first session the app offers to save a backup. Say yes. Your
+  log lives only on this phone until you do.
 - The **?** at the top of any screen walks you through that screen.
 
 ## Leaving notes

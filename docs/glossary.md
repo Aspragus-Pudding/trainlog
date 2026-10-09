@@ -6,7 +6,7 @@ label below, and a dotted underline means you can tap it for the definition.
 
 The app reads this file: each `##` is an entry. Keep the three lines under it
 (`In the app`, `Also called`, `Means`). After editing, run
-`node tools/embed-tutorial.js`, which copies this file into the app along with
+`node tools/embed-guide.js`, which copies this file into the app along with
 the guide.
 
 ## Effort

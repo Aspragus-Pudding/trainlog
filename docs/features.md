@@ -73,7 +73,7 @@ everyone.
 | Save backup (share sheet or download) | everyone | Your data card |
 | Send to sheet now | everyone with a sheet | Your data card |
 | Restore from backup / Restore from sheet | everyone | Your data card |
-| How this works (tours, first-session hints, the whole guide) | everyone | Your data card |
+| How this works: a searchable guide (what to do when something comes up, every setting, each screen, the glossary), tours, first-session hints | everyone | Your data card |
 | Rebuild with the program builder | advanced | Lifts, bottom |
 | Reset to a fresh install / Erase all data | advanced | Lifts, bottom (both confirm first) |
 
@@ -98,8 +98,8 @@ everyone.
 
 | Setting | For | Where |
 |---|---|---|
-| Blocks: type, length, deload, focus muscles | advanced | Blocks |
-| Your week (days and day types) | everyone | Your week |
+| Blocks: type, length, deload, focus muscles | advanced | Blocks (a card per block, with sets and intensity lines) |
+| Your week (days and day types) | everyone | Your week (a strip of your days) |
 | Goal lifts, ranked | everyone | Goal lifts |
 | Dates: target date, fixed or not, test date | advanced | Dates |
 | Strength : size balance | advanced | Strength : size |
@@ -143,7 +143,11 @@ everyone.
 
 | Feature | For | Where |
 |---|---|---|
-| The program builder (quick or full) | everyone | first run; Lifts → Rebuild |
+| Setup: Build it for me, Build it together, or Restore from a backup | everyone | first run |
+| Setup preview: every part with a reason and "Customize this"; nothing saved until Start first session | everyone | end of setup |
+| Set up a new program (keeps every logged set) | everyone | Lifts, bottom |
+| Keep a backup (after your first session) | everyone | first session's summary; Progress and Lifts until done |
+| The program builder (rebuild the rest of a program) | advanced | Lifts → Rebuild |
 | Injury consent screen | injury-prone | first time you pick a condition |
 | Quick note (the pencil) | everyone | header, every screen |
 | "?" tour of the current screen | everyone | header, and in Edit program |

@@ -46,11 +46,12 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
-const EMBEDS={injuries:EMBED('injuries'),'movement-tags':EMBED('movement-tags'),'coaching-cues':EMBED('coaching-cues'),'glossary-md':(html.match(/<script type="text\/markdown" id="glossary-md">([\s\S]*?)<\/script>/)||[])[1]||''};
+const EMBEDS={injuries:EMBED('injuries'),'movement-tags':EMBED('movement-tags'),'coaching-cues':EMBED('coaching-cues'),'glossary-md':(html.match(/<script type="text\/markdown" id="glossary-md">([\s\S]*?)<\/script>/)||[])[1]||'',
+  'guide-md':(html.match(/<script type="text\/markdown" id="guide-md">([\s\S]*?)<\/script>/)||[])[1]||''};
 function docWithData(){ const d=stub(); return new Proxy(d,{get(t,k){ if(k==='getElementById') return id=>id in EMBEDS?{textContent:EMBEDS[id]}:stub(); return d[k]; }}); }
 function load(events, withData){
   const store={};
@@ -1076,7 +1077,7 @@ section('30. top set + back-offs');
   const A=load(hist), slot={ex:'deadlift',role:'primary',reps:[3,5],rpe:8,sets_target:4,sets:[],structure:'topback',backoff:{n:3}};
   A.setSession({id:'TB',slots:[slot],openIdx:0,adj:null,ratings:{},startedAt:Date.now()});
   A.seedDraft(slot); const d=A.getDraft();
-  ok(/Top: .* · Back-offs: 3 × /.test(d.why.line),'the line shows the top set and the back-offs',d.why.line);
+  ok(/Top set: .* · back-offs: 3 × /.test(d.why.line),'the line shows the top set and the back-offs',d.why.line);
   d.weight=325; d.reps=5; d.rpe=8.5; d.unit='lb'; A.logSet(slot,0,'straight');
   const top=slot.sets[0];
   ok(top.role==='top','the first set is logged as the top set',JSON.stringify(top.role));
@@ -2668,12 +2669,13 @@ section('61. deprioritise: muscles rank last, patterns hand over accessory slots
 }
 
 /* ─── 62. v1.59: the guide is the tour — one file, embedded, full sentences ─── */
-section('62. tutorial: docs/tutorial.md embedded, tiers, full sentences, real targets');
+section('62. guide: docs/guide.md embedded, tiers, full sentences, real targets');
 {
-  const md=fs.readFileSync(path.join(__dirname,'..','docs','tutorial.md'),'utf8');
-  const m=html.match(/<script type="text\/markdown" id="tutorial-md">([\s\S]*?)<\/script>/);
-  ok(m&&m[1]===md,'the embedded guide matches docs/tutorial.md byte for byte — edit the file, then run node tools/embed-tutorial.js','');
+  const md=fs.readFileSync(path.join(__dirname,'..','docs','guide.md'),'utf8');
+  const m=html.match(/<script type="text\/markdown" id="guide-md">([\s\S]*?)<\/script>/);
+  ok(m&&m[1]===md,'the embedded guide matches docs/guide.md byte for byte — edit the file, then run node tools/embed-guide.js','');
   const T=load([]).parseTutorial(md), steps=T.sections.flatMap(x=>x.steps);
+  const tourSteps=T.sections.filter(x=>x.attrs.tab||x.attrs.screen||x.attrs.tier).flatMap(x=>x.steps);
   const t1=T.sections.find(x=>String(x.attrs.tier)==='1');
   ok(t1&&t1.steps.length>=6&&t1.steps.length<=8,'the first-session tour has at most 8 steps',String(t1&&t1.steps.length));
   ok(['dash','work','lifts','hist'].every(k=>T.sections.some(x=>x.attrs.tab===k))&&T.sections.some(x=>x.attrs.screen==='settings'),'every tab and Edit program has its own tour','');
@@ -2681,8 +2683,9 @@ section('62. tutorial: docs/tutorial.md embedded, tiers, full sentences, real ta
   ok(short.length===0,'no step body is under 8 words — the guide reads on its own, not as tooltip fragments',short.map(st=>st.id).join(' '));
   ok(steps.every(st=>/[.?]$/.test(st.body)),'every step body ends as a sentence',steps.filter(st=>!/[.?]$/.test(st.body)).map(st=>st.id).join(' '));
   ok(steps.every(st=>!st.body.includes('!')&&!st.title.includes('!')),'no exclamation marks (copy style)','');
-  ok(steps.every(st=>st.sel),'every step names its target','');
-  const missing=steps.map(st=>(st.sel.match(/data-tour="([^"]+)"/)||[])[1]).filter(Boolean).filter(n=>!html.includes("dataset.tour='"+n+"'")&&!html.includes('data-tour="'+n+'"')&&!html.includes("'"+n+"')"));
+  ok(tourSteps.every(st=>st.sel),'every tour step names its target','');
+  ok(T.sections.filter(x=>x.attrs.guide).flatMap(x=>x.steps).every(st=>!st.sel),'guide-only entries (tasks, settings) have no tour target','');
+  const missing=tourSteps.map(st=>(st.sel.match(/data-tour="([^"]+)"/)||[])[1]).filter(Boolean).filter(n=>!html.includes("dataset.tour='"+n+"'")&&!html.includes('data-tour="'+n+'"')&&!html.includes("'"+n+"')"));
   ok(missing.length===0,'every [data-tour] target in the guide exists in the app',missing.join(' '));
   ok(new Set(steps.map(st=>st.id)).size===steps.length,'step ids are unique (the first-session hints remember each one)','');
   console.log('  '+steps.length+' steps · first session '+(t1?t1.steps.length:0)+' · embedded = file · ≥ 8 words each · targets exist');
@@ -2780,7 +2783,7 @@ section('65. plain language: no band names, no raw ids, glossary labels on scree
 {
   // the glossary: embedded byte-for-byte, and it covers every idea the spec lists
   const gm=html.match(/<script type="text\/markdown" id="glossary-md">([\s\S]*?)<\/script>/);
-  ok(gm&&gm[1]===fs.readFileSync(path.join(__dirname,'..','docs','glossary.md'),'utf8'),'docs/glossary.md is embedded byte-for-byte (run node tools/embed-tutorial.js)','');
+  ok(gm&&gm[1]===fs.readFileSync(path.join(__dirname,'..','docs','glossary.md'),'utf8'),'docs/glossary.md is embedded byte-for-byte (run node tools/embed-guide.js)','');
   const G=load([],true).GLOSSARY||{}, entries=Object.values(G);
   ok(entries.length>=20&&entries.every(e=>e.label&&e.means&&e.means.split(/\s+/).length>=8),'every glossary entry has an in-app label and a plain definition',entries.filter(e=>!e.label||!e.means).map(e=>e.name).join(', '));
   const NEED=['RPE','RIR','e1RM','top set','back-off','AMRAP','deload','focused deload','system load','readiness','joint baseline','dial','calibrating','range fit','phase','block','mesocycle','MEV'];
@@ -2867,6 +2870,179 @@ section('65. plain language: no band names, no raw ids, glossary labels on scree
   const words=[...Object.values(D.READY_DOES),...[1,2,3,4,5].flatMap(level=>[0,1,2].map(over=>D.jointDoes({joint:'shoulder',level,over})))];
   ok(words.every(w=>!/\b(Green|Yellow|Orange|Red|level)\b/.test(w)),'no status sentence names a band or a level',words.find(w=>/\b(Green|Yellow|Orange|Red|level)\b/.test(w))||'');
   console.log('  glossary embedded and complete · '+Object.keys(screens).length+' screens rendered and scanned · readiness card = plan top line · sheet rows per input, sore group, joint · legend in words');
+}
+
+/* ─── 66. v1.63 (H3): the design system — tokens, five type sizes, light mode, directions, components ─── */
+section('66. design system: tokens, type scale, light mode, directions, components, icons');
+{
+  const css=html.slice(html.indexOf('<style>')+7,html.indexOf('</style>'));
+  const rootBlock=css.slice(css.indexOf(':root{'),css.indexOf('}',css.indexOf(':root{'))+1);
+  const NEED=['--surface','--surface-2','--text','--muted','--dim','--accent','--on-accent','--ok','--caution','--warn','--stop',
+    '--fs-1','--fs-2','--fs-3','--fs-4','--fs-5','--sp-1','--sp-2','--sp-3','--sp-4','--sp-5','--sp-6','--r-s','--r-btn','--r','--r-l','--r-pill','--e-1','--e-2','--tap','--safe-bottom'];
+  ok(NEED.every(t=>new RegExp(t.replace(/-/g,'\\-')+'\\s*:').test(rootBlock)),'the default :root defines every design-system token',NEED.filter(t=>!new RegExp(t.replace(/-/g,'\\-')+'\\s*:').test(rootBlock)).join(', '));
+  const sizes=[...rootBlock.matchAll(/--fs-(\d)\s*:\s*(\d+)px/g)];
+  ok(sizes.length===5&&new Set(sizes.map(m=>m[2])).size===5,'the type scale is five sizes',sizes.map(m=>m[2]).join('/'));
+  ok(/--tap\s*:\s*(4[4-9]|[5-9]\d)px/.test(rootBlock)&&/--safe-bottom\s*:\s*calc\((8\d|9\d)px/.test(rootBlock),'touch targets are at least 44px; the bottom keeps at least 80px clear','');
+  ok(/body\{[^}]*\}/.test(css)&&/padding-bottom:var\(--safe-bottom\)/.test(css)&&/\.btn\{[^}]*min-height:var\(--tap\)/.test(css),'the page pads by --safe-bottom and every button is --tap tall','');
+  const light=css.match(/@media \(prefers-color-scheme: light\)\{\s*:root\{([^}]*)\}/);
+  const COL=['--bg','--card','--card-2','--line','--ink','--muted','--dim','--accent','--ok','--caution','--warn','--danger'];
+  ok(light&&COL.every(t=>light[1].includes(t+':')),'a light mode redefines every colour token',light?COL.filter(t=>!light[1].includes(t+':')).join(', '):'no light block');
+  ['log','warm'].forEach(d=>{ const blocks=[...css.matchAll(new RegExp(':root\\[data-direction="'+d+'"\\]\\{([^}]*)\\}','g'))];
+    ok(blocks.length>=2&&blocks.every(b=>['--bg','--card','--ink','--accent'].every(t=>b[1].includes(t+':'))),'direction "'+d+'" is a token set, dark and light',String(blocks.length)); });
+  // components on tokens: outside the token blocks the stylesheet names no hex colours
+  const rules=css.replace(/:root(\[[^\]]*\])?\{[^}]*\}/g,'').replace(/@media \(prefers-color-scheme: light\)\{[\s\S]*?\n\}/g,'');
+  const hex=rules.match(/#[0-9a-fA-F]{3,8}\b/g)||[];
+  ok(hex.length===0,'component styles use tokens, never a raw colour',hex.slice(0,5).join(' '));
+  ['.card{','.li{','.chip{','.btn.pri,.btn.primary{','.btn.quiet{','.btn.danger,.btn.destructive{','.sheet{','.step{','.seg{','.empty{','.help{','.term{','.status{','.sdot{'].forEach(c=>
+    ok(css.includes(c),'component '+c.replace('{','')+' exists',''));
+  const A=load([],true);
+  ok(A.DESIGN_DIRECTION==='calm','the direction is Calm','');
+  ok(A.BAND_COLOR&&A.BAND_COLOR.Green==='var(--ok)'&&A.BAND_COLOR.Yellow==='var(--caution)'&&A.BAND_COLOR.Orange==='var(--warn)'&&A.BAND_COLOR.Red==='var(--stop)','the four dots are the four status roles',JSON.stringify(A.BAND_COLOR));
+  const names=Object.keys(A.ICONS||{}), used=[...new Set([...src.matchAll(/\bicon\('([a-z]+)'/g)].map(m=>m[1]))];
+  ok(names.length>0&&names.length<=24,'at most 24 icons',String(names.length));
+  ok(used.every(n=>names.includes(n)),'every icon used is in the set',used.filter(n=>!names.includes(n)).join(', '));
+  ok(/^<svg class="ic"[^>]*aria-hidden="true"/.test(A.icon('swap'))&&/aria-label="Swap"/.test(A.icon('swap','Swap'))&&A.icon('nope')==='','icons are inline SVG, labelled when they act alone','');
+  // the doc and the mockups
+  const dm=fs.readFileSync(path.join(__dirname,'..','docs','design.md'),'utf8');
+  ok(['surface','text','accent','ok','caution','warn','stop','Type','Spacing','Radius','Elevation','Card','List row','Chip','primary','secondary','quiet','destructive','Sheet','Stepper','Segmented','Empty state','Inline help','Status line','Icons','Sentence case','44px','80px'].every(w=>dm.includes(w)),'docs/design.md covers tokens, components, icons, copy, touch and the bottom edge','');
+  const dd=path.join(__dirname,'..','docs','design');
+  const files=fs.existsSync(dd)?fs.readdirSync(dd):[];
+  ok(['calm','log','warm'].every(d=>files.includes('mockup-'+d+'.html')&&['dashboard','set','program'].every(s=>['light','dark'].every(m=>files.includes(d+'-'+s+'-'+m+'.png')))),'three mockups, three screens each, light and dark screenshots in docs/design/',String(files.length));
+  console.log('  '+NEED.length+' tokens · 5 type sizes · light mode · log + warm directions · components on tokens · '+names.length+' icons · design.md + 3 mockups, 18 screenshots');
+}
+
+/* ─── 67. v1.64 (H4): onboarding — valid programs, nothing written until confirm, answers kept ─── */
+section('67. onboarding: every answer set builds a valid program; nothing is written until you start');
+{
+  const mkLoad=(events,cfg)=>{ const st={}; if(cfg) st['trainlog.cfg.v1']=JSON.stringify(cfg); if(events&&events.length) st['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
+    const ls={getItem:k=>k in st?st[k]:null,setItem:(k,v)=>{st[k]=String(v);},removeItem:k=>{delete st[k];},key:i=>Object.keys(st)[i]??null,get length(){return Object.keys(st).length;}};
+    const names=['CFG','LOG','EX','exById','sets','generatedDays','needsOnboarding','onbDefaults','onbResolve','onbPlan','onbDays','onbSlotOptions','onbApply','onbSwitch','onbNext','onbBack','openOnboarding','drawOnboarding',
+      'ONB_GOALS','ONB_HISTORY','ONB_GYMS','implementOf','likelyFlaggedFor','isExcluded','splitOf','INJ'];
+    const body=src+'\n;return {'+names.map(n=>n+':(()=>{try{return '+n+'}catch(e){}})()').join(',')+',getONB:()=>ONB,setONB:x=>{ONB=x},getCFG:()=>CFG,getRM:()=>ROADMAP,getLOG:()=>LOG,getSession:()=>session};';
+    const A=new Function('document','window','navigator','localStorage','location','history','setTimeout','setInterval','alert','confirm','fetch','Notification','matchMedia','requestAnimationFrame','console',body)
+      (docWithData(),stub(),stub(),ls,stub(),stub(),()=>0,()=>0,()=>{},()=>true,()=>Promise.resolve({}),stub(),()=>stub(),()=>0,{log(){},warn(){},error(){}});
+    A.store=st; return A; };
+  const A=mkLoad([]);
+  ok(A.needsOnboarding(),'a fresh install gets onboarding','');
+  // every combination of goal × history × days × gym builds a valid program (conditions, emphasis, don't-care and lifts varied alongside)
+  let seed=67; const Rn=()=>{ seed^=seed<<13; seed>>>=0; seed^=seed>>17; seed^=seed<<5; seed>>>=0; return seed/4294967296; };
+  const pick=a=>a[Math.floor(Rn()*a.length)];
+  const CONDS=[[],[],['sh_ant_instability'],['knee_general'],['lbp_general']].map(c=>c.filter(id=>A.INJ.some(e=>e.id===id)));
+  const keepC=A.getCFG(), keepR=A.getRM();
+  let combos=0, bad=[];
+  A.ONB_GOALS.forEach(g=>A.ONB_HISTORY.forEach(([h])=>[2,3,4,5,6].forEach(d=>A.ONB_GYMS.forEach(([gym])=>{
+    const O=A.onbDefaults(false); Object.assign(O.a,{goal:g.k, history:h, days:d, gym, minutes:pick([45,60,75,90]), conds:pick(CONDS), emphasis:Rn()<0.3?[pick(['chest','quads','glutes','side_delts'])]:[],
+      dep:Rn()<0.2?{muscles:['calves'],patterns:[]}:{muscles:[],patterns:[]}, goals:Rn()<0.4?['squat','bench'].slice(0,1+Math.floor(Rn()*2)):[]});
+    if(O.a.conds.length&&Rn()<0.5){ const fl=A.likelyFlaggedFor(O.a.conds); if(fl.length) O.a.excluded=[fl[0].ex.id]; }
+    const {R,plan}=A.onbPlan(O), days=A.onbDays(R,plan); combos++;
+    const tag=[g.k,h,d,gym].join('/');
+    if(!plan.blocks.length||plan.blocks.some(b=>!b.vol||!b.vol.length)) bad.push(tag+': no blocks');
+    if(days.length!==d) bad.push(tag+': '+days.length+' days');
+    days.forEach(dy=>{ if(dy.slots.length<3) bad.push(tag+' '+dy.name+': '+dy.slots.length+' slots');
+      dy.slots.forEach(sl=>{ const ex=A.exById[sl.ex];
+        if(!ex||ex.folded||ex.manualOnly) bad.push(tag+': '+sl.ex+' not generatable');
+        if(R.excluded.includes(sl.ex)&&sl.role!=='primary') bad.push(tag+': excluded '+sl.ex+' picked');
+        if(!(sl.sets>=1)||!(sl.reps[0]<=sl.reps[1])) bad.push(tag+': bad scheme '+JSON.stringify(sl)); }); });
+    if(g.k==='toned'&&plan.blocks.some(b=>b.realize)) bad.push(tag+': toned has a strength test');
+  }))));
+  ok(combos===A.ONB_GOALS.length*A.ONB_HISTORY.length*5*A.ONB_GYMS.length&&bad.length===0,combos+' answer combinations: each builds blocks and a full week of real exercises',bad.slice(0,4).join(' | '));
+  ok(A.getCFG()===keepC&&A.getRM()===keepR&&A.getLOG().length===0,'previewing never leaves the program swapped (globals restored) and writes nothing','');
+  // dumbbells only: what the generator picks is mostly what you have
+  { const O=A.onbDefaults(false); Object.assign(O.a,{goal:'size_first', days:3, gym:'dumbbell'}); const {R,plan}=A.onbPlan(O), days=A.onbDays(R,plan);
+    const all=days.flatMap(d=>d.slots), okIm=all.filter(sl=>['dumbbell','kettlebell','bodyweight','band'].includes(A.implementOf(A.exById[sl.ex])));
+    ok(okIm.length>=all.length*0.8,'dumbbells only: at least 80% of the exercises use what a dumbbell gym has',okIm.length+' of '+all.length); }
+  // the toned goal: size first, no strength tests, said plainly
+  { const O=A.onbDefaults(false); O.a.goal='toned'; const {R,plan}=A.onbPlan(O);
+    ok(R.profile==='size_first'&&R.params.testEvery===0&&plan.blocks.every(b=>!b.realize)&&plan.reasons.every(r=>!/tests every block/.test(r)),'"Get fit and toned" is size first with no strength tests, and the reasons say so',plan.reasons.join(' | ')); }
+  // nothing is written until you start: walk every screen of both paths
+  { const B=mkLoad([]); const before=JSON.stringify(B.store);
+    B.openOnboarding(false); const O=B.getONB();
+    B.onbSwitch('auto'); ['goal','history','schedule','equipment','body','around','priorities','lifts'].forEach(st=>{ O.step=st; B.drawOnboarding(); });
+    Object.assign(O.a,{goal:'even_mix', history:'intermediate', days:4, minutes:75, gym:'barbell', bw:190, goals:['squat','bench','deadlift'], showKnown:true, known:{squat:315}});
+    const snapA=JSON.stringify(O.a);
+    B.onbSwitch('together'); ['split','days','reps','blocks','preview'].forEach(st=>{ O.step=st; B.drawOnboarding(); });
+    O.t.style='ul'; O.t.reps.accessory=[12,20]; O.t.weeks[0]=7;
+    const opts=B.onbSlotOptions(B.onbResolve(O),B.onbPlan(O).plan,'Upper A');
+    ok(opts.length>=4&&opts.every(x=>x.opts.length>=1&&x.chosen===x.opts[0]),'each slot has a suggestion and alternatives, ranked as the generator ranks them',JSON.stringify(opts.map(x=>x.opts.length)));
+    const alt=opts.find(x=>x.opts.length>=2&&x.role!=='primary'); O.t.picks.upper_a={[alt.i]:alt.opts[1]};
+    B.onbSwitch('auto'); O.step='preview'; B.drawOnboarding(); B.onbSwitch('together');
+    ok(JSON.stringify(O.a)===snapA&&O.t.style==='ul'&&O.t.picks.upper_a[alt.i]===alt.opts[1],'switching between the two paths loses no answers','');
+    O.hist=[]; O.step='goal'; B.onbNext(); B.onbNext(); B.onbBack(); B.onbBack();
+    ok(O.step==='goal'&&JSON.stringify(O.a)===snapA,'Back keeps every answer',O.step);
+    ok(JSON.stringify(B.store)===before&&B.getLOG().length===0,'nothing is written to the log or settings before Start first session','');
+    const {R,plan}=B.onbPlan(O), days=B.onbDays(R,plan);
+    ok(days[0].slots[alt.i].ex===alt.opts[1],'a slot you chose shows in the preview',days[0].slots[alt.i].ex+' vs '+alt.opts[1]);
+    ok(plan.blocks[0].weeks===7&&plan.blocks[0].vol.length>=7,'a block length you set is the plan\'s',String(plan.blocks[0].weeks));
+    B.onbApply();
+    const L=B.getLOG(), C=B.getCFG();
+    ok(L.filter(e=>e.type==='program_edit').length===1&&L.some(e=>e.type==='bodyweight'&&e.bodyweight===190)&&L.some(e=>e.type==='e1rm_estimate'&&e.exercise_id==='squat')&&!L.some(e=>e.type==='set'),'Start writes the program edit, your bodyweight and your known number, and no sets',L.map(e=>e.type).join(','));
+    ok(C.onboarded&&JSON.stringify(C.week)===JSON.stringify(['upper','lower','upper','lower'])&&C.goals.join()==='squat,bench,deadlift'&&C.slotPicks.upper_a[alt.i]===alt.opts[1]&&Array.isArray(C.equipmentHave),'and the settings: the week, the main lifts, your slot choices, your equipment','');
+    const gd=B.generatedDays();
+    ok(gd[0].name==='Upper A'&&gd[0].slots[alt.i].ex===alt.opts[1],'the real program uses the exercise you chose',gd[0].slots[alt.i].ex);
+    ok(Object.values(C.repRanges||{}).some(r=>r[0]===12&&r[1]===20),'your isolation rep range is saved per exercise','');
+    ok(B.getSession()&&B.getSession().dayName==='Upper A','and the first session starts','');
+    ok(!B.needsOnboarding(),'onboarding is done once you start',''); }
+  // existing users: never shown it; "Set up a new program" keeps the log and how lifts progress
+  { const hist=[set('squat','x1',225,5,8,9),{type:'session_end',id:'ex1',ts:day(8.9),session_id:'x1',joints:{}},set('squat','x2',230,5,8,5),{type:'session_end',id:'ex2',ts:day(4.9),session_id:'x2',joints:{}}];
+    const E=mkLoad(hist,{onboarded:true,goals:['squat'],week:['full','full','full']});
+    ok(!E.needsOnboarding(),'an existing user never gets onboarding on its own','');
+    const g1=JSON.stringify(E.generatedDays().map(d=>d.slots.map(s=>s.ex+s.sets+s.reps)));
+    ok(E.getCFG().slotPicks===undefined&&E.getCFG().equipmentHave===undefined,'and none of the new settings exist for them, so their program is generated exactly as before','');
+    const seedBefore=JSON.stringify(E.getCFG().rateSeed), setsBefore=E.sets().length;
+    E.openOnboarding(true); const O=E.getONB();
+    ok(O.existing&&O.a.goals.join()==='squat'&&O.a.days===3,'"Set up a new program" starts from your current answers','');
+    O.a.goal='even_mix'; E.onbApply();
+    ok(E.sets().length===setsBefore&&JSON.stringify(E.getCFG().rateSeed)===seedBefore,'a new program keeps every logged set and how your lifts progress','');
+    ok(g1.length>10,'',''); }
+  console.log('  '+combos+' answer sets → valid programs · globals restored · nothing written before Start · paths and Back keep answers · picks reach the program · existing users untouched');
+}
+
+/* ─── 68. v1.65 (H5): screen pass — guide by task, every setting covered, tokens everywhere, Part 7 ─── */
+section('68. screen pass: the guide covers every setting, search works, sizes are tokens, set-card icons, Part 7');
+{
+  const A=load([],true), T=A.parseTutorial(fs.readFileSync(path.join(__dirname,'..','docs','guide.md'),'utf8'));
+  const norm=t=>String(t).toLowerCase().replace(/[^a-z0-9]+/g,'');
+  const entries=T.sections.flatMap(x=>x.steps.map(st=>({...st, guide:x.attrs.guide||null})));
+  // every setting in docs/features.md (Edit program and the exercise info sheet) has a guide entry
+  const feat=fs.readFileSync(path.join(__dirname,'..','docs','features.md'),'utf8');
+  const table=h=>{ const i=feat.indexOf('## '+h), j=feat.indexOf('\n## ',i+3); return feat.slice(i,j<0?feat.length:j).split('\n').filter(l=>/^\| /.test(l)&&!/^\| (Setting|Feature) \|/.test(l)).map(l=>l.split('|')[1].trim()); };
+  const settings=[...table('Edit program'),...table('Exercise info sheet')];
+  const keyOf=t=>t.replace(/^"|"$/g,'').split(/[(:,]/)[0].replace(/"/g,'').trim();
+  const titles=entries.filter(e=>e.guide).map(e=>norm(e.title));
+  const uncovered=settings.filter(st=>!titles.some(t=>t.includes(norm(keyOf(st)))));
+  ok(settings.length>=30&&uncovered.length===0,'every setting in docs/features.md ('+settings.length+') has a guide entry',uncovered.join(' | '));
+  // organised by task
+  const tasks=entries.filter(e=>e.guide==='tasks');
+  ok(tasks.length>=10&&['hurts','push harder','missed a week'].every(w=>tasks.some(e=>e.title.toLowerCase().includes(w))),'the guide starts with tasks ("my shoulder hurts", "I want to push harder", "I missed a week")',tasks.map(e=>e.title).join(' | '));
+  ok(entries.every(e=>e.body.split(/\s+/).length>=8&&/[.?]$/.test(e.body)),'every entry reads on its own, in full sentences','');
+  // the tours are still the screen sections, with targets
+  ok(['dash','work','lifts','hist'].every(k=>T.sections.some(x=>x.attrs.tab===k&&x.steps.length&&x.steps.every(st=>st.sel)))&&T.sections.some(x=>x.attrs.screen==='settings'),'the tours stay generated from their screen sections','');
+  // search
+  const first=q=>(A.guideSearch(q)[0]||{});
+  ok(/hurts/.test(first('shoulder hurts').title||''),'searching "shoulder hurts" finds the joint task first',first('shoulder hurts').title);
+  ok(/missed a week/i.test(first('missed week').title||''),'"missed week" finds "I missed a week"',first('missed week').title);
+  ok(A.guideSearch('effort').some(e=>e.group==='words'&&e.title==='Effort'),'the glossary is searchable too','');
+  ok(A.guideSearch('zzqqxx').length===0&&A.guideSearch('').length===entries.length+Object.keys(A.GLOSSARY).length,'nonsense finds nothing; an empty search lists everything','');
+  // sizes are tokens: no raw font size in a component style or an inline style (theme codes excepted)
+  const css=html.slice(html.indexOf('<style>')+7,html.indexOf('</style>')).replace(/:root(\[[^\]]*\])?\{[^}]*\}/g,'');
+  const th0=src.indexOf('const THEMES=['), th1=src.indexOf('\n];',th0), noThemes=src.slice(0,th0)+src.slice(th1);
+  const rawFs=[...(css.match(/font-size:\s*[0-9.]+px/g)||[]),...(noThemes.match(/font-size:\s*[0-9.]+px/g)||[])];
+  ok(rawFs.length===0,'every font size on every screen is one of the five tokens',rawFs.slice(0,4).join(' '));
+  const rawR=[...(css+noThemes).matchAll(/border-radius:\s*([0-9.]+)px/g)].filter(m=>+m[1]>4);
+  ok(rawR.length===0,'radii are tokens (hairline 1–4px roundings aside)',rawR.slice(0,3).map(m=>m[0]).join(' '));
+  // icons: set card actions come from the icon set; no hand-drawn 24-grid icons outside it and the tab bar
+  ok(/mv\(icon\('up'\)/.test(src)&&/mv\(icon\('down'\)/.test(src)&&/el\('button','iconbtn',icon\('info'\)\)/.test(src)&&/el\('button','iconbtn',icon\('swap'\)\)/.test(src)&&/icon\('star'\)/.test(src),'set card actions use the icon set','');
+  const stray=(src.match(/viewBox=\\?"0 0 24 24\\?"/g)||[]).length;
+  ok(stray===1,'no other 24-grid icons are drawn by hand in the script (icon() is the one)',String(stray));
+  // Part 7: block cards with sparklines, the week strip, the condition card, rehab and prep order
+  ok(/el\('div','blockcard'\)/.test(src)&&/class="spark">Sets \$\{miniSpark\(b\.vol/.test(src)&&/class="spark">Intensity \$\{miniSpark\(b\.int/.test(src),'Edit program: each block is a card with two sparklines','');
+  const A2=load([]);
+  ok(/^<svg[^>]*><polyline points="[^"]+"/.test(A2.miniSpark([10,12,14,9],'red'))&&A2.miniSpark([5],'red')==='','a sparkline is a small inline line, and nothing for a single week','');
+  ok(/el\('div','weekstrip'/.test(src),'Edit program: the week is a visual strip','');
+  ok(/Focused deload for these/.test(src)&&/In your program:/.test(src)&&/statusRow\(jb\.band/.test(src),'the condition card: status against your usual, what it flags in your program, a focused-deload button','');
+  ok(/el\('div','howto',esc\(how\.what\)\+'<br><b>Feel it:<\/b> '\+esc\(how\.feel\)\+\(how\.cues\[0\]\?'<br><b>Cue:<\/b>/.test(src),'rehab: what it is, where to feel it, the cue — in that order, shown, not behind a toggle','');
+  ok(/<b style="color:var\(--ink\);font-weight:600">Feel it:<\/b>/.test(src),'prep: where to feel it','');
+  console.log('  '+settings.length+' settings covered · '+tasks.length+' task entries · search incl. glossary · sizes and radii are tokens · set-card icons · Part 7 in place');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

@@ -6,6 +6,25 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.65.0 — 2026-10-09
+- A cleaner look, with a light mode that follows your phone. Theme codes still work.
+- New setup for new users: Build it for me or Build it together, with a preview of the whole plan before anything is saved.
+- Every screen uses the same few text sizes and spacings, and every button is big enough to tap easily.
+- Lifts → How this works is a searchable guide: what to do when your shoulder hurts, you missed a week, or you want to push harder, plus every setting.
+- Edit program shows blocks as cards and your week as a strip; a condition's card has a focused-deload button.
+
+## 1.64.0 — 2026-10-08
+- New setup: Build it for me, Build it together, or Restore from a backup. Eight short questions, each skippable.
+- Build it together lets you choose the split, an exercise for each slot, rep ranges and block lengths, with a suggestion at every step.
+- A preview shows the whole program with a reason for each part. Nothing is saved until Start first session.
+- No starting weights are asked. After your first session the app offers to save a backup.
+
+## 1.63.0 — 2026-10-08
+- The look is now one design system (docs/design.md): five text sizes, one set of spacings and colours, and every button at least 44 px tall to tap.
+- Light mode: the app follows your phone's light or dark setting. Theme codes still override it.
+- The status dots use four fixed colours, from no change to lighter.
+- On the redesign branch; it ships together with the new setup and the screen pass.
+
 ## 1.62.0 — 2026-10-08
 - Plain language: statuses now say what they do ("Shoulder: pressing, pulling and raises held at last time's load") with a small coloured dot, instead of Green, Yellow, Orange or Red.
 - The readiness card shows today's plan's top line. Tap it for each check-in answer and what it does, sore muscles and joints with the exercises they touch, and the readiness score.
