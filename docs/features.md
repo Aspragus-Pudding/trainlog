@@ -24,7 +24,8 @@ everyone.
 | Main lifts and how each one progresses | everyone | Main lifts card |
 | Start training | everyone | the training card |
 | This week's sessions | everyone | This week card |
-| Readiness score and today's bands (readiness, joints, fatigue) | everyone | readiness card |
+| Readiness: today's plan's top line, then a dot and a sentence for each joint and for fatigue | everyone | readiness card (leads the dashboard on a training day) |
+| Readiness detail: each check-in answer and what it does, sore muscles and joints with the exercises they touch, the score, a legend | everyone | tap the readiness card |
 | Volume this week per muscle, with the typical range | advanced | Volume this week card |
 | Your phases | everyone | Your phases card |
 | Recent bests (estimated max) | everyone | Recent bests card |
@@ -146,6 +147,7 @@ everyone.
 | Injury consent screen | injury-prone | first time you pick a condition |
 | Quick note (the pencil) | everyone | header, every screen |
 | "?" tour of the current screen | everyone | header, and in Edit program |
+| Tap a dotted word for its definition (the glossary) | everyone | set cards, Lifts, Progress, readiness, Edit program |
 | First-session hints | everyone | first session only |
 | Demo mode (?demo) | maintainer | a separate address; never touches real data |
 | Update banner (activate a new version) | everyone | bottom, when an update is waiting |
@@ -163,4 +165,5 @@ Found in this audit; what was done is noted.
    same.
 3. **MEV / MRV numbers** on the Lifts cards, and "Weekly volume against your
    landmarks" in the week preview, show judgement-default numbers under
-   jargon names. **To do in H2:** "typical weekly sets", per the glossary.
+   jargon names. **Fixed in v1.62.0:** "typical weekly sets", per the glossary,
+   with the range written as 12–20 and a note that it's a starting range.

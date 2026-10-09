@@ -103,8 +103,9 @@ the day. Rebuilding it later gives different numbers once sets are logged.
 for that day (`CFG.todayBriefing`). It's a record of what you were shown, like
 the suggestion saved with each set. The next day's check-in replaces it.
 
-**To undo:** delete the "Today's plan" card block in `renderDash` (search
-`data-tour='briefing'`). The briefing after the check-in still works.
+**To undo:** delete the "Today's plan ›" button in `readinessCard()` (search
+`data-tour='briefing'`). The briefing after the check-in still works. (Since
+v1.62 the plan lives inside the readiness card, see D9.)
 
 ---
 
@@ -138,3 +139,107 @@ set; on those slots the two can show different numbers.
 
 **To undo:** in `briefRow`, use `lastPerformance(...)` instead of
 `lastSetFor(...)`.
+
+---
+
+## D9. The readiness card and the "Today's plan" card are one card
+
+**Question:** H2 says the readiness card shows the plan's top line, and H1 put
+that same line on its own "Today's plan" card. Both on one screen would say
+the same sentence twice.
+
+**Options:** keep two cards with the line repeated; or merge them.
+
+**Chosen:** merged. On a day you've checked in, the readiness card leads the
+dashboard: the plan's top line, then a dot and a sentence for each joint and
+for fatigue, then a "Today's plan ›" button. Tapping the card opens the
+readiness detail; the button opens the plan. Other days the card sits where
+the readiness card always was, and says "No check-in yet today."
+
+**To undo:** in `renderDash` (index.html), put back a separate card that calls
+`openBriefing(todayBriefing())`, and drop the button from `readinessCard()`.
+
+---
+
+## D10. "Effort" replaces "RPE" everywhere on screen
+
+**Question:** the glossary label for RPE is "effort". Some lifters know RPE and
+might prefer it on set badges.
+
+**Chosen:** "effort" everywhere a person reads it: set badges ("top · effort
+7.5"), card lines, explanations, the set panel stepper, stall cards, the
+tutorial. Tapping "effort" on a set card shows the definition (10 = nothing
+left, 9 = one rep left...). The stored data still says `rpe`.
+
+**To undo:** put "RPE" back in the on-screen strings in index.html;
+`docs/h2-strings-changed.md` lists every place. Change the glossary's "In the
+app" line for Effort to match.
+
+---
+
+## D11. "Block" is the one name for a run of weeks; "phase" is only for rehab
+
+**Question:** the dashboard said "Your phases / Phase 1", Edit program said
+"Blocks", and rehab plans have "phases" too.
+
+**Chosen:** "block" for the program (it was already used in most places), so
+the dashboard now says "Your blocks / Block 1". "Phase" means only a step of a
+rehab phase plan.
+
+**To undo:** change the two dashboard strings back in `renderDash` and the
+glossary's Block entry.
+
+---
+
+## D12. Other labels picked for the glossary
+
+**Chosen:** system load → **total load**; the dial → **how hard suggestions
+push**; calibrating → **settling in**; AMRAP → **all-out set** (the end-of-
+strength-block one is the **test set**); MEV/MRV → **typical weekly sets**;
+RIR → **reps in reserve**. "Hypertrophy" stays as the block's name and is
+defined in the glossary (renaming it "Size" would touch every block label).
+
+**To undo:** edit the label in `docs/glossary.md` and the matching on-screen
+strings; `docs/h2-strings-changed.md` lists where each one is.
+
+---
+
+## D13. Joint lines name the movements, in plain words
+
+**Question:** "Shoulder: pressing held" needs a plain name for the movements
+each joint touches.
+
+**Chosen:** shoulder = pressing, pulling and raises; elbow = pressing, pulling
+and arm work; wrist = pressing and grip work; low back = squats, hinges and
+rows; hip = squats, hinges and hip work; knee = squats and leg work; ankle =
+squats and calf work (from the app's joint-to-movement table). Joints at their
+usual share one line.
+
+**To undo:** edit `JOINT_WORK` in index.html.
+
+---
+
+## D14. The readiness detail sheet's per-input effects
+
+**Question:** the warm-up comes from all the answers together, so one answer
+can't honestly claim "longer warm-up" on its own.
+
+**Chosen:** an answer below average says "longer warm-up" only when today's
+warm-up really is longer; a 2 says "no step-ups today", a 1 "sick day". The
+warm-up row states the actual result and the score: "Warm-up: standard
+(readiness 65 of 100; the score only sets the warm-up)".
+
+**To undo:** `readinessRows()` in index.html.
+
+---
+
+## D15. Two small fixes found by the H2 scan
+
+1. The soreness line in an exercise's explanation called itself "readiness 58"
+   (a score) though it was the soreness cut. It now says "sore quads · load
+   −10%".
+2. Today's plan's top line for a soreness day could take the wrong reason
+   ("Low sleep or motivation, so that work is lighter today"). It now names the
+   sore muscles.
+
+Neither changes a number. **To undo:** not recommended; both were wrong.

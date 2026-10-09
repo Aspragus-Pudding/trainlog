@@ -20,14 +20,14 @@ in `docs/decisions-pending.md`.
 | 1 bodyweight display | done | v1.60.1 (c4ac241) | + v1.60.2: the 21 machines placed by guess (D1) |
 | 2 Part 8 | done | v1.60.3 | docs/features.md, README.md; two maintainer-only leaks fixed (D4, D5); MEV/MRV wording left for H2 |
 | 3 H1 | done | v1.61.0 | briefing after check-in + dashboard card; §64 (300 random days match their traces); D6–D8 |
-| 4 H2 | not started | | |
+| 4 H2 | done | v1.62.0 | glossary (docs/glossary.md, embedded, tap-for-definition), readiness card + detail sheet, status dots, every string audited (docs/h2-strings-changed.md); §65 renders 12 screens and scans them; D9–D15 |
 | 5 H3 | not started | | |
 | 6 H4 | not started | | |
 | 7 H5 | not started | | |
 
 ## Backtest baseline for this run
 
-Maintainer export as of 8 Oct (169 sets): load mean |error| 5.0 lb, reps 2.0, exact load 90. Every version in this run must be IDENTICAL (nothing here touches prescriptions). Script: scratchpad btcompare.sh <ref>.
+Maintainer export as of 8 Oct (169 sets): load mean |error| 5.0 lb, reps 2.0, exact load 90. Every version in this run must be IDENTICAL (nothing here touches prescriptions). v1.62.0: every number identical; only the "basis" text column differs ("from e1RM" → "from your estimated max"), compared with that column cut. Script: scratchpad btcompare.sh <ref>.
 
 ## Half-finished
 

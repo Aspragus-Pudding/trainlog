@@ -38,6 +38,8 @@ tests/prospective.js    engine phase 2 check: were suggestions taken, did they l
 tests/simulate.js       persona simulator: made-up lifters train through the real app for months (node tests/simulate.js)
 docs/calibration-plan.md   phase-2 personal-calibration spec, not yet implemented
 docs/coaching-cues.json    per-exercise coaching cues — the editable source (see below)
+docs/glossary.md        one name per idea, plain definition, in-app label; embedded (tools/embed-tutorial.js) for tap-for-definition
+docs/h2-strings-changed.md the H2 audit: every on-screen string changed for plain language
 docs/injuries.json      injury & condition library — the editable source (research schema + avoid[].level)
 docs/injuries.derived.json  built from it by tools/derive-injuries.js (umbrellas = own tags + children's CORE tags)
 docs/movement_tags.json movement-tag vocabulary + the tags each built-in exercise carries + modifier effects
@@ -288,6 +290,13 @@ never swapped out mid-workout.
 - **`PENDING`** holds pre-workout plan edits until the session starts.
 - **Readiness** drives load adjustment (discrete tiers) and warmup length
   (continuous score). Adjustments are downward-only by design.
+- **Plain language (H2, v1.62).** No band name, score or internal term is
+  shown on its own: a status is `statusRow(band, sentence)` — a dot in the
+  band's colour and what it does (`jointDoes`, `READY_DOES`). The readiness
+  score appears only in the detail sheet (`openReadiness`/`readinessRows`).
+  On-screen words use the label in `docs/glossary.md`; `term(key)` makes one
+  tappable. §65 renders the screens and fails on bare band names, raw ids or
+  jargon (RPE, e1RM, MEV…). Bands stay as internal values.
 - **Colours are tokens, and themes override them.** `THEMES` (theme codes,
   `CFG.theme`) swaps the `:root` custom properties; a new theme is one object.
   Never hardcode a colour. Use `--accent` for interface (buttons, selection,

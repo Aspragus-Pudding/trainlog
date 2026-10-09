@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.62.0 — 2026-10-08
+- Plain language: statuses now say what they do ("Shoulder: pressing, pulling and raises held at last time's load") with a small coloured dot, instead of Green, Yellow, Orange or Red.
+- The readiness card shows today's plan's top line. Tap it for each check-in answer and what it does, sore muscles and joints with the exercises they touch, and the readiness score.
+- One name for each idea: RPE is now "effort", e1RM "estimated max", MEV/MRV "typical weekly sets". Dotted words can be tapped for a definition.
+- The dashboard's phases are now called blocks, the same word Edit program uses.
+
 ## 1.61.0 — 2026-10-08
 - New: Today's plan. After the check-in, one screen says what the app is doing to today's workout and why: what's held back, what steps up, what changed, and what's on plan.
 - Each exercise in it opens every step behind its numbers. Tap Start to begin.

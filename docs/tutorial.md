@@ -19,7 +19,7 @@ Each exercise is a card. Open it to see the suggested weight and reps for your f
 The amber numbers are suggestions, and you can change either one before logging. Change the weight and the reps recompute to hit the target effort, or the other way round, and whatever you set turns white.
 
 ### How hard it was `[data-tour="rpe"]`
-RPE is how hard the set was: ten means nothing left, nine means one rep left, and eight means about two. The next set is priced from what you enter here, so an honest number works better than an ambitious one.
+Effort is how hard the set was: ten means nothing left, nine means one rep left, and eight means about two. The next set is priced from what you enter here, so an honest number works better than an ambitious one.
 
 ### Why this number `[data-tour="why"]`
 This line says why the numbers are what they are. Tap it to see every step behind the suggestion, from your last set to today's check-in.
@@ -44,20 +44,20 @@ Cards here are proposals, such as a deload week, a change for a lift that has st
 ### Start training `[data-tour="start"]`
 Start training opens today's workout. The app picks the day from your rotation, not from the weekday, so the program carries on from wherever you left it.
 
-### Today's bands `[data-tour="dash-bands"]`
-This card sums up today in four words, Green, Yellow, Orange and Red, for readiness, for each joint against how it usually feels, and for fatigue. Each line says what the app is doing about it, so a band never changes anything without telling you. The readiness score itself only sets how long your warm-up is.
+### Readiness `[data-tour="dash-bands"]`
+The readiness card leads with what today's check-in does to the workout, then one line for each joint and for fatigue: a small coloured dot and what it changes. Tap the card for each check-in answer and what it does, and for the readiness score, which only sets how long your warm-up is.
 
 ### Volume this week `[data-tour="dash-volume"]`
-Volume counts hard sets per muscle this week, with half credit for muscles an exercise trains indirectly. The ticks mark a typical range, and those numbers are judgement defaults rather than measured limits.
+Volume counts hard sets per muscle this week, with half credit for muscles an exercise trains indirectly. The ticks mark the typical weekly sets for each muscle, and those numbers are judgement defaults rather than measured limits.
 
-### Your phases `[data-tour="dash-phases"]`
-Your phases lists the blocks of your program in order, with the one you are in highlighted. Their dates are worked out from your sessions, so they shift if you train more or less often than planned.
+### Your blocks `[data-tour="dash-phases"]`
+Your blocks lists the blocks of your program in order, with the one you are in highlighted. Their dates are worked out from your sessions, so they shift if you train more or less often than planned.
 
 ### Recent bests `[data-tour="dash-bests"]`
-Recent bests shows the best estimated one-rep max for each lift you have logged. It is an estimate from your sets, and it is more reliable from heavy sets of a few reps than from long ones.
+Recent bests shows the best estimated max for each lift you have logged. It is an estimate from your sets, and it is more reliable from heavy sets of a few reps than from long ones.
 
 ### Edit program `[data-tour="edit-program"]`
-Edit program is where you change your blocks, goals, schedule, conditions and preferences. After a program change the next session is a calibrating one, with no step up in load while it settles.
+Edit program is where you change your blocks, goals, schedule, conditions and preferences. After a program change the next session is a settling-in session, with no step up in load.
 
 ## Workout {tab:work}
 
@@ -67,11 +67,11 @@ Each exercise is a card, and tapping it opens the set panel. The order is a sugg
 ### Weight and reps `[data-tour="weight"]`
 The weight and reps are suggested in amber. Change either one and the other recomputes to hit the target effort. For pull-ups, chin-ups, dips and assisted machines you type what is on the machine, and the line underneath shows what you are actually lifting.
 
-### RPE `[data-tour="rpe"]`
-RPE records how hard the set was: ten means nothing left, nine one rep left, and eight about two. The next suggestion is built from it, so be honest rather than ambitious.
+### Effort `[data-tour="rpe"]`
+Effort records how hard the set was: ten means nothing left, nine one rep left, and eight about two. The next suggestion is built from it, so be honest rather than ambitious.
 
 ### Why these numbers `[data-tour="why"]`
-The line under the numbers says why they are what they are. Tap it to see each step: your last set, readiness, a sore muscle, a joint, a focused deload, the dial, and the guards that stop a single session from jumping too far.
+The line under the numbers says why they are what they are. Tap it to see each step: your last set, readiness, a sore muscle, a joint, a focused deload, how hard suggestions push, and the guards that stop a single session from jumping too far.
 
 ### Log set `[data-tour="logset"]`
 Log set saves the set and starts the rest timer. During the session you can tap a logged set to edit or delete it, and the change is recorded as a correction rather than by rewriting the original.
@@ -94,7 +94,7 @@ The pencil at the top sends a note to whoever gave you the app, from any screen.
 ## Lifts {tab:lifts}
 
 ### Your main lifts `#v-lifts .card`
-Your main lifts each have a card with the current estimate, the typical weekly set range for the muscle they train, and how they progress. Every exercise also has an info sheet, opened from its workout card or the library, which holds its history, coaching cues, your setup notes, its smallest jump, any warnings and the dial for that exercise.
+Your main lifts each have a card with the estimated max, the typical weekly sets for the muscle they train, and how they progress. Every exercise also has an info sheet, opened from its workout card or the library, which holds its history, coaching cues, your setup notes, its smallest jump, any warnings and how hard suggestions push for that exercise.
 
 ### The library `[data-tour="library"]`
 The library holds every built-in exercise, searchable by name, muscle or equipment, so typing smith, cable or band works. You can add your own exercise too, and if it is a version of a built-in one it inherits that exercise's cues and warnings.
@@ -117,7 +117,7 @@ How this works opens these tours again, along with this whole guide written out 
 Each main lift has a card with its estimated max over time, its recent best sets, and its training max during strength blocks. For pull-ups, chin-ups and dips it also shows the lift as a share of your bodyweight and the next milestone.
 
 ### Why these numbers `[data-tour="why-numbers"]`
-Why these numbers lists, for your last session, every step that shaped each suggestion. If the dial has moved away from your setting because of what you have been lifting, it says so here.
+Why these numbers lists, for your last session, every step that shaped each suggestion. If how hard suggestions push has moved a notch from your setting because of what you have been lifting, it says so here.
 
 ### How well the suggestions fit `[data-tour="accuracy"]`
 Suggestions measures how well the app fits you: how often you lifted the suggested load, how often your reps landed within two, and how often the effort was on target. Going lighter on a bad day is fine, because this measures fit rather than obedience.
@@ -126,10 +126,10 @@ Suggestions measures how well the app fits you: how often you lifted the suggest
 Weekly volume shows your hard sets per week over the last twelve weeks, so you can see a block build up and a deload drop off.
 
 ### Readiness over time `[data-tour="hist-readiness"]`
-Readiness plots your check-in score session by session. A run of falling scores is one of the signals behind a deload proposal.
+Readiness plots your check-in's readiness score session by session. A run of falling scores is one of the signals behind a deload proposal.
 
 ### Joints over time `[data-tour="hist-joints"]`
-Joints shows how each joint has felt over your recent sessions, compared with how it usually feels. The joint ladder uses the same ratings to hold or lighten the load on the movements that use that joint.
+Joints shows how each joint has felt over your recent sessions, compared with how it usually feels. The app uses the same ratings to hold or lighten the load on the movements that use a flared joint.
 
 ### Notes `[data-tour="notes"]`
 Notes collects what you have sent with the pencil, and you can mark each one done once it has been dealt with.
@@ -145,8 +145,8 @@ Your blocks are the phases of the program in order. You can change a block's typ
 ### Energy balance `[data-tour="set-energy"]`
 Energy balance tells the app whether you are eating to gain, maintain or lose weight. In a deficit it plans fewer sets, because recovery genuinely drops.
 
-### The dial `[data-tour="set-dial"]`
-The dial sets how hard suggestions push, one step either way. If your lifting keeps disagreeing with it at the right effort, it drifts a notch toward what you actually do and tells you on the Progress tab.
+### How hard suggestions push `[data-tour="set-dial"]`
+This setting nudges how hard suggestions push, one step either way. If your lifting keeps disagreeing with it at the right effort, it drifts a notch toward what you actually do and tells you on the Progress tab.
 
 ### What you're working around `[data-tour="set-conditions"]`
 This is where you pick any injuries or conditions. Exercises that load them get a warning but are never blocked, and each condition's card holds its red-flag checks, an optional phase plan, and how that joint usually feels.
