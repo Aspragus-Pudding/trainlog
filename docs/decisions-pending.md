@@ -461,3 +461,26 @@ entry.
 
 **To undo any one:** it's a single place in index.html; search for the old
 copy or class.
+
+---
+
+## D29. "Last time" beside each planned set (your D16 follow-up)
+
+**What you asked:** a faint "last time" value beside each planned set on the
+set card, from the set the suggestion was priced from (the same rule as D8).
+
+**Chosen reading:** a suggestion is priced from one set, but a card has
+several planned sets, so each row shows the set in the same place from that
+set's session.
+- **Which session:** the one holding the set the suggestion is priced from,
+  using D8's rule. That's the latest set on the pricing history, and a top set
+  reads the top-set history.
+- **The top row:** last time's top set.
+- **The rows after it:** last time's working or back-off sets, in order.
+- **Gaps:** a row last time didn't have stays "—".
+- **Today:** sets logged today never count.
+- **Where:** live set card only; the preview cards before you start don't
+  show it.
+
+**To change:** `lastTimeRows()` in index.html, for example to show the one
+priced-from set on every row.

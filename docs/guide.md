@@ -213,7 +213,7 @@ Edit program is where you change your blocks, goals, schedule, conditions and pr
 ## Workout {tab:work}
 
 ### Each exercise `#v-work .ex`
-Each exercise is a card, and tapping it opens the set panel. The order is a suggestion, and the card's controls let you move, swap or add exercises without changing your program.
+Each exercise is a card, and tapping it opens the set panel. The faint numbers beside sets you haven't done yet are what you did last time. The order is a suggestion, and the card's controls let you move, swap or add exercises without changing your program.
 
 ### Weight and reps `[data-tour="weight"]`
 The weight and reps are suggested in amber. Change either one and the other recomputes to hit the target RPE. For pull-ups, chin-ups, dips and assisted machines you type what is on the machine, and the line underneath shows what you are actually lifting.

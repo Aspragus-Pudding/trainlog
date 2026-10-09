@@ -36,6 +36,12 @@ H3–H5 were merged to main once (bf84262), as v1.65.0. At that point:
 - the headless new-user walk passed for all three personas;
 - the backtest was identical to main.
 
+## After the report
+
+- v1.65.1: RPE back on screen (D10 reversed), dark by default with light as the LIGHT theme code (D17 reversed), no "Get fit and toned" (D19 reversed).
+- v1.66.0: "last time" beside each planned set on the set card (D16 follow-up, D29).
+- D1 corrections: still to come from you.
+
 ## Half-finished
 
 (nothing)

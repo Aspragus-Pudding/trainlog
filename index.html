@@ -148,6 +148,7 @@ section{display:none;padding-top:var(--sp-4)} section.on{display:block}
 .sidx.done{background:var(--accent);color:var(--on-accent)}
 .sload{font-size:var(--fs-3);font-weight:600;color:var(--accent)}
 .sload.empty{color:var(--dim);font-weight:500;padding:0;text-align:left;font-size:var(--fs-3);line-height:1.45}
+.lastval{color:var(--dim);font-weight:500;font-size:var(--fs-2)}
 .sbadge{margin-left:auto;background:var(--surface-2);color:var(--muted);border-radius:var(--r-s);
   padding:var(--sp-1) var(--sp-2);font-size:var(--fs-1);font-weight:600;flex:none}
 .sbadge.on{background:var(--accent-soft);color:var(--accent)}
@@ -8804,7 +8805,7 @@ Edit program is where you change your blocks, goals, schedule, conditions and pr
 ## Workout {tab:work}
 
 ### Each exercise `#v-work .ex`
-Each exercise is a card, and tapping it opens the set panel. The order is a suggestion, and the card's controls let you move, swap or add exercises without changing your program.
+Each exercise is a card, and tapping it opens the set panel. The faint numbers beside sets you haven't done yet are what you did last time. The order is a suggestion, and the card's controls let you move, swap or add exercises without changing your program.
 
 ### Weight and reps `[data-tour="weight"]`
 The weight and reps are suggested in amber. Change either one and the other recomputes to hit the target RPE. For pull-ups, chin-ups, dips and assisted machines you type what is on the machine, and the line underneath shows what you are actually lifting.
@@ -9096,7 +9097,7 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.65.1","lines":["RPE is back: set badges, the set panel and every explanation say RPE again.","Dark is the default again on every phone. For the light look, enter the code LIGHT in Edit program → Have a code?","Setup no longer offers \"Get fit and toned\". Skip the goal question and you get size first."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.66.0","lines":["The set card now shows what you did last time, faintly, beside each set you haven't done yet.","It reads the same session the suggestion is worked out from, so the numbers always line up with the suggestion's reason.","The top set shows last time's top set; the sets after it show last time's sets in the same order."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9663,7 +9664,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.65.1';
+const APP_VERSION='1.66.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -13408,10 +13409,12 @@ function renderWork(){
     warms.forEach(w=>body.appendChild(srowEl({warm:true,empty:true,badge:'warmup',chev:true,
       load:fmt(w.weight.value)+' '+w.weight.unit+' × '+w.reps,
       onclick:()=>openEditWarmup(slot,w), aria:'Edit warmup'})));
-    for(let j=0;j<Math.max(slot.sets_target,slot.sets.length);j++){
-      const s=slot.sets[j];
+    const nRows=Math.max(slot.sets_target,slot.sets.length), lastRows=lastTimeRows(slot,nRows);
+    for(let j=0;j<nRows;j++){
+      const s=slot.sets[j], lt=lastRows[j];
       body.appendChild(srowEl({idx:j+1, done:!!s, empty:!s,
-        load:s?typedLabel(s.exercise_id||slot.ex,s.weight)+' × '+s.reps+(s.failed?' · missed':''):'—',
+        load:s?typedLabel(s.exercise_id||slot.ex,s.weight)+' × '+s.reps+(s.failed?' · missed':'')
+          :lt?'<span class="lastval">last time '+esc(typedLabel(lt.exercise_id||slot.ex,lt.weight))+' × '+lt.reps+'</span>':'—',
         pr:s&&isPRSet(s.id),
         badge:s?(s.group&&s.group.pos>0?TECHNIQUES[s.group.kind].extend:(s.role==='backoff'?'back-off':s.role==='top'?'top · RPE '+s.rpe:(s.rpe?'RPE '+s.rpe:'warmup')))
           :(isTopBack(slot)?(j===0?'top · RPE '+slot.rpe:'back-off'):isMaint(slot)&&j===0?'top · RPE '+MAINT_TOP.rpe:slot.calib&&j===slot.sets_target-1?'all-out':'RPE '+slot.rpe),
@@ -15384,6 +15387,28 @@ function capSessionVolume(day){
 const MAINT_TOP={reps:[3,5], rpe:7.5};
 const isMaint=slot=>!!slot&&slot.structure==='maint';
 const maintTopView=slot=>({...slot, reps:MAINT_TOP.reps.slice(), rpe:MAINT_TOP.rpe, _cls:'top'});
+/* "Last time" beside each planned set on the set card (D16). The session is the one
+   holding the set the suggestion is priced from (D8's rule: the latest set on the
+   pricing track and class; a top set reads the top-set history). Each planned row
+   shows that session's set in the same place: the top row its top set, the rest
+   its other working and back-off sets in order. Today's sets never count. Derived
+   on read; returns one entry (a set, or null) per row. */
+function lastTimeRows(slot, n){
+  const sid=session&&session.id;
+  const sameTrack=(s,tk)=>{ const t=setTrack(s); return t.ex===tk.ex&&t.sig===(tk.sig||''); };
+  const from=basis=>{
+    const tk=slotTrack(basis), cls=priceClass(basis);
+    const on=sets().filter(s=>s.set_kind!=='warmup'&&s.session_id!==sid&&onTrack(s,tk.ex,tk.sig));
+    const inC=on.filter(s=>inClass(s,cls)), p=(inC.length?inC:on).pop(); if(!p) return null;
+    return {p, all:sets().filter(s=>s.session_id===p.session_id&&s.set_kind!=='warmup'&&sameTrack(s,tk))};
+  };
+  const hasTop=isTopBack(slot)||isMaint(slot)||slot.structure==='amrap';
+  const top=hasTop?from(isMaint(slot)?maintTopView(slot):slot):null;
+  const work=isTopBack(slot)||slot.structure==='amrap'?top:from(slot);
+  const topSet=top?(top.all.find(s=>TOP_ROLES.includes(s.role))||top.p):null;
+  const rest=work?work.all.filter(s=>!(hasTop&&TOP_ROLES.includes(s.role))):[];
+  return Array.from({length:n},(_,j)=>hasTop?(j===0?topSet:rest[j-1]||null):rest[j]||null);
+}
 function addMaintenance(days, phase){
   if(!phase||phase.type!=='hyp'||phase.onDeload||!phase.refined) return days;
   [...new Set(CFG.goals||[])].filter(id=>exById[id]&&mainEligible(exById[id])).forEach(id=>{

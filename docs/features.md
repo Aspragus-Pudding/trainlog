@@ -40,7 +40,7 @@ everyone.
 | "Your preference" chips (don't care about) | advanced | on preview cards that moved |
 | Readiness check-in (sleep, motivation, rest of life, soreness, joints, bodyweight) | everyone | before the first exercise |
 | Pre-session cues for a condition (max 2) | injury-prone | top of the workout |
-| Exercise cards: last time, setup notes, cues, warnings | everyone | each card |
+| Exercise cards: last time (also faintly beside each planned set), setup notes, cues, warnings | everyone | each card |
 | Set panel: weight, reps, effort, the suggestion and its why | everyone | the open card |
 | Weight that recomputes when you change reps (and the reverse) | everyone | set panel |
 | Bodyweight question when the latest is over a week old | everyone | set panel, pull-ups, chin-ups, dips and similar |

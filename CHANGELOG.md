@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.66.0 — 2026-10-09
+- The set card now shows what you did last time, faintly, beside each set you haven't done yet.
+- It reads the same session the suggestion is worked out from, so the numbers always line up with the suggestion's reason.
+- The top set shows last time's top set; the sets after it show last time's sets in the same order.
+
 ## 1.65.1 — 2026-10-09
 - RPE is back: set badges, the set panel and every explanation say RPE again.
 - Dark is the default again on every phone. For the light look, enter the code LIGHT in Edit program → Have a code?
