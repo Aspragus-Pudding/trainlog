@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.64.0 — 2026-10-08
+- New setup: Build it for me, Build it together, or Restore from a backup. Eight short questions, each skippable.
+- Build it together lets you choose the split, an exercise for each slot, rep ranges and block lengths, with a suggestion at every step.
+- A preview shows the whole program with a reason for each part. Nothing is saved until Start first session.
+- No starting weights are asked. After your first session the app offers to save a backup.
+
 ## 1.63.0 — 2026-10-08
 - The look is now one design system (docs/design.md): five text sizes, one set of spacings and colours, and every button at least 44 px tall to tap.
 - Light mode: the app follows your phone's light or dark setting. Theme codes still override it.

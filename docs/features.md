@@ -143,7 +143,11 @@ everyone.
 
 | Feature | For | Where |
 |---|---|---|
-| The program builder (quick or full) | everyone | first run; Lifts → Rebuild |
+| Setup: Build it for me, Build it together, or Restore from a backup | everyone | first run |
+| Setup preview: every part with a reason and "Customize this"; nothing saved until Start first session | everyone | end of setup |
+| Set up a new program (keeps every logged set) | everyone | Lifts, bottom |
+| Keep a backup (after your first session) | everyone | first session's summary; Progress and Lifts until done |
+| The program builder (rebuild the rest of a program) | advanced | Lifts → Rebuild |
 | Injury consent screen | injury-prone | first time you pick a condition |
 | Quick note (the pencil) | everyone | header, every screen |
 | "?" tour of the current screen | everyone | header, and in Edit program |

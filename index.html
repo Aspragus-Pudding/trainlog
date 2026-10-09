@@ -8957,7 +8957,7 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.63.0","lines":["The look is now one design system (docs/design.md): five text sizes, one set of spacings and colours, and every button at least 44 px tall to tap.","Light mode: the app follows your phone's light or dark setting. Theme codes still override it.","The status dots use four fixed colours, from no change to lighter.","On the redesign branch; it ships together with the new setup and the screen pass."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.64.0","lines":["New setup: Build it for me, Build it together, or Restore from a backup. Eight short questions, each skippable.","Build it together lets you choose the split, an exercise for each slot, rep ranges and block lengths, with a suggestion at every step.","A preview shows the whole program with a reason for each part. Nothing is saved until Start first session.","No starting weights are asked. After your first session the app offers to save a backup."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9524,7 +9524,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.63.0';
+const APP_VERSION='1.64.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -10957,9 +10957,13 @@ function buildDay(tpl, phase){
   // the phase's lead lift gets first claim on a primary slot
   const lead=phase&&phase.lead&&exById[phase.lead]?phase.lead:null;
   const easeOff=!!lastEarlyPain();
-  tpl.slots.forEach(([pattern,role])=>{
+  // exercises chosen per slot in setup (CFG.slotPicks {dayId:{slotIndex:exId}}); unset for everyone else
+  const picks=(CFG.slotPicks||{})[id]||null;
+  tpl.slots.forEach(([pattern,role],si)=>{
     let ex=null;
+    const pk=picks&&picks[si]&&exById[picks[si]]&&!used.has(picks[si])?exById[picks[si]]:null;
     if(lead&&role==='primary'&&!used.has(lead)&&exById[lead].pattern===pattern) ex=exById[lead];
+    if(!ex&&pk) ex=pk;
     if(!ex) ex=resolveEx(pattern,role,used);
     if(!ex) return;
     if(bwClass(ex)){ const v=classVersion(ex.id); if(v!==ex.id&&!used.has(v)) ex=exById[v]; }   // the version you've switched to (handoff)
@@ -10972,7 +10976,7 @@ function buildDay(tpl, phase){
         if(free&&free.id!==ex.id&&depByMuscle(free)) slot.dep={kind:'muscle', muscles:directMuscles(free), why:'Picked over '+free.name+' — you don\'t care about '+directMuscles(free).map(m=>ML[m].toLowerCase()).join(' and ')}; }
     }
     // a pattern you don't care about: its accessory slot goes to another pattern that trains the same muscle
-    if(role!=='primary'&&depPatterns().includes(pattern)&&!override){
+    if(role!=='primary'&&depPatterns().includes(pattern)&&!override&&!pk){
       const m=directMuscles(ex)[0], order=[...(PATTERN_NEIGHBOURS[pattern]||[]),...MOVEMENT_TYPES_LIST().map(t=>t.pattern)];
       let alt=null, altP=null;
       for(const p of order){ if(p===pattern||depPatterns().includes(p)) continue; const e=m&&resolveEx(p,role,used,m); if(e){ alt=e; altP=p; break; } }
@@ -15458,7 +15462,8 @@ function sequenceBlocks(o){
   const reasons=out.map(b=>b.taper?'Two lighter, heavier-per-rep weeks so you arrive at the test fresh.'
     :b.type==='hyp'?'Build muscle: more sets at moderate loads'+(cyc.S?', which sets up the strength block after it.':'.')
     :b.realize?'Heavier, fewer reps on your main lifts, ending in an all-out test set that updates your training max.'
-    :'Heavier, fewer reps on your main lifts; no test this time (your profile tests every '+(P.testEvery>1?P.testEvery+' strength blocks':'block')+').');
+    :P.testEvery>0?'Heavier, fewer reps on your main lifts; no test this time (your profile tests every '+(P.testEvery>1?P.testEvery+' strength blocks':'block')+').'
+    :'Heavier, fewer reps on your main lifts. No strength tests in this program.');
   return {blocks:out, reasons, leftover:out.leftover||0};
 }
 /* The builder's plan from where you are: blocks already finished and the one
@@ -15479,8 +15484,18 @@ function planFromNow(o){
 /* The setup's equipment answer, by implement — it only orders exercises you haven't
    logged (resolveEx weighs history first). Dumbbells-only puts everything else last
    rather than out: if you've logged it, you have it. */
+/* What your gym has (setup's specifics, CFG.equipmentHave): anything else goes last
+   rather than out, like dumbbells-only. Unset for everyone who hasn't answered it. */
+const HAVE_IMPLEMENTS={barbell:['barbell'], smith:['smith'], specialty:['specialty'], dumbbell:['dumbbell'], kettlebell:['kettlebell'],
+  cable:['cable'], selector:['selector','machine'], plate:['plate','machine'], band:['band'], bodyweight:['bodyweight']};
+function haveScore(ex){
+  const have=CFG.equipmentHave; if(!Array.isArray(have)||!have.length) return 0;
+  const im=implementOf(ex); if(im==='bodyweight') return 0;
+  return have.some(h=>(HAVE_IMPLEMENTS[h]||[]).includes(im))?0:-500;
+}
 function equipmentScore(ex){
-  const q=CFG.equipment, im=implementOf(ex);
+  const q=CFG.equipment, im=implementOf(ex), hs=haveScore(ex);
+  if(hs) return hs;
   if(!q||q==='mixed') return 0;
   if(q==='dumbbell') return ['dumbbell','kettlebell','bodyweight','band'].includes(im)?0:-500;
   if(q==='machine') return ['machine','selector','plate','cable','smith'].includes(im)?40:0;
@@ -16192,7 +16207,8 @@ function usualChips(j, usual){
   const dn=jointDriftNote(j); if(dn) r.appendChild(el('div','dim tiny',esc(dn))).style.marginTop='4px';
   return r;
 }
-function conditionPicker(sel, onChange, usual){
+function conditionPicker(sel, onChange, usual, opts){
+  const setup=!!(opts&&opts.setup);
   if(!injConsented()) return consentGate(()=>onChange(sel.slice(),true));
   const box=el('div','');
   const has=id=>sel.includes(id);
@@ -16209,8 +16225,8 @@ function conditionPicker(sel, onChange, usual){
       card.appendChild(el('div','',esc(e.one_liner||'')
         +(e.category!=='UMBRELLA'&&(e.self_id_cues||[]).length?`<br><span class="dim">Sounds like you if: ${e.self_id_cues.map(s=>esc(s)).join(' · ')}</span>`:'')
         +(e.core_cue?`<br><span style="color:var(--accent)">${esc(e.core_cue)}</span>`:'')));
-      card.appendChild(redFlagChecklist(e,()=>onChange(sel.slice(),true)));
-      if(Array.isArray(e.rehab_phases)&&!redFlagged(e.id)){
+      if(!setup) card.appendChild(redFlagChecklist(e,()=>onChange(sel.slice(),true)));
+      if(!setup&&Array.isArray(e.rehab_phases)&&!redFlagged(e.id)){
         const pl=rehabPlan(e.id), pb=el('button','btn s ghost',pl?'Phase plan: '+(PHASE_LABEL[pl.phase]||pl.phase)+' — on your dashboard':'Start the phase plan (optional)');
         pb.style.cssText='margin-top:6px;font-size:12px;padding:4px 9px';
         if(!pl) pb.onclick=()=>{ if(startRehabPlan(e)){ toast('Phase plan started — it\'s on your dashboard'); onChange(sel.slice(),true); } };
@@ -17649,7 +17665,8 @@ function openPost(){
     session=null; saveSession(); stopRest(); $('#dlg').close(); TAB='dash'; render(); toast('Session saved');
     if(endEv) openSessionSummary(endEv, score);
     if((CFG.syncUrl||'').trim()) syncNow(true);
-    else{ const due=backupReminder(); if(due) setTimeout(()=>{   // the same rule, and the same "not now", as the Progress reminder
+    // after the very first session the summary itself offers a backup, so no second prompt
+    else{ const due=backupReminder(); if(due&&LOG.filter(e=>e.type==='session_end').length>1) setTimeout(()=>{   // the same rule, and the same "not now", as the Progress reminder
       if(confirm((due.last?'Your last backup was '+due.days+' days ago.':'You haven\'t saved a backup yet.')+'\n\nSave one now?')) shareBackup();
       else{ CFG.backupReminderDismissed={for:due.last, at:new Date().toISOString()}; saveCfg(); }
     },700); }
@@ -17764,6 +17781,9 @@ function renderLifts(){
   ob.style.marginTop='8px';
   ob.onclick=()=>{ BUILDER=null; openBuilder(true); };
   lg.appendChild(ob);
+  const nw=el('button','btn ghost wide','Set up a new program'); nw.style.marginTop='8px';
+  nw.onclick=()=>openOnboarding(true);
+  lg.appendChild(nw);
 
   const fr=el('button','btn ghost wide','Reset to a fresh install');
   fr.style.cssText='margin-top:8px;color:var(--skip)';
@@ -18233,8 +18253,11 @@ function openSessionSummary(endEv, score){
     <div class="qblock"><div class="qlab">Compared with last time</div>${cmp}</div>
     <div class="qblock"><div class="row between sm"><span class="muted">Readiness today</span>
       <span style="font-weight:600">${score!=null?esc(readinessLabel(score))+' · '+esc(warmupWord(score)):'No check-in this session'}</span></div></div>
+    ${!DEMO&&!lastBackupAt()&&LOG.filter(e=>e.type==='session_end').length===1?`<div class="qblock"><div class="qlab">Keep a backup</div><div class="sm muted" style="margin-bottom:10px">Your first session is saved on this phone. A backup keeps it if the phone is lost or the app is deleted.</div><div class="row" style="gap:8px"><button class="btn pri grow" id="sumbk">Save a backup</button>${(CFG.syncUrl||'').trim()?'':'<button class="btn ghost grow" id="sumsh">Use a sheet</button>'}</div></div>`:''}
     <button class="btn go wide" id="sumok">Done</button>`);
   $('#sumok').onclick=()=>{ $('#dlg').close(); render(); };
+  if($('#sumbk')) $('#sumbk').onclick=()=>shareBackup();
+  if($('#sumsh')) $('#sumsh').onclick=()=>{ $('#dlg').close(); openSettings(); };
 }
 function openSessionDetail(endEv){
   const ss=sets().filter(s=>s.session_id===endEv.session_id);
@@ -18611,6 +18634,349 @@ function drawBuilder(rerun){
   navBtn('Back','ghost',()=>{ if(B.i<=1){ B.path=null; B.i=0; openBuilder(); } else go(-1); });
   navBtn('Skip','ghost',()=>go(1));
   navBtn('Next','pri',()=>go(1));
+}
+
+/* ---------- Onboarding (batch H4, v1.64) ----------
+   First run: three ways in — Build it for me (recommended), Build it together,
+   Restore from a backup. Eight shared questions, each skippable with a
+   default; Back keeps every answer, and switching between the two paths keeps
+   them too (ONB is a module-level draft, the SETTINGS_DRAFT pattern). The
+   preview runs the real generator on the draft (globals swapped in a
+   try/finally). Nothing is written — not to the log, not to settings — until
+   "Start first session" (onbApply). No starting weights are asked; "I know my
+   numbers" is optional. Existing users only get here through "Set up a new
+   program", which keeps every logged set. */
+let ONB=null;
+const ONB_Q=['goal','history','schedule','equipment','body','around','priorities','lifts'];
+const ONB_T=['split','days','reps','blocks'];
+const ONB_GOALS=[{k:'toned', profile:'size_first', label:'Get fit and toned', blurb:'Build some muscle and feel fitter. A size-first program with no strength tests.'}]
+  .concat(PROFILE_ORDER.map(k=>({k, profile:k, label:PROFILES[k].label, blurb:PROFILES[k].blurb})));
+const ONB_HISTORY=[['new','New to lifting','Under six months, or starting again after a long break'],['novice',EXPERIENCE.novice.label,'Weight goes up most times you train'],
+  ['intermediate',EXPERIENCE.intermediate.label,'A new best every few weeks'],['advanced',EXPERIENCE.advanced.label,'A new best every few months']];
+const ONB_GYMS=[['mixed','A bit of everything','A typical commercial gym'],['barbell','Barbell gym','Racks, platforms and free weights'],
+  ['machine','Machine-heavy','Mostly machines and cables'],['dumbbell','Dumbbells only','Home or hotel']];
+const ONB_HAVE=[['barbell','Barbell and rack'],['dumbbell','Dumbbells'],['cable','Cables'],['selector','Pin-loaded machines'],['plate','Plate-loaded machines'],
+  ['smith','Smith machine'],['specialty','Specialty bars'],['kettlebell','Kettlebells'],['band','Bands']];
+const ONB_HAVE_DEFAULT={mixed:['barbell','dumbbell','cable','selector','plate','smith','band'], barbell:['barbell','dumbbell','cable','band'],
+  machine:['selector','plate','cable','smith','dumbbell'], dumbbell:['dumbbell','band','kettlebell']};
+// judgement defaults: a starting split for each number of days (every day is editable)
+const ONB_AUTO_STYLE={2:'full',3:'full',4:'ul',5:'ful',6:'ppl'};
+const ONB_STYLE_NOTE={
+  full:['Every muscle each session','Miss a day and nothing goes untrained','Longer sessions; heavy squats and deadlifts share days'],
+  ul:['Upper body one day, lower the next','More exercises per area each session','Miss a day and half the body waits'],
+  ppl:['Pushing, pulling and legs on their own days','Short, focused sessions','At 3 days each muscle gets one day a week'],
+  ulppl:['Upper and lower days plus push, pull and legs','Mixes how often and how much','Some muscles get more days than others'],
+  ful:['Full-body days with upper and lower days','Frequent practice of the main lifts','Some muscles get more days than others'],
+  fppl:['Push, pull and legs plus full-body days','Variety and frequency','Some muscles get more days than others']};
+const ONB_MINUTES_PER_SET=2.5, ONB_WARMUP_MIN=8;   // judgement defaults, only for the session-length estimate
+function onbDefaults(existing){
+  const sp=existing?splitOf(programSplitSpec()).week:null;
+  return {existing:!!existing, path:null, step:'welcome', hist:[], ret:false, err:null,
+    a:{goal:null, history:null, days:existing&&sp?sp.length:null, minutes:existing&&CFG.sessionLen||null, gym:existing&&CFG.equipment||null, have:existing&&Array.isArray(CFG.equipmentHave)?[...CFG.equipmentHave]:null,
+      bw:null, conds:existing?normalizeConditions(CFG.conditions):[], excluded:existing?[...(CFG.excludedEx||[])]:[], emphasis:[],
+      dep:existing?{muscles:[...((CFG.deprioritised||{}).muscles||[])],patterns:[...((CFG.deprioritised||{}).patterns||[])]}:{muscles:[],patterns:[]},
+      goals:existing?[...new Set(CFG.goals||[])].filter(id=>exById[id]):[], known:{}, showKnown:false},
+    t:{style:null, picks:{}, reps:{secondary:null, accessory:null}, weeks:{}}};
+}
+/* Every answer with its default filled in. Pure. */
+function onbResolve(O){
+  const a=O.a, g=ONB_GOALS.find(x=>x.k===a.goal)||ONB_GOALS.find(x=>x.k==='toned');
+  const days=Math.max(WEEK_MIN,Math.min(WEEK_MAX,a.days||3));
+  const st=WEEK_STYLES.find(x=>x.k===(O.t.style||ONB_AUTO_STYLE[days])&&(x.min||WEEK_MIN)<=days)||WEEK_STYLES[0];
+  const gym=a.gym||'mixed';
+  const repRanges={};
+  return {goal:g.k, toned:g.k==='toned', profile:g.profile, params:g.k==='toned'?{testEvery:0,peaks:'no'}:{},
+    history:a.history||'new', experience:a.history==='intermediate'||a.history==='advanced'?a.history:'novice',
+    days, minutes:a.minutes||60, style:st.k, week:st.make(days), gym, have:a.have||ONB_HAVE_DEFAULT[gym],
+    bw:a.bw>0?a.bw:null, conds:a.conds.slice(), excluded:a.excluded.slice(), emphasis:a.emphasis.slice(0,3), dep:{muscles:[...a.dep.muscles],patterns:[...a.dep.patterns]},
+    goals:a.goals.slice(0,3), est:a.showKnown?Object.fromEntries(Object.entries(a.known).filter(([id,v])=>v>0&&a.goals.includes(id))):{},
+    picks:JSON.parse(JSON.stringify(O.t.picks||{})), repChoice:{...O.t.reps}, repRanges, weeks:{...O.t.weeks}};
+}
+/* The builder draft the existing sequencer takes. */
+function onbDraft(R){
+  return {rerun:false, path:'full', i:0, units:'lb', profile:R.profile, params:R.params, customise:false, experience:R.experience, week:R.week,
+    sessionLen:R.minutes, goals:R.goals, est:R.est, equipment:R.gym, target:'', targetFixed:false, testDate:'', conds:R.conds, excluded:R.excluded,
+    dep:R.dep, name:CFG.testerName||''};
+}
+/* The plan: blocks from the sequencer, then your block lengths and emphasis. Pure. */
+function onbPlan(O){
+  const R=onbResolve(O), plan=builderPlan(onbDraft(R));
+  plan.blocks=plan.blocks.map((b,i)=>{ const x={...b};
+    const w=R.weeks[i]; if(w&&w!==x.weeks){ const lim=SEQ[x.type]||[BLOCK_MIN[x.type]||1,12]; x.weeks=Math.max(BLOCK_MIN[x.type]||1,Math.min(lim[1]||12,w)); applyShape(x); }
+    if(x.type==='hyp'&&R.emphasis.length) x.hyp=R.emphasis.slice(0,3);
+    return x; });
+  return {R, plan};
+}
+/* Run fn with the program as the draft would set it up (the real generator, the
+   real ranking). Globals are restored in a finally (CLAUDE.md). */
+function onbWith(R, plan, fn){
+  const keepC=CFG, keepR=ROADMAP;
+  try{
+    CFG={...keepC, goals:R.goals, equipment:R.gym, equipmentHave:R.have, conditions:R.conds, excludedEx:R.excluded, deprioritised:R.dep,
+      week:R.week, slotPicks:R.picks, repRanges:{...(keepC.repRanges||{}),...onbRepRanges(R)}, profile:R.profile, experience:R.experience,
+      start:'9999-12-31', roadmap:plan.blocks};
+    ROADMAP=plan.blocks;
+    return fn();
+  }finally{ CFG=keepC; ROADMAP=keepR; }
+}
+/* Rep-range choices (Build it together) as per-exercise ranges for the non-main
+   lifts in the week. Main lifts always follow the block. */
+const ONB_REP_OPTS={secondary:[[null,'Follow the block'],[[6,10],'6–10'],[[8,12],'8–12'],[[10,15],'10–15']],
+  accessory:[[null,'By muscle'],[[8,12],'8–12'],[[10,15],'10–15'],[[12,20],'12–20']]};
+function onbRepRanges(R){
+  const out={}; if(!R._days) return out;
+  R._days.forEach(d=>d.slots.forEach(sl=>{ const c=R.repChoice[sl.role]; if(c&&sl.role!=='primary') out[sl.ex]=c.slice(); }));
+  return out;
+}
+/* The first block's week of days, as the program would generate them. */
+function onbDays(R, plan){
+  const days=onbWith({...R, repChoice:{}}, plan, ()=>generatedDays());
+  R._days=days;
+  return Object.keys(R.repChoice).some(k=>R.repChoice[k])?onbWith(R, plan, ()=>generatedDays()):days;
+}
+/* A slot's suggestion and two alternatives, ranked exactly as the generator ranks them. */
+function onbSlotOptions(R, plan, dayName){
+  return onbWith(R, plan, ()=>{
+    const tpl=splitOf(R.week).template.find(t=>t.name===dayName); if(!tpl) return [];
+    const id=tpl.name.toLowerCase().replace(/\s+/g,'_'), picks=R.picks[id]||{}, used=new Set();
+    return tpl.slots.map(([pattern,role],i)=>{
+      const opts=[]; const tried=new Set(used);
+      for(let k=0;k<3;k++){ const e=resolveEx(pattern,role,tried); if(!e) break; opts.push(e.id); tried.add(e.id); }
+      const chosen=picks[i]&&exById[picks[i]]?picks[i]:opts[0]||null;
+      if(chosen) used.add(chosen);
+      return {i, pattern, role, opts, chosen, picked:!!picks[i]};
+    });
+  });
+}
+function onbMinutes(days){
+  const per=days.map(d=>ONB_WARMUP_MIN+d.slots.reduce((t,sl)=>t+(sl.sets||0),0)*ONB_MINUTES_PER_SET);
+  return Math.round(per.reduce((a,b)=>a+b,0)/Math.max(1,per.length)/5)*5;
+}
+/* One line on why, for each decision the preview shows. */
+function onbReasons(R, plan, days){
+  const nm=id=>exById[id]?exById[id].name:id;
+  const flagged=R.conds.length?likelyFlaggedFor(R.conds).length:0, mins=onbMinutes(days);
+  return {
+    goal:R.toned?'Toned means building some muscle and feeling fitter. This is a size-first program with no strength tests. How lean you look depends mostly on eating, which this app doesn\'t track.':PROFILES[R.profile].blurb,
+    week:R.days+' days a week, '+splitOf(R.week).name.toLowerCase()+'. '+ONB_STYLE_NOTE[R.style][0]+'. A starting point; every day can be changed.',
+    progress:R.experience==='novice'?'Your main lifts start by adding a step each session while they keep hitting the target. Two misses in a row and a lift moves to the slower progression on its own.'
+      :'Your lifts build reps across their range, then the weight goes up. A lift that starts climbing fast again speeds up on its own.',
+    equipment:'Exercises your gym has come first, and anything you\'ve logged comes first of all. What it doesn\'t have is picked last, not removed.',
+    around:R.conds.length?flagged+' exercise'+(flagged===1?' carries':'s carry')+' a warning for this. '+(R.excluded.length?R.excluded.length+' left out, as you ticked.':'Nothing is left out unless you tick it.'):'Nothing picked. Warnings appear if you add a condition later.',
+    priorities:(R.emphasis.length?'An extra set for '+R.emphasis.map(m=>ML[m].toLowerCase()).join(', ')+' in size blocks. ':'No emphasis. ')+(R.dep.muscles.length||R.dep.patterns.length?'Picked last: '+[...R.dep.muscles.map(m=>ML[m].toLowerCase()),...R.dep.patterns.map(p=>PATTERN_LABEL[p]||p)].join(', ')+'.':''),
+    lifts:R.goals.length?(R.goals.length===1?'It gets':'They get')+' priority, their own strength tracking, and the tests in strength blocks.':'None picked, so every lift progresses the same way. You can add up to three later.',
+    numbers:Object.keys(R.est).length?'Your numbers set the first loads.':'No starting weights needed: your first set of each exercise finds your level.',
+    time:'About '+mins+' minutes a session (2.5 minutes a set with rest, plus warm-up; a rough guide)'+(mins>R.minutes+10?'. That\'s more than your '+R.minutes+'; skip the last exercise on a short day.':'.'),
+    body:R.bw?'Used for pull-ups, dips and similar. The check-in asks again from time to time.':'Pull-ups and dips ask for it when you first do them.'
+  };
+}
+function openOnboarding(existing){
+  ONB=onbDefaults(existing);
+  if(existing) ONB.step='path';
+  drawOnboarding();
+}
+const onbGo=(step,noPush)=>{ if(!noPush) ONB.hist.push(ONB.step); ONB.step=step; drawOnboarding(); };
+function onbNext(){
+  const O=ONB;
+  if(O.ret&&(ONB_Q.includes(O.step)||ONB_T.includes(O.step))){ O.ret=false; return onbGo('preview'); }
+  const qi=ONB_Q.indexOf(O.step);
+  if(qi>=0&&qi<ONB_Q.length-1) return onbGo(ONB_Q[qi+1]);
+  if(qi===ONB_Q.length-1) return onbGo(O.path==='together'?'split':'preview');
+  const ti=ONB_T.indexOf(O.step);
+  if(ti>=0&&ti<ONB_T.length-1) return onbGo(ONB_T[ti+1]);
+  return onbGo('preview');
+}
+function onbBack(){ const O=ONB; if(!O.hist.length){ if(O.existing){ ONB=null; $('#dlg').close(); } return; } O.step=O.hist.pop(); drawOnboarding(); }
+function onbSwitch(path){ ONB.path=path; }   // answers live in ONB.a / ONB.t, so switching loses none
+function drawOnboarding(){
+  try{ return drawOnboardingStep(); }
+  catch(err){
+    console.error('onboarding failed', err);
+    sheet('<h2 style="font-size:20px;margin-bottom:8px">This step hit a problem</h2><div class="muted sm" style="margin-bottom:6px">Nothing was saved, and your answers are kept.</div><div class="dim tiny" style="margin-bottom:14px">'+esc(String(err&&err.message||err))+'</div><div class="row" style="gap:8px"><button class="btn ghost grow" id="obfb">Back a step</button><button class="btn pri grow" id="obfp">Show the plan</button></div>');
+    $('#obfb').onclick=()=>onbBack(); $('#obfp').onclick=()=>{ ONB.step='preview'; drawOnboarding(); };
+  }
+}
+function drawOnboardingStep(){
+  const O=ONB, a=O.a, step=O.step;
+  const qi=ONB_Q.indexOf(step), ti=ONB_T.indexOf(step);
+  const T={path:O.existing?'Set up a new program':'Welcome to Trainlog', welcome:'Welcome to Trainlog', restore:'Restore from a backup',
+    goal:'What are you training for?', history:'How long have you been lifting?', schedule:'How often can you train?', equipment:'Where do you train?',
+    body:'Your bodyweight', around:'Anything to work around?', priorities:'Anything to focus on, or skip?', lifts:'Any lifts you want to get stronger at?',
+    split:'How to split your week', days:'Your days', reps:'Rep ranges', blocks:'Your blocks', preview:'Your program'};
+  const SUB={welcome:'A program that adjusts to what you log. Pick how you want to set it up.', path:'Your logged history stays as it is. The new program starts from its first block today.',
+    restore:'Bring back your log and settings from a backup file or your sheet.',
+    goal:'Sets the balance of size and strength work, and how often you test.', history:'Sets how fast your main lifts start progressing. The rest of the program is the same either way.',
+    schedule:'Days per week and roughly how long you have.', equipment:'Your gym type, then what it has. Exercises you can do come first.',
+    body:'Optional. Used for pull-ups, dips and similar.', around:'Pick a region, then the closest match. It only ever warns; nothing is removed unless you say so.',
+    priorities:'Optional. An extra set for muscles you want to emphasise, and anything you\'d rather skip.', lifts:'Optional. Up to three main lifts get priority and strength tracking.',
+    split:'A suggestion for '+(a.days||3)+' days, with the trade-offs.', days:'Each slot has a suggestion and two alternatives. Tap to choose, or pick anything.',
+    reps:'Main lifts follow the block. Choose ranges for the rest, or keep the defaults.', blocks:'The order of your training blocks. Change any length.',
+    preview:'Built from your answers. Nothing is saved until you start.'};
+  const head=(qi>=0?'<div class="dim tiny" style="margin-bottom:6px">Question '+(qi+1)+' of '+ONB_Q.length+'</div>':ti>=0?'<div class="dim tiny" style="margin-bottom:6px">Build it together · step '+(ti+1)+' of '+ONB_T.length+'</div>':'')
+    +'<h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-1)">'+esc(T[step])+'</h2><div class="muted sm" style="margin-bottom:var(--sp-4)">'+esc(SUB[step]||'')+'</div>';
+  sheet(head+'<div id="onb"></div><div class="row bldnav" id="onbnav"></div>');
+  const host=$('#onb'), nav=$('#onbnav');
+  const navBtn=(label,cls,fn)=>{ const b=el('button','btn '+cls+' grow',esc(label)); b.onclick=fn; nav.appendChild(b); return b; };
+  const card=(on,title,sub,fn,badge)=>{ const b=el('button','qblock'); b.style.cssText='display:block;width:100%;text-align:left;'+(on?'outline:2px solid var(--accent);':'');
+    b.innerHTML='<div class="row between"><span style="font-weight:650">'+esc(title)+'</span>'+(badge?'<span class="tiny" style="color:var(--accent);font-weight:650">'+esc(badge)+'</span>':'')+'</div>'+(sub?'<div class="muted sm" style="margin-top:2px">'+esc(sub)+'</div>':'');
+    b.onclick=fn; host.appendChild(b); return b; };
+  const chips=(opts,on,fn,label)=>{ const w=el('div','qblock'); if(label) w.innerHTML='<div class="qlab">'+esc(label)+'</div>';
+    const c=el('div','chips'); opts.forEach(([v,l])=>{ const x=el('button','chip',esc(l)); x.setAttribute('aria-pressed',on(v)?'true':'false'); x.onclick=()=>{ fn(v); drawOnboarding(); }; c.appendChild(x); });
+    w.appendChild(c); host.appendChild(w); return w; };
+  const qnav=()=>{ navBtn('Back','ghost',onbBack); navBtn('Skip','ghost',onbNext); navBtn(O.ret?'Done':'Next','pri',onbNext); };
+
+  if(step==='welcome'||step==='path'){
+    card(O.path==='auto','Build it for me','Answer eight quick questions. The app builds the program and shows you why for each part.',()=>{ onbSwitch('auto'); onbGo('goal'); },'Recommended');
+    card(O.path==='together','Build it together','The same questions, then choose your split, exercises, rep ranges and blocks, with a suggestion at every step.',()=>{ onbSwitch('together'); onbGo('goal'); });
+    if(!O.existing) card(false,'Restore from a backup','From a backup file, or from your sheet.',()=>onbGo('restore'));
+    if(O.existing) navBtn('Cancel','ghost',()=>{ ONB=null; $('#dlg').close(); }); else nav.style.display='none';
+    return;
+  }
+  if(step==='restore'){
+    const f=el('button','btn pri wide','From a backup file'); f.onclick=()=>{ $('#fileIn').click(); }; host.appendChild(f);
+    const w=el('div','qblock'); w.style.marginTop='var(--sp-3)';
+    w.innerHTML='<div class="qlab">From your sheet</div><div class="field">Paste the sheet address or setup link you were given.</div><input type="text" id="onbsh" placeholder="https://script.google.com/…" style="width:100%;background:var(--surface-2);border:none;border-radius:var(--r-s);color:var(--ink);padding:11px;font:inherit">';
+    const g=el('button','btn wide','Restore from the sheet'); g.style.marginTop='var(--sp-2)'; w.appendChild(g); host.appendChild(w);
+    if((CFG.syncUrl||'').trim()) $('#onbsh').value=CFG.syncUrl;
+    g.onclick=()=>{ const v=($('#onbsh').value||'').trim();
+      if(/[?&](sync|feedback|who)=/.test(v)) applySetupLink(v.slice(v.indexOf('?')));
+      else if(SCRIPT_URL_RE.test(v)){ CFG.syncUrl=v; saveCfg(); }
+      else{ alert('That doesn\'t look like a sheet address. Nothing was changed.'); return; }
+      restoreFromSheet(); };
+    host.appendChild(el('div','dim tiny','Restoring merges by event id and never deletes anything. Your logged sets come back, and the program too if the backup has one.')).style.marginTop='var(--sp-2)';
+    navBtn('Back','ghost',onbBack);
+    return;
+  }
+  if(step==='goal'){
+    ONB_GOALS.forEach(g=>card(a.goal===g.k,g.label,g.blurb,()=>{ a.goal=g.k; drawOnboarding(); }));
+    if(a.goal==='toned') host.appendChild(el('div','anchor','How lean you look depends mostly on eating, which this app doesn\'t track. The program builds the muscle.'));
+  }
+  if(step==='history') ONB_HISTORY.forEach(([k,l,sub])=>card(a.history===k,l,sub,()=>{ a.history=k; drawOnboarding(); }));
+  if(step==='schedule'){
+    chips([2,3,4,5,6].map(n=>[n,n+' days']),v=>(a.days||null)===v,v=>{ a.days=v; O.t.style=null; O.t.picks={}; },'Days per week');
+    chips([[45,'45 min'],[60,'1 hour'],[75,'75 min'],[90,'90 min']],v=>a.minutes===v,v=>{ a.minutes=v; },'Minutes per session');
+    host.appendChild(el('div','dim tiny','Skip and it\'s 3 days of about an hour.'));
+  }
+  if(step==='equipment'){
+    ONB_GYMS.forEach(([k,l,sub])=>card((a.gym||null)===k,l,sub,()=>{ a.gym=k; a.have=null; drawOnboarding(); }));
+    const have=a.have||ONB_HAVE_DEFAULT[a.gym||'mixed'];
+    chips(ONB_HAVE,v=>have.includes(v),v=>{ const h=new Set(a.have||ONB_HAVE_DEFAULT[a.gym||'mixed']); h.has(v)?h.delete(v):h.add(v); a.have=[...h]; },'What it has');
+    host.appendChild(el('div','dim tiny','Anything not ticked is picked last, not removed. Bodyweight exercises are always in.'));
+  }
+  if(step==='body'){
+    const w=el('div','qblock');
+    w.appendChild(stepper('Bodyweight (lb)',a.bw||170,1,v=>{ a.bw=Math.max(60,Math.min(500,v)); drawOnboarding(); },null,{typeable:true,wide:true,min:60,max:500}));
+    w.appendChild(el('div','dim tiny',a.bw?'Saved when you start.':'Not set. The number is only where the buttons start.')).style.marginTop='var(--sp-2)';
+    host.appendChild(w);
+    host.appendChild(el('div','dim tiny','Weights are in pounds. Machines marked in kilograms can be switched on their own set card.'));
+  }
+  if(step==='around'){
+    host.appendChild(conditionPicker(a.conds,(n)=>{ a.conds=n; a.excluded=a.excluded.filter(id=>likelyFlaggedFor(n).some(x=>x.ex.id===id)); drawOnboarding(); },null,{setup:true}));
+    if(a.conds.length){ const w=el('div','qblock'); w.style.marginTop='var(--sp-3)'; w.innerHTML='<div class="qlab">Leave any of these out?</div><div class="field">Flagged for what you picked. Unticked ones stay in, with a warning.</div>';
+      w.appendChild(exclusionList(a.conds,a.excluded,n=>{ a.excluded=n; })); host.appendChild(w); }
+  }
+  if(step==='priorities'){
+    const w=el('div','qblock'); w.innerHTML='<div class="qlab">Emphasise <span class="dim tiny" style="font-weight:400">· up to 3</span></div>';
+    const c=el('div','chips'); MUSCLE_ORDER.filter(m=>LANDMARKS[m]).forEach(m=>{ const on=a.emphasis.includes(m), x=el('button','chip',esc(ML[m])); x.setAttribute('aria-pressed',on?'true':'false');
+      x.onclick=()=>{ a.emphasis=on?a.emphasis.filter(y=>y!==m):a.emphasis.concat(m).slice(-3); drawOnboarding(); }; c.appendChild(x); });
+    w.appendChild(c); host.appendChild(w);
+    const d=el('div','qblock'); d.innerHTML='<div class="qlab">Don\'t care about</div>'; d.appendChild(depChips(a.dep,()=>drawOnboarding())); host.appendChild(d);
+  }
+  if(step==='lifts'){
+    a.goals.forEach((id,i)=>{ const ex=exById[id]; if(!ex) return;
+      const r=el('div','qblock'); r.innerHTML='<div class="row between"><span style="font-weight:600">'+(i+1)+'. '+esc(ex.name)+'</span></div>';
+      const x=el('button','iconbtn',icon('remove','Remove')); x.onclick=()=>{ a.goals.splice(i,1); delete a.known[id]; drawOnboarding(); }; r.firstChild.appendChild(x);
+      if(a.showKnown){ r.appendChild(el('div','field','Estimated max (optional)')).style.marginTop='var(--sp-2)';
+        r.appendChild(stepper(isBW(ex)?'added lb':'lb',a.known[id]||(isBW(ex)?0:135),5,v=>{ a.known[id]=Math.max(0,v); drawOnboarding(); },null,{typeable:true,min:0})); }
+      host.appendChild(r); });
+    if(a.goals.length<3){ const add=el('button','btn wide',a.goals.length?'Add another':'Pick a lift');
+      add.onclick=()=>exPicker('Pick a main lift',e=>!a.goals.includes(e.id)&&mainEligible(e),e=>{ a.goals.push(e.id); drawOnboarding(); },{keepOpen:true,onCancel:()=>drawOnboarding()});
+      host.appendChild(add); }
+    if(a.goals.length){ const k=el('label',''); k.style.cssText='display:flex;gap:9px;align-items:center;margin-top:var(--sp-3);cursor:pointer';
+      k.innerHTML='<input type="checkbox"'+(a.showKnown?' checked':'')+'><span class="sm">I know my numbers</span>'; k.querySelector('input').onchange=e=>{ a.showKnown=e.target.checked; drawOnboarding(); }; host.appendChild(k); }
+    host.appendChild(el('div','dim tiny','No starting weights are needed: the first set of each exercise finds your level.')).style.marginTop='var(--sp-2)';
+  }
+  if(ONB_Q.includes(step)){ qnav(); return; }
+
+  // ── Build it together
+  const {R, plan}=onbPlan(O);
+  const fill=()=>{ O.ret=false; onbGo('preview'); };
+  const tnav=()=>{ navBtn('Back','ghost',onbBack); navBtn('Fill the rest for me','ghost',fill); navBtn(O.ret?'Done':'Next','pri',onbNext); };
+  if(step==='split'){
+    WEEK_STYLES.filter(x=>(x.min||WEEK_MIN)<=R.days).forEach(x=>{ const n=ONB_STYLE_NOTE[x.k]||['','',''];
+      const b=card(R.style===x.k,x.label,null,()=>{ O.t.style=x.k; O.t.picks={}; drawOnboarding(); },x.k===ONB_AUTO_STYLE[R.days]?'Suggested':'');
+      b.insertAdjacentHTML('beforeend','<div class="muted sm" style="margin-top:2px">'+esc(n[0])+'</div><div class="sm" style="margin-top:4px"><span style="color:var(--ok)">+</span> '+esc(n[1])+'</div><div class="sm"><span style="color:var(--warn)">−</span> '+esc(n[2])+'</div><div class="dim tiny" style="margin-top:4px">'+esc(x.make(R.days).map(t=>DAY_TYPES[t].label).join(' · '))+'</div>'); });
+    tnav(); return;
+  }
+  if(step==='days'){
+    splitOf(R.week).template.forEach(tpl=>{
+      const id=tpl.name.toLowerCase().replace(/\s+/g,'_'), w=el('div','qblock'); w.innerHTML='<div class="qlab">'+esc(tpl.name)+'</div>';
+      onbSlotOptions(R,plan,tpl.name).forEach(sl=>{
+        const row=el('div',''); row.style.marginBottom='var(--sp-3)';
+        row.appendChild(el('div','field',esc((PATTERN_LABEL[sl.pattern]||sl.pattern).replace(/^./,c=>c.toUpperCase()))+(sl.role==='primary'?' · main':'')));
+        const c=el('div','chips');
+        const opts=[...new Set([sl.chosen,...sl.opts].filter(Boolean))].slice(0,3);
+        opts.forEach((ex,k)=>{ const x=el('button','chip',esc(exById[ex].name)+(ex===sl.opts[0]?' <span class="dim tiny">· suggested</span>':'')); x.setAttribute('aria-pressed',ex===sl.chosen?'true':'false');
+          x.onclick=()=>{ (O.t.picks[id]=O.t.picks[id]||{})[sl.i]=ex; if(ex===sl.opts[0]) delete O.t.picks[id][sl.i]; drawOnboarding(); }; c.appendChild(x); });
+        const other=el('button','chip','Other…'); other.onclick=()=>exPicker('Pick for '+tpl.name,e=>e.pattern===sl.pattern&&!e.folded,e=>{ (O.t.picks[id]=O.t.picks[id]||{})[sl.i]=e.id; drawOnboarding(); },{keepOpen:true,onCancel:()=>drawOnboarding()});
+        c.appendChild(other); row.appendChild(c); w.appendChild(row);
+      });
+      host.appendChild(w);
+    });
+    tnav(); return;
+  }
+  if(step==='reps'){
+    chips(ONB_REP_OPTS.secondary.map(([v,l])=>[JSON.stringify(v),l]),v=>JSON.stringify(O.t.reps.secondary)===v,v=>{ O.t.reps.secondary=JSON.parse(v); },'Other compound lifts');
+    chips(ONB_REP_OPTS.accessory.map(([v,l])=>[JSON.stringify(v),l]),v=>JSON.stringify(O.t.reps.accessory)===v,v=>{ O.t.reps.accessory=JSON.parse(v); },'Isolation exercises');
+    host.appendChild(el('div','dim tiny','The defaults change with the block and the muscle; a fixed range stays the same in every block. Any exercise\'s range can be changed later on its info sheet.'));
+    tnav(); return;
+  }
+  if(step==='blocks'){
+    plan.blocks.forEach((b,i)=>{ const w=el('div','qblock');
+      w.innerHTML='<div class="row between"><span style="font-weight:650;color:'+blockColor(b)+'">'+(i+1)+'. '+esc(blockName(b))+'</span><span class="dim tiny">'+(b.realize?'ends with a test':'')+'</span></div><div class="muted sm" style="margin:2px 0 var(--sp-2)">'+esc(plan.reasons[i]||'')+'</div>';
+      const lim=SEQ[b.type]||[BLOCK_MIN[b.type]||1,12];
+      w.appendChild(stepper('weeks',b.weeks,1,v=>{ O.t.weeks[i]=Math.max(BLOCK_MIN[b.type]||1,Math.min(lim[1]||12,v)); drawOnboarding(); },null,{min:BLOCK_MIN[b.type]||1,max:lim[1]||12}));
+      host.appendChild(w); });
+    tnav(); return;
+  }
+  // ── the preview (both paths end here)
+  const days=onbDays(R,plan), why=onbReasons(R,plan,days);
+  const item=(title,value,reason,to,extra)=>{ const w=el('div','qblock');
+    w.innerHTML='<div class="row between" style="align-items:flex-start"><span class="grow"><div class="dim tiny">'+esc(title)+'</div><div style="font-weight:650;margin-top:1px">'+value+'</div></span></div><div class="muted sm" style="margin-top:var(--sp-1)">'+esc(reason)+'</div>'+(extra||'');
+    const cz=el('button','btn quiet s','Customize this'); cz.style.marginTop='var(--sp-1)'; cz.onclick=to; w.appendChild(cz); host.appendChild(w); return w; };
+  const toQ=st=>()=>{ O.ret=true; onbGo(st); };
+  const toT=st=>()=>{ onbSwitch('together'); O.ret=true; onbGo(st); };
+  item('Goal',esc(ONB_GOALS.find(g=>g.k===R.goal).label),why.goal,toQ('goal'));
+  item('Blocks',esc(plan.blocks.map(b=>blockName(b)+' '+b.weeks+' wk').join(' → ')),plan.reasons[0]||'',toT('blocks'),
+    '<div class="tiny dim" style="margin-top:var(--sp-1)">'+plan.blocks.map((b,i)=>esc((i+1)+'. '+(plan.reasons[i]||''))).join('<br>')+'</div>');
+  item('Your week',esc(splitOf(R.week).name+', '+R.days+' days'),why.week,O.path==='together'?toT('split'):toQ('schedule'));
+  item('Exercises',esc(days.length+' days, '+days.reduce((t,d)=>t+d.slots.length,0)+' exercises'),'Picked from what your gym has, what you\'re working around and your priorities.',toT('days'),
+    days.map(d=>'<div class="sm" style="margin-top:var(--sp-2)"><b>'+esc(d.name)+'</b><div class="muted tiny">'+d.slots.map(sl=>esc((exById[sl.ex]||{name:sl.ex}).name)+' '+sl.sets+'×'+sl.reps[0]+(sl.reps[1]!==sl.reps[0]?'–'+sl.reps[1]:'')).join(' · ')+'</div></div>').join(''));
+  item('Main lifts',esc(R.goals.length?R.goals.map(id=>exById[id].name).join(', '):'None'),why.lifts+' '+why.numbers,toQ('lifts'));
+  item('How fast your lifts progress',esc(ONB_HISTORY.find(h=>h[0]===R.history)[1]),why.progress,toQ('history'));
+  item('Equipment',esc(EQUIPMENT[R.gym]),why.equipment,toQ('equipment'));
+  item('Working around',esc(R.conds.length?R.conds.map(condName).join(', '):'Nothing'),why.around,toQ('around'));
+  item('Priorities',esc(R.emphasis.length?R.emphasis.map(m=>ML[m]).join(', '):'None'),why.priorities,toQ('priorities'));
+  item('Session length',esc('About '+onbMinutes(days)+' minutes'),why.time,toQ('schedule'));
+  item('Bodyweight',esc(R.bw?R.bw+' lb':'Not given'),why.body,toQ('body'));
+  navBtn('Back','ghost',onbBack);
+  navBtn('Start first session','pri',onbApply);
+}
+/* Confirm: everything is written here and only here. History is never touched. */
+function onbApply(){
+  const {R, plan}=onbPlan(ONB);
+  onbDays(R,plan);
+  const hadSets=LOG.some(e=>e.type==='set'), keepSeed=CFG.rateSeed;
+  applyBuilder(onbDraft(R), plan);
+  if(hadSets&&keepSeed) CFG.rateSeed=keepSeed;   // a new program never resets how lifts you've already trained progress
+  CFG.equipmentHave=R.have.slice(); CFG.slotPicks=JSON.parse(JSON.stringify(R.picks));
+  const rr=onbRepRanges(R); if(Object.keys(rr).length) CFG.repRanges={...(CFG.repRanges||{}),...rr};
+  CFG.introSeen=CFG.introSeen||false; saveCfg();
+  if(R.bw) append({type:'bodyweight',bodyweight:R.bw});
+  ONB=null; BUILDER=null; SETTINGS_DRAFT=null; $('#dlg').close();
+  TAB='work'; render();
+  if(!CFG.introSeen) startFirstRun();
+  startSession(todayDay());
 }
 
 /* ---------- Tutorial (spec §4.1) — six short cards, once, reachable from Lifts ---------- */
@@ -19325,6 +19691,7 @@ const lastBackupAt=()=>Math.max(lastExportAt(),lastSyncAt());
 function backupDue(){
   const first=LOG.find(e=>e.type==='set'); if(!first) return null;      // nothing to lose yet
   const last=lastBackupAt(), since=last||new Date(first.ts).getTime(), days=(Date.now()-since)/864e5;
+  if(!last&&LOG.some(e=>e.type==='session_end')) return {last, days:Math.floor(days), first:true};   // backup setup comes after the first session
   return days>=BACKUP_STALE_DAYS?{last, days:Math.floor(days)}:null;
 }
 function backupReminder(){
@@ -19816,7 +20183,7 @@ if(DEMO){ try{ demoPendingRun(); }catch(err){ console.error('demo seed failed',e
 if(session&&session.slots&&session.slots[session.openIdx]) seedDraft(session.slots[session.openIdx]);
 restoreRest(); render(); initUpdates(); demoBar();
 flushFeedback(); try{ window.addEventListener('online',flushFeedback); }catch{}
-if(needsOnboarding()) setTimeout(()=>{ BUILDER=null; openBuilder(false); },250);
+if(needsOnboarding()) setTimeout(()=>{ BUILDER=null; openOnboarding(false); },250);
 requestPersistence();
 </script>
 </body>

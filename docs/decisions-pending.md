@@ -291,3 +291,119 @@ scales). Longer lists use chips; a 5-word segmented control wraps at 390 px.
 
 **To undo:** `min-height:var(--tap)` on `.chip`, `.btn.s` and `.iconbtn`
 makes them visibly 44 px.
+
+---
+
+## D19. "Get fit and toned" is size first, with no strength tests
+
+**Question:** the spec maps "toned" to size-first with general-fitness
+defaults, but doesn't say which defaults.
+
+**Chosen:** the size-first profile with strength tests turned off. Its
+strength blocks stay (heavier weeks are good general training), but none ends
+in a test. The goal screen and the preview say that how lean you look depends
+mostly on eating, which the app doesn't track. It defaults to 3 full-body
+days if the schedule question is skipped.
+
+**To undo:** in index.html, change the `toned` entry in `ONB_GOALS`, or the
+`params` line in `onbResolve`.
+
+---
+
+## D20. Minutes per session are a guide, not a cap
+
+**Question:** what should "minutes per session" change?
+
+**Chosen:** the preview estimates a session's length: 2.5 minutes a set with
+rest, plus 8 minutes of warm-up, both judgement defaults. If that's over your
+time by more than 10 minutes, it says to skip the last exercise on a short
+day. The program itself doesn't trim sessions, because a hidden cap would
+change existing users' programs too.
+
+**To undo / change:** `ONB_MINUTES_PER_SET` and `ONB_WARMUP_MIN` in index.html.
+
+---
+
+## D21. Equipment specifics order the exercises; they never remove one
+
+**Question:** "gym type, then specifics." The engine only knew the gym type.
+
+**Chosen:** the specifics are saved as `CFG.equipmentHave`. An exercise
+whose equipment isn't ticked is picked last, not removed, the same as
+"dumbbells only". Anything you've logged still comes first. It's unset for
+everyone who hasn't been through the new setup, so their programs don't
+change.
+
+**To undo:** delete `haveScore` from `equipmentScore` in index.html.
+
+---
+
+## D22. Build it together: what you choose is saved per slot
+
+**Question:** saving chosen exercises as "saved day edits" would freeze their
+sets and reps, so they'd stop following the blocks.
+
+**Chosen:** a new setting, `CFG.slotPicks` (day, slot, exercise). The
+generator uses your exercise for that slot, and sets, reps and effort still
+follow the block. Rep-range choices apply only to non-main lifts, as
+per-exercise ranges, because main lifts must follow the block (heavier in
+strength blocks).
+
+**To undo:** delete the `picks` lines in `buildDay`. Programs then pick
+exercises as before.
+
+---
+
+## D23. "Set up a new program" for existing users
+
+**Chosen:**
+- **What it does:** runs the same setup, starting from your current answers.
+  Start restarts the program from its first block today.
+- **What it keeps:** every logged set, how each of your lifts progresses
+  (fast or standard, so a lift on standard is never sent back to fast), and
+  any saved day edits.
+- **Where it lives:** a button at the bottom of Lifts, next to "Rebuild with
+  the program builder". That button still rebuilds only the rest of the
+  current program.
+
+**To undo:** remove the "Set up a new program" button in `renderLifts`.
+
+---
+
+## D24. In setup, the condition picker hides red flags and phase plans
+
+**Question:** the condition cards can start a phase plan and record red
+flags. Both write straight away, before you've confirmed anything.
+
+**Chosen:** setup shows the conditions, consent and "leave these out". Red
+flags and phase plans are in Edit program afterwards. Consent itself is
+stored when you agree, as it always has been: it's a statement you made, not
+part of the program.
+
+**To undo:** drop `{setup:true}` from the `conditionPicker` call in
+`drawOnboardingStep`.
+
+---
+
+## D25. Backups come after the first session
+
+**Chosen:** the first session's summary has a "Keep a backup" block, with
+Save a backup or Use a sheet. Until you've made one, the Progress and Lifts
+reminder shows from then on, instead of waiting a week. Setup itself asks
+nothing about backups.
+
+**To undo:** delete the `first:true` line in `backupDue` and the
+"Keep a backup" block in `openSessionSummary`.
+
+---
+
+## D26. Units stay pounds in setup
+
+**Question:** "bodyweight and units."
+
+**Chosen:** pounds, as the alpha already decided. The engine prices in
+pounds, and kilograms isn't carried through every screen yet. Machines
+marked in kilograms can still be switched per exercise on the set card.
+Setup says so.
+
+**To undo:** add a units question once kg is carried through the engine.

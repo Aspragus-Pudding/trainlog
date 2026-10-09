@@ -2908,5 +2908,91 @@ section('66. design system: tokens, type scale, light mode, directions, componen
   console.log('  '+NEED.length+' tokens · 5 type sizes · light mode · log + warm directions · components on tokens · '+names.length+' icons · design.md + 3 mockups, 18 screenshots');
 }
 
+/* ─── 67. v1.64 (H4): onboarding — valid programs, nothing written until confirm, answers kept ─── */
+section('67. onboarding: every answer set builds a valid program; nothing is written until you start');
+{
+  const mkLoad=(events,cfg)=>{ const st={}; if(cfg) st['trainlog.cfg.v1']=JSON.stringify(cfg); if(events&&events.length) st['trainlog.jsonl.v1']=events.map(e=>JSON.stringify(e)).join('\n');
+    const ls={getItem:k=>k in st?st[k]:null,setItem:(k,v)=>{st[k]=String(v);},removeItem:k=>{delete st[k];},key:i=>Object.keys(st)[i]??null,get length(){return Object.keys(st).length;}};
+    const names=['CFG','LOG','EX','exById','sets','generatedDays','needsOnboarding','onbDefaults','onbResolve','onbPlan','onbDays','onbSlotOptions','onbApply','onbSwitch','onbNext','onbBack','openOnboarding','drawOnboarding',
+      'ONB_GOALS','ONB_HISTORY','ONB_GYMS','implementOf','likelyFlaggedFor','isExcluded','splitOf','INJ'];
+    const body=src+'\n;return {'+names.map(n=>n+':(()=>{try{return '+n+'}catch(e){}})()').join(',')+',getONB:()=>ONB,setONB:x=>{ONB=x},getCFG:()=>CFG,getRM:()=>ROADMAP,getLOG:()=>LOG,getSession:()=>session};';
+    const A=new Function('document','window','navigator','localStorage','location','history','setTimeout','setInterval','alert','confirm','fetch','Notification','matchMedia','requestAnimationFrame','console',body)
+      (docWithData(),stub(),stub(),ls,stub(),stub(),()=>0,()=>0,()=>{},()=>true,()=>Promise.resolve({}),stub(),()=>stub(),()=>0,{log(){},warn(){},error(){}});
+    A.store=st; return A; };
+  const A=mkLoad([]);
+  ok(A.needsOnboarding(),'a fresh install gets onboarding','');
+  // every combination of goal × history × days × gym builds a valid program (conditions, emphasis, don't-care and lifts varied alongside)
+  let seed=67; const Rn=()=>{ seed^=seed<<13; seed>>>=0; seed^=seed>>17; seed^=seed<<5; seed>>>=0; return seed/4294967296; };
+  const pick=a=>a[Math.floor(Rn()*a.length)];
+  const CONDS=[[],[],['sh_ant_instability'],['knee_general'],['lbp_general']].map(c=>c.filter(id=>A.INJ.some(e=>e.id===id)));
+  const keepC=A.getCFG(), keepR=A.getRM();
+  let combos=0, bad=[];
+  A.ONB_GOALS.forEach(g=>A.ONB_HISTORY.forEach(([h])=>[2,3,4,5,6].forEach(d=>A.ONB_GYMS.forEach(([gym])=>{
+    const O=A.onbDefaults(false); Object.assign(O.a,{goal:g.k, history:h, days:d, gym, minutes:pick([45,60,75,90]), conds:pick(CONDS), emphasis:Rn()<0.3?[pick(['chest','quads','glutes','side_delts'])]:[],
+      dep:Rn()<0.2?{muscles:['calves'],patterns:[]}:{muscles:[],patterns:[]}, goals:Rn()<0.4?['squat','bench'].slice(0,1+Math.floor(Rn()*2)):[]});
+    if(O.a.conds.length&&Rn()<0.5){ const fl=A.likelyFlaggedFor(O.a.conds); if(fl.length) O.a.excluded=[fl[0].ex.id]; }
+    const {R,plan}=A.onbPlan(O), days=A.onbDays(R,plan); combos++;
+    const tag=[g.k,h,d,gym].join('/');
+    if(!plan.blocks.length||plan.blocks.some(b=>!b.vol||!b.vol.length)) bad.push(tag+': no blocks');
+    if(days.length!==d) bad.push(tag+': '+days.length+' days');
+    days.forEach(dy=>{ if(dy.slots.length<3) bad.push(tag+' '+dy.name+': '+dy.slots.length+' slots');
+      dy.slots.forEach(sl=>{ const ex=A.exById[sl.ex];
+        if(!ex||ex.folded||ex.manualOnly) bad.push(tag+': '+sl.ex+' not generatable');
+        if(R.excluded.includes(sl.ex)&&sl.role!=='primary') bad.push(tag+': excluded '+sl.ex+' picked');
+        if(!(sl.sets>=1)||!(sl.reps[0]<=sl.reps[1])) bad.push(tag+': bad scheme '+JSON.stringify(sl)); }); });
+    if(g.k==='toned'&&plan.blocks.some(b=>b.realize)) bad.push(tag+': toned has a strength test');
+  }))));
+  ok(combos===A.ONB_GOALS.length*A.ONB_HISTORY.length*5*A.ONB_GYMS.length&&bad.length===0,combos+' answer combinations: each builds blocks and a full week of real exercises',bad.slice(0,4).join(' | '));
+  ok(A.getCFG()===keepC&&A.getRM()===keepR&&A.getLOG().length===0,'previewing never leaves the program swapped (globals restored) and writes nothing','');
+  // dumbbells only: what the generator picks is mostly what you have
+  { const O=A.onbDefaults(false); Object.assign(O.a,{goal:'size_first', days:3, gym:'dumbbell'}); const {R,plan}=A.onbPlan(O), days=A.onbDays(R,plan);
+    const all=days.flatMap(d=>d.slots), okIm=all.filter(sl=>['dumbbell','kettlebell','bodyweight','band'].includes(A.implementOf(A.exById[sl.ex])));
+    ok(okIm.length>=all.length*0.8,'dumbbells only: at least 80% of the exercises use what a dumbbell gym has',okIm.length+' of '+all.length); }
+  // the toned goal: size first, no strength tests, said plainly
+  { const O=A.onbDefaults(false); O.a.goal='toned'; const {R,plan}=A.onbPlan(O);
+    ok(R.profile==='size_first'&&R.params.testEvery===0&&plan.blocks.every(b=>!b.realize)&&plan.reasons.every(r=>!/tests every block/.test(r)),'"Get fit and toned" is size first with no strength tests, and the reasons say so',plan.reasons.join(' | ')); }
+  // nothing is written until you start: walk every screen of both paths
+  { const B=mkLoad([]); const before=JSON.stringify(B.store);
+    B.openOnboarding(false); const O=B.getONB();
+    B.onbSwitch('auto'); ['goal','history','schedule','equipment','body','around','priorities','lifts'].forEach(st=>{ O.step=st; B.drawOnboarding(); });
+    Object.assign(O.a,{goal:'even_mix', history:'intermediate', days:4, minutes:75, gym:'barbell', bw:190, goals:['squat','bench','deadlift'], showKnown:true, known:{squat:315}});
+    const snapA=JSON.stringify(O.a);
+    B.onbSwitch('together'); ['split','days','reps','blocks','preview'].forEach(st=>{ O.step=st; B.drawOnboarding(); });
+    O.t.style='ul'; O.t.reps.accessory=[12,20]; O.t.weeks[0]=7;
+    const opts=B.onbSlotOptions(B.onbResolve(O),B.onbPlan(O).plan,'Upper A');
+    ok(opts.length>=4&&opts.every(x=>x.opts.length>=1&&x.chosen===x.opts[0]),'each slot has a suggestion and alternatives, ranked as the generator ranks them',JSON.stringify(opts.map(x=>x.opts.length)));
+    const alt=opts.find(x=>x.opts.length>=2&&x.role!=='primary'); O.t.picks.upper_a={[alt.i]:alt.opts[1]};
+    B.onbSwitch('auto'); O.step='preview'; B.drawOnboarding(); B.onbSwitch('together');
+    ok(JSON.stringify(O.a)===snapA&&O.t.style==='ul'&&O.t.picks.upper_a[alt.i]===alt.opts[1],'switching between the two paths loses no answers','');
+    O.hist=[]; O.step='goal'; B.onbNext(); B.onbNext(); B.onbBack(); B.onbBack();
+    ok(O.step==='goal'&&JSON.stringify(O.a)===snapA,'Back keeps every answer',O.step);
+    ok(JSON.stringify(B.store)===before&&B.getLOG().length===0,'nothing is written to the log or settings before Start first session','');
+    const {R,plan}=B.onbPlan(O), days=B.onbDays(R,plan);
+    ok(days[0].slots[alt.i].ex===alt.opts[1],'a slot you chose shows in the preview',days[0].slots[alt.i].ex+' vs '+alt.opts[1]);
+    ok(plan.blocks[0].weeks===7&&plan.blocks[0].vol.length>=7,'a block length you set is the plan\'s',String(plan.blocks[0].weeks));
+    B.onbApply();
+    const L=B.getLOG(), C=B.getCFG();
+    ok(L.filter(e=>e.type==='program_edit').length===1&&L.some(e=>e.type==='bodyweight'&&e.bodyweight===190)&&L.some(e=>e.type==='e1rm_estimate'&&e.exercise_id==='squat')&&!L.some(e=>e.type==='set'),'Start writes the program edit, your bodyweight and your known number, and no sets',L.map(e=>e.type).join(','));
+    ok(C.onboarded&&JSON.stringify(C.week)===JSON.stringify(['upper','lower','upper','lower'])&&C.goals.join()==='squat,bench,deadlift'&&C.slotPicks.upper_a[alt.i]===alt.opts[1]&&Array.isArray(C.equipmentHave),'and the settings: the week, the main lifts, your slot choices, your equipment','');
+    const gd=B.generatedDays();
+    ok(gd[0].name==='Upper A'&&gd[0].slots[alt.i].ex===alt.opts[1],'the real program uses the exercise you chose',gd[0].slots[alt.i].ex);
+    ok(Object.values(C.repRanges||{}).some(r=>r[0]===12&&r[1]===20),'your isolation rep range is saved per exercise','');
+    ok(B.getSession()&&B.getSession().dayName==='Upper A','and the first session starts','');
+    ok(!B.needsOnboarding(),'onboarding is done once you start',''); }
+  // existing users: never shown it; "Set up a new program" keeps the log and how lifts progress
+  { const hist=[set('squat','x1',225,5,8,9),{type:'session_end',id:'ex1',ts:day(8.9),session_id:'x1',joints:{}},set('squat','x2',230,5,8,5),{type:'session_end',id:'ex2',ts:day(4.9),session_id:'x2',joints:{}}];
+    const E=mkLoad(hist,{onboarded:true,goals:['squat'],week:['full','full','full']});
+    ok(!E.needsOnboarding(),'an existing user never gets onboarding on its own','');
+    const g1=JSON.stringify(E.generatedDays().map(d=>d.slots.map(s=>s.ex+s.sets+s.reps)));
+    ok(E.getCFG().slotPicks===undefined&&E.getCFG().equipmentHave===undefined,'and none of the new settings exist for them, so their program is generated exactly as before','');
+    const seedBefore=JSON.stringify(E.getCFG().rateSeed), setsBefore=E.sets().length;
+    E.openOnboarding(true); const O=E.getONB();
+    ok(O.existing&&O.a.goals.join()==='squat'&&O.a.days===3,'"Set up a new program" starts from your current answers','');
+    O.a.goal='even_mix'; E.onbApply();
+    ok(E.sets().length===setsBefore&&JSON.stringify(E.getCFG().rateSeed)===seedBefore,'a new program keeps every logged set and how your lifts progress','');
+    ok(g1.length>10,'',''); }
+  console.log('  '+combos+' answer sets → valid programs · globals restored · nothing written before Start · paths and Back keep answers · picks reach the program · existing users untouched');
+}
+
 console.log('\n'+checks+' checks, '+failures+' failed');
 if(failures){ console.log('\n'+Object.entries(shown).map(([k,n])=>n+' x '+k).join('\n')); process.exit(1); }

@@ -291,6 +291,14 @@ never swapped out mid-workout.
 - **`PENDING`** holds pre-workout plan edits until the session starts.
 - **Readiness** drives load adjustment (discrete tiers) and warmup length
   (continuous score). Adjustments are downward-only by design.
+- **Onboarding (H4, v1.64).** `openOnboarding()`; `ONB` is the draft (answers
+  `a`, together-choices `t`) — Back and switching paths keep it. `onbPlan()` →
+  the sequencer; `onbWith()` previews with globals swapped in a try/finally;
+  `onbApply()` is the only write (via `applyBuilder`). New settings it sets:
+  `CFG.slotPicks` {dayId:{slot:exId}} (read by `buildDay`) and
+  `CFG.equipmentHave` (read by `equipmentScore`), both inert when unset.
+  Existing users reach it only via "Set up a new program" (keeps the log and
+  `rateSeed`). §67 checks 480 answer sets and that nothing is written early.
 - **Plain language (H2, v1.62).** No band name, score or internal term is
   shown on its own: a status is `statusRow(band, sentence)` — a dot in the
   band's colour and what it does (`jointDoes`, `READY_DOES`). The readiness
