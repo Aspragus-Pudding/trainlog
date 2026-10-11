@@ -147,11 +147,45 @@ icon that does something has a label (`aria-label`); one beside text is
   say so.
 - Statuses say what they do (H2). Errors say your data is safe.
 
+## Screens and sheets (v1.67)
+
+Everything that sits over the app is one of two things, both built the same
+way:
+- **The screen (`#scr`)** is a full-screen flow. Setup is the only one. It
+  has no backdrop and nothing to swipe away; you leave it with "Exit setup".
+- **The sheet (`#dlg`)** is every other popup.
+
+Both follow the same rules:
+- **Sized to the visible viewport.** Each is a column as tall as what's
+  actually visible: `--vvh` and `--vvt` follow `window.visualViewport`,
+  falling back to `100dvh`. Never the vh unit, which is the height *without*
+  the browser toolbars and doesn't shrink for the iPhone keyboard.
+- **One scroller.** There's a header, then the body (`flex:1; min-height:0;
+  overflow-y:auto; overscroll-behavior:contain`), then the footer.
+- **Footer in normal flow.** The footer is never fixed, and its bottom padding
+  clears the home indicator (`max(12px, safe-area bottom)`). The primary
+  action is in the footer, so it's always on screen.
+- **Footers fill themselves.** A sheet's trailing buttons move into its
+  footer automatically.
+- **The keyboard.** The visible viewport shrinks, so the footer rides above
+  the keyboard, and a focused field scrolls into view. Inputs are at least
+  16px, so the iPhone doesn't zoom.
+- **Back.** Each open sheet and each setup step is a history entry. Back
+  closes the sheet or goes back a step, and never leaves the app. A sheet with
+  something typed or set asks before it closes; a read-only one just closes.
+  Tapping outside never closes anything.
+- **Fixed positioning.** Only the screen, the sheet, the tab bar, and the bars
+  and cards tied to them (rest timer, update banner, toast, tour card,
+  definition card) use it. §70 checks this.
+- **Testing.** `tests/mobile.js` runs every setup step and every sheet on
+  iPhone and Pixel profiles in WebKit and Chromium, with a toolbar, both kinds
+  of keyboard and safe areas.
+
 ## Checklist for a screen
 
 1. Every colour comes from a role token, and every size is one of the five.
 2. Every gap and padding is a spacing token.
-3. Tap targets are 44px. The bottom 80px stays clear.
+3. Tap targets are 44px. The bottom 80px stays clear. Anything over the app is the screen or the sheet, never a new fixed element.
 4. There's one primary button.
 5. It works in light and dark, and with a theme code.
 6. Words come from the glossary, and statuses are dot plus sentence.

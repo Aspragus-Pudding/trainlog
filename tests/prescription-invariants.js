@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark','THEMES','lastTimeRows'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark','THEMES','lastTimeRows','navPush','navDrop'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -2969,7 +2969,8 @@ section('67. onboarding: every answer set builds a valid program; nothing is wri
     ok(JSON.stringify(O.a)===snapA&&O.t.style==='ul'&&O.t.picks.upper_a[alt.i]===alt.opts[1],'switching between the two paths loses no answers','');
     O.hist=[]; O.step='goal'; B.onbNext(); B.onbNext(); B.onbBack(); B.onbBack();
     ok(O.step==='goal'&&JSON.stringify(O.a)===snapA,'Back keeps every answer',O.step);
-    ok(JSON.stringify(B.store)===before&&B.getLOG().length===0,'nothing is written to the log or settings before Start first session','');
+    { const cfgNow=JSON.parse(B.store['trainlog.cfg.v1']||'{}'), cfgThen=JSON.parse(JSON.parse(before)['trainlog.cfg.v1']||'{}'); delete cfgNow.onbDraft; delete cfgThen.onbDraft;
+      ok(JSON.stringify(cfgNow)===JSON.stringify(cfgThen)&&B.getLOG().length===0&&Object.keys(B.store).every(k=>k==='trainlog.cfg.v1'||JSON.parse(before)[k]===B.store[k]),'nothing reaches the log before Start first session; settings only gain the setup draft (v1.67)',''); }
     const {R,plan}=B.onbPlan(O), days=B.onbDays(R,plan);
     ok(days[0].slots[alt.i].ex===alt.opts[1],'a slot you chose shows in the preview',days[0].slots[alt.i].ex+' vs '+alt.opts[1]);
     ok(plan.blocks[0].weeks===7&&plan.blocks[0].vol.length>=7,'a block length you set is the plan\'s',String(plan.blocks[0].weeks));
@@ -3075,6 +3076,64 @@ section('69. last time beside each planned set: the session the suggestion is pr
     ok(A.lastTimeRows(sl,3).every(x=>x===null),'no history: no last-time values',''); }
   ok(/'<span class="lastval">last time '\+esc\(typedLabel\(lt\.exercise_id\|\|slot\.ex,lt\.weight\)\)\+' × '\+lt\.reps\+'<\/span>'/.test(src),'the set card shows them faintly on planned rows','');
   console.log('  same place from the priced-from session · today ignored · top set + back-offs · strength upkeep · empty without history');
+}
+
+/* ─── 70. v1.67: one layout primitive, no accidental exits (the mobile-layout fix) ─── */
+section('70. mobile layout: the visible viewport, one primitive, history, setup draft, diagnostics');
+{
+  const css=html.slice(html.indexOf('<style>')+7,html.indexOf('</style>'));
+  // lint: the vh unit is the height WITHOUT the browser toolbars (and iOS doesn't shrink it for the keyboard)
+  const vh=html.match(/\d+(\.\d+)?vh\b/g)||[];
+  ok(vh.length===0,'no vh units anywhere (dvh or the visible-viewport variable instead)',vh.slice(0,5).join(' '));
+  ok(/<meta name="viewport" content="[^"]*viewport-fit=cover[^"]*interactive-widget=resizes-content/.test(html),'the viewport meta has viewport-fit=cover and interactive-widget=resizes-content','');
+  // lint: position:fixed only in the primitive (screen, sheet), the tab bar and the bars and cards tied to them
+  const ALLOWED=['nav','.screen','#dlg[open]','.rest','.upd','.toast','.termtip','.tourspot','.tourcard'];
+  const fixedRules=[...css.matchAll(/([^{}]+)\{[^}]*position:fixed[^}]*\}/g)].map(m=>m[1].trim().split('\n').pop().trim());
+  ok(fixedRules.length>0&&fixedRules.every(sel=>ALLOWED.includes(sel)),'position:fixed only in the primitive, the tab bar and its bars and cards',fixedRules.filter(sel=>!ALLOWED.includes(sel)).join(', '));
+  ok(!/position:\s*fixed/.test(src.replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/[^\n]*/g,'')),'no position:fixed set from script','');
+  // lint: one sheet, one screen; setup is the screen
+  ok((html.match(/<dialog/g)||[]).length===1&&/<dialog id="dlg"><div class="sheet" id="dlgSheet"><div class="sheet-body" id="dlgBody"><\/div><div class="sheet-foot" id="dlgFoot"><\/div><\/div><\/dialog>/.test(html),'one sheet element, with a body and a footer','');
+  ok((src.match(/\.showModal\(/g)||[]).length===2,'showModal only in sheet() and its reopen',String((src.match(/\.showModal\(/g)||[]).length));
+  ok(/<div id="scr" class="screen" hidden[^>]*><div class="screen-head" id="scrHead"><\/div><div class="screen-body" id="scrBody"><\/div><div class="screen-foot" id="scrFoot"><\/div><\/div>/.test(html),'one full-screen element, head / body / foot','');
+  const ds=src.slice(src.indexOf('function drawOnboardingStep('),src.indexOf('function onbApply('));
+  ok(ds.length>1000&&!/\bsheet\(/.test(ds)&&/screenOpen\(\)/.test(ds),'setup draws on the full screen, never in a sheet','');
+  // the primitive: body is the only scroller, footer in normal flow, padded for the home indicator
+  const rule=sel=>{ const m=css.match(new RegExp(sel.replace(/[.#\[\]]/g,'\\$&')+'\\{([^}]*)\\}')); return m?m[1]:''; };
+  ['.sheet-body','.screen-body'].forEach(sel=>ok(/min-height:0/.test(rule(sel))&&/overflow-y:auto/.test(rule(sel))&&/overscroll-behavior:contain/.test(rule(sel)),sel+' scrolls on its own and contains its scroll',''));
+  ['.sheet-foot','.screen-foot'].forEach(sel=>ok(rule(sel)&&!/position:/.test(rule(sel)),sel+' sits in normal flow',''));
+  ok(/max\(var\(--sp-3\),var\(--safe-b\)\)/.test(rule('.screen-foot'))&&/var\(--vvh\)/.test(rule('.screen'))&&/var\(--vvh\)/.test(rule('#dlg[open]')),'screen and sheet are sized to the visible viewport; the footer clears the home indicator','');
+  // lint: inputs at 16px or more (iOS zooms into smaller ones)
+  ok(/input:not\(\[type=checkbox\]\):not\(\[type=radio\]\):not\(\[type=file\]\):not\(\.numin\),select,textarea\{font-size:max\(16px,var\(--fs-3\)\)!important\}/.test(css),'every text input, select and textarea is at least 16px','');
+  const smallInputs=(html.match(/<(input|textarea|select)[^>]*font-size:(var\(--fs-[12]\)|1[0-5](\.\d+)?px)/g)||[]);
+  ok(smallInputs.length===0,'no form control asks for a smaller font',smallInputs.slice(0,2).join(' | '));
+  // functional: footer lifting, history, setup draft and resume, errors, diagnostics (stub DOM)
+  const A=load([],true);
+  ok(typeof A.navPush==='function'&&typeof A.navDrop==='function'&&/addEventListener\('popstate'/.test(src),'back is handled in the app (history entries for sheets and setup steps)','');
+  ok(/navPush\('sheet',sheetBack\)/.test(src)&&/navPush\('onb',onbHistBack\)/.test(src)&&/navPush\('onb-root',onbRootBack\)/.test(src),'every open sheet and every setup step is a history entry','');
+  // setup draft: saved as you go (a setting), resumed after a reload, cleared on Start
+  { const st={}; const ls={getItem:k=>k in st?st[k]:null,setItem:(k,v)=>{st[k]=String(v);},removeItem:k=>{delete st[k];},key:i=>Object.keys(st)[i]??null,get length(){return Object.keys(st).length;}};
+    const names=['CFG','LOG','openOnboarding','openOnboardingResume','onbResumeFrom','drawOnboarding','onbNext','onbApply','needsOnboarding','logError','diagText'];
+    const body=src+'\n;return {'+names.map(n=>n+':(()=>{try{return '+n+'}catch(e){}})()').join(',')+',getONB:()=>ONB,getCFG:()=>CFG,getLOG:()=>LOG};';
+    const mk=()=>new Function('document','window','navigator','localStorage','location','history','setTimeout','setInterval','alert','confirm','fetch','Notification','matchMedia','requestAnimationFrame','console',body)
+      (docWithData(),stub(),stub(),ls,stub(),stub(),()=>0,()=>0,()=>{},()=>true,()=>Promise.resolve({}),stub(),()=>stub(),()=>0,{log(){},warn(){},error(){}});
+    const B=mk(); B.openOnboarding(false); const O=B.getONB(); O.path='auto'; O.a.goal='pure_strength'; O.hist=['welcome']; O.step='goal'; B.onbNext();
+    const d=JSON.parse(st['trainlog.cfg.v1']||'{}').onbDraft;
+    ok(d&&d.step==='history'&&d.a.goal==='pure_strength'&&d.path==='auto'&&B.getLOG().length===0,'setup answers are saved as a draft in settings after every step, and nothing reaches the log',JSON.stringify(d&&{step:d.step,goal:d.a.goal}));
+    const C=mk(); ok(C.needsOnboarding()&&C.getCFG().onbDraft&&C.getCFG().onbDraft.step==='history','after a reload the draft is still there',''); C.openOnboardingResume();
+    ok(C.getONB().step==='resume','reopening offers "Continue setup" or "Start over"',C.getONB().step);
+    C.onbResumeFrom(C.getCFG().onbDraft);
+    ok(C.getONB().step==='history'&&C.getONB().a.goal==='pure_strength'&&C.getONB().hist.length===2,'"Continue setup" returns to the same step with every answer',JSON.stringify({step:C.getONB().step,hist:C.getONB().hist}));
+    C.getONB().step='preview'; C.onbApply();
+    ok(!C.getCFG().onbDraft&&C.getLOG().some(e=>e.type==='program_edit'),'Start first session clears the draft; only then does anything reach the log','');
+    // errors: recorded into the notes log, not sent; one per message an hour, ten a day
+    const L0=C.getLOG().length; C.logError('Boom','x.js:1'); C.logError('Boom','x.js:1');
+    for(let k=0;k<15;k++) C.logError('Other '+k);
+    const errs=C.getLOG().filter(e=>e.type==='note'&&e.tag==='error');
+    ok(errs.length===10&&errs[0].auto===true&&/Boom/.test(errs[0].text)&&errs[0].app_version&&typeof errs[0].screen==='string','errors go into the notes log with the screen, once per message, at most ten a day',String(errs.length));
+    ok(!/logError[^\n]*sendFeedback|sendFeedback\(n\); append\(\{type:'note_sent'/.test(src)||/Send to the developer/.test(src),'an error note leaves the phone only when the tester sends it','');
+    const t=String(C.diagText()); ok(/^Trainlog \d+\.\d+\.\d+/.test(t)&&/Device: /.test(t)&&/Browser: /.test(t)&&/Installed to home screen: /.test(t)&&/Visible: /.test(t)&&/Safe areas: /.test(t),'diagnostics: version, device, browser, home screen, visible size, safe areas',t.split('\n')[0]); }
+  ok(/getElementById\('appVer'\)|querySelector\('#appVer'\)/.test(src)&&/'pointerdown'/.test(src)&&/toggleDiag\(vr\)/.test(src),'diagnostics open on a long press of the version number in Lifts','');
+  console.log('  no vh · viewport meta · fixed only in the primitive · one sheet, one screen · body scrolls, footer in flow · 16px inputs · history · draft + resume · errors in notes · diagnostics');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

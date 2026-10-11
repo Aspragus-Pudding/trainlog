@@ -178,6 +178,17 @@ kind, version, note. A tester's own notes list shows them as "Sent". The
 owner-only *Copy all for Claude Code* button is hidden for testers. The notes
 also stay in the tester's own log, so nothing is lost if the sheet is down.
 
+**Errors the app records (v1.67)** also go into the tester's notes, tagged
+"Error the app recorded", with the screen they happened on. There is at most
+one per message an hour and ten a day. They're never sent on their own. A
+tester sends one with **Send to the developer** on the Notes card, and it then
+arrives like any note. Like every note, they're in the log, so an automatic
+backup to the tester's own sheet includes them.
+
+**Diagnostics:** ask a tester to long-press the version number in Lifts, tap
+Copy and paste it into a note. You get the phone, browser, home screen or not,
+visible size and safe areas.
+
 ## Theme codes
 
 Edit program → *Have a code?* Type one, tap Apply. It only changes the look,

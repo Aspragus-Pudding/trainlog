@@ -36,6 +36,7 @@ tests/prescription-invariants.js   prescription direction/pairing tests, run wit
 tests/backtest.js       replays the engine against a real exported log to measure suggestion accuracy
 tests/prospective.js    engine phase 2 check: were suggestions taken, did they land on target (node tests/prospective.js <export>)
 tests/simulate.js       persona simulator: made-up lifters train through the real app for months (node tests/simulate.js)
+tests/mobile.js         the app on phone-shaped browsers (Playwright, WebKit + Chromium): every setup step and sheet with a toolbar, keyboards, safe areas; back; resume (needs: npm i playwright && npx playwright install webkit chromium)
 docs/calibration-plan.md   phase-2 personal-calibration spec, not yet implemented
 docs/coaching-cues.json    per-exercise coaching cues — the editable source (see below)
 docs/design.md          the design system: tokens, components, icons, copy (Calm; directions in docs/design/)
@@ -120,6 +121,21 @@ global pointing at a half-edited draft, freezing the app. That swap is now
 **Fixed-position overlays can cover buttons.** The rest timer bar sat on top of
 the Log Set button on short screens, which reads as "the app froze". `body.resting`
 adds bottom padding while it's visible.
+
+**The vh unit, fixed footers and the back gesture (fixed structurally in v1.67).**
+The hidden Next button, the clipped edit popup and the tour card breaking on
+scroll were one bug, fixed screen by screen until v1.67:
+- The vh unit is the height without the browser toolbars.
+- iOS doesn't shrink the layout for the keyboard.
+- A modal dialog's own max-height clipped a vh-sized sheet.
+- Android back closed setup, and there was no history to go back through.
+
+Now everything over the app is the screen (`#scr`, setup) or the sheet (`#dlg`),
+sized to the visible viewport (`--vvh` from `visualViewport`), with the body as
+the only scroller and the footer in flow. Back pops history entries
+(`navPush`/`navDrop`). Never use the vh unit, never add a `position:fixed`
+element, never open a second `<dialog>` — §70 fails on each. Desktop headless
+tests can't see any of this; run `node tests/mobile.js`.
 
 **`render()` and `sheet()` are wrapped in try/catch** with a recovery UI. A
 render error used to blank a screen after `innerHTML=''` had already run, leaving
@@ -291,6 +307,14 @@ never swapped out mid-workout.
 - **`PENDING`** holds pre-workout plan edits until the session starts.
 - **Readiness** drives load adjustment (discrete tiers) and warmup length
   (continuous score). Adjustments are downward-only by design.
+- **Layout primitive (v1.67).** `sheet(html)` fills `#dlgBody` and lifts trailing
+  buttons into `#dlgFoot` (`liftFooter`). Setup draws on the screen (`screenOpen`,
+  `#scrHead/#scrBody/#scrFoot`). `syncViewport()` keeps `--vvh/--vvt` current;
+  tests play an iOS keyboard via `window.__vvOverride`. Setup answers save to
+  `CFG.onbDraft` on every redraw (`onbSave`), and boot or the dashboard card resumes
+  them (`openOnboardingResume`). `logError()` records errors as `note` events
+  (tag `error`, `auto`); they're never sent unless a tester taps Send.
+  Diagnostics: a long press on the Lifts version (`diagText`).
 - **Guide (H5, v1.65).** `docs/guide.md` has three parts: `## … {guide:tasks}`,
   `## … {guide:settings}`, then the screen tours (`{tab:…}`, `{screen:settings}`,
   `{tier:1}`). Only screen sections become tours. `guideSearch()` searches

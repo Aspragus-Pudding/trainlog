@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0B0D12" data-default="#0B0D12">
@@ -197,7 +197,31 @@ section{display:none;padding-top:var(--sp-4)} section.on{display:block}
 .mark{position:absolute;top:0;bottom:0;width:1px;background:var(--ink);opacity:.4}
 .volnum{width:52px;text-align:right;font-size:var(--fs-1);color:var(--muted);flex:none}
 
-dialog{border:none;padding:0;background:transparent;max-width:540px;width:calc(100% - 20px);color:var(--ink)}
+/* ── The layout primitive (v1.67, docs/design.md "Screens and sheets") ──
+   Sized to the VISIBLE viewport: --vvh/--vvt follow window.visualViewport (the vh unit
+   is the height without the browser toolbars, and iOS doesn't shrink it for the
+   keyboard). A column: header / body (the only scroller) / footer in normal flow,
+   so the footer's primary action is always on screen. Never the vh unit. */
+:root{--vvh:100dvh;--vvt:0px;--safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+html{touch-action:manipulation}
+html.locked,html.locked body{overflow:hidden}
+#dlg{border:none;padding:0;margin:0;background:transparent;color:var(--ink);max-width:none;max-height:none}
+#dlg[open]{position:fixed;inset:auto;left:0;right:0;top:var(--vvt);width:100%;height:var(--vvh);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:max(var(--sp-2),var(--safe-t)) 10px max(var(--sp-3),var(--safe-b));overflow:hidden}
+.sheet-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:var(--sp-4)}
+.sheet-foot{flex:none;display:flex;flex-direction:column;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4) var(--sp-4);border-top:1px solid var(--line)}
+.sheet-foot:empty{display:none}
+.sheet-foot .bldnav{position:static;margin:0;padding:0;border:0;background:none}
+.screen{position:fixed;left:0;right:0;top:var(--vvt);height:var(--vvh);z-index:58;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);padding-top:var(--safe-t)}
+.screen[hidden]{display:none}
+.screen-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);min-height:var(--tap);padding:var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-4);border-bottom:1px solid var(--line)}
+.screen-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:var(--sp-4) var(--sp-4) var(--sp-5)}
+.screen-body>*{max-width:600px;margin-left:auto;margin-right:auto}
+.screen-foot{flex:none;display:flex;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4) max(var(--sp-3),var(--safe-b));border-top:1px solid var(--line);background:var(--bg)}
+.screen-foot:empty{display:none}
+.screen-foot>*{max-width:600px}
+/* inputs at 16px or more: iOS zooms into anything smaller, and the layout jumps */
+input:not([type=checkbox]):not([type=radio]):not([type=file]):not(.numin),select,textarea{font-size:max(16px,var(--fs-3))!important}
 .tourspot{position:fixed;border-radius:var(--r-btn);pointer-events:none;z-index:2147483000;box-shadow:0 0 0 200vmax var(--backdrop);outline:2px solid var(--accent);outline-offset:2px;transition:top .15s,left .15s,width .15s,height .15s}
 .tourspot.light{box-shadow:0 0 0 200vmax color-mix(in srgb, var(--backdrop) 40%, transparent)}
 .tourcard{position:fixed;left:12px;right:12px;max-width:440px;margin:0 auto;z-index:2147483001;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:var(--sp-3) var(--sp-4);color:var(--ink);box-shadow:0 10px 30px color-mix(in srgb, var(--backdrop) 60%, transparent)}
@@ -208,7 +232,7 @@ dialog:focus,dialog:focus-visible{outline:none}
    is — the review used to push it below the fold, where it read as missing */
 .bldnav{gap:var(--sp-2);position:sticky;bottom:-17px;margin:var(--sp-2) -17px -17px;padding:var(--sp-2) var(--sp-4) var(--sp-4);
   background:var(--card);border-top:1px solid var(--line);z-index:2}
-.sheet{background:var(--surface);border-radius:var(--r-l);padding:var(--sp-4);box-shadow:var(--e-2);max-height:84vh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.sheet{width:100%;max-width:540px;max-height:100%;min-height:0;display:flex;flex-direction:column;background:var(--surface);border-radius:var(--r-l);box-shadow:var(--e-2);overflow:hidden}
 .hdrnote{color:var(--muted);font-size:var(--fs-3);padding:var(--sp-1) var(--sp-2);align-self:center}
 .hdrnote:active{color:var(--ink)}
 .rest{position:fixed;left:0;right:0;bottom:calc(70px + env(safe-area-inset-bottom));z-index:40;
@@ -287,7 +311,8 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:v
     Progress</button>
 </nav>
 
-<dialog id="dlg"><div class="sheet" id="dlgBody"></div></dialog>
+<dialog id="dlg"><div class="sheet" id="dlgSheet"><div class="sheet-body" id="dlgBody"></div><div class="sheet-foot" id="dlgFoot"></div></div></dialog>
+<div id="scr" class="screen" hidden role="dialog" aria-modal="true" aria-label="Setup"><div class="screen-head" id="scrHead"></div><div class="screen-body" id="scrBody"></div><div class="screen-foot" id="scrFoot"></div></div>
 <div class="rest" id="rest">
   <span class="pbar" id="restbar"></span>
   <span class="t" id="restt">0:00</span>
@@ -8638,7 +8663,7 @@ Set Edit program → Energy balance to deficit or surplus. A deficit trims volum
 Lifts → Save backup makes a file you can keep in Files, and a backup sheet saves one automatically after each session. Restoring merges event by event and never deletes anything newer. The app reminds you after your first session, and again whenever a week passes without a backup.
 
 ### Something looks wrong
-Tap the pencil at the top of any screen to leave a note about what broke, what was confusing, or an idea. Every suggestion also has a "Why these numbers" view showing each step behind it, which is the quickest way to see where a number came from.
+Tap the pencil at the top of any screen to leave a note about what broke, what was confusing, or an idea. If something on your phone looks wrong, long-press the version number in Lifts, tap Copy and paste it into the note. Every suggestion also has a "Why these numbers" view showing each step behind it, which is the quickest way to see where a number came from.
 
 ## Every setting {guide:settings}
 
@@ -9097,7 +9122,7 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.66.0","lines":["The set card now shows what you did last time, faintly, beside each set you haven't done yet.","It reads the same session the suggestion is worked out from, so the numbers always line up with the suggestion's reason.","The top set shows last time's top set; the sets after it show last time's sets in the same order."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.67.0","lines":["Setup now fills the screen, and its buttons stay above the keyboard and the browser's toolbar on every phone.","Back (Android back, the iPhone edge swipe, the browser's back) goes to the previous step or closes the popup. It no longer leaves the app.","Your setup answers are kept as you go. If you leave or the app closes, you can carry on where you were.","Something looks wrong on your phone? Long-press the version number in Lifts, tap Copy, and paste it into a note."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9664,7 +9689,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.66.0';
+const APP_VERSION='1.67.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -11228,7 +11253,7 @@ const DAYS=[
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
   profile:null,profileParams:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
-  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{},deprioritised:{muscles:[],patterns:[]},tour:{t1:'off',seen:{}},backupReminderDismissed:null,todayBriefing:null};
+  feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{},deprioritised:{muscles:[],patterns:[]},tour:{t1:'off',seen:{}},backupReminderDismissed:null,todayBriefing:null,onbDraft:null};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
    from the address bar so it isn't left sitting in history. Each writes
@@ -11370,7 +11395,7 @@ const THEMES=[
      warn:'#FFD166','warn-soft':'rgba(255,209,102,.1)',danger:'#FF5A5F',go:'#6BCB77',skip:'#FF5A5F',ok:'#8CD790',
      steel:'#7A5068',pr:'#FF7A59','on-pr':'#2A0F14',bar:'rgba(29,16,39,.94)',backdrop:'rgba(15,5,20,.8)',r:'14px',
      font:'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'},
-   css:`html{background:#3B1A22}body{background:linear-gradient(180deg,#1D1027 0%,#2B1230 45%,#3B1A22 100%);min-height:100vh}
+   css:`html{background:#3B1A22}body{background:linear-gradient(180deg,#1D1027 0%,#2B1230 45%,#3B1A22 100%);min-height:100dvh}
      .card,.ex,.qblock{background:linear-gradient(165deg,#2A1631 0%,#35182C 60%,#3E1E26 100%)}
      .sheet{background:linear-gradient(170deg,#2A1631 0%,#3A1A2A 100%)}`},
   {code:'HIGHVIS', name:'High visibility', blurb:'Maximum contrast, larger text. The accessibility option.',
@@ -12795,7 +12820,7 @@ function render(){
   const keepY=(LAST_RENDER_TAB===TAB&&TAB!=='work')?window.scrollY:null;
   try{ renderInner(); }
   catch(err){
-    console.error('render failed', err);
+    console.error('render failed', err); logError('Screen failed: '+(err&&err.message||err),'render');
     const v=$('#v-'+TAB); if(v) v.innerHTML=`
       <div class="card pad" style="text-align:center">
         <div style="font-weight:650;margin-bottom:var(--sp-2)">Something went wrong on this screen</div>
@@ -12998,6 +13023,8 @@ function renderDash(){
   const v=$('#v-dash'); v.innerHTML='';
   autoApplyInterventions();
   { const wn=whatsNewCard(); if(wn) v.appendChild(wn); }
+  if(CFG.onbDraft&&!ONB){ const c=el('div','card pad'); c.innerHTML='<div style="font-weight:650">'+(CFG.onbDraft.existing?'Finish your new program':'Finish setting up')+'</div><div class="muted sm" style="margin-top:var(--sp-1)">Your answers so far are kept.</div>';
+    const b=el('button','btn pri','Continue setup'); b.style.marginTop='var(--sp-3)'; b.onclick=openOnboardingResume; c.appendChild(b); v.appendChild(c); }
   if(todayBriefing()){ const rc=readinessCard(); if(rc) v.appendChild(rc); }
   v.appendChild(proposalCards());
   activeRehabPlans().forEach(({e,plan})=>v.appendChild(rehabPlanCard(e,plan,true)));
@@ -13806,7 +13833,7 @@ function openLibrary(){
       <input type="text" id="lq" value="${esc(q)}" placeholder="Search name or movement pattern"
        style="width:100%;background:var(--card-2);border:none;border-radius:var(--r-s);color:var(--ink);padding:var(--sp-3);font:inherit;margin-bottom:var(--sp-2)">
       <div class="chips" id="lf" style="margin-bottom:var(--sp-3)"></div>
-      <div id="ll" style="max-height:46vh;overflow-y:auto"></div>
+      <div id="ll" style="max-height:calc(var(--vvh) * .46);overflow-y:auto;overscroll-behavior:contain"></div>
       <button class="btn pri wide" id="lnew" style="margin-top:var(--sp-3)">Add a custom exercise</button>
       <button class="btn ghost wide" id="lc" style="margin-top:var(--sp-2)">Close</button>`);
     $('#lq').oninput=e=>{ q=e.target.value; draw(); setTimeout(()=>{const n=$('#lq'); if(n) n.focus();},0); };
@@ -14707,7 +14734,7 @@ function exPicker(title, filterFn, onPick, opts){
       <div class="chips" id="excat" style="margin-bottom:var(--sp-2)"></div>
       <input type="text" id="exq" value="${esc(q)}" placeholder="Search by name or pattern"
        style="width:100%;background:var(--card-2);border:none;border-radius:var(--r-s);color:var(--ink);padding:var(--sp-3);font:inherit;margin-bottom:var(--sp-2)">
-      <div class="stack" id="exl" style="max-height:40vh;overflow-y:auto"></div>
+      <div class="stack" id="exl" style="max-height:calc(var(--vvh) * .4);overflow-y:auto;overscroll-behavior:contain"></div>
       <button class="btn ghost wide" id="exnew" style="margin-top:var(--sp-2)">Create a new exercise</button>
       <button class="btn ghost wide" id="exc" style="margin-top:var(--sp-2)">Cancel</button>`);
     const inp=$('#exq'); inp.oninput=e=>{ q=e.target.value; draw(); setTimeout(()=>{const n=$('#exq'); if(n){n.focus();}},0); };
@@ -17924,7 +17951,11 @@ function renderLifts(){
   lg.appendChild(el('div','row between sm',`<span class="muted">Sessions</span><span>${LOG.filter(e=>e.type==='session_end').length}</span>`));
   const stat=el('div','row between sm',`<span class="muted">Storage</span><span class="dim" id="stg">checking…</span>`);
   lg.appendChild(stat);
-  lg.appendChild(el('div','row between sm',`<span class="muted">Version</span><span class="dim">${APP_VERSION}</span>`));
+  { const vr=el('div','row between sm',`<span class="muted">Version</span><span class="dim" id="appVer" style="user-select:none;-webkit-user-select:none;-webkit-touch-callout:none">${APP_VERSION}</span>`); lg.appendChild(vr);
+    // long-press the number for diagnostics a tester can paste into a note
+    const vEl=vr.querySelector('#appVer'); let lp=null; const stop=()=>{ if(lp){ clearTimeout(lp); lp=null; } };
+    if(vEl&&typeof vEl.addEventListener==='function'){ vEl.addEventListener('pointerdown',()=>{ stop(); lp=setTimeout(()=>{ lp=null; toggleDiag(vr); },600); });
+      ['pointerup','pointerleave','pointercancel'].forEach(k=>vEl.addEventListener(k,stop)); vEl.addEventListener('contextmenu',e=>e.preventDefault()); } }
   const hw=el('button','btn ghost wide','How this works'); hw.dataset.tour='help'; hw.style.marginTop='var(--sp-2)'; hw.onclick=openGuide; lg.appendChild(hw);
 
   const due=backupDue();
@@ -18328,13 +18359,18 @@ function renderHist(){
       const r=el('div',''); r.style.cssText='padding:var(--sp-2) 0;border-top:1px solid var(--line)';
       r.innerHTML=`<div class="row between">
           <span class="grow"><div class="sm">${esc(n.text)}</div>
-            <div class="dim tiny" style="margin-top:2px">${esc(t?t.label:n.tag)} · ${
+            <div class="dim tiny" style="margin-top:2px">${esc(t?t.label:n.tag==='error'?'Error the app recorded':n.tag)} · ${
               new Date(n.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}${
               n.app_version?' · v'+n.app_version:''}${n.screen?' · '+esc(n.screen):''}</div></span></div>`;
       // Done is the owner's triage. A tester's notes went to the owner, so
       // they just see that it's been sent (or saved, if sending is off).
-      if(isTester()){
-        r.appendChild(el('span','sbadge',(CFG.feedbackUrl||'').trim()?'Sent':'Saved')).style.cssText='display:inline-block;margin-top:var(--sp-2);margin-left:0';
+      if(isTester()&&n.auto&&(CFG.feedbackUrl||'').trim()&&!DEMO&&!LOG.some(e=>e.type==='note_sent'&&e.target_id===n.id)){
+        // an error the app recorded goes nowhere until you send it
+        const sd=el('button','btn s','Send to the developer'); sd.style.marginTop='var(--sp-2)';
+        sd.onclick=()=>{ sendFeedback(n); append({type:'note_sent',target_id:n.id}); render(); toast('Sent'); };
+        r.appendChild(sd);
+      }else if(isTester()){
+        r.appendChild(el('span','sbadge',(CFG.feedbackUrl||'').trim()&&!(n.auto&&!LOG.some(e=>e.type==='note_sent'&&e.target_id===n.id))?'Sent':'Saved')).style.cssText='display:inline-block;margin-top:var(--sp-2);margin-left:0';
       }else{
         const done=el('button','btn s','Done'); done.style.marginTop='var(--sp-2)';
         done.onclick=()=>{ append({type:'note_resolved',target_id:n.id}); render(); toast('Marked done'); };
@@ -18354,7 +18390,7 @@ function renderHist(){
       try{ await navigator.clipboard.writeText(r.text); toast(`${r.count} notes copied`); }
       catch{
         sheet(`<h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-2)">Copy this</h2>
-          <textarea readonly rows="14" style="width:100%;background:var(--card-2);border:none;border-radius:var(--r-s);color:var(--ink);padding:var(--sp-3);font:inherit;font-size:var(--fs-1)">${esc(r.text)}</textarea>
+          <textarea readonly rows="14" style="width:100%;background:var(--card-2);border:none;border-radius:var(--r-s);color:var(--ink);padding:var(--sp-3);font:inherit;font-size:var(--fs-3)">${esc(r.text)}</textarea>
           <button class="btn ghost wide" id="cpc" style="margin-top:var(--sp-2)">Close</button>`);
         $('#cpc').onclick=()=>$('#dlg').close();
       }
@@ -18956,12 +18992,35 @@ function onbReasons(R, plan, days){
     body:R.bw?'Used for pull-ups, dips and similar. The check-in asks again from time to time.':'Pull-ups and dips ask for it when you first do them.'
   };
 }
+/* Setup is a full screen, not a sheet (v1.67): no backdrop, no swipe away. Each
+   step is a history entry, so back goes to the previous step; leaving needs
+   "Exit setup". Answers are kept as a draft in CFG.onbDraft after every change
+   (a setting, never the log) and reopening the app offers to continue. */
 function openOnboarding(existing){
   ONB=onbDefaults(existing);
   if(existing) ONB.step='path';
-  drawOnboarding();
+  onbEnter();
 }
-const onbGo=(step,noPush)=>{ if(!noPush) ONB.hist.push(ONB.step); ONB.step=step; drawOnboarding(); };
+function onbEnter(){ navPush('onb-root',onbRootBack); for(let k=0;k<ONB.hist.length;k++) navPush('onb',onbHistBack); screenOpen(); drawOnboarding(); }
+/* Continue a saved draft, or start over. */
+function openOnboardingResume(){
+  const d=CFG.onbDraft; if(!d){ openOnboarding(false); return; }
+  ONB=onbDefaults(!!d.existing); ONB.step='resume'; ONB._draft=d;
+  navPush('onb-root',onbRootBack); screenOpen(); drawOnboarding();
+}
+function onbResumeFrom(d){ ONB=onbDefaults(!!d.existing); Object.assign(ONB,{path:d.path||null, step:d.step||'welcome', hist:(d.hist||[]).slice(), ret:!!d.ret});
+  ONB.a={...ONB.a,...(d.a||{})}; ONB.t={...ONB.t,...(d.t||{})}; for(let k=0;k<ONB.hist.length;k++) navPush('onb',onbHistBack); drawOnboarding(); }
+function onbSave(){ try{ if(!ONB||ONB.step==='resume') return; CFG.onbDraft={v:1, at:new Date().toISOString(), existing:ONB.existing, path:ONB.path, step:ONB.step, hist:ONB.hist.slice(), ret:!!ONB.ret, a:ONB.a, t:ONB.t}; saveCfg(); }catch(e){} }
+const onbGo=(step,noPush)=>{ if(!noPush){ ONB.hist.push(ONB.step); navPush('onb',onbHistBack); } ONB.step=step; drawOnboarding(); };
+function onbHistBack(){ if(!ONB) return; if(ONB.hist.length){ ONB.step=ONB.hist.pop(); drawOnboarding(); } }
+function onbRootBack(){ if(!ONB) return; if(!confirm(ONB_EXIT_ASK)){ navPush('onb-root',onbRootBack); return; } onbExit(true); }
+const ONB_EXIT_ASK='Leave setup? Your answers are kept, and you can carry on from the dashboard.';
+function onbExitAsk(){ if(confirm(ONB_EXIT_ASK)) onbExit(false); }
+function onbExit(fromBack){ onbSave(); ONB=null; if(!fromBack) navDrop('onb-root'); else { for(let k=NAV.length-1;k>=0;k--) if(NAV[k].kind==='onb'||NAV[k].kind==='onb-root') NAV.splice(k,1); }
+  try{ if($('#dlg').open) $('#dlg').close(); }catch(e){} screenClose(); TAB='dash'; render(); }
+/* The full screen. */
+function screenOpen(){ const el2=$('#scr'); if(el2.hidden!==false){ el2.hidden=false; } lockScroll(); }
+function screenClose(){ const el2=$('#scr'); el2.hidden=true; ['#scrHead','#scrBody','#scrFoot'].forEach(q=>{ $(q).innerHTML=''; }); lockScroll(); }
 function onbNext(){
   const O=ONB;
   if(O.ret&&(ONB_Q.includes(O.step)||ONB_T.includes(O.step))){ O.ret=false; return onbGo('preview'); }
@@ -18972,13 +19031,14 @@ function onbNext(){
   if(ti>=0&&ti<ONB_T.length-1) return onbGo(ONB_T[ti+1]);
   return onbGo('preview');
 }
-function onbBack(){ const O=ONB; if(!O.hist.length){ if(O.existing){ ONB=null; $('#dlg').close(); } return; } O.step=O.hist.pop(); drawOnboarding(); }
+function onbBack(){ const O=ONB; if(!O.hist.length){ onbExitAsk(); return; } O.step=O.hist.pop(); navDrop('onb'); drawOnboarding(); }
 function onbSwitch(path){ ONB.path=path; }   // answers live in ONB.a / ONB.t, so switching loses none
 function drawOnboarding(){
-  try{ return drawOnboardingStep(); }
+  try{ if($('#dlg').open===true) $('#dlg').close(); }catch(e){}   // a picker opened from setup closes when setup redraws
+  try{ const r=drawOnboardingStep(); onbSave(); return r; }
   catch(err){
     console.error('onboarding failed', err);
-    sheet('<h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-2)">This step hit a problem</h2><div class="muted sm" style="margin-bottom:var(--sp-2)">Nothing was saved, and your answers are kept.</div><div class="dim tiny" style="margin-bottom:var(--sp-3)">'+esc(String(err&&err.message||err))+'</div><div class="row" style="gap:var(--sp-2)"><button class="btn ghost grow" id="obfb">Back a step</button><button class="btn pri grow" id="obfp">Show the plan</button></div>');
+    screenOpen(); $('#scrFoot').innerHTML=''; $('#scrHead').innerHTML=''; $('#scrBody').innerHTML=('<h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-2)">This step hit a problem</h2><div class="muted sm" style="margin-bottom:var(--sp-2)">Nothing was saved, and your answers are kept.</div><div class="dim tiny" style="margin-bottom:var(--sp-3)">'+esc(String(err&&err.message||err))+'</div><div class="row" style="gap:var(--sp-2)"><button class="btn ghost grow" id="obfb">Back a step</button><button class="btn pri grow" id="obfp">Show the plan</button></div>');
     $('#obfb').onclick=()=>onbBack(); $('#obfp').onclick=()=>{ ONB.step='preview'; drawOnboarding(); };
   }
 }
@@ -18998,10 +19058,19 @@ function drawOnboardingStep(){
     split:'A suggestion for '+(a.days||3)+' days, with the trade-offs.', days:'Each slot has a suggestion and two alternatives. Tap to choose, or pick anything.',
     reps:'Main lifts follow the block. Choose ranges for the rest, or keep the defaults.', blocks:'The order of your training blocks. Change any length.',
     preview:'Built from your answers. Nothing is saved until you start.'};
-  const head=(qi>=0?'<div class="dim tiny" style="margin-bottom:var(--sp-2)">Question '+(qi+1)+' of '+ONB_Q.length+'</div>':ti>=0?'<div class="dim tiny" style="margin-bottom:var(--sp-2)">Build it together · step '+(ti+1)+' of '+ONB_T.length+'</div>':'')
-    +'<h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-1)">'+esc(T[step])+'</h2><div class="muted sm" style="margin-bottom:var(--sp-4)">'+esc(SUB[step]||'')+'</div>';
-  sheet(head+'<div id="onb"></div><div class="row bldnav" id="onbnav"></div>');
-  const host=$('#onb'), nav=$('#onbnav');
+  const prog=qi>=0?'Question '+(qi+1)+' of '+ONB_Q.length:ti>=0?'Build it together · step '+(ti+1)+' of '+ONB_T.length:(O.existing?'New program':'Setup');
+  screenOpen();
+  $('#scrHead').innerHTML='<span class="dim tiny">'+esc(prog)+'</span>';
+  const ex=el('button','btn quiet s','Exit setup'); ex.onclick=onbExitAsk; $('#scrHead').appendChild(ex);
+  const body=$('#scrBody'), newStep=O._shown!==step; O._shown=step;
+  body.innerHTML='<h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-1)">'+esc(T[step]||'Continue setup')+'</h2><div class="muted sm" style="margin-bottom:var(--sp-4)">'+esc(SUB[step]||'')+'</div><div id="onb"></div>';
+  if(newStep) body.scrollTop=0;
+  const host=$('#onb'), nav=$('#scrFoot'); nav.innerHTML=''; nav.style.display='';
+  if(step==='resume'){ const d=O._draft||{};
+    host.appendChild(el('div','qblock','<div class="sm">You started setting up'+(d.at?' on '+esc(new Date(d.at).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})):'')+'. Your answers so far are kept.</div>'));
+    const st=el('button','btn ghost grow','Start over'); st.onclick=()=>{ if(!confirm('Start setup again from the beginning? Your answers so far are cleared.')) return; CFG.onbDraft=null; saveCfg(); const ex2=!!d.existing; ONB=onbDefaults(ex2); if(ex2) ONB.step='path'; drawOnboarding(); };
+    const go=el('button','btn pri grow','Continue setup'); go.onclick=()=>onbResumeFrom(d);
+    nav.append(st,go); return; }
   const navBtn=(label,cls,fn)=>{ const b=el('button','btn '+cls+' grow',esc(label)); b.onclick=fn; nav.appendChild(b); return b; };
   const card=(on,title,sub,fn,badge)=>{ const b=el('button','qblock'); b.style.cssText='display:block;width:100%;text-align:left;'+(on?'outline:2px solid var(--accent);':'');
     b.innerHTML='<div class="row between"><span style="font-weight:650">'+esc(title)+'</span>'+(badge?'<span class="tiny" style="color:var(--accent);font-weight:650">'+esc(badge)+'</span>':'')+'</div>'+(sub?'<div class="muted sm" style="margin-top:2px">'+esc(sub)+'</div>':'');
@@ -19015,7 +19084,7 @@ function drawOnboardingStep(){
     card(O.path==='auto','Build it for me','Answer eight quick questions. The app builds the program and shows you why for each part.',()=>{ onbSwitch('auto'); onbGo('goal'); },'Recommended');
     card(O.path==='together','Build it together','The same questions, then choose your split, exercises, rep ranges and blocks, with a suggestion at every step.',()=>{ onbSwitch('together'); onbGo('goal'); });
     if(!O.existing) card(false,'Restore from a backup','From a backup file, or from your sheet.',()=>onbGo('restore'));
-    if(O.existing) navBtn('Cancel','ghost',()=>{ ONB=null; $('#dlg').close(); }); else nav.style.display='none';
+    if(O.existing) navBtn('Cancel','ghost',onbExitAsk); else nav.style.display='none';
     return;
   }
   if(step==='restore'){
@@ -19158,7 +19227,7 @@ function onbApply(){
   const rr=onbRepRanges(R); if(Object.keys(rr).length) CFG.repRanges={...(CFG.repRanges||{}),...rr};
   CFG.introSeen=CFG.introSeen||false; saveCfg();
   if(R.bw) append({type:'bodyweight',bodyweight:R.bw});
-  ONB=null; BUILDER=null; SETTINGS_DRAFT=null; $('#dlg').close();
+  ONB=null; BUILDER=null; SETTINGS_DRAFT=null; CFG.onbDraft=null; saveCfg(); navDrop('onb-root'); screenClose();
   TAB='work'; render();
   if(!CFG.introSeen) startFirstRun();
   startSession(todayDay());
@@ -19245,7 +19314,7 @@ function termShow(t){
   c.innerHTML='<div class="termname">'+esc(g.name)+'</div><p>'+esc(g.means)+'</p>'+(g.also&&g.also!=='none'?'<div class="dim tiny">Also called: '+esc(g.also)+'</div>':'');
   (t.closest('dialog[open]')||document.body).appendChild(c);
   const r=t.getBoundingClientRect(), h=c.offsetHeight;
-  c.style.top=(r.bottom+8+h<=innerHeight-8?r.bottom+8:Math.max(8,r.top-8-h))+'px';
+  const V=vvRect(), bot=V.t+V.h; c.style.top=(r.bottom+8+h<=bot-8?r.bottom+8:Math.max(V.t+8,r.top-8-h))+'px';
 }
 document.addEventListener('click',e=>{
   const t=e.target&&e.target.closest&&e.target.closest('.term');
@@ -19260,7 +19329,7 @@ function tourEl(sel){
   if(!sel) return null;
   try{ return [...document.querySelectorAll(sel)].find(e=>{ const r=e.getBoundingClientRect(); return r.width>0&&r.height>0&&!e.closest('dialog:not([open])'); })||null; }catch{ return null; }
 }
-const tourInView=e=>{ const r=e.getBoundingClientRect(); return r.bottom>40&&r.top<innerHeight-40; };
+const tourInView=e=>{ const r=e.getBoundingClientRect(), V=vvRect(); return r.bottom>V.t+40&&r.top<V.t+V.h-40; };
 /* Elements a hint must never sit on: Log set, the steppers, the rest bar. */
 const TOUR_PROTECT='[data-tour="logset"],[data-tour="weight"],[data-tour="rpe"],.stepgrid,#rest.on';
 function tourLayerFor(target){ const d=$('#dlg'); return d&&d.open&&d.contains(target)?d:document.body; }
@@ -19293,10 +19362,10 @@ function tourPlace(){
   const t=TOUR.target; if(!t||!document.contains(t)){ tourEnd(); return; }
   const r=t.getBoundingClientRect(), pad=5, spot=L.querySelector('.tourspot'), card=L.querySelector('.tourcard');
   Object.assign(spot.style,{top:(r.top-pad)+'px',left:(r.left-pad)+'px',width:(r.width+pad*2)+'px',height:(r.height+pad*2)+'px'});
-  const ch=card.offsetHeight, H=innerHeight, gap=10;
+  const V=vvRect(), ch=card.offsetHeight, H=V.t+V.h, gap=10;
   const avoid=[r,...[...document.querySelectorAll(TOUR_PROTECT)].filter(e=>e!==t&&!t.contains(e)).map(e=>e.getBoundingClientRect())];
   const clash=top=>avoid.some(a=>top<a.bottom+4&&top+ch>a.top-4);
-  const cands=[r.bottom+gap, r.top-gap-ch, 12, H-ch-12].filter(y=>y>=8&&y+ch<=H-8);
+  const cands=[r.bottom+gap, r.top-gap-ch, V.t+12, H-ch-12].filter(y=>y>=V.t+8&&y+ch<=H-8);
   const top=cands.find(y=>!clash(y))??cands[0]??12;
   card.style.top=top+'px';
 }
@@ -19669,7 +19738,7 @@ function openSettings(){
     sy.innerHTML=`<div class="qlab">Automatic backup</div>
       <div class="field">Paste the Google Apps Script URL from the setup guide. Every finished session then writes your whole log to that sheet.</div>
       <input type="text" id="syncu" value="${esc(S.syncUrl)}" placeholder="https://script.google.com/macros/s/..."
-        style="width:100%;background:var(--card-2);border:none;border-radius:var(--r-s);color:var(--ink);padding:var(--sp-3);font:inherit;font-size:var(--fs-2)">
+        style="width:100%;background:var(--card-2);border:none;border-radius:var(--r-s);color:var(--ink);padding:var(--sp-3);font:inherit;font-size:var(--fs-3)">
       <div class="anchor">Leave blank to back up manually instead.</div>`;
     host.appendChild(sy);
     $('#syncu').onchange=e=>{ const v=e.target.value.trim();
@@ -19679,7 +19748,7 @@ function openSettings(){
       const sl=el('div','qblock');sl.dataset.tour='set-setuplink';
       sl.innerHTML=`<div class="qlab">Setup link</div>
         <div class="field">Got a setup link from whoever gave you this app? Paste it here. On iPhone the home-screen app doesn't share Safari's storage, so a link opened in Safari doesn't reach it.</div>
-        <input type="text" id="slink" placeholder="https://…?feedback=…" style="width:100%;background:var(--card-2);border:none;border-radius:var(--r-s);color:var(--ink);padding:var(--sp-3);font:inherit;font-size:var(--fs-2)">`;
+        <input type="text" id="slink" placeholder="https://…?feedback=…" style="width:100%;background:var(--card-2);border:none;border-radius:var(--r-s);color:var(--ink);padding:var(--sp-3);font:inherit;font-size:var(--fs-3)">`;
       const ab=el('button','btn s','Apply'); ab.style.marginTop='var(--sp-2)';
       ab.onclick=()=>{ const raw=($('#slink').value||'').trim(); if(!raw) return;
         let qs=''; try{ qs=new URL(raw).search; }catch{ qs=raw.includes('?')?raw.slice(raw.indexOf('?')):''; }
@@ -20035,6 +20104,7 @@ function finishImport(res){
     mergeCustom(); applyBarOverrides(); applyStepOverrides();
     saveCfg();
   }
+  if(ONB&&!needsOnboarding()){ CFG.onbDraft=null; saveCfg(); ONB=null; navDrop('onb-root'); screenClose(); }
   render();
   alert((res.added?`Restored ${res.added} new event${res.added>1?'s':''}.`:'Nothing new in that backup — your log already had everything in it.')
     +(res.skipped?` ${res.skipped} line${res.skipped>1?'s':''} couldn't be read and ${res.skipped>1?'were':'was'} skipped.`:''));
@@ -20109,14 +20179,59 @@ function initUpdates(){
   });
 }
 
+/* ---------- The layout primitive (v1.67) ----------
+   One way to put something over the app: setup is a full screen (#scr), every
+   other popup is the sheet (#dlg). Both are columns sized to the VISIBLE viewport
+   (--vvh/--vvt from window.visualViewport), with the body as the only scroller
+   and the footer in normal flow, so the primary action is always on screen —
+   under browser toolbars and above the keyboard. docs/design.md has the rules;
+   §70 fails on the vh unit, on position:fixed outside the primitive, and on inputs
+   under 16px. window.__vvOverride lets the tests play an iOS keyboard. */
+function vvRect(){ const vv=window.__vvOverride||window.visualViewport; return {h:vv&&vv.height?vv.height:innerHeight, t:vv&&vv.offsetTop?vv.offsetTop:0}; }
+function syncViewport(){ try{ const r=vvRect(), st=document.documentElement.style; st.setProperty('--vvh',Math.round(r.h)+'px'); st.setProperty('--vvt',Math.round(r.t)+'px'); }catch(e){} }
+try{ if(window.visualViewport){ visualViewport.addEventListener('resize',syncViewport); visualViewport.addEventListener('scroll',syncViewport); }
+  window.addEventListener('resize',syncViewport); window.addEventListener('orientationchange',()=>setTimeout(syncViewport,300)); syncViewport(); }catch(e){}
+// a focused field scrolls into the visible part of its sheet or screen once the keyboard is up
+document.addEventListener('focusin',e=>{ const t=e.target; if(!t||typeof t.matches!=='function'||t.matches('input,textarea,select')!==true) return;
+  if(t.closest('.sheet-body,.screen-body')) setTimeout(()=>{ try{ t.scrollIntoView({block:'center'}); }catch(err){} },300); });
+const lockScroll=()=>{ try{ document.documentElement.classList.toggle('locked', $('#dlg').open===true||$('#scr').hidden===false); }catch(e){} };
+/* Back stays in the app: each open sheet and each setup step is a history entry.
+   The browser's back, Android back and the iOS edge-swipe pop it; closing from a
+   button consumes it silently. */
+const NAV=[]; let NAV_SKIP=0;
+function navPush(kind,onBack){ NAV.push({kind,onBack}); try{ history.pushState({tl:NAV.length},''); }catch(e){} }
+function navDrop(kind){ let i=-1; for(let k=NAV.length-1;k>=0;k--) if(NAV[k].kind===kind){ i=k; break; }
+  if(i<0) return; const n=NAV.length-i; NAV.splice(i); NAV_SKIP++; try{ history.go(-n); }catch(e){ NAV_SKIP--; } }
+window.addEventListener('popstate',()=>{ if(NAV_SKIP>0){ NAV_SKIP--; return; } const top=NAV.pop(); if(top) top.onBack(); });
+/* A sheet with something to type or set asks before closing; a read-only one just closes. */
+const dlgHasInput=()=>{ try{ return !!document.querySelector('#dlgSheet input:not([type=checkbox]):not([type=search]):not([type=file]):not([readonly]),#dlgSheet textarea:not([readonly]),#dlgSheet select,#dlgSheet .step'); }catch(e){ return false; } };
+const DLG_ASK='Close this without saving? Anything you already saved is kept.';
+let SHEET_BACK=false, SHEET_REOPEN=false;
+function sheetBack(){
+  const d=$('#dlg'); if(!d.open) return;
+  if(dlgHasInput()&&!confirm(DLG_ASK)){ navPush('sheet',sheetBack); return; }
+  SHEET_BACK=true; d.close();
+}
+/* Trailing buttons and button rows move to the footer — moved, not copied, so
+   handlers attached after sheet() still find them by id. */
+function liftFooter(){
+  const body=document.getElementById('dlgBody'), foot=document.getElementById('dlgFoot'); if(!body||!foot) return;
+  const isAct=n=>!!n&&n.nodeType===1&&typeof n.matches==='function'&&(n.matches('[data-foot],.bldnav')===true
+    ||(n.matches('button.btn')===true&&n.matches('.warmtog')!==true)
+    ||(n.matches('.row')===true&&n.children.length>0&&[...n.children].every(c=>c.matches('button.btn')===true)));
+  const trail=[]; for(let n=body.lastElementChild; isAct(n); n=n.previousElementSibling) trail.unshift(n);
+  trail.forEach(n=>foot.appendChild(n));
+}
 function sheet(html){
   try{
     if(TOUR) tourEnd();
-    $('#dlgBody').innerHTML=html;
-    const d=$('#dlg'); if(!d.open) d.showModal();
+    $('#dlgBody').innerHTML=html; $('#dlgFoot').innerHTML='';
+    liftFooter(); setTimeout(liftFooter,0);
+    const d=$('#dlg'); if(!d.open){ d.showModal(); navPush('sheet',sheetBack); lockScroll(); }
     setTimeout(tourTick,120);
   }catch(err){
-    console.error('sheet failed', err);
+    console.error('sheet failed', err); logError('Popup failed: '+(err&&err.message||err),'sheet');
+    try{ $('#dlgFoot').innerHTML=''; }catch(e){}
     $('#dlgBody').innerHTML=`<div style="text-align:center;padding:var(--sp-2)">
       <div style="font-weight:650;margin-bottom:var(--sp-2)">This popup hit a problem</div>
       <button class="btn pri wide" id="dlgRecover">Close</button></div>`;
@@ -20124,6 +20239,48 @@ function sheet(html){
     if(rb) rb.onclick=()=>{ try{$('#dlg').close();}catch{} };
   }
 }
+/* ---------- What a tester can send when something looks wrong (v1.67) ----------
+   Diagnostics: long-press the version number in Lifts. Read on demand, never
+   stored. Errors: recorded into the notes log with the screen they happened on,
+   at most one per distinct message an hour and ten a day. Nothing here sends
+   anything — an error note leaves the phone only if the tester sends it from
+   the Notes card, like any note. */
+function copyText(text, done){
+  const fallback=()=>sheet('<h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-2)">Copy this</h2><textarea readonly rows="10" style="width:100%;background:var(--card-2);border:none;border-radius:var(--r-s);color:var(--ink);padding:var(--sp-3);font:inherit">'+esc(text)+'</textarea><button class="btn ghost wide" id="cpx">Close</button>');
+  const fallback2=()=>{ fallback(); const b=document.getElementById('cpx'); if(b) b.onclick=()=>$('#dlg').close(); };
+  try{ navigator.clipboard.writeText(text).then(()=>toast(done||'Copied'),fallback2); }catch(e){ fallback2(); }
+}
+function diagText(){
+  const ua=String(navigator.userAgent||''), m=re=>(ua.match(re)||[])[1]||'', V=vvRect();
+  const device=/iPhone|iPod/.test(ua)?'iPhone, iOS '+m(/OS (\d+[_\d]*)/).replace(/_/g,'.'):/iPad/.test(ua)?'iPad, iOS '+m(/OS (\d+[_\d]*)/).replace(/_/g,'.')
+    :/Android/.test(ua)?'Android '+m(/Android ([\d.]+)/)+(m(/; ([^;)]+) Build/)?', '+m(/; ([^;)]+) Build/):''):/Macintosh/.test(ua)?'Mac':/Windows/.test(ua)?'Windows':'Other';
+  const browser=m(/CriOS\/([\d.]+)/)?'Chrome on iOS '+m(/CriOS\/([\d.]+)/):m(/FxiOS\/([\d.]+)/)?'Firefox on iOS '+m(/FxiOS\/([\d.]+)/):m(/EdgA?\/([\d.]+)/)?'Edge '+m(/EdgA?\/([\d.]+)/)
+    :m(/SamsungBrowser\/([\d.]+)/)?'Samsung Internet '+m(/SamsungBrowser\/([\d.]+)/):m(/Chrome\/([\d.]+)/)?'Chrome '+m(/Chrome\/([\d.]+)/):m(/Version\/([\d.]+).*Safari/)?'Safari '+m(/Version\/([\d.]+).*Safari/):m(/Firefox\/([\d.]+)/)?'Firefox '+m(/Firefox\/([\d.]+)/):'Other';
+  let standalone=false; try{ standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true; }catch(e){}
+  let sa='unknown'; try{ const p=document.createElement('div'); p.style.cssText='position:absolute;visibility:hidden;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+    document.body.appendChild(p); const cs=getComputedStyle(p); sa=['Top','Right','Bottom','Left'].map(k=>k.toLowerCase()+' '+Math.round(parseFloat(cs['padding'+k])||0)).join(' · '); p.remove(); }catch(e){}
+  const vw=Math.round(window.visualViewport&&window.visualViewport.width?window.visualViewport.width:window.innerWidth);
+  return ['Trainlog '+APP_VERSION+(DEMO?' (demo)':''), 'Device: '+device, 'Browser: '+browser, 'Installed to home screen: '+(standalone?'yes':'no'),
+    'Window: '+window.innerWidth+' × '+window.innerHeight, 'Visible: '+vw+' × '+Math.round(V.h)+(V.t?' (scrolled '+Math.round(V.t)+')':''), 'Safe areas: '+sa,
+    'Screen: '+((window.screen||{}).width||'?')+' × '+((window.screen||{}).height||'?')+' at '+(window.devicePixelRatio||1)+'x', 'Theme: '+(CFG.theme||'default'), 'Time: '+new Date().toISOString().slice(0,16).replace('T',' ')].join('\n');
+}
+function toggleDiag(after){
+  const ex=document.getElementById('diagBox'); if(ex){ ex.remove(); return; }
+  const txt=diagText(), b=el('div','qblock'); b.id='diagBox'; b.style.cssText='margin:var(--sp-2) 0 0;background:var(--surface-2)';
+  b.innerHTML='<div class="qlab">Diagnostics</div><div class="field">Copy this into a note if something on your phone looks wrong.</div><pre style="white-space:pre-wrap;font:inherit;font-size:var(--fs-1);margin:0 0 var(--sp-3);color:var(--muted)">'+esc(txt)+'</pre>';
+  const cp=el('button','btn s','Copy'); cp.onclick=()=>copyText(txt,'Diagnostics copied. Paste them into a note.'); b.appendChild(cp);
+  after.after(b);
+}
+const ERR_SEEN={};
+function screenName(){ try{ if(ONB) return 'Setup: '+ONB.step; const d=$('#dlg'); const h=d&&d.open===true?((d.querySelector('h2')||{}).textContent||''):''; return (TAB_LABEL[TAB]||TAB)+(h?' › '+h.trim().slice(0,40):''); }catch(e){ return ''; } }
+function logError(msg, where){
+  try{ const key=String(msg||'error').slice(0,160), now=Date.now(); if(ERR_SEEN[key]&&now-ERR_SEEN[key]<36e5) return; ERR_SEEN[key]=now;
+    const day=new Date().toISOString().slice(0,10);
+    if(LOG.filter(e=>e.type==='note'&&e.tag==='error'&&String(e.ts||'').slice(0,10)===day).length>=10) return;
+    append({type:'note', tag:'error', auto:true, text:key+(where?' · '+String(where).slice(0,120):''), screen:screenName(), app_version:APP_VERSION});
+  }catch(e){} }
+try{ window.addEventListener('error',e=>{ if(e&&e.message) logError(e.message,(String(e.filename||'').split('/').pop()||'')+(e.lineno?':'+e.lineno:'')); });
+  window.addEventListener('unhandledrejection',e=>{ const r=e&&e.reason; logError('Unhandled: '+(r&&r.message?r.message:String(r))); }); }catch(e){}
 /* Short beep via WebAudio — no audio file needed, works offline, and iOS
    allows it here because it fires from code already running inside a user
    gesture chain (the tap that started the rest timer). */
@@ -20233,7 +20390,15 @@ function openAbandon(){
   },true);
   $('#abback').onclick=()=>$('#dlg').close();
 }
-$('#dlg').addEventListener('cancel',e=>e.preventDefault());
+// Esc and Android back are close requests: a read-only sheet closes; one with input asks.
+// When the browser won't let a close be refused, the sheet reopens with its input untouched.
+$('#dlg').addEventListener('cancel',e=>{ if(!dlgHasInput()) return;
+  if(e.cancelable){ e.preventDefault(); if(confirm(DLG_ASK)) $('#dlg').close(); } else SHEET_REOPEN=true; });
+$('#dlg').addEventListener('close',()=>{
+  if(SHEET_REOPEN){ SHEET_REOPEN=false; try{ $('#dlg').showModal(); }catch(e){} return; }
+  if(SHEET_BACK) SHEET_BACK=false; else navDrop('sheet');
+  lockScroll();
+});
 $('#fileIn').onchange=e=>{
   const f=e.target.files&&e.target.files[0]; if(!f) return;
   const r=new FileReader();
@@ -20416,7 +20581,7 @@ if(DEMO){ try{ demoPendingRun(); }catch(err){ console.error('demo seed failed',e
 if(session&&session.slots&&session.slots[session.openIdx]) seedDraft(session.slots[session.openIdx]);
 restoreRest(); render(); initUpdates(); demoBar();
 flushFeedback(); try{ window.addEventListener('online',flushFeedback); }catch{}
-if(needsOnboarding()) setTimeout(()=>{ BUILDER=null; openOnboarding(false); },250);
+if(needsOnboarding()) setTimeout(()=>{ BUILDER=null; if(CFG.onbDraft&&!CFG.onbDraft.existing) openOnboardingResume(); else openOnboarding(false); },250);
 requestPersistence();
 </script>
 </body>

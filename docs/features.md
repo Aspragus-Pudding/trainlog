@@ -150,6 +150,9 @@ everyone.
 | The program builder (rebuild the rest of a program) | advanced | Lifts → Rebuild |
 | Injury consent screen | injury-prone | first time you pick a condition |
 | Quick note (the pencil) | everyone | header, every screen |
+| Diagnostics (phone, browser, visible size, safe areas) with Copy | everyone | long-press the version number in Lifts |
+| Errors the app records, kept in your notes until you send them | everyone | Progress → Notes |
+| Exit setup, and Continue setup later (answers kept) | everyone | setup header; dashboard card; on reopening the app |
 | "?" tour of the current screen | everyone | header, and in Edit program |
 | Tap a dotted word for its definition (the glossary) | everyone | set cards, Lifts, Progress, readiness, Edit program |
 | First-session hints | everyone | first session only |

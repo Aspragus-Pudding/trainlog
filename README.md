@@ -72,3 +72,11 @@ then paste them into a message.
 Your logged data is safe. If a screen shows "Something went wrong", tap
 **Back to dashboard** and carry on, then leave a note saying what you were
 doing.
+
+- **If something on your phone looks wrong**, such as a button you can't reach,
+  long-press the version number at the bottom of **Lifts**. Tap **Copy**, and
+  paste it into a note. It says which phone, browser and screen size you have.
+- **If setup closes or you leave it**, your answers are kept. Open the app
+  and tap **Continue setup**.
+- **The app also notes its own errors** in your Notes, on the Progress tab.
+  They stay on your phone unless you tap **Send to the developer**.

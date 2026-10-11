@@ -484,3 +484,126 @@ set's session.
 
 **To change:** `lastTimeRows()` in index.html, for example to show the one
 priced-from set on every row.
+
+---
+
+## D30. The mobile fix is one structure, not another patch (v1.67)
+
+**Root cause:**
+- **Next out of reach.** Setup and every popup lived in a modal dialog whose
+  sheet was sized in vh. The vh unit is the height without the browser
+  toolbars, and iOS doesn't shrink the layout for the keyboard. So the
+  keyboard covered Next on every setup step, and on short iPhones the
+  toolbar and home indicator cut it off.
+- **Leaving setup.** Android back closed the setup dialog on its second
+  press, and there were no history entries, so back left the app. Setup
+  answers lived only in memory.
+
+**Chosen:** one primitive. A full screen for setup and one sheet for
+everything else, both sized to the visible viewport. Each has a scrolling body
+and a footer in normal flow. Back pops in-app history entries, and setup is
+kept as a draft. The tab bar's companions are counted as part of the
+primitive in the lint test: the rest timer, update banner and toast at the
+bottom, and the tour and definition cards. Moving them into a single layer
+would be a bigger refactor for no visible gain.
+
+**To undo:** not recommended. The pieces are `syncViewport`, `sheet`/
+`liftFooter`, `screenOpen`, `navPush`, `onbSave` and the CSS block marked "The
+layout primitive".
+
+---
+
+## D31. Pinch zoom is allowed again
+
+**Chosen:** the viewport meta loses `maximum-scale=1`. That setting was there
+to stop the iPhone zooming into small inputs, and inputs are now at least 16px
+so it isn't needed. Leaving it in also blocks pinch zoom on Android, which is
+an accessibility problem. Double-tap zoom on buttons is turned off with
+`touch-action:manipulation`.
+
+**To undo:** add `, maximum-scale=1` back to the viewport meta.
+
+---
+
+## D32. What back and tapping outside do
+
+**Chosen:**
+- **Back on a read-only sheet** (info, guide, today's plan) closes it.
+- **Back on a sheet with something to type or set** asks first: "Close this
+  without saving?" Saying no keeps it open.
+- **When Android won't let a close be refused** (a second back with no tap in
+  between), the sheet opens again with what you typed still there.
+- **Tapping outside a sheet** closes nothing. Your brief allowed it for
+  read-only sheets; never is the safest choice.
+- **Back on a setup step** goes to the previous step.
+- **Back on the first setup step** asks before leaving setup.
+
+**To undo / change:** `sheetBack`, the `cancel` and `close` handlers on
+`#dlg`, and `onbRootBack`.
+
+---
+
+## D33. How the setup draft works
+
+**Chosen:**
+- **When it's saved:** after every change, not only every step, in
+  `CFG.onbDraft`. That's a setting and never the log, and it rides along in
+  backups.
+- **Reopening the app:** a new user who hasn't finished setup sees "Continue
+  setup" or "Start over".
+- **After leaving on purpose:** "Exit setup" keeps the draft, and a dashboard
+  card offers to continue. An existing user's "Set up a new program" also
+  resumes from that card.
+- **Starting:** Start first session clears the draft.
+
+**To undo:** remove `onbSave` from `drawOnboarding`. Setup then starts over
+each time.
+
+---
+
+## D34. The status bar stays white-on-colour
+
+**Chosen:** `apple-mobile-web-app-status-bar-style` stays
+`black-translucent`: white clock and the app drawn under it. That's right for
+the dark default, and the LIGHT theme already puts an accent band behind the
+clock. The status bar style can't switch with the theme on iPhone, because
+it's read once when the app is opened.
+
+**To undo:** change the meta to `default` (a white bar with a black clock).
+That looks wrong in dark.
+
+---
+
+## D35. Errors go into the notes, and stay there until sent
+
+**Chosen:**
+- **What's recorded:** every uncaught error, plus anything the screen and
+  popup safety nets catch, becomes a note. It's tagged "Error the app
+  recorded", with the screen and version.
+- **Limits:** one per distinct message an hour, and ten a day.
+- **Sending:** nothing is sent on its own. Testers get a "Send to the
+  developer" button on each one, and you see them in "Copy all notes".
+- **Backups:** they're notes in the log, so an automatic backup to a
+  tester's own sheet includes them, the same as their other notes.
+
+**To undo:** remove the `error` and `unhandledrejection` listeners and the
+`logError` calls in `render` and `sheet`.
+
+---
+
+## D36. How the phones are tested
+
+**Chosen:**
+- **The harness:** `tests/mobile.js` uses Playwright (installed separately,
+  not part of the repo).
+- **Profiles:** iPhone SE, iPhone 13 and iPhone 15 on WebKit; Pixel 7 on
+  Chromium; plus one cross-engine pair each way.
+- **How the hard cases are played:**
+  - The toolbar and the Android keyboard shrink the page.
+  - The iPhone keyboard shrinks only the visible viewport, through a hook the
+    app reads (`window.__vvOverride`).
+  - Safe areas are CSS variables the layout uses.
+- **What it can't show:** real iOS toolbar animation and the real keyboard.
+  The 5-minute real-phone checklist in the report covers those.
+
+**To change:** `PROFILES` and `CASES` at the top of `tests/mobile.js`.

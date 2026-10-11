@@ -42,6 +42,10 @@ H3–H5 were merged to main once (bf84262), as v1.65.0. At that point:
 - v1.66.0: "last time" beside each planned set on the set card (D16 follow-up, D29).
 - D1 corrections: still to come from you.
 
+## Mobile layout fix (priority, v1.67.0)
+
+Root causes, the one-primitive fix, history, setup draft, diagnostics and error notes: D30–D36. tests/mobile.js: 894 checks on 6 device/engine combinations; §70 lints the rules.
+
 ## Half-finished
 
 (nothing)
