@@ -697,3 +697,26 @@ lives.
 
 **To undo:** in index.html, `flagChip` back to `flagLine` (from git history),
 and `preSessionBanner(v)` back in `renderWork`.
+
+---
+
+## D40. App errors and tour cards (v1.69.1)
+
+**Chosen:**
+- **App errors are grouped.** Notes the app recorded (tag "error") are a
+  collapsed "App errors" group under your own notes. The open count counts
+  only your notes. "Copy all notes" lists the errors last, under their own
+  heading. The diary never showed them. Testers still get "Send to the
+  developer" on each one.
+- **Tour cards were already fixed by v1.67.** On v1.67.0 every tour step
+  fitted on the four phone profiles in `tests/mobile.js`, so nothing needed
+  fixing. As a guard, a card is now capped at the visible height and scrolls
+  inside itself, with its buttons stuck to its bottom. Scrolling a sheet now
+  re-places the card too.
+- **Every tour step is tested.** `tests/mobile.js` walks every step of the
+  five screen tours, on a normal screen and on a short one with toolbar and
+  safe areas. For each step it checks the card fits, the button can be hit,
+  and a touch or scroll inside the card doesn't end the tour.
+
+**To undo:** `ERRORS_OPEN` and the `errs` group in `renderHist`; the
+`.tourcard` max-height.

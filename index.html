@@ -224,7 +224,7 @@ html.locked,html.locked body{overflow:hidden}
 input:not([type=checkbox]):not([type=radio]):not([type=file]):not(.numin),select,textarea{font-size:max(16px,var(--fs-3))!important}
 .tourspot{position:fixed;border-radius:var(--r-btn);pointer-events:none;z-index:2147483000;box-shadow:0 0 0 200vmax var(--backdrop);outline:2px solid var(--accent);outline-offset:2px;transition:top .15s,left .15s,width .15s,height .15s}
 .tourspot.light{box-shadow:0 0 0 200vmax color-mix(in srgb, var(--backdrop) 40%, transparent)}
-.tourcard{position:fixed;left:12px;right:12px;max-width:440px;margin:0 auto;z-index:2147483001;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:var(--sp-3) var(--sp-4);color:var(--ink);box-shadow:0 10px 30px color-mix(in srgb, var(--backdrop) 60%, transparent)}
+.tourcard{position:fixed;left:12px;right:12px;max-width:440px;margin:0 auto;z-index:2147483001;max-height:calc(var(--vvh) - 24px);overflow-y:auto;overscroll-behavior:contain;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:var(--sp-3) var(--sp-4);color:var(--ink);box-shadow:0 10px 30px color-mix(in srgb, var(--backdrop) 60%, transparent)}
 .tourcard h3{font-size:var(--fs-3);margin:0 0 var(--sp-2)}.tourcard p{font-size:var(--fs-2);line-height:1.5;margin:0;color:var(--muted)}
 dialog::backdrop{background:var(--backdrop,rgba(6,8,12,.78))}
 dialog:focus,dialog:focus-visible{outline:none}
@@ -9122,7 +9122,7 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.69.0","lines":["Plain words in the workout. A flagged exercise shows one chip, \"For your shoulder\" (or knee, elbow…). Tap it for what to watch, the cues and a suggested swap.","The pain check names the set it's about (\"Set 2 · 80 lb × 10\") and asks in plain words, including \"Felt unstable or like it might slip\".","Gone: the made-up \"Feel it: around your shoulder\" line on warm-ups, and the condition reminder at the top of the workout."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.69.1","lines":["Errors the app records now sit in their own collapsed \"App errors\" group under Progress → Notes, apart from your own notes.","A long tour card now scrolls inside itself instead of running off a short screen, and its buttons stay in reach."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9689,7 +9689,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.69.0';
+const APP_VERSION='1.69.1';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -14346,7 +14346,7 @@ function drawExNotes(host, ex){
   sv.onclick=()=>{ const ok=Object.entries(areas).every(([k,ta])=>saveExNote(ex.id,k,ta.value)); render(); toast(ok?'Saved':'Could not save — your log is unchanged'); };
   host.appendChild(sv);
 }
-let NOTES_SHOW_ALL=false, DIARY_ALL=false;
+let NOTES_SHOW_ALL=false, DIARY_ALL=false, ERRORS_OPEN=false;
 /* Everything still open, formatted for pasting straight into Claude Code. */
 function notesReport(){
   const open=openFeedbackNotes();
@@ -14355,7 +14355,8 @@ function notesReport(){
   open.forEach(n=>{ (byTag[n.tag]=byTag[n.tag]||[]).push(n); });
   // a tag this build doesn't know still gets reported, never silently dropped
   const groups=NOTE_TAGS.map(t=>({id:t.id,label:t.label}))
-    .concat(Object.keys(byTag).filter(k=>!NOTE_TAGS.some(t=>t.id===k)).map(k=>({id:k,label:k})));
+    .concat(Object.keys(byTag).filter(k=>!NOTE_TAGS.some(t=>t.id===k)).map(k=>({id:k,label:k==='error'?'App errors (recorded by the app, not written by you)':k})))
+    .sort((a,b)=>(a.id==='error')-(b.id==='error'));          // the app's own errors last, apart from your notes
   let out='Feedback from the last few sessions.\n\n';
   groups.forEach(t=>{
     const list=byTag[t.id]; if(!list||!list.length) return;
@@ -18528,41 +18529,50 @@ function renderHist(){
   // notes
   const rep=notesReport();
   const cn=el('div','card pad');cn.dataset.tour='notes';
+  // your own notes, and apart from them (collapsed) the errors the app recorded — never mixed (v1.69.1)
+  const allOpen=rep?openFeedbackNotes().reverse():[], own=allOpen.filter(n=>n.tag!=='error'), errs=allOpen.filter(n=>n.tag==='error');
   cn.appendChild(el('div','row between',
-    `<span style="font-weight:650">Notes</span><span class="dim tiny">${rep?rep.count+' open':'none open'}</span>`));
-  if(!rep){
-    cn.appendChild(el('div','empty','Tap the ✎ button any time to jot something down.<br>Notes sync to your backup sheet automatically.'));
-  }else{
-    const open=openFeedbackNotes().reverse();
+    `<span style="font-weight:650">Notes</span><span class="dim tiny">${own.length?own.length+' open':'none open'}</span>`));
+  const noteRow=n=>{
+    const t=NOTE_TAGS.find(x=>x.id===n.tag);
+    const r=el('div',''); r.style.cssText='padding:var(--sp-2) 0;border-top:1px solid var(--line)';
+    r.innerHTML=`<div class="row between">
+        <span class="grow"><div class="sm">${esc(n.text)}</div>
+          <div class="dim tiny" style="margin-top:2px">${esc(t?t.label:n.tag==='error'?'Error the app recorded':n.tag)} · ${
+            new Date(n.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}${
+            n.app_version?' · v'+n.app_version:''}${n.screen?' · '+esc(n.screen):''}</div></span></div>`;
+    // Done is the owner's triage. A tester's notes went to the owner, so
+    // they just see that it's been sent (or saved, if sending is off).
+    if(isTester()&&n.auto&&(CFG.feedbackUrl||'').trim()&&!DEMO&&!LOG.some(e=>e.type==='note_sent'&&e.target_id===n.id)){
+      // an error the app recorded goes nowhere until you send it
+      const sd=el('button','btn s','Send to the developer'); sd.style.marginTop='var(--sp-2)';
+      sd.onclick=()=>{ sendFeedback(n); append({type:'note_sent',target_id:n.id}); render(); toast('Sent'); };
+      r.appendChild(sd);
+    }else if(isTester()){
+      r.appendChild(el('span','sbadge',(CFG.feedbackUrl||'').trim()&&!(n.auto&&!LOG.some(e=>e.type==='note_sent'&&e.target_id===n.id))?'Sent':'Saved')).style.cssText='display:inline-block;margin-top:var(--sp-2);margin-left:0';
+    }else{
+      const done=el('button','btn s','Done'); done.style.marginTop='var(--sp-2)';
+      done.onclick=()=>{ append({type:'note_resolved',target_id:n.id}); render(); toast('Marked done'); };
+      r.appendChild(done);
+    }
+    return r;
+  };
+  if(!rep||!own.length) cn.appendChild(el('div','empty','Tap the ✎ button any time to jot something down.<br>Notes sync to your backup sheet automatically.'));
+  if(rep){
     // newest 8 first; the rest one tap away — the copy below holds exactly this list
-    (NOTES_SHOW_ALL?open:open.slice(0,8)).forEach(n=>{
-      const t=NOTE_TAGS.find(x=>x.id===n.tag);
-      const r=el('div',''); r.style.cssText='padding:var(--sp-2) 0;border-top:1px solid var(--line)';
-      r.innerHTML=`<div class="row between">
-          <span class="grow"><div class="sm">${esc(n.text)}</div>
-            <div class="dim tiny" style="margin-top:2px">${esc(t?t.label:n.tag==='error'?'Error the app recorded':n.tag)} · ${
-              new Date(n.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}${
-              n.app_version?' · v'+n.app_version:''}${n.screen?' · '+esc(n.screen):''}</div></span></div>`;
-      // Done is the owner's triage. A tester's notes went to the owner, so
-      // they just see that it's been sent (or saved, if sending is off).
-      if(isTester()&&n.auto&&(CFG.feedbackUrl||'').trim()&&!DEMO&&!LOG.some(e=>e.type==='note_sent'&&e.target_id===n.id)){
-        // an error the app recorded goes nowhere until you send it
-        const sd=el('button','btn s','Send to the developer'); sd.style.marginTop='var(--sp-2)';
-        sd.onclick=()=>{ sendFeedback(n); append({type:'note_sent',target_id:n.id}); render(); toast('Sent'); };
-        r.appendChild(sd);
-      }else if(isTester()){
-        r.appendChild(el('span','sbadge',(CFG.feedbackUrl||'').trim()&&!(n.auto&&!LOG.some(e=>e.type==='note_sent'&&e.target_id===n.id))?'Sent':'Saved')).style.cssText='display:inline-block;margin-top:var(--sp-2);margin-left:0';
-      }else{
-        const done=el('button','btn s','Done'); done.style.marginTop='var(--sp-2)';
-        done.onclick=()=>{ append({type:'note_resolved',target_id:n.id}); render(); toast('Marked done'); };
-        r.appendChild(done);
-      }
-      cn.appendChild(r);
-    });
-    if(open.length>8){
-      const more=el('button','btn ghost wide',NOTES_SHOW_ALL?'Show only the newest 8':'Show '+(open.length-8)+' older');
+    (NOTES_SHOW_ALL?own:own.slice(0,8)).forEach(n=>cn.appendChild(noteRow(n)));
+    if(own.length>8){
+      const more=el('button','btn ghost wide',NOTES_SHOW_ALL?'Show only the newest 8':'Show '+(own.length-8)+' older');
       more.style.marginTop='var(--sp-2)'; more.onclick=()=>{ NOTES_SHOW_ALL=!NOTES_SHOW_ALL; render(); };
       cn.appendChild(more);
+    }
+    if(errs.length){
+      const eh=el('button','row between','<span class="sm" style="font-weight:600">App errors <span class="dim tiny">· '+errs.length+', recorded by the app</span></span><span class="dim tiny">'+(ERRORS_OPEN?'▾':'▸')+'</span>');
+      eh.style.cssText='width:100%;text-align:left;padding:var(--sp-3) 0 var(--sp-1);border-top:1px solid var(--line);margin-top:var(--sp-2)';
+      eh.setAttribute('aria-expanded',ERRORS_OPEN?'true':'false'); eh.dataset.errors='1';
+      eh.onclick=()=>{ ERRORS_OPEN=!ERRORS_OPEN; render(); };
+      cn.appendChild(eh);
+      if(ERRORS_OPEN){ cn.appendChild(el('div','dim tiny','Nothing here leaves your phone unless you send it. Your data is safe.')); errs.forEach(n=>cn.appendChild(noteRow(n))); }
     }
     const cp=el('button','btn pri wide','Copy all notes');
     cp.style.marginTop='var(--sp-3)'; if(isTester()) cp.hidden=true;
@@ -19532,7 +19542,7 @@ function tourShow(step, target, buttons, light){
   const spot=el('div','tourspot'+(light?' light':'')); L.appendChild(spot);
   const card=el('div','tourcard'); card.id='tourCard'; card.setAttribute('role','dialog'); card.setAttribute('aria-label',step.title);
   card.innerHTML='<h3>'+esc(step.title)+'</h3><p>'+esc(step.body)+'</p>';
-  const row=el('div','row'); row.style.cssText='gap:var(--sp-2);margin-top:var(--sp-3);flex-wrap:wrap;justify-content:flex-end';
+  const row=el('div','row tourbtns'); row.style.cssText='gap:var(--sp-2);margin-top:var(--sp-3);flex-wrap:wrap;justify-content:flex-end;position:sticky;bottom:calc(-1 * var(--sp-3));background:var(--card);padding:var(--sp-2) 0 var(--sp-1)';
   buttons.forEach(([label,fn,kind])=>{ const b=el('button','btn s'+(kind?' '+kind:''),esc(label)); b.onclick=e=>{ e.stopPropagation(); fn(); }; row.appendChild(b); });
   card.appendChild(row); L.appendChild(card); host.appendChild(L);
   tourPlace();
@@ -20537,7 +20547,8 @@ let tT; function toast(m){ if(DEMO_QUIET) return; const t=$('#toast'); t.textCon
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();});
 $('#noteBtn').onclick=()=>openNote();
 $('#tourBtn').onclick=()=>startTour(TAB);
-window.addEventListener('scroll',()=>{ clearTimeout(window._tourScroll); window._tourScroll=setTimeout(tourTick,180); },{passive:true});
+// any scroller (the page, a sheet's body, the tour card itself) re-places the card; capture sees them all
+document.addEventListener('scroll',()=>{ clearTimeout(window._tourScroll); window._tourScroll=setTimeout(tourTick,180); },{passive:true,capture:true});
 window.addEventListener('resize',()=>{ if(TOUR) tourPlace(); });
 $('#skipTop').onclick=()=>openAbandon();
 

@@ -3330,5 +3330,17 @@ section('73. plain words: every flag and library text the app can show passes th
   console.log('  '+n+' texts checked · pain advice plain · the condition picker keeps the clinical name');
 }
 
+section('74. app errors sit apart from your notes; tour cards fit the visible screen');
+{
+  const ev=[{type:'note',id:'n1',ts:day(2),tag:'bug',text:'The popup froze'},{type:'note',id:'n2',ts:day(1),tag:'error',auto:true,text:'TypeError: x is undefined',app_version:'1.69.0',screen:'Workout'},{type:'note',id:'n3',ts:day(0.5),tag:'idea',text:'Plate maths for machines'}];
+  const A=load(ev), r=A.notesReport();
+  const iErr=r.text.indexOf('## App errors'), iBug=r.text.indexOf('## Something broke'), iIdea=r.text.indexOf('## Idea');
+  ok(iErr>iBug&&iErr>iIdea&&/TypeError/.test(r.text.slice(iErr)),'"Copy all notes": the app\'s errors come last, under their own heading',r.text.slice(0,200));
+  ok(/allOpen\.filter\(n=>n\.tag!=='error'\)/.test(src)&&/ERRORS_OPEN/.test(src)&&/App errors <span/.test(src),'the notes list shows your notes, then a collapsed "App errors" group','');
+  ok(/\.tourcard\{[^}]*max-height:calc\(var\(--vvh\) - 24px\);overflow-y:auto/.test(html),'a tour card never grows past the visible screen; it scrolls inside itself','');
+  ok(/document\.addEventListener\('scroll',[^\n]*capture:true/.test(src),'scrolling a sheet re-places the tour card (capture catches every scroller)','');
+  console.log('  errors last and collapsed · tour card capped at the visible height · tests/mobile.js walks every tour step');
+}
+
 console.log('\n'+checks+' checks, '+failures+' failed');
 if(failures){ console.log('\n'+Object.entries(shown).map(([k,n])=>n+' x '+k).join('\n')); process.exit(1); }

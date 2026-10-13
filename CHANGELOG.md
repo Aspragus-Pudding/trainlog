@@ -6,6 +6,10 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.69.1 — 2026-10-12
+- Errors the app records now sit in their own collapsed "App errors" group under Progress → Notes, apart from your own notes.
+- A long tour card now scrolls inside itself instead of running off a short screen, and its buttons stay in reach.
+
 ## 1.69.0 — 2026-10-12
 - Plain words in the workout. A flagged exercise shows one chip, "For your shoulder" (or knee, elbow…). Tap it for what to watch, the cues and a suggested swap.
 - The pain check names the set it's about ("Set 2 · 80 lb × 10") and asks in plain words, including "Felt unstable or like it might slip".

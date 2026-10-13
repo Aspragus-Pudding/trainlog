@@ -182,6 +182,43 @@ async function reorderCheck(page, tag){
   ok(s3.order[0]!==s0.order[1]&&s4.last===s0.order[1]&&s3.order[s3.open]===s0.order[1], tag+' mid-exercise, another moved up above it: Log set stays on the exercise in progress: '+JSON.stringify({order:s3.order.slice(0,3),open:s3.open,last:s4.last}));
   await page.evaluate(()=>{ session=null; saveSession(); stopRest(); TAB='dash'; render(); });
 }
+/* Every tour step (Appendix A Part 6): the card fits the visible screen, its buttons are
+   reachable, and scrolling inside it never ends the tour or breaks the app. */
+async function tourCheck(page, d, tag){
+  await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
+  await page.evaluate(()=>demoReset({kind:'persona',key:'shoulder',weeks:4})); await page.waitForLoadState('load'); await sleep(2200);
+  await page.evaluate(()=>{ CFG.seenVersion=APP_VERSION; CFG.tour={t1:'off',seen:{}}; saveCfg(); try{ $('#dlg').close(); }catch(e){} });
+  const TOURS=[['dash',()=>{ TAB='dash'; render(); }],['lifts',()=>{ TAB='lifts'; render(); }],['hist',()=>{ TAB='hist'; render(); }],
+    ['settings',()=>{ openSettings(); }],['work',()=>{ try{ $('#dlg').close(); }catch(e){} startSession(todayDay()); $('#ckskip').click(); TAB='work'; render(); }]];
+  for(const c of ['normal','toolbar+safe']){
+    await applyCase(page,d,c);
+    for(const [key,open] of TOURS){
+      await page.evaluate(new Function('('+open.toString()+')()')); await sleep(250);
+      const n=await page.evaluate(k=>{ startTour(k); return TOUR&&TOUR.steps?TOUR.steps.length:0; },key); await sleep(350);
+      ok(n>0, tag+' tour '+key+' ['+c+'] has steps');
+      for(let i=0;i<n;i++){
+        const r=await page.evaluate(()=>{ const card=document.getElementById('tourCard'); if(!card) return {gone:true};
+          const vv=window.__vvOverride||window.visualViewport, top=vv&&vv.offsetTop?vv.offsetTop:0, bot=top+(vv&&vv.height?vv.height:innerHeight);
+          const q=card.getBoundingClientRect(), btns=[...card.querySelectorAll('button')], last=btns[btns.length-1], b=last?last.getBoundingClientRect():null;
+          const hit=b?document.elementFromPoint(b.left+b.width/2,b.top+b.height/2):null;
+          return {fits:q.top>=top-0.5&&q.bottom<=bot+0.5, btn:!!b&&b.top>=top-0.5&&b.bottom<=bot+0.5&&!!hit&&(hit===last||last.contains(hit)), title:(card.querySelector('h3')||{}).textContent, scrollable:card.scrollHeight>card.clientHeight+1}; });
+        ok(!r.gone&&r.fits&&r.btn, tag+' tour '+key+' step '+(i+1)+' ['+c+'] fits the visible screen with its buttons reachable: '+JSON.stringify(r));
+        // a touch inside the card, and scrolling the card and the page: the tour stays, nothing breaks
+        const pt=await page.evaluate(()=>{ const p=document.querySelector('#tourCard p'); if(!p) return null; const q=p.getBoundingClientRect(); return {x:q.left+8,y:q.top+6}; });
+        if(pt) await page.touchscreen.tap(pt.x,pt.y);
+        await page.evaluate(()=>{ const card=document.getElementById('tourCard'); if(card){ card.scrollTop=card.scrollHeight; card.dispatchEvent(new Event('scroll',{bubbles:false})); } const b=document.getElementById('dlgBody'); if(b&&document.getElementById('dlg').open){ b.scrollTop+=40; b.dispatchEvent(new Event('scroll')); } window.scrollBy(0,30); });
+        await sleep(260);
+        const still=await page.evaluate(()=>!!TOUR&&!!document.getElementById('tourCard'));
+        ok(still, tag+' tour '+key+' step '+(i+1)+' ['+c+']: a touch and a scroll inside the card keep the tour open');
+        if(!still) break;
+        await page.evaluate(()=>{ const card=document.getElementById('tourCard'); const btns=[...card.querySelectorAll('button')]; btns[btns.length-1].click(); }); await sleep(300);
+      }
+      await page.evaluate(()=>{ try{ tourEnd(); }catch(e){} try{ if($('#dlg').open) $('#dlg').close(); }catch(e){} }); await sleep(150);
+    }
+    await page.evaluate(()=>{ if(session){ session=null; saveSession(); stopRest(); } TAB='dash'; render(); });
+  }
+  await applyCase(page,d,'normal');
+}
 async function resumeCheck(page, tag){
   await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(1100);
   await clickText(page,'Build it for me'); await clickText(page,'Pure strength'); await clickText(page,'Next'); await clickText(page,'Progress takes months'); await clickText(page,'Next');
@@ -205,6 +242,7 @@ async function resumeCheck(page, tag){
       await personaSetups(page,tag);
       await sheetMatrix(page,d,tag);
       await reorderCheck(page,tag);
+      await tourCheck(page,d,tag);
     }catch(e){ ok(false,tag+' crashed: '+e.message); }
     ok(errs.length===0, tag+' no page errors: '+errs.slice(0,2).join(' | '));
     rows.push([tag, fails===f0?'pass':(fails-f0)+' failed']);
