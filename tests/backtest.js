@@ -84,14 +84,16 @@ const A=loadApp();
 
 /* ---------- canonical replay: corrections applied, same rule sets() uses ---------- */
 function resolvedSets(list){
+  // corrections merge in log order; patch:null voids for good (v1.68.1, same as correctionMap())
   const patch={};
-  for(const e of list) if(e.type==='correction') patch[e.target_id]=e;
+  for(const e of list){ if(e.type!=='correction') continue; const cur=patch[e.target_id];
+    if(cur===null) continue; patch[e.target_id]=e.patch===null?null:{...(cur||{}),...e.patch}; }
   const out=[];
   for(const e of list){
     if(e.type!=='set') continue;
     const p=patch[e.id];
-    if(p){ if(p.patch===null) continue; out.push({...e,...p.patch}); }
-    else out.push(e);
+    if(p===undefined) out.push(e);
+    else if(p!==null) out.push({...e,...p});
   }
   return out;
 }

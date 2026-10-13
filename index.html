@@ -9122,7 +9122,7 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.68.0","lines":["Moving an exercise up into the current spot now makes it the one you log next. Before, Log set stayed on the old one.","If you're partway through an exercise, moving others around never takes Log set away from it.","Tapping an exercise's name makes it the current one until you finish it or tap another. Tapping the open one closes it."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.68.1","lines":["Editing a set now counts exactly like deleting it and logging the new numbers. The next set's suggestion updates straight away.","Editing the same set twice (reps, then RPE) keeps both changes. Before, the first change was lost after the app reloaded.","Sets you'd already edited twice now read the way you entered them. Nothing in your log was rewritten."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9689,7 +9689,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.68.0';
+const APP_VERSION='1.68.1';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -11481,18 +11481,39 @@ const ulid=()=>Date.now().toString(36).toUpperCase()+Math.random().toString(36).
 /* sets() replays corrections over the raw log. A correction with patch:null
    voids the event entirely. The log itself stays append-only — nothing is
    ever rewritten, so history and sync safety are preserved. */
+/* ONE replay rule, used by everything that reads a set (v1.68.1): corrections
+   apply in log order and MERGE (an edit changes only the fields it names, and an
+   earlier edit's fields stay); patch:null voids the set for good. Before, a later
+   correction replaced an earlier one, so editing reps and then RPE on one set put
+   the reps back after a reload, and a few readers skipped corrections entirely.
+   Anything that walks the raw LOG for sets goes through corrected(). */
+let _corrCache=null, _corrLen=-1;
+function correctionMap(){
+  if(_corrCache&&_corrLen===LOG.length) return _corrCache;
+  const out={};
+  for(const e of LOG){ if(e.type!=='correction') continue;
+    const cur=out[e.target_id];
+    if(cur===null) continue;                                    // voided stays voided
+    out[e.target_id]=e.patch===null?null:{...(cur||{}),...e.patch};
+  }
+  _corrCache=out; _corrLen=LOG.length; return out;
+}
+/* A raw set as it reads after its corrections; null when deleted. Other events pass through. */
+function corrected(e){
+  if(!e||e.type!=='set') return e;
+  const p=correctionMap()[e.id];
+  return p===undefined?e:p===null?null:{...e,...p};
+}
 let _setsCache=null, _setsLen=-1;
 function sets(){
   if(_setsCache&&_setsLen===LOG.length) return _setsCache;
-  const patch={};
-  for(const e of LOG) if(e.type==='correction') patch[e.target_id]=e;
-  const out=[];
+  const P=correctionMap(), out=[];
   for(const e of LOG){
     if(e.type!=='set') continue;
-    const p=patch[e.id];
-    if(!p){ out.push(e); continue; }
-    if(p.patch===null) continue;          // voided
-    out.push({...e, ...p.patch});
+    const p=P[e.id];
+    if(p===undefined){ out.push(e); continue; }
+    if(p===null) continue;                // voided
+    out.push({...e, ...p});
   }
   _setsCache=out; _setsLen=LOG.length; return out;
 }
@@ -14606,22 +14627,23 @@ function drawBarEditor(host, ex){
    For history logged against one exercise that belongs to another (a
    Transformer squat logged before its configurations were separate
    exercises). Append-only: each set gets a correction re-pointing it, so the
-   raw log is never rewritten and the move can be undone. A correction
-   REPLACES an earlier one for the same set (see sets()), so each move carries
-   that set's previous patch forward — a weight you corrected stays corrected
-   — and records it, so undo can put it back exactly. Only working and warmup
-   SETS move; ratings, notes and diary entries stay with the old exercise. */
+   raw log is never rewritten and the move can be undone. Corrections merge
+   (see correctionMap()); each move still writes the set's corrections so far
+   in full, so an older reader that replaces instead of merging (a backup
+   sheet's script) gets the same answer, and records them so undo can put them
+   back exactly. Only working and warmup SETS move; ratings, notes and diary
+   entries stay with the old exercise. */
 function latestCorrection(setId){ let c=null; for(const e of LOG) if(e.type==='correction'&&e.target_id===setId) c=e; return c; }
 function moveHistory(fromId, toId){
   const id='mv'+ulid(), to=exById[toId]; let n=0;
+  const P={...correctionMap()};
   for(const e of LOG){
     if(e.type!=='set') continue;
-    const prev=latestCorrection(e.id);
-    if(prev&&prev.patch===null) continue;                         // a deleted set stays deleted
-    const cur=prev?{...e,...prev.patch}:e;
+    const prevPatch=P[e.id];
+    if(prevPatch===null) continue;                                // a deleted set stays deleted
+    const cur=prevPatch?{...e,...prevPatch}:e;
     if(cur.exercise_id!==fromId) continue;
-    const prevPatch=prev?prev.patch:null;
-    if(append({type:'correction',target_id:e.id,reason:'moved history',move:{id,from:fromId,to:toId,prev_patch:prevPatch},
+    if(append({type:'correction',target_id:e.id,reason:'moved history',move:{id,from:fromId,to:toId,prev_patch:prevPatch||null,prev_slot:cur.slot},
       patch:{...(prevPatch||{}),exercise_id:toId,slot:toId}})) n++;
   }
   return {id,count:n,to:to?to.name:toId};
@@ -14636,7 +14658,10 @@ function undoHistoryMove(moveId){
   let n=0;
   LOG.filter(e=>e.type==='correction'&&e.move&&e.move.id===moveId).forEach(c=>{
     if(latestCorrection(c.target_id)!==c) return;                  // something newer happened to that set
-    if(append({type:'correction',target_id:c.target_id,reason:'undo moved history',patch:c.move.prev_patch||{}})) n++;
+    // names the exercise it goes back to, so merging and replacing readers agree
+    const raw=LOG.find(e=>e.id===c.target_id)||{};
+    const back={...(c.move.prev_patch||{}),exercise_id:c.move.from,slot:c.move.prev_slot!==undefined?c.move.prev_slot:((c.move.prev_patch||{}).slot||raw.slot||c.move.from)};
+    if(append({type:'correction',target_id:c.target_id,reason:'undo moved history',patch:back})) n++;
   });
   return n;
 }
@@ -15115,9 +15140,7 @@ function openEditEvent(slot,orig,title){
       ? `Delete this set and its ${grp.length-1} extension${grp.length>2?'s':''}?`
       : isWarm?'Delete this warmup? It stays in the log as a voided entry.':'Delete this set? It stays in the log as a voided entry.';
     if(!confirm(msg)) return;
-    grp.forEach(x=>append({type:'correction', target_id:x.id, patch:null, reason:'deleted in app'}));
-    grp.forEach(x=>{ const k=slot.sets.indexOf(x); if(k>-1) slot.sets.splice(k,1); });
-    saveSession();
+    deleteLogged(slot, grp, isWarm);
     $('#dlg').close(); renderWork(); toast(grp.length>1?'Cluster deleted':isWarm?'Warmup deleted':'Set deleted');
   };
   $('#esave').onclick=()=>{
@@ -15126,11 +15149,35 @@ function openEditEvent(slot,orig,title){
     if(st.reps!==orig.reps) p.reps=st.reps;
     if(!isWarm&&st.rpe!==orig.rpe) p.rpe=st.rpe;
     if(!Object.keys(p).length){ $('#dlg').close(); return; }
-    append({type:'correction', target_id:orig.id, patch:p, reason:'edited in app'});
-    const k=slot.sets.indexOf(orig); if(k>-1) Object.assign(slot.sets[k], p);
-    saveSession();
+    if(!editLogged(slot, orig, p, isWarm)) return;
     $('#dlg').close(); renderWork(); toast(isWarm?'Warmup updated':'Set updated');
   };
+}
+/* Delete logged sets (a cluster's top set takes its extensions with it). */
+function deleteLogged(slot, grp, isWarm){
+  grp.forEach(x=>append({type:'correction', target_id:x.id, patch:null, reason:'deleted in app'}));
+  grp.forEach(x=>{ const k=slot.sets.findIndex(y=>y.id===x.id); if(k>-1) slot.sets.splice(k,1); });
+  if(!isWarm) afterSetChange(slot);
+  saveSession();
+}
+/* Edit a logged set. The patch carries this set's earlier corrections too, so a
+   reader that replaces rather than merges (an older backup-sheet script) reads
+   the same set. The session's copy becomes the corrected set; the logged event
+   itself is never touched. */
+function editLogged(slot, orig, p, isWarm){
+  const prev=correctionMap()[orig.id]||{};
+  if(!append({type:'correction', target_id:orig.id, patch:{...prev,...p}, reason:'edited in app'})) return false;
+  const k=slot.sets.findIndex(y=>y.id===orig.id), fresh=sets().find(y=>y.id===orig.id);
+  if(k>-1&&fresh) slot.sets[k]=fresh;
+  if(!isWarm) afterSetChange(slot);
+  saveSession(); return true;
+}
+/* An edited or deleted set counts exactly like a set logged with those numbers:
+   on the exercise you're on, the next-set suggestion is worked out again from the
+   corrected log, the same way Log set does it. */
+function afterSetChange(slot){
+  if(!session||session.slots[session.openIdx]!==slot||draft.group) return;
+  if(slot.sets.length) reseedAfterLog(slot); else seedDraft(slot);
 }
 
 /* Warmup ramp toward a working weight. Percentages are convention, not
@@ -17015,7 +17062,7 @@ function fdExtension(fd, endAt){
 function fdReference(fd, exId){
   // the load you were on at the start: the heaviest working set of your last session on it before the window
   let best=null, sid=null;
-  for(let i=Math.min(fd.start,LOG.length)-1;i>=0;i--){ const e=LOG[i]; if(e.type!=='set'||trackRoot(e.exercise_id)!==trackRoot(exId)||e.set_kind==='warmup') continue;
+  for(let i=Math.min(fd.start,LOG.length)-1;i>=0;i--){ const e=corrected(LOG[i]); if(!e||e.type!=='set'||trackRoot(e.exercise_id)!==trackRoot(exId)||e.set_kind==='warmup') continue;
     if(sid==null) sid=e.session_id; if(e.session_id!==sid) break; const L=engLb(e); if(L!=null&&(best==null||L>best)) best=L; }
   return best;
 }
@@ -17040,7 +17087,7 @@ function dialRevealed(exId){
   let reset=-1; LOG.forEach((e,i)=>{ if(e.type==='dial_reset'&&(!e.exercise_id||e.exercise_id===exId)) reset=i; });
   const ex=exById[exId]; if(!ex) return {n:0,mean:0,notch:0};
   const firsts=new Map();
-  LOG.forEach((e,i)=>{ if(i<=reset||e.type!=='set'||e.exercise_id!==exId||e.set_kind==='warmup'||!e.suggestion||e.suggestion.lb==null) return; if(!firsts.has(e.session_id)) firsts.set(e.session_id,e); });
+  LOG.forEach((r,i)=>{ const e=corrected(r); if(i<=reset||!e||e.type!=='set'||e.exercise_id!==exId||e.set_kind==='warmup'||!e.suggestion||e.suggestion.lb==null) return; if(!firsts.has(e.session_id)) firsts.set(e.session_id,e); });
   const rows=[...firsts.values()].slice(-ENGINE.DIAL_WINDOW).filter(e=>e.rpe!=null&&e.suggestion.target_rpe!=null&&Math.abs(e.rpe-e.suggestion.target_rpe)<=1);
   if(!rows.length) return {n:0,mean:0,notch:0};
   const step=Math.max(2.5,ex.inc||5);
@@ -17232,7 +17279,7 @@ function dialChips(cur, onPick){
 }
 /* One line per exercise where what you lift and your setting disagree. */
 function dialDriftLines(){
-  const ids=[...new Set(LOG.filter(e=>e.type==='set'&&e.suggestion).map(e=>e.exercise_id))].filter(id=>exById[id]);
+  const ids=[...new Set(sets().filter(e=>e.suggestion).map(e=>e.exercise_id))].filter(id=>exById[id]);
   return ids.map(id=>({id,d:dialEffective(id)})).filter(x=>x.d.drift)
     .map(x=>({id:x.id, text:x.d.drift>0?'You\'ve been lifting above suggestion on '+exById[x.id].name+', so it\'s stepped up a notch.':'You\'ve been lifting below suggestion on '+exById[x.id].name+', so it\'s stepped down a notch.'}));
 }
@@ -17519,17 +17566,7 @@ function logSet(slot,idx,kind,extend,over){
      (and lastSetFor()) already reflects the set just appended above. This
      is only a pre-fill: whatever the steppers show when Log Set is tapped
      is what gets logged, exactly like every other set. */
-  if(kind!=='warmup'&&!group){
-    const next=suggestFor(slot);
-    if(next.lb!=null){
-      draft.weight = draft.unit==='kg' ? Math.round(next.lb/LB*2)/2 : next.lb;
-      draft.reps=next.pr.reps; draft.suggestedLb=next.lb; draft.suggestedReps=next.pr.reps;
-      draft.suggested=true; draft.alt=null; draft.why=next.why;
-      if(next.pr.calibAmrap) draft.rpe=10;
-    }
-    // the set is logged: locks clear, both numbers are the suggestion again
-    draft.lock={}; draft.lockEx=slot.ex; draft.sugW=draft.sugR=next.lb!=null; draft.rebal=null;
-  }
+  if(kind!=='warmup'&&!group) reseedAfterLog(slot);
   saveSession();
   if(tmMsg) toast(tmMsg);
   else if(pr){ toast(`New best on ${ex.name} · +${fmt(pr.gain,0)} lb`); if(navigator.vibrate) navigator.vibrate(80); }
@@ -17543,6 +17580,19 @@ function logSet(slot,idx,kind,extend,over){
   renderWork();
 }
 
+/* Suggest the next set from the log as it stands (after a set is logged, edited
+   or deleted): same nextPrescription() the next session uses. Only a pre-fill;
+   locks clear and both numbers are the suggestion again. */
+function reseedAfterLog(slot){
+  const next=suggestFor(slot);
+  if(next.lb!=null){
+    draft.weight = draft.unit==='kg' ? Math.round(next.lb/LB*2)/2 : next.lb;
+    draft.reps=next.pr.reps; draft.suggestedLb=next.lb; draft.suggestedReps=next.pr.reps;
+    draft.suggested=true; draft.alt=null; draft.why=next.why;
+    if(next.pr.calibAmrap) draft.rpe=10;
+  }
+  draft.lock={}; draft.lockEx=slot.ex; draft.sugW=draft.sugR=next.lb!=null; draft.rebal=null;
+}
 /* Once this exercise is complete, move on by the current-exercise rule (rule 4,
    then rule 2). Used by both logging a set and skipping one, so the two can't
    drift apart. All done → -1, the panel collapses. */
@@ -18288,8 +18338,8 @@ function renderHist(){
 
   // why these numbers: last session's first suggestion per exercise, one line per modifier
   {
-    let lastSid=null; for(let k=LOG.length-1;k>=0;k--){ const e=LOG[k]; if(e.type==='set'&&e.suggestion&&e.suggestion.trace){ lastSid=e.session_id; break; } }
-    const firsts=new Map(); if(lastSid) LOG.forEach(e=>{ if(e.type==='set'&&e.session_id===lastSid&&e.suggestion&&!firsts.has(e.exercise_id)) firsts.set(e.exercise_id,e); });
+    const S=sets(); let lastSid=null; for(let k=S.length-1;k>=0;k--){ const e=S[k]; if(e.suggestion&&e.suggestion.trace){ lastSid=e.session_id; break; } }
+    const firsts=new Map(); if(lastSid) S.forEach(e=>{ if(e.session_id===lastSid&&e.suggestion&&!firsts.has(e.exercise_id)) firsts.set(e.exercise_id,e); });
     const drift=dialDriftLines(), fdc=focusedDeloadCard();
     if(firsts.size||drift.length){
       const cw=el('div','card pad'); cw.dataset.tour='why-numbers'; cw.appendChild(el('div','row between','<span style="font-weight:650">Why these numbers</span><span class="dim tiny">last session</span>'));

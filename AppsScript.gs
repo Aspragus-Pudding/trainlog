@@ -98,15 +98,25 @@ function writeSets(ss, events) {
   sh.getRange(1, 1, 1, head.length).setValues([head]).setFontWeight('bold');
   sh.setFrozenRows(1);
 
-  // corrections replay over the raw events, same as the app does
+  // corrections replay over the raw events, same as the app does (v1.68.1):
+  // they merge in order, and a delete (patch null) is final
   var patch = {};
-  events.forEach(function (e) { if (e.type === 'correction') patch[e.target_id] = e; });
+  events.forEach(function (e) {
+    if (e.type !== 'correction') return;
+    var cur = patch[e.target_id];
+    if (cur === null) return;
+    if (e.patch === null) { patch[e.target_id] = null; return; }
+    var m = {}, k;
+    if (cur) for (k in cur) m[k] = cur[k];
+    for (k in e.patch) m[k] = e.patch[k];
+    patch[e.target_id] = m;
+  });
 
   var rows = [];
   events.forEach(function (e) {
     if (e.type !== 'set') return;
     var p = patch[e.id];
-    if (p) { if (p.patch === null) return; for (var k in p.patch) e[k] = p.patch[k]; }
+    if (p !== undefined) { if (p === null) return; for (var k in p) e[k] = p[k]; }
     var d = new Date(e.ts);
     var lb = e.weight ? (e.weight.unit === 'kg' ? e.weight.value * 2.2046226 : e.weight.value) : null;
     rows.push([

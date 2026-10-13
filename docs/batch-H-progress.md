@@ -57,6 +57,7 @@ of Appendix A). Order: Appendix A by reported impact, then Parts 1–6, then 7�
 
 | Part | State | Version | Notes |
 |---|---|---|---|
+| A1 edit = delete + relog | done | v1.68.1 | corrections merge (one rule: correctionMap/corrected), edits recompute the next set, readers that skipped corrections fixed; §72; backtest: one row (20 Sep double edit) moved, error 10 → 0 reps; D38 |
 | A2 which exercise is current | done | v1.68.0 | rule in CLAUDE.md, ruleCurrent/syncCurrent, §71, mobile.js reorder repro (fails on 1.67.0 on both engines, passes now); D37 |
 
 ## Half-finished

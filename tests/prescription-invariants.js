@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark','THEMES','lastTimeRows','navPush','navDrop','pickSlot','syncCurrent','advanceIfDone','ruleCurrent'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark','THEMES','lastTimeRows','navPush','navDrop','pickSlot','syncCurrent','advanceIfDone','ruleCurrent','editLogged','deleteLogged','correctionMap','corrected','dialRevealed','undoHistoryMove'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -3208,6 +3208,83 @@ section('71. which exercise is current: one rule, both reported scenarios');
     }
   }
   console.log('  mid-exercise wins · moving into the first unfinished place takes it · a tap wins until finished · finishing moves on · skip, add, close');
+}
+
+section('72. an edited set counts exactly like a deleted-and-relogged one');
+{
+  // canonical form: ids and timestamps differ between the two paths by construction, nothing else may
+  const canon=v=>JSON.stringify(v,(k,x)=>(k==='id'||k==='ts'||k==='target_id'||k==='ev'||k==='set')?undefined:(typeof x==='string'&&/^[0-9A-Z]{12,}$/.test(x)?'#':(typeof x==='number'?Math.round(x*1000)/1000:x)));
+  const EXS=['bench','pulldown','curl','squat'];
+  let R=12345; const rnd=n=>{ R=(R*48271)%2147483647; return R%n; };
+  const consumers=(A,exid,slot)=>{
+    const prs=A.sets().filter(x=>A.prIds().has(x.id)).map(x=>[x.exercise_id,A.toLb(x.weight),x.reps,x.rpe]);
+    const fresh={ex:exid,role:slot.role,reps:slot.reps,rpe:slot.rpe,sets:3,sets_target:3};
+    const d=A.getDraft();
+    return {
+      nextSet:(()=>{ const r=A.suggestFor(slot); return [r.lb,r.pr&&r.pr.reps]; })(),
+      draft:[d.weight,d.reps,d.suggestedLb,d.suggestedReps],
+      nextSession:(()=>{ const r=A.nextPrescription(fresh); return [r.lb,r.reps]; })(),
+      best:(A.bestE1RM(exid)||{}).v,
+      prs,
+      stall:canon(A.stallState(exid)),
+      dial:canon(A.dialRevealed(exid)),
+      accuracy:canon(A.suggestionAccuracy()),
+      history:canon(A.exerciseSessionHistory(exid)),
+      today:canon(A.sets().filter(x=>x.session_id===A.getSession().id).map(x=>[x.weight,x.reps,x.rpe,x.role,x.suggestion&&x.suggestion.lb,x.suggested_lb]))
+    };
+  };
+  let agreed=0;
+  for(let run=0;run<160;run++){
+    const exid=EXS[run%EXS.length], base=exid==='curl'?30:exid==='pulldown'?120:exid==='squat'?225:185, ev=[];
+    const nh=2+rnd(5);
+    for(let h=nh;h>=1;h--) for(let k=0;k<3;k++) ev.push(set(exid,'h'+h+'_'+run,base+5*rnd(3)-5,6+rnd(5),7+rnd(3)*0.5,h*3+1));
+    const slotOf=()=>({uid:'s',ex:exid,role:'secondary',reps:[6,10],rpe:8,sets:3,sets_target:4,sets:[]});
+    const K=1+rnd(3), plan=[]; for(let k=0;k<K;k++) plan.push({w:base+5*rnd(4)-5,r:5+rnd(6),p:7+rnd(5)*0.5});
+    const X={w:base+5*rnd(5)-10,r:4+rnd(8),p:6.5+rnd(7)*0.5}, which=1+rnd(7);   // which fields change: bit 1 weight, 2 reps, 4 RPE
+    const sid='TODAY'+run;
+    const today=(A)=>{ const sl=slotOf(); A.setSession({id:sid,slots:[sl],openIdx:0,adj:null,score:0.7,ratings:{},startedAt:Date.now()}); A.seedDraft(sl);
+      for(const q of plan){ const d=A.getDraft(); d.weight=q.w; d.unit='lb'; d.reps=q.r; d.rpe=q.p; A.logSet(sl,0,'straight'); } return sl; };
+    const p={}; const last=plan[K-1];
+    if(which&1&&X.w!==last.w) p.weight={value:X.w,unit:'lb'}; if(which&2&&X.r!==last.r) p.reps=X.r; if(which&4&&X.p!==last.p) p.rpe=X.p;
+    if(!Object.keys(p).length) p.reps=last.r+1;
+    const target={w:p.weight?p.weight.value:last.w, r:p.reps!=null?p.reps:last.r, rpe:p.rpe!=null?p.rpe:last.p};
+    // path A: edit the last set
+    const A=load(ev); const sa=today(A); const orig=sa.sets[sa.sets.length-1]; const raw=JSON.stringify(A.LOG.find(e=>e.id===orig.id));
+    A.editLogged(sa,orig,p,false);
+    ok(JSON.stringify(A.LOG.find(e=>e.id===orig.id))===raw,'editing never changes the logged event itself (only a correction is appended)',run);
+    // path B: delete it, then log the same numbers
+    const B=load(ev); const sb=today(B); const ob=sb.sets[sb.sets.length-1];
+    B.deleteLogged(sb,[ob],false); const d=B.getDraft(); d.weight=target.w; d.unit='lb'; d.reps=target.r; d.rpe=target.rpe; B.logSet(sb,0,'straight');
+    const ca=consumers(A,exid,sa), cb=consumers(B,exid,sb);
+    let all=true;
+    for(const k of Object.keys(ca)){ const same=JSON.stringify(ca[k])===JSON.stringify(cb[k]); if(!same) all=false;
+      ok(same,'edit vs delete-and-relog differ: '+k,'run '+run+' '+exid+' '+JSON.stringify(p)+'\n      edit:   '+JSON.stringify(ca[k]).slice(0,240)+'\n      relog:  '+JSON.stringify(cb[k]).slice(0,240)); }
+    if(all) agreed++;
+  }
+  // two edits on one set: both stick, and still stick after a reload (the merge rule)
+  { const ev=[set('bench','h1',185,8,8,4)]; const A=load(ev); const sl={uid:'s',ex:'bench',role:'secondary',reps:[6,10],rpe:8,sets_target:3,sets:[]};
+    A.setSession({id:'TW',slots:[sl],openIdx:0,adj:null,score:0.7,ratings:{},startedAt:Date.now()}); A.seedDraft(sl);
+    const d=A.getDraft(); d.weight=185; d.unit='lb'; d.reps=8; d.rpe=8; A.logSet(sl,0,'straight');
+    const id=sl.sets[0].id; A.editLogged(sl,sl.sets[0],{reps:20},false); A.editLogged(sl,sl.sets[0],{rpe:9},false);
+    const now=A.sets().find(x=>x.id===id); ok(now.reps===20&&now.rpe===9,'two edits on one set: both stick',JSON.stringify([now.reps,now.rpe]));
+    const B=load(A.LOG.slice()); const re=B.sets().find(x=>x.id===id); ok(re&&re.reps===20&&re.rpe===9,'two edits on one set: both still there after a reload (they used to drop the first)',JSON.stringify(re&&[re.reps,re.rpe]));
+    // an old-style double edit in the log (the 20 Sep case: reps 20 + RPE 8.5, then RPE 8 alone) reads as both
+    const old=[set('bench','h2',100,10,8,3)]; old.push({type:'correction',id:'c1',ts:day(3),target_id:old[0].id,patch:{reps:20,rpe:8.5},reason:'edited in app'},{type:'correction',id:'c2',ts:day(3),target_id:old[0].id,patch:{rpe:8},reason:'edited in app'});
+    const C=load(old); const o=C.sets()[0]; ok(o.reps===20&&o.rpe===8,'an old double edit reads as both edits',JSON.stringify([o.reps,o.rpe]));
+    // delete is final: nothing after it brings the set back
+    const del=[set('bench','h3',100,10,8,3)]; del.push({type:'correction',id:'d1',ts:day(3),target_id:del[0].id,patch:null},{type:'correction',id:'d2',ts:day(3),target_id:del[0].id,patch:{reps:9}});
+    ok(load(del).sets().length===0,'a deleted set stays deleted',''); }
+  // moving history and undoing it, with an edit before the move: the edit survives both
+  { const ev=[set('squat','m1',225,5,8,6)]; ev.push({type:'correction',id:'e1',ts:day(6),target_id:ev[0].id,patch:{reps:6},reason:'edited in app'});
+    const A=load(ev); const mv=A.moveHistory('squat','transformer_high_bar');
+    const s1=A.sets()[0]; ok(s1.exercise_id==='transformer_high_bar'&&s1.reps===6,'moved history keeps an earlier edit',JSON.stringify([s1.exercise_id,s1.reps]));
+    A.undoHistoryMove(mv.id); const s2=A.sets()[0]; ok(s2.exercise_id==='squat'&&s2.slot==='squat'&&s2.reps===6,'undoing a move puts the exercise back and keeps the edit',JSON.stringify([s2.exercise_id,s2.slot,s2.reps])); }
+  // every reader of sets goes through the one rule
+  ok(/function correctionMap\(\)/.test(src)&&!/patch\[e\.target_id\]=e;/.test(src),'one replay rule in the app (no second "last correction wins" copy)','');
+  const bt=fs.readFileSync(path.join(__dirname,'backtest.js'),'utf8'), gs=fs.readFileSync(path.join(__dirname,'..','AppsScript.gs'),'utf8');
+  ok(/\.\.\.\(cur\|\|\{\}\),\.\.\.e\.patch/.test(bt)&&/if \(cur === null\) return;/.test(gs),'the backtest and the backup sheet replay corrections the same way','');
+  ok(!/LOG\.forEach\(\(e,i\)=>\{ if\(i<=reset\|\|e\.type!=='set'/.test(src),'the dial reads corrected sets','');
+  console.log('  '+agreed+' of 160 random logs: every reader agrees (next set, draft, next session, best, PRs, stall, dial, accuracy, history, today) · double edits stick · delete is final · moves keep edits');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

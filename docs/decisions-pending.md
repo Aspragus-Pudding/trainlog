@@ -633,3 +633,37 @@ That looks wrong in dark.
 
 **To undo:** `ruleCurrent()` in index.html is the whole rule; CLAUDE.md's
 "Recurring bugs" section says what it must do.
+
+---
+
+## D38. Edits merge, and an edit equals delete-and-relog of the last set (v1.68.1)
+
+**What was wrong:**
+- **Edits replaced each other.** A later correction replaced an earlier one,
+  so editing reps and then RPE on one set lost the reps after a reload. Your
+  log has one: a rear delt fly on 20 Sep, edited to 20 reps and then RPE 8.
+- **No recompute.** Editing never recomputed the next-set suggestion.
+- **The edit touched the logged set.** It changed the in-memory copy of the
+  logged event itself.
+- **Some readers skipped corrections:** the dial's revealed side, the "why
+  these numbers" card and the focused deload's reference load.
+
+**Chosen:**
+- **One replay rule:** corrections merge in log order, and a delete is final
+  (`correctionMap()`, `corrected()`).
+- **Same rule everywhere:** sets(), the backtest and AppsScript.gs. Every new
+  edit also writes the set's full corrected values, so a backup sheet still
+  running the old script reads new edits the same way. Redeploying the script
+  only matters for sets edited twice before this version.
+- **What "identical" means:** editing the *last* set equals deleting it and
+  logging the same numbers, in every reader (§72, 160 random logs).
+- **Earlier sets differ, by design.** Deleting an earlier set and relogging
+  it makes it the newest set, so the next-set suggestion then prices from it.
+  Edit keeps it in its place, which is the right answer.
+
+**Backtest:** one row moved, the 20 Sep rear delt fly. The suggestion now
+prices from the 20 reps you entered. That row's reps error went from 10 to
+0; nothing else changed.
+
+**To undo:** not recommended. `correctionMap()` is the one place the rule
+lives.

@@ -61,6 +61,10 @@ editing the JSON, paste its full contents into that block unchanged.
 line in `localStorage` under `trainlog.jsonl.v1`. Nothing is ever rewritten.
 Edits and deletes append a `correction` event that `sets()` replays over the
 raw log on read. This is what makes backup/restore and sync conflict-free.
+Corrections merge in log order (an edit changes only the fields it names) and a
+delete is final; `correctionMap()`/`corrected()` are the one rule. Read sets
+through `sets()` or `corrected()`, never the raw `LOG`. Editing the last set
+must equal deleting it and logging the same numbers (§72).
 
 **2. Derived state is never stored.** e1RM, weekly volume, PR status, joint
 trends — all computed on read from the log. If you're tempted to cache a

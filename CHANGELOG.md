@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.68.1 — 2026-10-12
+- Editing a set now counts exactly like deleting it and logging the new numbers. The next set's suggestion updates straight away.
+- Editing the same set twice (reps, then RPE) keeps both changes. Before, the first change was lost after the app reloaded.
+- Sets you'd already edited twice now read the way you entered them. Nothing in your log was rewritten.
+
 ## 1.68.0 — 2026-10-12
 - Moving an exercise up into the current spot now makes it the one you log next. Before, Log set stayed on the old one.
 - If you're partway through an exercise, moving others around never takes Log set away from it.
