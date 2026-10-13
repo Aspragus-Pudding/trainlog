@@ -9,6 +9,7 @@ this file's top entry and `APP_VERSION` disagree.
 ## 1.69.1 — 2026-10-12
 - Errors the app records now sit in their own collapsed "App errors" group under Progress → Notes, apart from your own notes.
 - A long tour card now scrolls inside itself instead of running off a short screen, and its buttons stay in reach.
+- Every step of every screen tour is now checked on iPhone and Android screen sizes before an update ships.
 
 ## 1.69.0 — 2026-10-12
 - Plain words in the workout. A flagged exercise shows one chip, "For your shoulder" (or knee, elbow…). Tap it for what to watch, the cues and a suggested swap.
