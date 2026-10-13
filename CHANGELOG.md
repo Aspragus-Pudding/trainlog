@@ -6,6 +6,13 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.84.0 — 2026-10-13
+- Rehab and prehab exercises are tracked. After training, open one in the rehab block and log the dose, the pain during it, and how it moved.
+- Rehab starts with a feel-it stage: the same easy dose for 10 days and 3 sessions. After that it takes one small step a week at most (reps first, then a slower lowering, then load), and only when the pain stayed within the limit and was back to your usual by the next morning.
+- A flare-up steps back one level and holds there for a week. Prehab is the maintenance version: a rep a week, with the same pain check.
+- After three pain-free weeks at the top of the dose, the app asks whether to move the exercise to prehab. It never switches on its own.
+- Progress has a Rehab and prehab history, kept apart from training volume and bests.
+
 ## 1.83.0 — 2026-10-12
 - The warm-up fits the day: first the main lifts (a squat day warms hips, knees and back), then your conditions, then anything sore. Each item says why ("for today's back squat", "for your shoulder").
 - Edit warm-up: add from the library, create your own warm-up or rehab exercises, reorder yours and remove suggestions, for one day or every session.

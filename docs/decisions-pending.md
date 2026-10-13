@@ -1211,3 +1211,42 @@ removed, with the one-line reason.
   CHANGELOG entry; that's reserved for what a user would notice.
 
 **To undo:** the files are docs; git history has the earlier versions.
+
+---
+
+# Big batch Part 7
+
+## D59. Rehab and prehab as tracked exercises (v1.84.0)
+
+**Chosen:**
+- **Its own event, `rehab_set`**, not a `set` with a tag. A `set` reaches
+  `sets()`, and from there volume, bests, the dial and the engine; keeping rehab out
+  structurally means no reader has to remember to skip it. Each event records the
+  exercise, mode, sets, reps or seconds, load, a slow lowering, pain (0–10),
+  quality and "felt unstable". Corrections apply as for sets.
+- **Feel it: 10 days and 3 sessions** at one easy dose. Both are needed, and only
+  pain and quality count. (The brief says 1–2 weeks; 10 days is in that range.)
+- **One step every 7 days at most** (the brief says every 1–2 weeks; 7 days is
+  the faster end of it). The order is reps (+2, up to 15), then a 3-second
+  lowering, then the smallest load step (back to 10 reps). Holds go +5 s up to
+  45 s.
+- **The pain gate is the injury library's rule** (`painRule`) for your
+  conditions: "ok" or "amber" is within the limit, and "felt unstable" is always
+  over. A custom item gets the general rule (no condition passed in).
+- **"Back to usual by the next morning"** means the next check-in rates that
+  joint at or below your usual (`jointBaseline`). Two steps over your usual is
+  a flare. With no check-in since, the session isn't held against you.
+- **A flare steps back one level and holds for 7 days.**
+- **Prehab:** +1 rep a week, then load, with the same pain gate and no feel-it
+  stage.
+- **Graduation is a proposal** after 21 days and 6 sessions, at the top of the
+  dose, with pain at 2 or less. Accepting it sets `CFG.rehabMode`. Rehab and
+  prehab chips in the block switch the mode by hand.
+- **History** is one card in Progress ("Rehab and prehab · not training volume"):
+  sessions, the last dose, the next dose, and pain over the last 6 sessions.
+
+**Worth a second look:** the 7-day step and the 10-day feel-it stage are the
+quick end of the brief's ranges. Both are constants (`STEP_DAYS`, `FEEL_DAYS`).
+
+**To undo:** the old block ticked items without logging them (v1.83.0). Any
+`rehab_set` events already logged stay in the log and are ignored by the old code.

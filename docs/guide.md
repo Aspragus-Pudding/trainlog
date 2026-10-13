@@ -36,6 +36,9 @@ Before you start, the Workout tab is today's workout, with the same cards as the
 ### I want my own warm-up
 The warm-up at the top of a workout is built from the day's main lifts, then your conditions, then anything sore, and each item says why it's there. Tap Edit warm-up to stop a suggestion for that day, add one from the library, or create your own warm-up or rehab exercise, for that day or every session. Rehab ones come after training.
 
+### I'm doing rehab for an injury
+Rehab exercises come after training, in the rehab block. Tap one to log it: the dose, the pain during it, and how it moved. For the first 10 days and 3 sessions the dose stays the same (the feel-it stage). After that it goes up one small step a week at most (reps, then a slower lowering, then load), and only when the pain stayed within the limit and was back to your usual by the next check-in. If it hurts more than the limit, the next session steps back and holds for a week. Your history is under Progress → Rehab and prehab.
+
 ### My gym doesn't have an exercise
 Tap the swap button on the exercise card and pick another, by muscle or by name. Anything you log comes first from then on. To change what the app assumes your gym has, use Settings → Equipment; anything you've logged still comes first.
 
@@ -178,6 +181,9 @@ For assisted machines: how much of the number on the stack actually comes off yo
 
 ### How hard it should push here
 The same setting as How hard suggestions push, for one exercise only.
+
+### Rehab or prehab
+Rehab is slow and pain-led: a feel-it stage first, then one small step a week at most. Prehab is for maintenance: a rep a week, with the same pain check. After three pain-free weeks at the top of the dose the app asks whether to move it to prehab; you can also switch with the chips when an item is open.
 
 ### Focused deload
 Hold one or more exercises at a lighter load for a few sessions while everything else carries on. The app proposes the ramp back; it never moves on by itself.

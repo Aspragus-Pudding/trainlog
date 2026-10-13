@@ -60,6 +60,8 @@ everyone.
 | Leave (end early, with a reason) | everyone | header, top right |
 | Video prompt ("film this set") | advanced | occasionally, on main lifts |
 | Rehab and prep blocks | injury-prone | in the session, if a plan or prep applies |
+| Rehab and prehab logging: dose, pain, how it moved; feel-it stage, one step a week at most, a flare steps back | injury-prone | rehab block after training, tap an item |
+| Rehab or prehab, per exercise | injury-prone | rehab block, an open item |
 | Finish session: joint question per exercise, diary, ratings | everyone | Finish session |
 | Session summary: new bests, compared with last time | everyone | after finishing |
 
@@ -85,6 +87,7 @@ everyone.
 | Weekly volume, last 12 weeks | advanced | Weekly volume card |
 | Readiness over time | everyone | Readiness card |
 | Joints over time, against your usual | injury-prone | Joints card |
+| Rehab and prehab history: sessions, last and next dose, recent pain (not training volume) | injury-prone | Rehab and prehab card, once you've logged one |
 | Notes: what you've sent, mark done | everyone | Notes card |
 | Copy all notes | maintainer | Notes card (hidden for testers) |
 | Sessions list and session detail | everyone | Sessions card |

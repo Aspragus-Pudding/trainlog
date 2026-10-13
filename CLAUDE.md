@@ -338,6 +338,11 @@ included), `planFor`/`weekPlanFor`, swaps and saving a range. A stored
   plus revealed overrides; it replaced override damping. Program changes
   append `program_edit` (the next session is "calibrating": no step up).
   §52 runs 1200 randomised stacks — if it fails, fix the interaction, not the test.
+- **Rehab and prehab are tracked (v1.84).** They're logged as `rehab_set` events, never `set`, so no
+  volume, best or engine reader can see them. `rehabRx()` derives the dose from
+  them: a feel-it stage first, then at most one step per window. The pain gate is
+  `painRule` plus the next check-in against `jointBaseline`. A flare steps back and
+  holds. Graduating to prehab is a proposal (`CFG.rehabMode`).
 - **`PENDING`** holds pre-workout plan edits until the session starts.
 - **Readiness** drives load adjustment (discrete tiers) and warmup length
   (continuous score). Adjustments are downward-only by design.
