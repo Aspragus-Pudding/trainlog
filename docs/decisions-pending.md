@@ -743,3 +743,25 @@ and `preSessionBanner(v)` back in `renderWork`.
 
 **To undo:** `renderPreview` and `planCard` in index.html. The old
 `openWorkoutPreview` is in git history (v1.69.1).
+
+---
+
+## D42. The readiness card's numbers (v1.71)
+
+**Chosen:**
+- **Joints use 0 to 3, not "/ 5".** The check-in records joints as none,
+  mild, moderate or bad, so the card says "Shoulder 2 / 3 (usual 1)". A
+  5-point number would invent precision the check-in doesn't have.
+- **The four readiness bands are the warm-up thresholds** the app already
+  uses: 85+ Great (short warm-up), 65–84 Good (standard), 45–64 Below par
+  (longer), under 45 Rough (longest). What changes load, the no step-ups and
+  sick-day rules, is said on the same line, because the score itself only
+  sets the warm-up (D14). The sheet says the cut-offs are the app's judgement,
+  not research.
+- **The score shows only on a day you checked in.** Other days the card
+  says there's no check-in yet, plus the joints.
+- **Fatigue appears only when a sign is showing.** Saying "no signs" every
+  day made the card cramped.
+- **The H2 rule holds:** every number and band word sits next to what it does.
+
+**To undo:** `readinessCard`, `READY_BANDS` and `jointLines` in index.html.

@@ -224,6 +224,7 @@ html.locked,html.locked body{overflow:hidden}
 input:not([type=checkbox]):not([type=radio]):not([type=file]):not(.numin),select,textarea{font-size:max(16px,var(--fs-3))!important}
 .tourspot{position:fixed;border-radius:var(--r-btn);pointer-events:none;z-index:2147483000;box-shadow:0 0 0 200vmax var(--backdrop);outline:2px solid var(--accent);outline-offset:2px;transition:top .15s,left .15s,width .15s,height .15s}
 .tourspot.light{box-shadow:0 0 0 200vmax color-mix(in srgb, var(--backdrop) 40%, transparent)}
+.readycard .rsec{padding:var(--sp-3) 0}.readycard .rsec+.rsec{border-top:1px solid var(--line)}.readycard .rsec:first-child{padding-top:0}.readycard .rtap{display:block;width:100%;text-align:left;padding:var(--sp-1) 0;min-height:var(--tap)}.readycard .rtap .status{margin:0}
 .tourcard{position:fixed;left:12px;right:12px;max-width:440px;margin:0 auto;z-index:2147483001;max-height:calc(var(--vvh) - 24px);overflow-y:auto;overscroll-behavior:contain;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:var(--sp-3) var(--sp-4);color:var(--ink);box-shadow:0 10px 30px color-mix(in srgb, var(--backdrop) 60%, transparent)}
 .tourcard h3{font-size:var(--fs-3);margin:0 0 var(--sp-2)}.tourcard p{font-size:var(--fs-2);line-height:1.5;margin:0;color:var(--muted)}
 dialog::backdrop{background:var(--backdrop,rgba(6,8,12,.78))}
@@ -8816,7 +8817,7 @@ Cards here are proposals, such as a deload week, a change for a lift that has st
 Start training opens today's workout. The app picks the day from your rotation, not from the weekday, so the program carries on from wherever you left it.
 
 ### Readiness `[data-tour="dash-bands"]`
-The readiness card leads with what today's check-in does to the workout, then one line for each joint and for fatigue: a small coloured dot and what it changes. Tap the card for each check-in answer and what it does, and for the readiness score, which only sets how long your warm-up is.
+The readiness card has three parts: today's plan, your readiness out of 100 with what it does today, and each joint against your usual (0 none to 3 bad). Every number sits next to what it changes. Tap any of them for the scales: the four readiness bands, which set your warm-up, and how your usual is worked out.
 
 ### Volume this week `[data-tour="dash-volume"]`
 Volume counts hard sets per muscle this week, with half credit for muscles an exercise trains indirectly. The ticks mark the typical weekly sets for each muscle, and those numbers are judgement defaults rather than measured limits.
@@ -9125,7 +9126,7 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.70.0","lines":["Before you start, the Workout tab is today's workout, with the same cards and controls as the live session: move, swap, add or remove exercises and change sets.","Each planned set shows what you did last time, and the top shows roughly how long it'll take.","Changes are for today. \"Save to program\" keeps them for that day from now on. Start begins in the order you set.","The separate Preview workout button is gone. Below the list, \"Last Upper B: 5 days ago, 2 PRs\" opens that session."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.71.0","lines":["The dashboard's readiness card has room to breathe: Today's plan, Readiness and Joints each get their own section.","The numbers are back, each with what it does: \"Readiness 64 / 100 · Below par: longer warm-up, no step-ups today.\"","Joints show your rating against your usual: \"Shoulder 2 / 3 (usual 1): longer warm-up on pressing…\". Joints at their usual share one line.","Tap any of them, or \"What these numbers mean\", for the scales: the four readiness bands and how \"your usual\" works."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9692,7 +9693,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.70.0';
+const APP_VERSION='1.71.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -12966,25 +12967,55 @@ function whatsNewCard(){
   c.appendChild(b);
   return c;
 }
-/* The readiness card (H2): today's plan's top line, not a band or a score; then
-   one line per status (joints, fatigue), each a dot and what it does. The score
-   and the per-input effects are in the detail sheet (tap the card). */
+/* The readiness card (v1.71, Appendix A Part 5): three sections with room between
+   them. Today's plan (its top line and the button); Readiness as a number out of
+   100 with its band word and what it does today; Joints as a number against your
+   usual with what it does (joints at their usual share one line). A number or a
+   band word never appears without what it does (H2); tapping any of it opens the
+   detail sheet, which starts with the scales. */
 const sameDay=ts=>new Date(ts).toDateString()===new Date().toDateString();
+/* Readiness bands: the warm-up thresholds warmupRamp() uses (<45, <65, <85).
+   Judgement defaults, Grade D. What changes load is the global items (a 2 = no
+   step-ups, a 1 = sick day), said on the same line. */
+const READY_BANDS=[[85,'Great','short warm-up','Green'],[65,'Good','standard warm-up','Green'],[45,'Below par','longer warm-up','Yellow'],[0,'Rough','longest warm-up','Orange']];
+const readyBand=sc=>READY_BANDS.find(([min])=>sc>=min)||READY_BANDS[READY_BANDS.length-1];
+const JOINT_SCALE_WORDS=['none','mild','moderate','bad'];
+function readinessLine(ev){
+  if(!ev) return null;
+  const sc=Math.round(((session&&sameDay(ev.ts)&&session.score!=null)?session.score:readinessScoreFromEvent(ev))*100);
+  const [,word,warm,band]=readyBand(sc);
+  const g=globalReadiness({sleep:ev.sleep_quality, motivation:ev.motivation, recovery:ev.recovery});
+  const plan=g.band==='Red'?'sick day, everything one step lighter':g.band==='Yellow'?'no step-ups today':'full plan';
+  return {score:sc, word, band:worseBand(band,g.band), text:'Readiness '+sc+' / 100 · '+word+': '+warm+', '+plan+'.'};
+}
+function jointLines(){
+  const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
+  const js=JOINTS.map(jointBand).filter(Boolean);
+  const loud=js.filter(b=>b.band!=='Green'||b.level>=2).sort((x,y)=>BAND_ORDER.indexOf(y.band)-BAND_ORDER.indexOf(x.band)||y.level-x.level);
+  const quiet=js.filter(b=>!loud.includes(b));
+  const out=loud.map(b=>({band:b.band, text:cap(b.joint)+' '+b.now+' / 3 (usual '+b.usual+'): '+jointDoes(b)+'.'}));
+  const list=a=>a.length>1?a.slice(0,-1).join(', ')+' and '+a[a.length-1]:a[0];
+  if(quiet.length) out.push({band:'Green', text:cap(list(quiet.map(b=>b.joint)))+': at your usual, no change.'});
+  return out;
+}
 function readinessCard(){
-  const lastR=[...LOG].reverse().find(e=>e.type==='readiness'), b=todayBriefing(), bands=dashBands(lastR);
-  if(!lastR&&!b&&!bands.some(x=>x.joint)) return null;
-  const today=!!(lastR&&sameDay(lastR.ts));
-  const top=b?b.top:today?'':'No check-in yet today. It sets the warm-up and whether anything steps up.';
-  const rows=bands.filter(x=>x.what!=='Readiness'||(today&&!b));
-  const rc=el('div','card pad'); rc.dataset.tour='dash-bands'; rc.setAttribute('role','button'); rc.tabIndex=0; rc.style.cursor='pointer';
-  rc.innerHTML='<div class="row between"><span style="font-weight:650">Readiness</span><span class="dim tiny">'
-      +(lastR?'checked in '+esc(new Date(lastR.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})):'details')+' ›</span></div>'
-    +(top?'<div class="sm" style="margin-top:var(--sp-1);line-height:1.45">'+esc(top)+'</div>':'')
-    +'<div style="margin-top:var(--sp-2)">'+rows.map(x=>statusRow(x.band,'<b>'+esc(x.what)+':</b> <span class="dim">'+esc(x.does)+'</span>',x.sub)).join('')+'</div>';
+  const lastR=[...LOG].reverse().find(e=>e.type==='readiness'), b=todayBriefing();
+  const today=!!(lastR&&sameDay(lastR.ts)), jl=jointLines();
+  if(!lastR&&!b&&!jl.length) return null;
+  const rc=el('div','card pad readycard'); rc.dataset.tour='dash-bands';
+  const sec=(title,html)=>{ const d=el('div','rsec'); d.innerHTML='<div class="qlab">'+title+'</div>'+html; rc.appendChild(d); return d; };
+  // 1. today's plan
+  const s1=sec(b?'Today\'s plan':'Today', '<div class="sm" style="line-height:1.45">'+esc(b?b.top:today?'Checked in. Start a session for today\'s plan.':'No check-in yet today. It sets the warm-up and whether anything steps up.')+'</div>');
   if(b){ const bt=el('button','btn s ghost','Today\'s plan ›'); bt.dataset.tour='briefing'; bt.style.marginTop='var(--sp-2)';
-    bt.onclick=e=>{ e.stopPropagation(); openBriefing(b); }; rc.appendChild(bt); }
-  rc.onclick=()=>openReadiness();
-  rc.onkeydown=e=>{ if(e.target===rc&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); openReadiness(); } };
+    bt.onclick=e=>{ e.stopPropagation(); openBriefing(b); }; s1.appendChild(bt); }
+  // 2. readiness: the number, its word, what it does
+  const tap=(html,band)=>{ const x=el('button','rtap',statusRow(band,html)); x.setAttribute('aria-label','What this means'); x.onclick=()=>openReadiness(); return x; };
+  if(today){ const r=readinessLine(lastR); const s2=sec('Readiness',''); s2.appendChild(tap('<span><b>'+esc(r.text.split(' · ')[0])+'</b> · '+esc(r.text.split(' · ')[1])+'</span>',r.band)); }
+  // 3. joints against your usual
+  if(jl.length){ const s3=sec('Joints',''); jl.forEach(j=>s3.appendChild(tap('<span>'+esc(j.text)+'</span>',j.band))); }
+  const f=fatigueBand();
+  if(f.n){ const fd=dashBands(null).find(x=>x.what==='Fatigue'); const s4=sec('Fatigue',''); s4.appendChild(tap('<span>'+esc(fd.does.charAt(0).toUpperCase()+fd.does.slice(1))+'.</span>',fd.band)); }
+  const more=el('button','btn s quiet','What these numbers mean ›'); more.onclick=()=>openReadiness(); more.style.marginTop='var(--sp-1)'; rc.appendChild(more);
   return rc;
 }
 /* Every row of the readiness detail sheet, from one check-in event: what each
@@ -13016,7 +13047,7 @@ function readinessRows(ev, today, exIds){
   const cap=t=>t.charAt(0).toUpperCase()+t.slice(1), js=JOINTS.map(jointBand).filter(Boolean), quiet=js.filter(b=>b.level<2&&b.over<=0);
   js.filter(b=>!quiet.includes(b)).forEach(b=>{
     const exs=(exIds||[]).filter(x=>(JOINT_PATTERNS[b.joint]||[]).includes(exById[x].pattern)).map(x=>exById[x].name);
-    out.joints.push({what:cap(b.joint), band:b.band, does:jointDoes(b), exs});
+    out.joints.push({what:cap(b.joint)+' '+b.now+' / 3 (usual '+b.usual+')', band:b.band, does:jointDoes(b), exs});
   });
   if(quiet.length) out.joints.push({what:quiet.map(b=>cap(b.joint)).join(', '), band:'Green', does:'at your usual, no change', exs:[]});
   return out;
@@ -13030,6 +13061,13 @@ function openReadiness(){
     +(r.exs&&r.exs.length?'<div class="tiny dim" style="margin-top:1px">'+esc(r.exs.join(', '))+'</div>':''));
   let html='<h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-1)">'+term('readiness','Readiness')+'</h2><div class="muted tiny" style="margin-bottom:var(--sp-2)">'
     +(ev?'Check-in: '+esc(new Date(ev.ts).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}))+(today?'':'. It applied to that day\'s session.'):'No check-in yet. It comes up when you start a session.')+'</div>';
+  // the scales first: what the numbers mean (v1.71)
+  html+='<div class="qblock"><div class="qlab">How to read the numbers</div>'
+    +'<div class="sm"><b>Readiness, 0 to 100</b>, comes from your check-in. It sets your warm-up:</div>'
+    +READY_BANDS.map(([min,word,warm,band],i)=>statusRow(band,'<b>'+min+'–'+(i?READY_BANDS[i-1][0]-1:100)+'</b> · '+esc(word)+': '+esc(warm))).join('')
+    +'<div class="dim tiny" style="margin-top:var(--sp-1)">On top of that, a 2 for sleep, motivation or rest of life means no step-ups today, and a 1 is a sick day: everything one step lighter. The cut-offs are the app\'s judgement, not research.</div>'
+    +'<div class="sm" style="margin-top:var(--sp-3)"><b>Joints, 0 to 3</b>: '+JOINT_SCALE_WORDS.map((w,i)=>i+' '+w).join(', ')+'.</div>'
+    +'<div class="dim tiny" style="margin-top:var(--sp-1)">Your usual is the rating you set in Edit program, or else the middle rating of your recent sessions. Only a rating above your usual changes anything, and a bad rating always counts.</div></div>';
   if(b) html+='<div class="sm" style="line-height:1.5;margin-bottom:var(--sp-3)">'+esc(b.top)+'</div>';
   if(ev){
     html+='<div class="qblock"><div class="qlab">Your check-in</div>'+R.inputs.map(row).join('')
@@ -16983,7 +17021,7 @@ function jointBand(joint){
   const over=wStep(t.last||0)-wStep(t.base||0);
   const byRating=over<=0?'Green':over===1?'Yellow':over===2?'Orange':'Red';
   const level=jointLevel(t);
-  return {joint, level, over, band:level>=3?worseBand(byRating,JOINT_BAND[level]):byRating};
+  return {joint, level, over, now:wStep(t.last||0), usual:wStep(t.base||0), band:level>=3?worseBand(byRating,JOINT_BAND[level]):byRating};
 }
 /* Readiness band: from the three global items only (sleep, motivation, rest of
    life) — exactly what the engine's global_readiness / sick_day read, so the

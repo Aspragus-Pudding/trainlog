@@ -2879,17 +2879,22 @@ section('65. plain language: no band names, no raw ids, glossary labels on scree
     ok(/For your shoulder/.test(inf)&&/Swap for |Suggested swap|Worth attention|Flagged/.test(inf),'the info sheet carries the condition: reason, cues and swap, under "For your shoulder"',inf.slice(0,120));
     ok(/Your shoulder plan/.test(screens['dashboard with a rehab plan']),'a rehab plan card is titled in plain words','');
   }
-  ok(!/\b\d{1,3}\s*\/\s*100\b/.test(screens.dashboard+screens['dashboard after check-in']),'the dashboard shows no readiness score (it is in the detail sheet)','');
+  // the numbers are back on the dashboard (v1.71), each with what it does
+  { const d=screens['dashboard after check-in'];
+    ok(/Readiness \d{1,3} \/ 100\s+·\s+(Great|Good|Below par|Rough): (short|standard|longer|longest) warm-up, (full plan|no step-ups today|sick day, everything one step lighter)\./.test(d),'the dashboard shows the readiness score, its word and what it does today',(d.match(/Readiness \d[^\n]{0,80}/)||[''])[0]);
+    ok(/Today's plan/.test(d)&&/Joints/.test(d),'the card has its sections: today\'s plan, readiness, joints','');
+    const sh=screens['readiness sheet'];
+    ok(/How to read the numbers/.test(sh)&&/85–100\s+·\s+Great: short warm-up/.test(sh)&&/0–44\s+·\s+Rough: longest warm-up/.test(sh)&&/Joints, 0 to 3/.test(sh)&&/Your usual is/.test(sh),'the detail sheet starts with the scales: four bands in a line each, the joint scale and how "your usual" works',''); }
   ok(!/so that work is lighter/.test(S.briefing.top)||/^Sore /.test(S.briefing.top),'a soreness top line names the sore muscles (H1 fix: it used to take the row\'s first reason)',S.briefing.top);
   ok(screens['dashboard after check-in'].includes(S.briefing.top),'the readiness card shows today\'s plan\'s top line',S.briefing.top);
-  ok(/Shoulder:/.test(screens['dashboard after check-in'])&&/held|lighter|warm-up/.test(screens['dashboard after check-in']),'joints read as what they do ("Shoulder: … held …")','');
+  ok(/Shoulder \d \/ 3 \(usual \d\): [^\n]*(held|lighter|warm-up)/.test(screens['dashboard after check-in']),'joints read as a number against your usual and what it does ("Shoulder 3 / 3 (usual 1): … held …")',(screens['dashboard after check-in'].match(/Shoulder[^\n]{0,90}/)||[''])[0]);
 
   // the detail sheet: one row per input with its effect, sore groups and joints with what they touch
   const ev=D.LOG.filter(e=>e.type==='readiness').pop(), R=D.readinessRows(ev,true,S.slots.map(x=>x.ex));
   ok(R.inputs.find(r=>/^Sleep 2/.test(r.what)&&/no step-ups today/.test(r.does))&&R.inputs.find(r=>/^Motivation 3/.test(r.what)&&r.does==='no change'),'one row per input with its effect ("Sleep 2 — … no step-ups today")',JSON.stringify(R.inputs.slice(0,2)));
   ok(R.score!=null&&/warm-up/.test(R.warm)&&/readiness \d+ of 100/.test(screens['readiness sheet']),'the score lives in the sheet, next to the warm-up it sets',R.warm);
   ok(R.sore.length>=1&&R.sore.every(r=>/lighter|noted/.test(r.does)),'each sore group says what it does',JSON.stringify(R.sore));
-  ok(R.joints.some(j=>j.what==='Shoulder'&&j.exs.length>0),'a flared joint lists the exercises it touches today',JSON.stringify(R.joints[0]));
+  ok(R.joints.some(j=>/^Shoulder \d \/ 3 \(usual \d\)$/.test(j.what)&&j.exs.length>0),'a flared joint lists the exercises it touches today, with its number against your usual',JSON.stringify(R.joints[0]));
   const sick=D.readinessRows({...ev,sleep_quality:1},true,[]);
   ok(/sick day/.test(sick.inputs[0].does)&&sick.inputs[0].band==='Red','a 1 says sick day',sick.inputs[0].does);
   ok(D.BAND_LEGEND.length===4&&D.BAND_LEGEND.every(([b,t])=>t&&!/Green|Yellow|Orange|Red/.test(t)),'a legend for the four dots, in words','');

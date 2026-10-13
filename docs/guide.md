@@ -199,7 +199,7 @@ Cards here are proposals, such as a deload week, a change for a lift that has st
 Start training opens today's workout. The app picks the day from your rotation, not from the weekday, so the program carries on from wherever you left it.
 
 ### Readiness `[data-tour="dash-bands"]`
-The readiness card leads with what today's check-in does to the workout, then one line for each joint and for fatigue: a small coloured dot and what it changes. Tap the card for each check-in answer and what it does, and for the readiness score, which only sets how long your warm-up is.
+The readiness card has three parts: today's plan, your readiness out of 100 with what it does today, and each joint against your usual (0 none to 3 bad). Every number sits next to what it changes. Tap any of them for the scales: the four readiness bands, which set your warm-up, and how your usual is worked out.
 
 ### Volume this week `[data-tour="dash-volume"]`
 Volume counts hard sets per muscle this week, with half credit for muscles an exercise trains indirectly. The ticks mark the typical weekly sets for each muscle, and those numbers are judgement defaults rather than measured limits.

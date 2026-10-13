@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.71.0 — 2026-10-12
+- The dashboard's readiness card has room to breathe: Today's plan, Readiness and Joints each get their own section.
+- The numbers are back, each with what it does: "Readiness 64 / 100 · Below par: longer warm-up, no step-ups today."
+- Joints show your rating against your usual: "Shoulder 2 / 3 (usual 1): longer warm-up on pressing…". Joints at their usual share one line.
+- Tap any of them, or "What these numbers mean", for the scales: the four readiness bands and how "your usual" works.
+
 ## 1.70.0 — 2026-10-12
 - Before you start, the Workout tab is today's workout, with the same cards and controls as the live session: move, swap, add or remove exercises and change sets.
 - Each planned set shows what you did last time, and the top shows roughly how long it'll take.
