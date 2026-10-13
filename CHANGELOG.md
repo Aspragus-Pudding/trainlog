@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.71.1 — 2026-10-12
+- Setup's gym question: "A bit of everything" is now Commercial gym, and there's a new Home gym option (barbell, rack, bench, dumbbells, pull-up bar).
+- A home gym puts machines and cables last. Untick the pull-up bar and pull-ups go last too.
+- Build it together is now the recommended path. Build it for me says: "Not sure what you want yet? Answer a few questions and we'll build a plan."
+
 ## 1.71.0 — 2026-10-12
 - The dashboard's readiness card has room to breathe: Today's plan, Readiness and Joints each get their own section.
 - The numbers are back, each with what it does: "Readiness 64 / 100 · Below par: longer warm-up, no step-ups today."

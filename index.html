@@ -9126,7 +9126,7 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.71.0","lines":["The dashboard's readiness card has room to breathe: Today's plan, Readiness and Joints each get their own section.","The numbers are back, each with what it does: \"Readiness 64 / 100 · Below par: longer warm-up, no step-ups today.\"","Joints show your rating against your usual: \"Shoulder 2 / 3 (usual 1): longer warm-up on pressing…\". Joints at their usual share one line.","Tap any of them, or \"What these numbers mean\", for the scales: the four readiness bands and how \"your usual\" works."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.71.1","lines":["Setup's gym question: \"A bit of everything\" is now Commercial gym, and there's a new Home gym option (barbell, rack, bench, dumbbells, pull-up bar).","A home gym puts machines and cables last. Untick the pull-up bar and pull-ups go last too.","Build it together is now the recommended path. Build it for me says: \"Not sure what you want yet? Answer a few questions and we'll build a plan.\""]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9693,7 +9693,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.71.0';
+const APP_VERSION='1.71.1';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -15634,7 +15634,7 @@ const EXPERIENCE={
   intermediate:{label:'Progress takes weeks', short:'Intermediate'},
   advanced:{label:'Progress takes months', short:'Advanced'}
 };
-const EQUIPMENT={barbell:'Barbell gym',machine:'Machine-heavy',dumbbell:'Dumbbells only',mixed:'A bit of everything'};
+const EQUIPMENT={mixed:'Commercial gym',home:'Home gym',barbell:'Barbell gym',machine:'Machine-heavy',dumbbell:'Dumbbells only'};
 /* ---------- Progression rate, per main lift ----------
    Replaces the novice / intermediate / advanced program models (Oct 2026).
    Each main lift is either FAST — the top set goes up one step every
@@ -15826,10 +15826,13 @@ function planFromNow(o){
 /* What your gym has (setup's specifics, CFG.equipmentHave): anything else goes last
    rather than out, like dumbbells-only. Unset for everyone who hasn't answered it. */
 const HAVE_IMPLEMENTS={barbell:['barbell'], smith:['smith'], specialty:['specialty'], dumbbell:['dumbbell'], kettlebell:['kettlebell'],
-  cable:['cable'], selector:['selector','machine'], plate:['plate','machine'], band:['band'], bodyweight:['bodyweight']};
+  cable:['cable'], selector:['selector','machine'], plate:['plate','machine'], band:['band'], bodyweight:['bodyweight'], bench:[], pullup:[]};
 function haveScore(ex){
   const have=CFG.equipmentHave; if(!Array.isArray(have)||!have.length) return 0;
-  const im=implementOf(ex); if(im==='bodyweight') return 0;
+  const im=implementOf(ex);
+  // a home gym without a pull-up bar: hanging pulls go last (only for the new Home gym answer, so nobody else's program moves)
+  if(CFG.equipment==='home'&&im==='bodyweight'&&ex.pattern==='vertical_pull'&&!have.includes('pullup')) return -500;
+  if(im==='bodyweight') return 0;
   return have.some(h=>(HAVE_IMPLEMENTS[h]||[]).includes(im))?0:-500;
 }
 function equipmentScore(ex){
@@ -15837,6 +15840,7 @@ function equipmentScore(ex){
   if(hs) return hs;
   if(!q||q==='mixed') return 0;
   if(q==='dumbbell') return ['dumbbell','kettlebell','bodyweight','band'].includes(im)?0:-500;
+  if(q==='home') return ['barbell','dumbbell','kettlebell','bodyweight','band'].includes(im)?0:-500;
   if(q==='machine') return ['machine','selector','plate','cable','smith'].includes(im)?40:0;
   if(q==='barbell') return ['barbell','specialty'].includes(im)?40:im==='smith'?20:0;
   return 0;
@@ -19096,12 +19100,12 @@ const ONB_T=['split','days','reps','blocks'];
 const ONB_GOALS=PROFILE_ORDER.map(k=>({k, profile:k, label:PROFILES[k].label, blurb:PROFILES[k].blurb}));
 const ONB_HISTORY=[['new','New to lifting','Under six months, or starting again after a long break'],['novice',EXPERIENCE.novice.label,'Weight goes up most times you train'],
   ['intermediate',EXPERIENCE.intermediate.label,'A new best every few weeks'],['advanced',EXPERIENCE.advanced.label,'A new best every few months']];
-const ONB_GYMS=[['mixed','A bit of everything','A typical commercial gym'],['barbell','Barbell gym','Racks, platforms and free weights'],
-  ['machine','Machine-heavy','Mostly machines and cables'],['dumbbell','Dumbbells only','Home or hotel']];
+const ONB_GYMS=[['mixed','Commercial gym','Machines, cables and free weights'],['home','Home gym','Barbell, rack, bench, dumbbells and a pull-up bar'],
+  ['barbell','Barbell gym','Racks, platforms and free weights'],['machine','Machine-heavy','Mostly machines and cables'],['dumbbell','Dumbbells only','A hotel gym, or a pair at home']];
 const ONB_HAVE=[['barbell','Barbell and rack'],['dumbbell','Dumbbells'],['cable','Cables'],['selector','Pin-loaded machines'],['plate','Plate-loaded machines'],
-  ['smith','Smith machine'],['specialty','Specialty bars'],['kettlebell','Kettlebells'],['band','Bands']];
+  ['smith','Smith machine'],['specialty','Specialty bars'],['kettlebell','Kettlebells'],['band','Bands'],['bench','Bench'],['pullup','Pull-up bar']];
 const ONB_HAVE_DEFAULT={mixed:['barbell','dumbbell','cable','selector','plate','smith','band'], barbell:['barbell','dumbbell','cable','band'],
-  machine:['selector','plate','cable','smith','dumbbell'], dumbbell:['dumbbell','band','kettlebell']};
+  machine:['selector','plate','cable','smith','dumbbell'], dumbbell:['dumbbell','band','kettlebell'], home:['barbell','bench','dumbbell','pullup','band']};
 // judgement defaults: a starting split for each number of days (every day is editable)
 const ONB_AUTO_STYLE={2:'full',3:'full',4:'ul',5:'ful',6:'ppl'};
 const ONB_STYLE_NOTE={
@@ -19302,8 +19306,8 @@ function drawOnboardingStep(){
   const qnav=()=>{ navBtn('Back','ghost',onbBack); navBtn('Skip','ghost',onbNext); navBtn(O.ret?'Done':'Next','pri',onbNext); };
 
   if(step==='welcome'||step==='path'){
-    card(O.path==='auto','Build it for me','Answer eight quick questions. The app builds the program and shows you why for each part.',()=>{ onbSwitch('auto'); onbGo('goal'); },'Recommended');
-    card(O.path==='together','Build it together','The same questions, then choose your split, exercises, rep ranges and blocks, with a suggestion at every step.',()=>{ onbSwitch('together'); onbGo('goal'); });
+    card(O.path==='together','Build it together','The same questions, then choose your split, exercises, rep ranges and blocks, with a suggestion at every step.',()=>{ onbSwitch('together'); onbGo('goal'); },'Recommended');
+    card(O.path==='auto','Build it for me','Not sure what you want yet? Answer a few questions and we\'ll build a plan. You can change anything later.',()=>{ onbSwitch('auto'); onbGo('goal'); });
     if(!O.existing) card(false,'Restore from a backup','From a backup file, or from your sheet.',()=>onbGo('restore'));
     if(O.existing) navBtn('Cancel','ghost',onbExitAsk); else nav.style.display='none';
     return;

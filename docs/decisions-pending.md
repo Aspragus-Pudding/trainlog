@@ -765,3 +765,23 @@ and `preSessionBanner(v)` back in `renderWork`.
 - **The H2 rule holds:** every number and band word sits next to what it does.
 
 **To undo:** `readinessCard`, `READY_BANDS` and `jointLines` in index.html.
+
+---
+
+## D43. Setup wording and the home gym (v1.71.1)
+
+**Chosen:**
+- **Commercial gym** is the old "A bit of everything". It keeps the same id
+  (`mixed`), so nobody's saved answer changes.
+- **Home gym** is new: barbell, rack, bench, dumbbells and a pull-up bar,
+  ticked by default. Machines and cables go last, never out, the same rule as
+  dumbbells only. If you untick the pull-up bar, pull-ups and chin-ups go last
+  too. That rule only applies to the Home gym answer, so no existing tester's
+  program moves.
+- **Barbell gym stays,** next to machine-heavy and dumbbells only.
+- **"Recommended" is on Build it together.** Build it for me uses your
+  wording, including "we'll". That's the only place the app says "we"
+  outside the injury consent.
+
+**To undo:** `ONB_GYMS`, `EQUIPMENT` and the two `card(...)` lines on the
+welcome step.
