@@ -58,6 +58,7 @@ of Appendix A). Order: Appendix A by reported impact, then Parts 1–6, then 7�
 | Part | State | Version | Notes |
 |---|---|---|---|
 | A1 edit = delete + relog | done | v1.68.1 | corrections merge (one rule: correctionMap/corrected), edits recompute the next set, readers that skipped corrections fixed; §72; backtest: one row (20 Sep double edit) moved, error 10 → 0 reps; D38 |
+| A10 I know my numbers | done | v1.72.0 | weight × reps + chips, class: bw/added/assist (0 ok), stored on the track; same input in setup, starting estimates, Edit program; §77; harness compiles the app once (32 s); D44 |
 | A9 setup wording | done | v1.71.1 | Commercial gym, Home gym (machines last; pull-up bar), Build it together recommended; §76; D43 |
 | A5 readiness card: room and numbers | done | v1.71.0 | three sections, score/100 + band word + effect, joints n/3 vs usual, sheet opens with the scales; §65 updated; D42 |
 | A3 Workout tab is the editable preview | done | v1.70.0 | live-card controls on plan cards, last time per set, Save to program button, last-day line, no Preview button; §75, mobile previewCheck; D41 |

@@ -67,6 +67,7 @@ everyone.
 | Feature | For | Where |
 |---|---|---|
 | Main lift cards (estimate, typical weekly sets, progression model) | everyone | top |
+| "Enter a recent set" for a goal lift: weight × reps (chips 1, 3, 5), or for the bodyweight class bodyweight only / added / assistance | everyone | Edit program → Goal lifts; setup's "I know my numbers"; Workout → Set starting estimates |
 | Exercise library (browse, search by name, muscle or equipment) | everyone | Exercise library card |
 | Add a custom exercise | advanced | Exercise library card |
 | Your data (events, sets, storage, version) | everyone | Your data card |

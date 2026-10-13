@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.72.0 — 2026-10-12
+- "I know my numbers" now asks for a recent set you could do today, weight × reps, with quick chips for 1, 3 and 5 reps.
+- Pull-ups, chin-ups, dips and assisted versions: pick bodyweight only, added weight or assistance. 0 is accepted, and it asks for reps.
+- The same input is on each goal lift in Edit program ("Enter a recent set") and in Workout → Set starting estimates.
+- Fixed: an estimate for an assisted pull-up wasn't used for your first session's suggestion.
+
 ## 1.71.1 — 2026-10-12
 - Setup's gym question: "A bit of everything" is now Commercial gym, and there's a new Home gym option (barbell, rack, bench, dumbbells, pull-up bar).
 - A home gym puts machines and cables last. Untick the pull-up bar and pull-ups go last too.

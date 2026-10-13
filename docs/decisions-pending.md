@@ -785,3 +785,36 @@ and `preSessionBanner(v)` back in `renderWork`.
 
 **To undo:** `ONB_GYMS`, `EQUIPMENT` and the two `card(...)` lines on the
 welcome step.
+
+---
+
+## D44. "I know my numbers": a recent set (v1.72)
+
+**What was wrong:**
+- **0 was refused.** The field wouldn't take 0 (anything not above 0 was
+  thrown away), and it asked for a weight when it should ask for reps.
+- **The estimate wasn't read.** A class lift's estimate was saved under the
+  exercise (`assisted_pullup`), but suggestions read the movement's track
+  (`pullup`), so it was never used.
+
+**Chosen:**
+- **Weight × reps** with chips for 1, 3 and 5 reps. The estimated max is
+  `e1rm()` on that set, the same formula as every logged set.
+- **The rep limit is 15, with a note past 10.** "Accept up to 10 with a note
+  above 10" can't both hold. The formula works up to 15 reps, so the app
+  accepts up to 15 and says "estimates get rough past 10 reps".
+- **The bodyweight class** picks bodyweight only, added weight or
+  assistance. The set becomes total load with your bodyweight (minus
+  assistance × the machine's ratio). It's stored on the movement's track,
+  so every version of the lift reads it. With no bodyweight yet, it says so
+  instead of guessing.
+- **Saved as a stated estimate** (`e1rm_estimate`), never a fake set, with
+  what you typed alongside it.
+- **Edit program:** each goal lift shows its estimate and where it came
+  from. A lift with no log gets "Enter a recent set", which saves straight
+  away, like logging.
+- **Old estimates:** one saved under an exercise still counts. A numeric
+  answer in an unfinished setup draft is kept as you entered it.
+
+**To undo:** `estimateFromSet`, `knownSetInput` and `openKnownSet` in
+index.html.

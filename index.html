@@ -8678,7 +8678,7 @@ Each block has a type (hypertrophy or strength), a length in weeks, an optional 
 How many days you train and what kind each day is: full body, upper, lower, push, pull or legs. Days run in order and repeat. A block can have its own week instead of the program's.
 
 ### Goal lifts, ranked
-Up to three main lifts get priority, their own strength tracking and the tests in strength blocks. The first one leads; rotate it across blocks rather than chasing all three at once.
+Up to three main lifts get priority, their own strength tracking and the tests in strength blocks. The first one leads; rotate it across blocks rather than chasing all three at once. Until you've logged one, "Enter a recent set" takes a set you could do today, weight and reps, and the app works out your estimated max from it. For pull-ups, chin-ups and dips, pick bodyweight only, added weight or assistance.
 
 ### Dates
 Your target date, whether it's fixed, and an optional test date. If you fall behind, the app offers to move a date that isn't fixed. Blocks are an order, not dates, so they keep their length.
@@ -9126,7 +9126,7 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.71.1","lines":["Setup's gym question: \"A bit of everything\" is now Commercial gym, and there's a new Home gym option (barbell, rack, bench, dumbbells, pull-up bar).","A home gym puts machines and cables last. Untick the pull-up bar and pull-ups go last too.","Build it together is now the recommended path. Build it for me says: \"Not sure what you want yet? Answer a few questions and we'll build a plan.\""]}</script>
+<script type="application/json" id="whats-new">{"version":"1.72.0","lines":["\"I know my numbers\" now asks for a recent set you could do today, weight × reps, with quick chips for 1, 3 and 5 reps.","Pull-ups, chin-ups, dips and assisted versions: pick bodyweight only, added weight or assistance. 0 is accepted, and it asks for reps.","The same input is on each goal lift in Edit program (\"Enter a recent set\") and in Workout → Set starting estimates.","Fixed: an estimate for an assisted pull-up wasn't used for your first session's suggestion."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9693,7 +9693,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.71.1';
+const APP_VERSION='1.72.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -11705,7 +11705,8 @@ function bestE1RM(id, sig){ let b=null;
     if(v!=null&&(!b||v>b.v)) b={v,reps:s.reps};
   }
   // a stated estimate is for the unmodified lift only
-  if(!b&&!sig){ const e=statedE1RM(id); if(e) b={v:e+bwOffset(exById[id]),reps:null,stated:true}; }   // (class: bwOffset is 0 — the estimate is what you'd lift in total)
+  // the class keeps its estimate on the movement's track (v1.72); one saved under the exercise itself still counts
+  if(!b&&!sig){ const e=statedE1RM(trackRoot(id))??statedE1RM(id); if(e) b={v:e+bwOffset(exById[id]),reps:null,stated:true}; }   // (class: bwOffset is 0 — the estimate is what you'd lift in total)
   return b; }
 /* one best e1RM per calendar day, oldest first */
 /* Each session's best working set for one exercise, newest first — the one
@@ -13879,6 +13880,71 @@ function renderPreview(v){
     b.innerHTML='<span class="sm">'+esc(ld.text)+'</span><span class="dim">›</span>'; b.onclick=()=>openSessionDetail(ld.ev); v.appendChild(b); }
 }
 
+/* "A recent set you could do today" (v1.72): weight × reps instead of a 1RM box.
+   The estimated max is e1rm() on it, the same formula as every logged set. For
+   pull-ups, chin-ups, dips and the rest of the bodyweight class it's bodyweight
+   only, added weight or assistance, priced on total load (bodyweight + added, or
+   minus assistance) and stored on the movement's track, which is what the engine
+   reads. st = {w, reps, mode:'bw'|'added'|'assist'}. Returns null with a reason
+   when it can't be placed (no bodyweight for the class). */
+const KNOWN_REPS_ROUGH=10, KNOWN_REPS_MAX=15;   // e1rm() stops at 15; past 10 it gets rough (judgement default)
+function knownDefault(ex, v){
+  if(v&&typeof v==='object') return {w:v.w||0, reps:v.reps||1, mode:v.mode||null};
+  const c=bwClass(ex);
+  if(typeof v==='number') return {w:v, reps:1, mode:c?(c.mode==='assist'?'assist':v>0?'added':'bw'):null};   // an old 1RM number
+  return {w:c?0:(isBW(ex)?0:135), reps:5, mode:c?(c.mode==='assist'?'assist':'bw'):null};
+}
+function estimateFromSet(exId, st, bw){
+  const ex=exById[exId]; if(!ex||!st) return null;
+  const reps=Math.round(st.reps||0); if(reps<1||reps>KNOWN_REPS_MAX) return {err:'Reps from 1 to '+KNOWN_REPS_MAX+'.'};
+  const w=Math.max(0,+st.w||0), c=bwClass(ex);
+  if(c){
+    if(bw==null) return {err:'Add your bodyweight first: this lift is worked out on what you lift in total.'};
+    const sys=st.mode==='assist'?bw-w*assistRatio(exId):st.mode==='added'?bw+w:bw;
+    if(!(sys>0)) return {err:'That much assistance is more than your bodyweight.'};
+    const e=e1rm(sys,reps); return e?{track:trackRoot(exId), lb:Math.round(e*10)/10, total:e, rough:reps>KNOWN_REPS_ROUGH}:null;
+  }
+  if(ex.load==='bodyweight') return {err:'Reps only: the app learns this one from your first set.'};
+  const off=ex.load==='bodyweight_plus'?(bw||0):0;
+  if(!(w+off>0)) return {err:'Enter the weight.'};
+  const e=e1rm(w+off,reps); if(!e) return null;
+  return {track:exId, lb:Math.round((e-off)*10)/10, total:e, rough:reps>KNOWN_REPS_ROUGH};
+}
+/* The input: (for the class) bodyweight only / added / assistance, then weight and reps, chips for 1, 3 and 5. */
+function knownSetInput(ex, st, onChange, bw){
+  const box=el('div','');
+  const c=bwClass(ex), redraw=()=>{ box.innerHTML=''; draw(); };
+  const draw=()=>{
+    if(c){ const m=el('div','chips'); m.style.marginBottom='var(--sp-2)';
+      [['bw','Bodyweight only'],['added','Added weight'],['assist','Assistance']].forEach(([k,l])=>{ const x=el('button','chip',l); x.setAttribute('aria-pressed',st.mode===k?'true':'false');
+        x.onclick=()=>{ st.mode=k; if(k==='bw') st.w=0; onChange(st); redraw(); }; m.appendChild(x); });
+      box.appendChild(m); }
+    const g=el('div','stepgrid');
+    if(!c||st.mode!=='bw') g.appendChild(stepper(c?(st.mode==='assist'?'assistance lb':'added lb'):'lb',st.w||0,ex.load==='barbell'?5:2.5,v=>{ st.w=Math.max(0,v); onChange(st); redraw(); },null,{typeable:true,min:0}));
+    g.appendChild(stepper('reps',st.reps,1,v=>{ st.reps=Math.max(1,Math.min(KNOWN_REPS_MAX,Math.round(v))); onChange(st); redraw(); },null,{typeable:true,min:1}));
+    box.appendChild(g);
+    const ch=el('div','chips'); ch.style.marginTop='var(--sp-2)';
+    [1,3,5].forEach(r=>{ const x=el('button','chip',r+(r===1?' rep':' reps')); x.setAttribute('aria-pressed',st.reps===r?'true':'false'); x.onclick=()=>{ st.reps=r; onChange(st); redraw(); }; ch.appendChild(x); });
+    box.appendChild(ch);
+    const e=estimateFromSet(ex.id,st,bw);
+    box.appendChild(el('div','dim tiny',e&&e.err?esc(e.err):e?(e.rough?'Estimates get rough past '+KNOWN_REPS_ROUGH+' reps. ':'')+'Estimated max '+fmt(e.total,0)+' lb'+(c?' in total, with your bodyweight':''):'')).style.marginTop='var(--sp-1)';
+  };
+  draw(); return box;
+}
+/* Write one: a stated estimate, never a fake set. */
+function saveKnown(exId, st, bw){
+  const e=estimateFromSet(exId,st,bw); if(!e||e.err) return false;
+  return !!append({type:'e1rm_estimate',exercise_id:e.track,lb:e.lb,from:{exercise_id:exId,w:+st.w||0,reps:st.reps,mode:st.mode||null}});
+}
+function openKnownSet(exId, back){
+  const ex=exById[exId], bw=latestBodyweight(), st=knownDefault(ex,null);
+  sheet('<h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-1)">'+esc(ex.name)+'</h2><div class="muted tiny" style="margin-bottom:var(--sp-3)">A recent set you could do today. It sets the first loads until you\'ve logged this lift.</div><div id="ksin"></div>'
+    +'<div class="row" style="gap:var(--sp-2);margin-top:var(--sp-3)"><button class="btn ghost grow" id="ksx">Cancel</button><button class="btn pri grow" id="kss">Save</button></div>');
+  $('#ksin').appendChild(knownSetInput(ex,st,()=>{},bw));
+  $('#ksx').onclick=()=>{ $('#dlg').close(); if(back) back(); };
+  $('#kss').onclick=()=>{ const e=estimateFromSet(exId,st,bw); if(!e||e.err){ toast(e&&e.err||'Check the numbers'); return; }
+    saveKnown(exId,st,bw); $('#dlg').close(); toast('Estimate saved: '+fmt(e.total,0)+' lb'); if(back) back(); else render(); };
+}
 /* Stated starting maxes, so the first session isn't a row of dashes.
    Logged as their own event type — never as fake sets. */
 function openEstimates(){
@@ -13886,29 +13952,26 @@ function openEstimates(){
     generatedDays().flatMap(d=>d.slots.map(s=>s.ex))))].filter(id=>exById[id]);
   const vals={};
   sheet(`<h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-1)">Starting estimates</h2>
-    <div class="muted tiny" style="margin-bottom:var(--sp-4)">Roughly what you could do for one all-out rep today. Skip anything you're unsure of — the app will learn it from your first few sessions either way.</div>
+    <div class="muted tiny" style="margin-bottom:var(--sp-4)">A recent set you could do today, for each lift: weight and reps. Skip anything you're unsure of; the app learns it from your first few sessions either way.</div>
     <div id="es"></div>
     <div class="row" style="gap:var(--sp-2)">
       <button class="btn ghost grow" id="esskip">Done</button>
       <button class="btn pri grow" id="essave">Save</button></div>`);
   const host=$('#es');
-  ids.forEach(id=>{
-    const ex=exById[id], cur=bestE1RM(id);
-    let val=cur?Math.round(Math.max(0,cur.v-bwOffset(ex))):(isBW(ex)?0:100);
-    vals[id]=null;
+  const bw=latestBodyweight();
+  ids.filter(id=>exById[id].load!=='bodyweight'||bwClass(id)).forEach(id=>{
+    const ex=exById[id], cur=bestE1RM(slotTrack({ex:id}).ex);
     const blk=el('div','qblock');
     blk.innerHTML=`<div class="qlab">${esc(ex.name)}</div>`;
-    const h=el('div','');
-    const drawS=()=>{ h.innerHTML=''; h.appendChild(stepper(
-      isBW(ex)?'added lb':'lb', val, ex.inc, nv=>{val=Math.max(0,nv);vals[id]=val;drawS();})); };
-    drawS(); blk.appendChild(h);
-    if(cur&&!cur.stated) blk.appendChild(el('div','anchor',`Already estimated at ${fmt(cur.v,0)} lb from your logs`));
-    host.appendChild(blk);
+    if(cur&&!cur.stated){ blk.appendChild(el('div','anchor',`Already estimated at ${fmt(cur.v,0)} lb from your logs`)); host.appendChild(blk); return; }
+    const st=knownDefault(ex,null);
+    const add=el('button','btn s ghost','Enter a recent set'); add.onclick=()=>{ add.remove(); vals[id]=st; blk.appendChild(knownSetInput(ex,st,()=>{},bw)); };
+    blk.appendChild(add); host.appendChild(blk);
   });
   $('#esskip').onclick=()=>$('#dlg').close();
   $('#essave').onclick=()=>{
     let n=0;
-    Object.entries(vals).forEach(([id,v])=>{ if(v!=null&&v>0){ append({type:'e1rm_estimate',exercise_id:id,lb:v}); n++; } });
+    Object.entries(vals).forEach(([id,st])=>{ if(st&&saveKnown(id,st,bw)) n++; });
     $('#dlg').close(); render(); toast(n?`${n} estimate${n>1?'s':''} saved`:'Nothing changed');
   };
 }
@@ -18933,8 +18996,9 @@ function applyBuilder(B, plan){
   if(B.name&&B.name.trim()) CFG.testerName=B.name.trim().slice(0,40);
   ROADMAP=plan.blocks.map(b=>({...b})); CFG.roadmap=ROADMAP; CFG.onboarded=true; saveCfg();
   // rough strength for main lifts: stated estimates, never fake sets
-  Object.entries(B.est||{}).forEach(([id,v])=>{ if(v>0&&B.goals.includes(id))
-    append({type:'e1rm_estimate',exercise_id:id,lb:B.units==='kg'?Math.round(v*LB*10)/10:v}); });
+  Object.entries(B.est||{}).forEach(([id,v])=>{ if(!B.goals.includes(id)) return;
+    if(v&&typeof v==='object'){ if(v.lb>0) append({type:'e1rm_estimate',exercise_id:v.track||id,lb:v.lb}); return; }   // a recent set, already in lb and on its track
+    if(v>0) append({type:'e1rm_estimate',exercise_id:trackRoot(id),lb:B.units==='kg'?Math.round(v*LB*10)/10:v}); });
 }
 function openBuilder(rerun){
   try{ return drawBuilder(rerun); }
@@ -19136,7 +19200,7 @@ function onbResolve(O){
     history:a.history||'new', experience:a.history==='intermediate'||a.history==='advanced'?a.history:'novice',
     days, minutes:a.minutes||60, style:st.k, week:st.make(days), gym, have:a.have||ONB_HAVE_DEFAULT[gym],
     bw:a.bw>0?a.bw:null, conds:a.conds.slice(), excluded:a.excluded.slice(), emphasis:a.emphasis.slice(0,3), dep:{muscles:[...a.dep.muscles],patterns:[...a.dep.patterns]},
-    goals:a.goals.slice(0,3), est:a.showKnown?Object.fromEntries(Object.entries(a.known).filter(([id,v])=>v>0&&a.goals.includes(id))):{},
+    goals:a.goals.slice(0,3), est:a.showKnown?Object.fromEntries(Object.entries(a.known).filter(([id])=>a.goals.includes(id)).map(([id,v])=>[id,typeof v==='number'?(v>0?{track:trackRoot(id),lb:v}:null):estimateFromSet(id,knownDefault(exById[id],v),a.bw||latestBodyweight())]).filter(([,e])=>e&&!e.err)):{},
     picks:JSON.parse(JSON.stringify(O.t.picks||{})), repChoice:{...O.t.reps}, repRanges, weeks:{...O.t.weeks}};
 }
 /* The builder draft the existing sequencer takes. */
@@ -19365,8 +19429,9 @@ function drawOnboardingStep(){
     a.goals.forEach((id,i)=>{ const ex=exById[id]; if(!ex) return;
       const r=el('div','qblock'); r.innerHTML='<div class="row between"><span style="font-weight:600">'+(i+1)+'. '+esc(ex.name)+'</span></div>';
       const x=el('button','iconbtn',icon('remove','Remove')); x.onclick=()=>{ a.goals.splice(i,1); delete a.known[id]; drawOnboarding(); }; r.firstChild.appendChild(x);
-      if(a.showKnown){ r.appendChild(el('div','field','Estimated max (optional)')).style.marginTop='var(--sp-2)';
-        r.appendChild(stepper(isBW(ex)?'added lb':'lb',a.known[id]||(isBW(ex)?0:135),5,v=>{ a.known[id]=Math.max(0,v); drawOnboarding(); },null,{typeable:true,min:0})); }
+      if(a.showKnown&&(ex.load!=='bodyweight'||bwClass(ex))){ r.appendChild(el('div','field','A recent set you could do today (optional)')).style.marginTop='var(--sp-2)';
+        const st=knownDefault(ex,a.known[id]); a.known[id]=st;
+        r.appendChild(knownSetInput(ex,st,v=>{ a.known[id]=v; onbSave&&onbSave(); },a.bw||latestBodyweight())); }
       host.appendChild(r); });
     if(a.goals.length<3){ const add=el('button','btn wide',a.goals.length?'Add another':'Pick a lift');
       add.onclick=()=>exPicker('Pick a main lift',e=>!a.goals.includes(e.id)&&mainEligible(e),e=>{ a.goals.push(e.id); drawOnboarding(); },{keepOpen:true,onCancel:()=>drawOnboarding()});
@@ -19777,6 +19842,10 @@ function openSettings(){
       c.setAttribute('aria-label','Change lift');
       c.onclick=()=>exPicker('Pick a goal lift', e=>!S.goals.includes(e.id)&&mainEligible(e), e=>{ S.goals[i]=e.id; openSettings(); });
       btns.appendChild(c); r.appendChild(btns); gl.appendChild(r);
+      if(ex){ const b=bestE1RM(slotTrack({ex:g}).ex), est=el('div','row between'); est.style.cssText='padding:0 0 var(--sp-2) 30px;gap:var(--sp-2)';
+        est.appendChild(el('span','dim tiny',b?'Estimated max '+fmt(b.v,0)+' lb'+(b.stated?' (from a set you entered)':' (from your log)'):'No estimate yet'));
+        if(!b||b.stated){ const k=el('button','btn s ghost','Enter a recent set'); k.onclick=()=>openKnownSet(g,()=>openSettings()); est.appendChild(k); }
+        gl.appendChild(est); }
     });
     host.appendChild(gl);
 

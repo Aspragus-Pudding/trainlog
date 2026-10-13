@@ -60,7 +60,7 @@ Each block has a type (hypertrophy or strength), a length in weeks, an optional 
 How many days you train and what kind each day is: full body, upper, lower, push, pull or legs. Days run in order and repeat. A block can have its own week instead of the program's.
 
 ### Goal lifts, ranked
-Up to three main lifts get priority, their own strength tracking and the tests in strength blocks. The first one leads; rotate it across blocks rather than chasing all three at once.
+Up to three main lifts get priority, their own strength tracking and the tests in strength blocks. The first one leads; rotate it across blocks rather than chasing all three at once. Until you've logged one, "Enter a recent set" takes a set you could do today, weight and reps, and the app works out your estimated max from it. For pull-ups, chin-ups and dips, pick bodyweight only, added weight or assistance.
 
 ### Dates
 Your target date, whether it's fixed, and an optional test date. If you fall behind, the app offers to move a date that isn't fixed. Blocks are an order, not dates, so they keep their length.
