@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.69.0 — 2026-10-12
+- Plain words in the workout. A flagged exercise shows one chip, "For your shoulder" (or knee, elbow…). Tap it for what to watch, the cues and a suggested swap.
+- The pain check names the set it's about ("Set 2 · 80 lb × 10") and asks in plain words, including "Felt unstable or like it might slip".
+- Gone: the made-up "Feel it: around your shoulder" line on warm-ups, and the condition reminder at the top of the workout.
+
 ## 1.68.1 — 2026-10-12
 - Editing a set now counts exactly like deleting it and logging the new numbers. The next set's suggestion updates straight away.
 - Editing the same set twice (reps, then RPE) keeps both changes. Before, the first change was lost after the app reloaded.

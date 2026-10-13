@@ -667,3 +667,33 @@ prices from the 20 reps you entered. That row's reps error went from 10 to
 
 **To undo:** not recommended. `correctionMap()` is the one place the rule
 lives.
+
+---
+
+## D39. Plain words in the workout (v1.69)
+
+**Chosen:**
+- **One chip on the set card.** A flagged exercise shows "For your shoulder ›"
+  (or knee, elbow and so on). It's amber, red, grey for a standing cue, or green
+  once you've rated it fine. Tapping it opens the info sheet's "For your
+  shoulder" block: the reason, the cues, what to do if it hurts, and the
+  suggested swap, with a Swap button when nothing's logged yet.
+- **The condition reminder is gone from the top of the workout** ("Elbows in
+  front today · Anterior shoulder instability"). You asked for it to go; the
+  same cue is in each flagged exercise's info sheet.
+- **One plain-words pass.** Library and flag text goes through `plainText()`
+  wherever it's shown: apprehension becomes "feeling it might slip",
+  abduction with external rotation becomes "arm out wide and turned back",
+  and so on. The flag reasons the app writes itself were rewritten by hand.
+  The condition picker keeps the clinical name, and so does the guide.
+- **The banned list** is `CLINICAL_WORDS`. The screen scan fails on any of
+  them on the Workout tab, the Dashboard and what they open, and §73 runs all
+  1,000+ library and flag texts through it. Exercise names are exempt:
+  "hip abduction machine" and "band external rotation" are gym words.
+- **No more made-up "Feel it".** The prep list has no real "where you'll
+  feel it" text, so prep shows none. Rehab exercises keep theirs.
+- **Flags didn't change.** Same levels, same exercises, and the shoulder
+  instability rows are exactly as strict. Only the wording moved.
+
+**To undo:** in index.html, `flagChip` back to `flagLine` (from git history),
+and `preSessionBanner(v)` back in `renderWork`.

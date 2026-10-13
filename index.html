@@ -8624,7 +8624,7 @@ This guide starts with what to do when something comes up, then every setting, t
 ## When something comes up {guide:tasks}
 
 ### My shoulder, knee or another joint hurts
-Rate it in the check-in under "Anything hurting?", and after an exercise when the app asks. A rating above your usual holds or lightens only the movements that load that joint, and everything else carries on as planned. If it keeps flaring, the dashboard offers a focused deload for those exercises, and Edit program → What you're working around shows how the joint is doing against your usual. Pain during a set has its own button on the set card, with advice on whether to carry on. The app warns and suggests swaps but never stops you, and anything on a condition's "see a professional" list is worth getting checked.
+Rate it in the check-in under "Anything hurting?", and after an exercise when the app asks. A rating above your usual holds or lightens only the movements that load that joint, and everything else carries on as planned. If it keeps flaring, the dashboard offers a focused deload for those exercises, and Edit program → What you're working around shows how the joint is doing against your usual. After a set on a joint you've flagged, the set card asks how it felt on that set, out of 10 (or whether it felt unstable), and says whether to carry on. A flagged exercise shows a "For your shoulder" chip (or knee, elbow and so on); tap it for the reason, the cues and a suggested swap. The app warns and suggests swaps but never stops you, and anything on a condition's "see a professional" list is worth getting checked.
 
 ### I'm sore today
 Mark the sore area in the check-in. Only the exercises that train that muscle start lighter, with a set fewer on the first two of them, and the rest of the session is unchanged. If soreness already cut that work last session without a missed rep since, it doesn't cut again.
@@ -9122,7 +9122,7 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.68.1","lines":["Editing a set now counts exactly like deleting it and logging the new numbers. The next set's suggestion updates straight away.","Editing the same set twice (reps, then RPE) keeps both changes. Before, the first change was lost after the app reloaded.","Sets you'd already edited twice now read the way you entered them. Nothing in your log was rewritten."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.69.0","lines":["Plain words in the workout. A flagged exercise shows one chip, \"For your shoulder\" (or knee, elbow…). Tap it for what to watch, the cues and a suggested swap.","The pain check names the set it's about (\"Set 2 · 80 lb × 10\") and asks in plain words, including \"Felt unstable or like it might slip\".","Gone: the made-up \"Feel it: around your shoulder\" line on warm-ups, and the condition reminder at the top of the workout."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9689,7 +9689,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.68.1';
+const APP_VERSION='1.69.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -9845,73 +9845,73 @@ function buildPrep(day, rd){
 /* Conditions you can declare. Exercises carry a flag per condition so the
    app can warn without ever refusing — you decide, it just remembers. */
 const CONDITIONS={
-  hip_pain:{name:'Hip pain', joint:'hip', note:'Deep hip flexion, especially with rotation, is the usual provoker.'},
-  ankle_pain:{name:'Ankle pain / stiffness', joint:'ankle', note:'Deep dorsiflexion under load — the bottom of a squat, loaded calf stretch.'},
+  hip_pain:{name:'Hip pain', joint:'hip', note:'A deep hip bend, especially with the leg turned, is what usually sets it off.'},
+  ankle_pain:{name:'Ankle pain / stiffness', joint:'ankle', note:'The ankle bent deeply under load: the bottom of a squat, a loaded calf stretch.'},
   shoulder_instability:{name:'Anterior shoulder instability', joint:'shoulder',
     note:'Risk lives in abduction plus external rotation — arm out to the side and rotated back, under load.'},
   shoulder_impingement:{name:'Shoulder impingement / pinching', joint:'shoulder',
     note:'Provoked by loaded overhead and internally-rotated abduction.'},
-  knee_pain:{name:'Knee pain', joint:'knee', note:'Deep flexion under load and open-chain extension are the usual provokers.'},
-  low_back:{name:'Low back pain', joint:'low back', note:'Loaded spinal flexion and heavy axial compression.'},
-  wrist_pain:{name:'Wrist pain', joint:'wrist', note:'Loaded extension — pressing setups and front rack.'},
-  elbow_pain:{name:'Elbow pain', joint:'elbow', note:'Loaded elbow extension and heavy gripping.'}
+  knee_pain:{name:'Knee pain', joint:'knee', note:'Deep knee bends under load and leg extensions are what usually set it off.'},
+  low_back:{name:'Low back pain', joint:'low back', note:'Rounding the back under load, and heavy weight pressing down through the spine.'},
+  wrist_pain:{name:'Wrist pain', joint:'wrist', note:'The wrist bent back under load: pressing setups and the front rack.'},
+  elbow_pain:{name:'Elbow pain', joint:'elbow', note:'Heavy load straightening the elbow, and heavy gripping.'}
 };
 /* red  = the movement puts the joint in its at-risk position under load
    yellow = usually fine, but worth a setup change or attention */
 const FLAGS={
   shoulder_instability:{
-    red:{fly:'end-range abduction with external rotation under load',
-      cable_fly:'same as a dumbbell fly, held at end range',
-      bn_press:'maximal abduction plus external rotation',
-      bn_pulldown:'maximal abduction plus external rotation',
-      dip:'deep shoulder extension with anterior translation',
-      snatch:'loaded, ballistic, at end range overhead',
-      pullover:'end-range overhead with the arm behind the torso'},
-    yellow:{bench:'keep elbows near 45° — flared and wide puts you in the at-risk position',
+    red:{fly:'arm out wide and turned back at the end of its range, under load',
+      cable_fly:'same as a dumbbell fly, held at the end of the range',
+      bn_press:'arm out wide and turned back as far as it goes',
+      bn_pulldown:'arm out wide and turned back as far as it goes',
+      dip:'deep dips push the top of the arm bone forward in the socket',
+      snatch:'fast and loaded, at the very top of the overhead range',
+      pullover:'arm overhead and behind the body at the end of its range'},
+    yellow:{bench:'keep elbows near 45°: flared and wide puts you in the at-risk position',
       db_bench:'dumbbells let you descend past where a bar would stop you',
       decline_press:'watch elbow flare at the bottom',
-      ohp:'loaded overhead — fine for many, worth attention',
+      ohp:'loaded overhead: fine for many, worth attention',
       seated_db_press:'loaded overhead',
       machine_ohp:'loaded overhead, though a fixed path helps',
       z_press:'loaded overhead',
       weighted_pushup:'watch elbow flare at the bottom'}},
-  shoulder_impingement:{red:{bn_press:'overhead with forced external rotation',bn_pulldown:'overhead behind the neck'},
-    yellow:{ohp:'loaded overhead',lat_raise:'abduction near shoulder height',machine_raise:'abduction near shoulder height',
-      cable_raise:'abduction near shoulder height',seated_db_press:'loaded overhead',
-      stand_m_raise:'abduction near shoulder height',seat_m_raise:'abduction near shoulder height',lean_raise:'abduction near shoulder height',
+  shoulder_impingement:{red:{bn_press:'overhead with the arm forced to turn back',bn_pulldown:'overhead behind the neck'},
+    yellow:{ohp:'loaded overhead',lat_raise:'arm raised out to the side near shoulder height',machine_raise:'arm raised out to the side near shoulder height',
+      cable_raise:'arm raised out to the side near shoulder height',seated_db_press:'loaded overhead',
+      stand_m_raise:'arm raised out to the side near shoulder height',seat_m_raise:'arm raised out to the side near shoulder height',lean_raise:'arm raised out to the side near shoulder height',
       machine_ohp:'loaded overhead',db_press:'loaded overhead',z_press:'loaded overhead',
-      dip:'deep shoulder extension',pullover:'end-range overhead'}},
-  knee_pain:{red:{sissy:'extreme knee flexion under load'},
-    yellow:{leg_ext:'open-chain extension loads the patellar tendon directly',
-      hack:'deep flexion under load',bulgarian:'deep flexion, one leg',front_squat:'deep knee flexion',
-      pendulum:'deep flexion under load',goblet:'deep knee flexion',leg_press:'deep flexion if the seat lets you go low',
-      squat:'deep knee flexion under load',ssb_squat:'deep knee flexion under load',transformer_high_bar:'deep knee flexion under load',
-      transformer_low_bar:'knee flexion under load',transformer_front:'deep knee flexion',transformer_goblet:'deep knee flexion',
-      rev_nordic:'long-lever load on the knee in flexion'}},
-  hip_pain:{yellow:{squat:'deep hip flexion',front_squat:'deep hip flexion',bulgarian:'deep hip flexion, one leg',
-      leg_press:'deep hip flexion if the seat lets you go low',goblet:'deep hip flexion',hack:'deep hip flexion',pendulum:'deep hip flexion',
-      ssb_squat:'deep hip flexion',transformer_high_bar:'deep hip flexion',transformer_low_bar:'deep hip flexion',good_morning:'loaded hip flexion'}},
-  ankle_pain:{yellow:{front_squat:'deep dorsiflexion',goblet:'deep dorsiflexion',bulgarian:'dorsiflexion under load on the front foot',
-      hack:'deep dorsiflexion',pendulum:'deep dorsiflexion',calf:'loaded ankle stretch at the bottom',stand_m_calf:'loaded ankle stretch at the bottom',
+      dip:'deep dips stretch the front of the shoulder',pullover:'arm overhead at the end of its range'}},
+  knee_pain:{red:{sissy:'the knee bent as far as it goes, under load'},
+    yellow:{leg_ext:'straightening the knee against a pad loads the tendon below the kneecap directly',
+      hack:'a deep knee bend under load',bulgarian:'a deep knee bend on one leg',front_squat:'a deep knee bend',
+      pendulum:'a deep knee bend under load',goblet:'a deep knee bend',leg_press:'a deep knee bend if the seat lets you go low',
+      squat:'a deep knee bend under load',ssb_squat:'a deep knee bend under load',transformer_high_bar:'a deep knee bend under load',
+      transformer_low_bar:'the knee bent under load',transformer_front:'a deep knee bend',transformer_goblet:'a deep knee bend',
+      rev_nordic:'a long lever on the bent knee'}},
+  hip_pain:{yellow:{squat:'a deep hip bend',front_squat:'a deep hip bend',bulgarian:'a deep hip bend on one leg',
+      leg_press:'a deep hip bend if the seat lets you go low',goblet:'a deep hip bend',hack:'a deep hip bend',pendulum:'a deep hip bend',
+      ssb_squat:'a deep hip bend',transformer_high_bar:'a deep hip bend',transformer_low_bar:'a deep hip bend',good_morning:'bending at the hips under load'}},
+  ankle_pain:{yellow:{front_squat:'the ankle bent deeply',goblet:'the ankle bent deeply',bulgarian:'the front ankle bent deeply under load',
+      hack:'the ankle bent deeply',pendulum:'the ankle bent deeply',calf:'loaded ankle stretch at the bottom',stand_m_calf:'loaded ankle stretch at the bottom',
       seated_calf:'loaded ankle stretch at the bottom',seat_pl_calf:'loaded ankle stretch at the bottom'}},
-  low_back:{red:{good_morning:'heavy loaded hip flexion with a long lever'},
-    yellow:{deadlift:'heavy axial load',squat:'axial compression',rdl:'loaded spinal position',
-      seal_row:'supported, but watch the setup',tbar:'hinged and loaded',cable_crunch:'loaded spinal flexion',
-      trap_bar:'heavy axial load',transformer_hinge:'heavy axial load',front_squat:'axial compression',ssb_squat:'axial compression',
-      transformer_high_bar:'axial compression',transformer_low_bar:'axial compression, more forward lean',roman_hinge:'loaded spinal position',
-      back_ext:'loaded spinal extension',belt_rdl:'hinged, though the belt spares the spine',farmer:'heavy carry loads the spine',
-      shrug:'heavy axial load',ab_wheel:'anti-extension at full length',hang_raise:'hip flexors pull on the lower back',db_row:'hinged and loaded'}},
+  low_back:{red:{good_morning:'heavy bending at the hips with a long lever'},
+    yellow:{deadlift:'heavy weight pressing down through the spine',squat:'weight pressing down through the spine',rdl:'the back held under load',
+      seal_row:'supported, but watch the setup',tbar:'hinged and loaded',cable_crunch:'rounding the back under load',
+      trap_bar:'heavy weight pressing down through the spine',transformer_hinge:'heavy weight pressing down through the spine',front_squat:'weight pressing down through the spine',ssb_squat:'weight pressing down through the spine',
+      transformer_high_bar:'weight pressing down through the spine',transformer_low_bar:'weight pressing down through the spine, with more forward lean',roman_hinge:'the back held under load',
+      back_ext:'arching the back under load',belt_rdl:'hinged, though the belt spares the spine',farmer:'heavy carry loads the spine',
+      shrug:'heavy weight pressing down through the spine',ab_wheel:'holding the back flat at full stretch',hang_raise:'the muscles at the front of the hip pull on the lower back',db_row:'hinged and loaded'}},
   wrist_pain:{red:{wrist_roller:'loads the wrist directly',rev_wrist:'loads the wrist directly',wrist_curl:'loads the wrist directly'},
-    yellow:{bench:'loaded wrist extension',front_squat:'front rack forces wrist extension',
-      cg_bench:'loaded wrist extension',weighted_pushup:'maximal wrist extension',skullcrusher:'loaded wrist position',
-      db_bench:'loaded wrist extension',incline_db:'loaded wrist extension',floor_press:'loaded wrist extension',decline_press:'loaded wrist extension',
-      ohp:'loaded wrist extension overhead',z_press:'loaded wrist extension overhead',farmer:'heavy grip',transformer_front:'front rack forces wrist extension'}},
-  elbow_pain:{yellow:{skullcrusher:'high elbow stress',pushdown:'direct elbow extension',
-      oh_ext:'elbow extension under stretch',cg_bench:'elbow-dominant pressing',
-      rope_pushdown:'direct elbow extension',m_oh_tri:'elbow extension under stretch',pin_tri_dip:'direct elbow extension',dip:'heavy elbow extension',
-      curl:'direct elbow flexion',hammer:'elbow flexion with a heavy grip',preacher:'elbow flexion at full stretch',spider:'elbow flexion at full stretch',
-      cable_curl:'direct elbow flexion',pin_preacher:'elbow flexion at full stretch',sa_cable_curl:'direct elbow flexion',
-      chinup:'heavy elbow flexion and grip',pullup:'heavy grip',farmer:'heavy grip',hang:'heavy grip'}}
+    yellow:{bench:'the wrist bent back under load',front_squat:'the front rack bends the wrist back hard',
+      cg_bench:'the wrist bent back under load',weighted_pushup:'the wrist bent back as far as it goes',skullcrusher:'loaded wrist position',
+      db_bench:'the wrist bent back under load',incline_db:'the wrist bent back under load',floor_press:'the wrist bent back under load',decline_press:'the wrist bent back under load',
+      ohp:'the wrist bent back under load, overhead',z_press:'the wrist bent back under load, overhead',farmer:'heavy grip',transformer_front:'the front rack bends the wrist back hard'}},
+  elbow_pain:{yellow:{skullcrusher:'high elbow stress',pushdown:'straightens the elbow against load',
+      oh_ext:'straightens the elbow from a stretched position',cg_bench:'pressing that leans on the elbows',
+      rope_pushdown:'straightens the elbow against load',m_oh_tri:'straightens the elbow from a stretched position',pin_tri_dip:'straightens the elbow against load',dip:'heavy load straightening the elbow',
+      curl:'bends the elbow against load',hammer:'bends the elbow with a heavy grip',preacher:'bends the elbow from full stretch',spider:'bends the elbow from full stretch',
+      cable_curl:'bends the elbow against load',pin_preacher:'bends the elbow from full stretch',sa_cable_curl:'bends the elbow against load',
+      chinup:'heavy elbow bending and grip',pullup:'heavy grip',farmer:'heavy grip',hang:'heavy grip'}}
 };
 /* Custom exercises have generated ids, so they'd never match a flag. Their
    names are matched against the flag ids for movements the library leaves
@@ -10053,8 +10053,8 @@ const FLAGS_ADDED={
   shoulder_instability:{
     transformer_low_bar:{why:'the low-bar position needs the shoulder rotated back under load', swap:'transformer_high_bar', note:'or the safety squat bar'},
     squat:{why:'the low-bar position needs the shoulder rotated back under load', swap:'squat+barpos:high', note:'or the safety squat bar', when:m=>!!m&&m.barpos==='low'},
-    pullup:{why:'a wide overhand grip moves toward the at-risk position — shoulder width or narrower', swap:'pullup+grip:neutral', note:'parallel handles', unless:m=>!!m&&['neutral','close'].includes(m.grip)},
-    incline_db:{why:'loaded abduction with the shoulder rotated back at the bottom — keep the elbows tucked and stop short of a deep stretch'}}
+    pullup:{why:'a wide overhand grip moves toward the at-risk position: shoulder width or narrower', swap:'pullup+grip:neutral', note:'parallel handles', unless:m=>!!m&&['neutral','close'].includes(m.grip)},
+    incline_db:{why:'arm out wide and turned back at the bottom: keep the elbows tucked and stop short of a deep stretch'}}
 };
 function authoredFlag(exId, mods, o){
   const ex=exById[exId], ids=[exId];
@@ -13432,7 +13432,6 @@ function renderWork(){
     v.appendChild(a);
   }
 
-  preSessionBanner(v);
   if(session.prep&&session.prep.length){
     const done=session.prep.filter(m=>m.done).length;
     const c=el('div','ex');
@@ -13448,7 +13447,7 @@ function renderWork(){
         const r=el('button','srow'); r.style.cssText='width:100%;text-align:left';
         r.innerHTML=`<span class="sidx ${m.done?'done':''}">${m.done?'✓':i+1}</span>
           <span class="grow"><div style="font-size:var(--fs-2);font-weight:${m.done?'400':'600'};${m.done?'opacity:.55':''}">${esc(m.name)}</div>
-            <div class="dim tiny">${esc(m.dose)}${m.why?' · for your '+esc(m.why):''}</div>${m.done?'':'<div class="dim tiny"><b style="color:var(--ink);font-weight:600">Feel it:</b> '+esc(m.joint?'around your '+m.joint:(m.tgt||[]).map(g=>(GROUP_LABEL[g]||g).toLowerCase()).join(', '))+'</div>'}</span>`;
+            <div class="dim tiny">${esc(m.dose)}${m.why?' · for your '+esc(m.why):''}</div>${!m.done&&m.feel?'<div class="dim tiny"><b style="color:var(--ink);font-weight:600">Feel it:</b> '+esc(m.feel)+'</div>':''}</span>`;
         r.onclick=()=>{ m.done=!m.done; saveSession(); renderWork(); };
         b.appendChild(r);
       });
@@ -13726,7 +13725,7 @@ function planCard(slot, key, controls){
     };
     draw(); body.appendChild(wrap);
   }
-  const fl=flagLine(slot,null); if(fl) body.appendChild(fl);
+  const fl=flagChip(slot,null); if(fl) body.appendChild(fl);
   if(slot.dep){ const d=el('div','row'); d.style.cssText='gap:var(--sp-2);align-items:baseline;margin-top:var(--sp-2)';
     d.innerHTML='<span class="tiny" style="flex:none;padding:2px var(--sp-2);border-radius:var(--r-pill);background:var(--card-2);color:var(--muted)">your preference</span><span class="dim tiny grow">'+esc(slot.dep.why)+'</span>';
     const u=el('button','btn s ghost','Undo'); u.style.cssText='font-size:var(--fs-1);padding:var(--sp-1) var(--sp-2);flex:none';
@@ -14382,7 +14381,8 @@ const CUES=(()=>{ try{ const a=JSON.parse(document.getElementById('coaching-cues
   return Object.fromEntries(a.map(o=>[o.id,o])); }catch{ return {}; } })();
 /* Cues for an exercise; a generated entry uses its nearest ancestor's. */
 function cueFor(exId){ const ex=exById[exId]; if(CUES[exId]) return CUES[exId]; if(ex&&ex.gen){ const p=genChain(ex).find(x=>CUES[x.id]); if(p) return CUES[p.id]; } return undefined; }
-function openInfo(exId){
+function openInfo(exId, ctx){
+  ctx=ctx||{};
   const ex=exById[exId], b=bestE1RM(exId), last=lastSetFor(exId);
   const mode={percentage:'Percentage — load set from your estimated max',
               double:'Double progression — climb the rep range, then add load',
@@ -14391,12 +14391,9 @@ function openInfo(exId){
     `<div class="row between sm"><span class="muted">${esc(ML[m])}</span><span>${w===1?'direct · 1.0':'indirect · 0.5'}</span></div>`).join('');
   const cue=cueFor(exId);
   const disclaimer='<div class="dim tiny" style="margin-top:var(--sp-2)">Standard technique points, not a substitute for a coach watching you move.</div>';
-  // the shoulder note only matters to someone with the condition — noise for everyone else
-  const shoulderHtml=cue&&cue.shoulder&&hasLegacy('shoulder_instability')
-    ? `<div class="qblock" style="border-left:3px solid var(--warn)"><div class="qlab" style="color:var(--warn)">For your shoulder</div>
-        <div class="sm">${esc(cue.shoulder)}</div></div>` : '';
+  const fl=flagFor(exId, ctx.mods), condHtml=condInfoHtml(exId, fl, cue, ctx);
   const tips = cue?[]:(EXERCISE_TIPS[exId] || PATTERN_TIPS[ex.pattern] || []);
-  const tipsHtml = cue ? `${shoulderHtml}<div class="qblock"><div class="qlab">Coaching cues</div>
+  const tipsHtml = cue ? `<div class="qblock"><div class="qlab">Coaching cues</div>
       ${[['Setup',cue.setup],['Execution',cue.execution],['Common faults',cue.faults]].filter(([,t])=>t)
         .map(([h,t])=>`<div class="field" style="margin:var(--sp-2) 0 2px">${h}</div><div class="muted sm">${esc(t)}</div>`).join('')}
       ${cue.sources&&cue.sources.length?`<div class="dim tiny" style="margin-top:var(--sp-2)">Cues drawn from ${esc(cue.sources.join(', '))}.</div>`:''}
@@ -14409,18 +14406,12 @@ function openInfo(exId){
     <div class="muted tiny" style="margin-bottom:var(--sp-4)">${esc(ex.pattern.replace(/_/g,' '))} · ${esc(ex.barType&&BAR_TYPE[ex.barType]?BAR_TYPE[ex.barType].label:IMPLEMENT_LABEL[implementOf(ex)]||loadName(ex.load))}${
       familyOf(ex)!=='isolation'?' · '+esc(FAMILY_LABEL[familyOf(ex)])+' family':''}${
       parentEx?' · a version of '+esc(parentEx.name):''}</div>
+    ${condHtml}
     ${tipsHtml}
     ${REHAB_HOWTO[exId]?`<div class="qblock"><div class="qlab">How to do it</div><div class="sm">${esc(REHAB_HOWTO[exId].what)}</div>
       <div class="sm" style="margin-top:var(--sp-2)"><b>Feel it:</b> ${esc(REHAB_HOWTO[exId].feel)}</div>
       <div class="muted tiny" style="margin-top:var(--sp-2)">${REHAB_HOWTO[exId].cues.map(c=>'· '+esc(c)).join('<br>')}</div></div>`:''}
     <div class="qblock" id="inotes"></div>
-    ${(()=>{const f=flagFor(exId); if(!f) return '';
-      const col=f.level==='red'?'var(--danger)':f.level==='ok'?'var(--ok)':f.level==='note'?'var(--muted)':'var(--warn)';
-      return `<div class="qblock" style="border-left:3px solid ${col}">
-        <div class="qlab" style="color:${col}">${f.level==='red'?'Flagged':f.level==='ok'?'Fine for you so far':f.level==='note'?'Standing cue':'Worth attention'}</div>
-        <div class="muted sm">${esc(f.why)}${f.libraryWhy?' <span class="dim">(flagged for: '+esc(f.libraryWhy)+')</span>':''}</div>
-        ${f.swap?`<div class="sm" style="margin-top:var(--sp-1)">Suggested swap: ${esc(f.swap.name)}${f.swapNote?' — '+esc(f.swapNote):''}</div>`:''}
-        <div class="anchor">${f.cond?'From: '+esc(condName(f.cond))+'. ':''}A note, not a block.</div></div>`;})()}
     <div class="qblock" id="iexcl"></div>
     <div class="qblock" id="irr"></div>
     <div class="qblock"><div class="qlab">Counts toward</div>${vols}</div>
@@ -14443,6 +14434,8 @@ function openInfo(exId){
     ${ex.custom?'<button class="btn ghost wide" id="idel" style="margin-bottom:var(--sp-2);color:var(--skip)">Delete this custom exercise</button>':''}
     <button class="btn ghost wide" id="iclose">Close</button>`);
   $('#iclose').onclick=()=>$('#dlg').close();
+  if($('#icswap')) $('#icswap').onclick=()=>{ $('#dlg').close(); ctx.onSwap(fl.swap); };
+  if(ctx.focus==='cond'&&$('#icond')) try{ $('#icond').scrollIntoView({block:'start'}); }catch(e){}
   drawRepRangeEditor($('#irr'), ex);
   if($('#ibar')) drawBarEditor($('#ibar'), ex);
   if($('#isled')) drawSledEditor($('#isled'), ex);
@@ -14492,6 +14485,27 @@ function openInfo(exId){
   };
 }
 
+/* "For your shoulder" on the info sheet (v1.69): what a flag means for this exercise,
+   in plain words, the condition's cues for it, and the suggested swap (a button when
+   opened from a set card with nothing logged yet). Never a clinical name. */
+function condInfoHtml(exId, f, cue, ctx){
+  const shoulder=cue&&cue.shoulder&&hasLegacy('shoulder_instability')?cue.shoulder:null;
+  if(!f&&!shoulder) return '';
+  const area=f&&f.cond?condArea(f.cond):'shoulder';
+  const col=!f?'var(--warn)':f.level==='red'?'var(--danger)':f.level==='ok'?'var(--ok)':f.level==='note'?'var(--muted)':'var(--warn)';
+  const e=f&&f.cond?(INJ_BY[f.cond]||INJ_BY[normCondId(f.cond)]):null;
+  const cueOf=t=>e&&((e.in_workout_cues||[]).find(x=>x.trigger===t)||{}).message;
+  const lines=[];
+  if(f) lines.push('<div class="sm"><b>'+(f.level==='red'?'Flagged':f.level==='ok'?'Fine for you so far':f.level==='note'?'A standing cue':'Worth attention')+':</b> '+esc(plainText(f.why))
+    +(f.libraryWhy?' <span class="dim">(flagged for: '+esc(plainText(f.libraryWhy))+')</span>':'')+'</div>');
+  if(shoulder) lines.push('<div class="sm">'+esc(plainText(shoulder))+'</div>');
+  if(f&&isWarning(f)&&cueOf('per_exercise')) lines.push('<div class="sm">'+esc(plainText(cueOf('per_exercise')))+'</div>');
+  if(f&&cueOf('pain_threshold')) lines.push('<div class="muted sm">If it hurts: '+esc(plainText(cueOf('pain_threshold')))+'</div>');
+  if(f&&f.swap) lines.push('<div class="sm">Suggested swap: '+esc(f.swap.name)+(f.swapNote?' ('+esc(plainText(f.swapNote))+')':'')+'</div>'
+    +(ctx&&ctx.onSwap?'<button class="btn s" id="icswap" style="margin-top:var(--sp-2)">Swap for '+esc(f.swap.name)+'</button>':''));
+  return '<div class="qblock" id="icond" style="border-left:3px solid '+col+'"><div class="qlab" style="color:'+col+'">For your '+esc(area)+'</div>'
+    +lines.join('<div style="height:var(--sp-2)"></div>')+'<div class="anchor">A note, not a block. You can always still choose this exercise.</div></div>';
+}
 /* "Don't care about this": muscles (rank last when the app picks) and movement
    patterns (their accessory slots go to another movement for the same muscles).
    dep = {muscles:[], patterns:[]}, edited in place; onChange redraws. */
@@ -14822,7 +14836,7 @@ function exPicker(title, filterFn, onPick, opts){
         f&&f.level!=='note'?`<span style="color:${f.level==='red'?'var(--danger)':f.level==='ok'?'var(--ok)':'var(--warn)'};font-size:var(--fs-1)"> ${f.level==='red'?'▲':f.level==='ok'?'✓':'●'}</span>`:''}</div>
         <div class="dim tiny" style="font-weight:400">${esc(e.pattern.replace(/_/g,' '))} · ${esc(e.barType&&BAR_TYPE[e.barType]?BAR_TYPE[e.barType].label:IMPLEMENT_LABEL[implementOf(e)]||loadName(e.load))}${
           rt?` · stimulus ${rt.st.toFixed(1)}/5 across ${rt.n}`:''}${
-          f?` · ${esc(f.why)}`:''}</div>`;
+          f?` · ${esc(plainText(f.why))}`:''}</div>`;
       b.onclick=()=>{ if(!(opts&&opts.keepOpen)) $('#dlg').close(); onPick(e); };
       $('#exl').appendChild(b);
     });
@@ -14880,7 +14894,7 @@ function bodyweightAsk(slot){
 function entryPanel(slot,idx){
   const ex=exById[slot.ex], p=el('div',''); p.style.marginTop='var(--sp-3)';
   p.appendChild(el('div','hr'));
-  { const fl=flagLine(slot, slot.sets.length?null:sw=>{ slot.ex=sw.ex; if(sw.modifiers) slot.modifiers=sw.modifiers; else delete slot.modifiers;
+  { const fl=flagChip(slot, slot.sets.length?null:sw=>{ slot.ex=sw.ex; if(sw.modifiers) slot.modifiers=sw.modifiers; else delete slot.modifiers;
       slot.swapped=true; seedDraft(slot); saveSession(); renderWork(); toast('Swapped to '+sw.name); });
     if(fl) p.appendChild(fl);
     const pr=painReportEl(slot,idx); if(pr) p.appendChild(pr); }
@@ -14990,7 +15004,7 @@ function entryPanel(slot,idx){
     const f0=flagFor(slot.ex,slot.modifiers), f=isWarning(f0)?f0:null, heavyBar=ex.load==='barbell'&&familyOf(ex)!=='isolation';
     p.appendChild(el('div','dim tiny','All-out: as many reps as you can at this weight, stopping when the next rep would break form. Logged at RPE 10 — it shows the app how your RPE ratings line up with reps actually left. It doesn\'t change your training max or push up your next sets.'
       +(heavyBar?' <span style="color:var(--warn)">On a heavy barbell lift this carries more risk — machines and isolation work are the safer place for it.</span>':'')
-      +(f?' <span style="color:var(--warn)">'+esc(f.why)+'.</span>':''))).style.marginTop='var(--sp-2)';
+      +(f?' <span style="color:var(--warn)">'+esc(plainText(f.why))+'.</span>':''))).style.marginTop='var(--sp-2)';
   }
 
   const T=TECHNIQUES[draft.tech];
@@ -16598,27 +16612,99 @@ function exclusionList(conds, excluded, onChange){
     const r=el('label',''); r.style.cssText='display:flex;gap:var(--sp-2);align-items:flex-start;padding:var(--sp-2) 0;border-top:1px solid var(--line);cursor:pointer';
     r.innerHTML=`<input type="checkbox"${on?' checked':''} style="margin-top:var(--sp-1)"><span class="grow"><span class="sm" style="font-weight:600">${esc(ex.name)}</span>
       <span style="color:${f.level==='red'?'var(--danger)':'var(--warn)'}"> ${f.level==='red'?'▲':'●'}</span>
-      <div class="dim tiny">${esc(f.why)}${f.swap?' · could swap for '+esc(f.swap.name):''}</div></span>`;
+      <div class="dim tiny">${esc(plainText(f.why))}${f.swap?' · could swap for '+esc(f.swap.name):''}</div></span>`;
     r.querySelector('input').onchange=e=>onChange(e.target.checked?excluded.concat(ex.id):excluded.filter(x=>x!==ex.id));
     box.appendChild(r);
   });
   return box;
 }
-/* Badge line for a flagged exercise in a session or preview, with the suggested swap. */
-function flagLine(slot, onSwap){
+/* ---- plain words (v1.69) ----
+   Library and flag text is research wording. Anywhere it's shown, except the
+   condition picker's clinical name and the guide, it goes through plainText().
+   CLINICAL_WORDS is what the screen scan (§65) bans from the Workout tab and the
+   Dashboard (exercise names aside: "hip abduction machine" is a gym word). */
+const CLINICAL_WORDS=/\b(apprehension|anterior|posterior|tendinopath\w*|impingement|rcrsp|instability|abduction|adduction|external rotation|internal rotation|isometrics?|plyometrics?|dorsiflexion|plantarflexion|subluxation|labral|labrum|hill-sachs|glenohumeral|spondyl\w*|orif|hallux|fais|mtss|patellofemoral|epicondyl\w*|axial|translation|open-chain|closed-chain|eccentrics?)\b/i;
+const PLAIN_PHRASES=[
+  [/the apprehension position: /gi,'the at-risk position: '],
+  [/no apprehension allowed, ever/gi,'stop the moment it feels like it might slip'],
+  [/no apprehension allowed/gi,'stop the moment it feels like it might slip'],
+  [/any apprehension:/gi,'feels unstable or like it might slip:'],
+  [/any apprehension/gi,'any feeling that it might slip'],
+  [/the apprehension position/gi,'the at-risk position (arm out wide and turned back)'],
+  [/apprehension position/gi,'At-risk position'],
+  [/(short of|without) apprehension/gi,'$1 feeling unstable'],
+  [/no apprehension/gi,'no feeling of slipping'],
+  [/apprehension/gi,'a feeling of slipping'],
+  [/end-range abduction with external rotation/gi,'the arm out wide and turned back, at the end of its range'],
+  [/(maximal )?abduction (plus|with|and|\+) (forced )?external rotation/gi,'the arm out wide and turned back'],
+  [/loaded abduction with the shoulder rotated back/gi,'the arm out wide and turned back under load'],
+  [/forced external rotation/gi,'the arm forced to turn back'],
+  [/wide external rotation/gi,'turning the leg out wide'],
+  [/external rotation/gi,'turning out'],
+  [/internal rotation/gi,'turning in'],
+  [/abduction near shoulder height/gi,'lifting the arm out to the side near shoulder height'],
+  [/hip abduction/gi,'pushing the knees out'],
+  [/hip adduction/gi,'squeezing the knees in'],
+  [/abduction/gi,'lifting out to the side'],
+  [/adduction/gi,'bringing in to the body'],
+  [/with anterior translation/gi,'that pushes the shoulder forward in its socket'],
+  [/anterior translation/gi,'the shoulder pushed forward in its socket'],
+  [/translation/gi,'shifting in the joint'],
+  [/anterior shoulder instability/gi,'a shoulder that slips forward'],
+  [/(for )?anterior instability/gi,'$1a shoulder that slips forward'],
+  [/shoulder instability/gi,'an unstable shoulder'],
+  [/instability/gi,'looseness'],
+  [/anterior/gi,'front'],[/posterior/gi,'back'],
+  [/patellar tendinopathy/gi,'pain just below the kneecap'],
+  [/tendinopath(y|ies)/gi,'tendon pain'],
+  [/open-chain extension loads the patellar tendon directly/gi,'straightening the knee against a pad loads the tendon below the kneecap directly'],
+  [/patellar tendon/gi,'tendon below the kneecap'],
+  [/patellofemoral/gi,'kneecap'],
+  [/open-chain/gi,'machine-pad'],[/closed-chain/gi,'feet-planted'],
+  [/impingement/gi,'pinching'],[/\bRCRSP\b/g,'pinchy shoulder'],
+  [/isometrics only/gi,'still holds only (squeeze and hold, no movement)'],
+  [/an isometric hold/gi,'a still hold'],
+  [/isometrics?/gi,'still holds'],
+  [/plyometrics?/gi,'jumps and bounds'],
+  [/deep dorsiflexion/gi,'the ankle bent deeply'],
+  [/dorsiflexion under load/gi,'the ankle bent under load'],
+  [/dorsiflexion/gi,'ankle bend'],[/plantarflexion/gi,'pointing the foot'],
+  [/heavy axial load/gi,'heavy weight pressing down through the spine'],
+  [/axial compression/gi,'weight pressing down through the spine'],
+  [/axial load(s|ing)?/gi,'weight pressing down through the spine'],
+  [/axial/gi,'down-through-the-spine'],
+  [/subluxation/gi,'partial slip'],[/labr(al|um)/gi,'socket rim'],[/hill-sachs/gi,'old dislocation dent'],[/glenohumeral/gi,'shoulder joint'],
+  [/spondylolisthesis/gi,'slipped vertebra'],[/spondylolysis/gi,'stress crack in the spine'],[/spondyl\w*/gi,'spine'],
+  [/\bORIF\b/g,'plates and screws'],[/hallux rigidus/gi,'stiff big toe'],[/hallux/gi,'big toe'],
+  [/\bFAIS\b/g,'hip pinch'],[/\bMTSS\b/g,'sore shins'],[/lateral epicondyl\w*/gi,'outer elbow'],[/epicondyl\w*/gi,'elbow'],
+  [/eccentrics?/gi,'slow lowering'],
+  [/spinal flexion/gi,'back rounding'],[/spinal extension/gi,'back arching'],[/lumbar hyperextension/gi,'lower-back arching'],
+  [/knee flexion/gi,'knee bend'],[/hip flexion/gi,'hip bend']
+];
+function plainText(s){
+  let t=String(s==null?'':s);
+  PLAIN_PHRASES.forEach(([re,to])=>{ t=t.replace(re,to); });
+  return t.replace(/^([a-z])/,m=>m.toUpperCase());
+}
+/* The joint (or area) a condition is about, in plain words. */
+const REGION_PLAIN={shoulder:'shoulder',elbow:'elbow',wrist_hand:'wrist',neck:'neck',thoracic_ribs:'upper back',lower_back:'back',hip_thigh:'hip',knee:'knee',ankle_foot_shin:'ankle',systemic:'joints'};
+function condArea(c){
+  const e=INJ_BY[c]||INJ_BY[normCondId(c)];
+  if(e&&REGION_PLAIN[e.region]) return REGION_PLAIN[e.region];
+  return (CONDITIONS[c]&&CONDITIONS[c].joint)||'joints';
+}
+/* On the set card a flag is one chip: "For your shoulder ›". It opens the
+   exercise's info sheet, where the cue, the reason and any swap are. */
+function flagChip(slot, onSwap){
   const f=flagFor(slot.ex, slot.modifiers); if(!f) return null;
-  const w=el('div',''); w.style.marginTop='var(--sp-2)';
-  if(f.level==='ok'){ w.appendChild(el('div','tiny','✓ '+esc(f.why))).style.color='var(--ok)'; return w; }
-  if(f.level==='note'){ w.appendChild(el('div','tiny','ⓘ '+esc(f.why)+(f.cond?' <span class="dim">· '+esc(condName(f.cond))+'</span>':''))).style.color='var(--muted)'; return w; }
-  const col=f.level==='red'?'var(--danger)':'var(--warn)';
-  w.appendChild(el('div','tiny',(f.level==='red'?'▲ ':'● ')+esc(f.why)+(f.cond?' <span class="dim">· '+esc(condName(f.cond))+'</span>':''))).style.color=col;
-  const pc=f.cond&&INJ_BY[f.cond]&&(INJ_BY[f.cond].in_workout_cues||[]).find(x=>x.trigger==='per_exercise');
-  if(pc) w.appendChild(el('div','dim tiny',esc(pc.message)));
-  if(f.swap&&onSwap){
-    const b=el('button','btn s ghost','Swap for '+f.swap.name); b.style.cssText='margin-top:var(--sp-1);font-size:var(--fs-1);padding:var(--sp-1) var(--sp-2)';
-    b.onclick=()=>onSwap(f.swap); w.appendChild(b);
-  }
-  return w;
+  const area=f.cond?condArea(f.cond):'joints';
+  const col=f.level==='red'?'var(--danger)':f.level==='ok'?'var(--ok)':f.level==='note'?'var(--muted)':'var(--warn)';
+  const mark=f.level==='red'?'▲ ':f.level==='ok'?'✓ ':f.level==='note'?'ⓘ ':'● ';
+  const b=el('button','chip flagchip',mark+(f.level==='ok'?'Fine for your '+esc(area)+' so far':'For your '+esc(area))+' ›');
+  b.style.cssText='margin-top:var(--sp-2);color:'+col+';font-size:var(--fs-1);padding:var(--sp-1) var(--sp-2)';
+  b.setAttribute('aria-label','For your '+area+': what to watch on '+(exById[slot.ex]||{name:''}).name);
+  b.onclick=()=>openInfo(slot.ex,{mods:slot.modifiers, onSwap, focus:'cond'});
+  return b;
 }
 /* "It's bothered you" → ask once whether to stop including it automatically. */
 PROPOSAL_SOURCES.push(()=>{
@@ -16685,14 +16771,14 @@ function redFlagChecklist(e, onChange){
    cap 3; outside-elbow pain over 7 → isometrics only; a stress fracture →
    any pain at the site ends the session. Advice with buttons, never a lock.
    Logged as set_pain {set_id, joint, nprs, kind}. */
-const PAIN_BUCKETS=[[0,'None'],[2,'1–3'],[5,'4–5'],[7,'6–7'],[9,'8+']];
+const PAIN_BUCKETS=[[0,'No pain'],[2,'1–3'],[5,'4–5'],[7,'6–7'],[9,'8+']];
 const PAIN_INSTABILITY=['sh_ant_instability','sh_mdi_hypermobile','sh_unstable'];
 function painRule(nprs, kind, conds){
   const has=id=>conds.includes(id);
-  if(kind==='apprehension') return {level:'stop', text:'Any apprehension: stop the set. Choose a position where the shoulder feels secure, or swap the exercise.'};
+  if(kind==='apprehension') return {level:'stop', text:'It felt unstable or like it might slip: stop the set. Choose a position where your shoulder feels secure, or swap the exercise.'};
   if(kind==='site'&&has('shin_bsi_lowrisk')) return {level:'end', text:'Pain at the stress-fracture site: stop the session (Warden 2021). Running and impact wait until you\'re pain-free for 5 days.'};
   if(has('el_lateral_tendinopathy')&&nprs>7)   // the isometric allowance ISOMETRIC_OK relies on
-    return {level:'stop', text:'Over 7/10: the elbow is highly irritable. Isometrics only for it today.'};
+    return {level:'stop', text:'Over 7/10: your elbow is very irritable today. Only still holds for it (squeeze and hold, no movement).'};
   const cap=has('an_lateral_sprain')?3:has('sh_rcrsp')?4:5;
   if(nprs>cap) return {level:'stop', text:'Over '+cap+'/10'+(cap<5?' (the limit for this condition)':'')+': stop this exercise for today and swap it, or move on.'};
   if(nprs>=3) return {level:'amber', text:'Tolerable — carry on if it settles by tomorrow morning. Your next check-in looks at it.'};
@@ -16700,7 +16786,7 @@ function painRule(nprs, kind, conds){
 }
 function painKinds(){
   const c=CFG.conditions||[], out=[];
-  if(c.some(x=>PAIN_INSTABILITY.includes(x))) out.push(['apprehension','Apprehension']);
+  if(c.some(x=>PAIN_INSTABILITY.includes(x))) out.push(['apprehension','Felt unstable or like it might slip']);
   if(c.includes('shin_bsi_lowrisk')) out.push(['site','Pain at the site']);
   return out;
 }
@@ -16714,8 +16800,6 @@ function painReportEl(slot, idx){
     const r=painRule(got.nprs,got.kind,CFG.conditions||[]);
     const col=r.level==='ok'?'var(--ok)':r.level==='amber'?'var(--warn)':'var(--danger)';
     box.appendChild(el('div','tiny',esc(r.text))).style.color=col;
-    const cue=(CFG.conditions||[]).map(c=>INJ_BY[c]).filter(Boolean).flatMap(e=>(e.in_workout_cues||[]).filter(x=>x.trigger==='pain_threshold').map(x=>x.message))[0];
-    if(cue&&r.level!=='ok') box.appendChild(el('div','dim tiny',esc(cue)));
     if(r.level==='stop'||r.level==='end'){
       const row=el('div','row'); row.style.cssText='gap:var(--sp-2);margin-top:var(--sp-2);flex-wrap:wrap';
       const sw=el('button','btn s','Swap exercise'); sw.onclick=()=>openSwap(slot,idx);
@@ -16726,7 +16810,8 @@ function painReportEl(slot, idx){
     }
     return box;
   }
-  box.appendChild(el('div','dim tiny','Any '+esc(joint)+' pain in that set? (0–10)'));
+  box.appendChild(el('div','dim tiny','How did your '+esc(joint)+' feel on that last set? <span style="white-space:nowrap">(Set '+slot.sets.length+' · '+esc(typedLabel(last.exercise_id||slot.ex,last.weight))+' × '+last.reps+')</span>'));
+  box.appendChild(el('div','dim tiny','Pain out of 10:')).style.marginTop='var(--sp-1)';
   const c=el('div','chips'); c.style.marginTop='var(--sp-1)';
   const rec=(nprs,kind)=>{ append({type:'set_pain',set_id:last.id,exercise_id:slot.ex,session_id:session.id,joint,nprs,...(kind?{kind}:{})});
     session.pain[last.id]={nprs,kind}; saveSession(); renderWork(); };
@@ -16777,17 +16862,18 @@ const humanEx=s=>String(s||'').replace(/_/g,' ');
 function rehabPlanCard(e, plan, withButtons){
   const ph=phaseOf(e,plan.phase), i=e.rehab_phases.findIndex(p=>p.phase===plan.phase);
   const c=el('div','card pad'); c.style.cssText='border-left:3px solid var(--accent)';
-  c.innerHTML=`<div class="row between"><span style="font-weight:650">${esc(e.chip_label)}</span><span class="dim tiny">phase ${i+1} of ${e.rehab_phases.length}</span></div>
+  // shown on the dashboard and in the workout: plain words, no clinical name (v1.69)
+  c.innerHTML=`<div class="row between"><span style="font-weight:650">Your ${esc(condArea(e.id))} plan</span><span class="dim tiny">phase ${i+1} of ${e.rehab_phases.length}</span></div>
     <div class="sm" style="margin-top:var(--sp-1)"><b>${esc(PHASE_LABEL[plan.phase]||plan.phase)}</b>${ph&&ph.duration?' <span class="dim tiny">· typically '+esc(ph.duration)+'</span>':''}</div>
-    ${ph&&ph.goals&&ph.goals.length?'<div class="muted tiny" style="margin-top:var(--sp-1)">Goal: '+ph.goals.map(esc).join('; ')+'</div>':''}
-    ${ph&&ph.exercises&&ph.exercises.length?'<div class="tiny" style="margin-top:var(--sp-2)">'+ph.exercises.map(x=>esc(humanEx(x.exercise))+' <span class="dim">'+esc(x.sets)+' × '+esc(x.reps)+', '+esc(x.frequency)+'</span>').join('<br>')+'</div>':''}
-    ${ph&&ph.progression_criteria&&ph.progression_criteria.length?'<div class="dim tiny" style="margin-top:var(--sp-2)">Move on when: '+ph.progression_criteria.map(esc).join('; ')+'</div>':''}
+    ${ph&&ph.goals&&ph.goals.length?'<div class="muted tiny" style="margin-top:var(--sp-1)">Goal: '+ph.goals.map(g=>esc(plainText(g))).join('; ')+'</div>':''}
+    ${ph&&ph.exercises&&ph.exercises.length?'<div class="tiny" style="margin-top:var(--sp-2)">'+ph.exercises.map(x=>esc(plainText(humanEx(x.exercise)))+' <span class="dim">'+esc(x.sets)+' × '+esc(x.reps)+', '+esc(x.frequency)+'</span>').join('<br>')+'</div>':''}
+    ${ph&&ph.progression_criteria&&ph.progression_criteria.length?'<div class="dim tiny" style="margin-top:var(--sp-2)">Move on when: '+ph.progression_criteria.map(g=>esc(plainText(g))).join('; ')+'</div>':''}
     <div class="dim tiny" style="margin-top:var(--sp-1)">Doses are app defaults within the ranges the trials used (${esc(e.evidence_grade)}). Not counted as training volume.</div>`;
   if(withButtons){
     const row=el('div','row'); row.style.cssText='gap:var(--sp-2);margin-top:var(--sp-2);flex-wrap:wrap';
     if(i<e.rehab_phases.length-1){ const nx=el('button','btn s','I\'ve met these — next phase');
       nx.onclick=()=>{ append({type:'rehab_plan',entry_id:e.id,action:'advance',phase:e.rehab_phases[i+1].phase}); render(); toast(PHASE_LABEL[e.rehab_phases[i+1].phase]); }; row.appendChild(nx); }
-    const sp=el('button','btn s ghost','Stop the plan'); sp.onclick=()=>{ if(confirm('Stop the '+e.chip_label+' phase plan? Flags and cues stay.')){ append({type:'rehab_plan',entry_id:e.id,action:'stop'}); render(); } };
+    const sp=el('button','btn s ghost','Stop the plan'); sp.onclick=()=>{ if(confirm('Stop your '+condArea(e.id)+' plan? Flags and cues stay.')){ append({type:'rehab_plan',entry_id:e.id,action:'stop'}); render(); } };
     row.appendChild(sp); c.appendChild(row);
   }
   return c;
@@ -16803,8 +16889,8 @@ PROPOSAL_SOURCES.push(()=>activeRehabPlans().map(({e,plan})=>{
   const flaring=Object.keys(jointRatings()).some(id=>{ const v=exerciseVerdict(id); return v&&v.verdict==='bad'&&(!j||v.joint===j); });
   if(flaring) return null;
   const next=e.rehab_phases[i+1];
-  return {id:'rehabnext:'+e.id+':'+plan.phase, snoozeDays:7, title:e.chip_label+': ready for '+(PHASE_LABEL[next.phase]||next.phase).toLowerCase()+'?',
-    body:'You\'ve been in '+(PHASE_LABEL[plan.phase]||plan.phase).toLowerCase()+' for '+Math.floor(weeks)+' week'+(Math.floor(weeks)===1?'':'s')+' and nothing has flared. Move on only if these hold for you: '+(ph.progression_criteria||[]).join('; ')+'.',
+  return {id:'rehabnext:'+e.id+':'+plan.phase, snoozeDays:7, title:'Your '+condArea(e.id)+' plan: ready for '+(PHASE_LABEL[next.phase]||next.phase).toLowerCase()+'?',
+    body:'You\'ve been in '+(PHASE_LABEL[plan.phase]||plan.phase).toLowerCase()+' for '+Math.floor(weeks)+' week'+(Math.floor(weeks)===1?'':'s')+' and nothing has flared. Move on only if these hold for you: '+(ph.progression_criteria||[]).map(plainText).join('; ')+'.',
     accept:{label:'Next phase', fn:()=>append({type:'rehab_plan',entry_id:e.id,action:'advance',phase:next.phase})}, decline:{label:'Not yet'}};
 }).filter(Boolean));
 /* In the workout: the current phase's exercises, as a labelled block. */
@@ -17172,7 +17258,7 @@ function runModifiers(slot, base, o){
     else rec('focused_deload',false,'Focused deload: '+FD_LABEL[lv]+' — already at or under the pin',pr);
   }
   // condition flags: shown, never applied
-  const f=flagFor(slot.ex,slot.modifiers); if(isWarning(f)) rec('condition_flag',false,f.why+' — a note, not a change',pr);
+  const f=flagFor(slot.ex,slot.modifiers); if(isWarning(f)) rec('condition_flag',false,plainText(f.why)+' — a note, not a change',pr);
   // ── guards
   if(L0!=null&&fresh){
     if(up()&&calibratingNow()){ pr={...pr,lb:L0,reps:Math.min(pr.reps,Math.max(R0,lo))}; rec('calibrating',true,'First session after a program change: no load step-up while it settles in',pr); }
@@ -17756,7 +17842,7 @@ function briefRow(slot){
   // why, in a few words
   const why=[], whyBy={};
   mods.forEach(id=>{ if(id==='progression') why.push(dir>0?((r.pr.src||'').includes('top of range')?'you hit the top of the range last time':'last time had reps to spare'):'last time was harder than aimed');
-    else if(id==='condition_flag') why.push((f.why||'a warning')+' — could swap for '+f.swap.name);
+    else if(id==='condition_flag') why.push(plainText(f.why||'a warning')+' — could swap for '+f.swap.name);
     else { const t=tr.find(x=>x.id===id); why.push(whyBy[id]=BRIEF_WHY[id]?BRIEF_WHY[id](t||{reason:''}):id.replace(/_/g,' ')); } });
   if(tags.includes('swap')) why.push('you swapped it in');
   if(tags.includes('preference')&&slot.dep) why.push(slot.dep.why);

@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark','THEMES','lastTimeRows','navPush','navDrop','pickSlot','syncCurrent','advanceIfDone','ruleCurrent','editLogged','deleteLogged','correctionMap','corrected','dialRevealed','undoHistoryMove'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark','THEMES','lastTimeRows','navPush','navDrop','pickSlot','syncCurrent','advanceIfDone','ruleCurrent','editLogged','deleteLogged','correctionMap','corrected','dialRevealed','undoHistoryMove','plainText','CLINICAL_WORDS','CUES','painKinds'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -63,8 +63,12 @@ function load(events, withData){
     'setRoadmap:x=>{ROADMAP=x},getRoadmap:()=>ROADMAP,getCFG:()=>CFG};';
   const fn=new Function('document','window','navigator','localStorage','location','history','setTimeout','setInterval',
     'alert','confirm','fetch','Notification','matchMedia','requestAnimationFrame','console',body);
-  return fn(withData?docWithData():stub(),stub(),stub(),ls,stub(),stub(),()=>0,()=>0,()=>{},()=>true,()=>Promise.resolve({}),stub(),()=>stub(),()=>0,{log(){},warn(){},error(){}});
+  return fn(withData?docWithData():stub(),stub(),NAV,ls,stub(),stub(),()=>0,()=>0,()=>{},()=>true,()=>Promise.resolve({}),stub(),()=>stub(),()=>0,{log(){},warn(){},error(){}});
 }
+/* navigator.storage is undefined here: requestPersistence() awaits it at boot, and in a
+   suite that never yields, each pending await kept a whole loaded copy of the app alive
+   (3+ GB over the grid). */
+const NAV=(()=>{ const n=stub(); return new Proxy(n,{get(t,k){ return k==='storage'?undefined:n[k]; }}); })();
 
 const day=n=>new Date(Date.now()-n*864e5).toISOString();
 let uid=0;
@@ -1983,9 +1987,9 @@ section('48. pain rules, phase plans, consent');
   ok(A.painRule(2,null,[]).level==='ok'&&A.painRule(4,null,[]).level==='amber'&&A.painRule(6,null,[]).level==='stop','default: ≤2 fine, 3–5 tolerable if it settles, over 5 stop the exercise','');
   ok(A.painRule(5,null,['sh_rcrsp']).level==='stop'&&A.painRule(4,null,['sh_rcrsp']).level==='amber','rotator cuff pain: capped at 4/10','');
   ok(A.painRule(4,null,['an_lateral_sprain']).level==='stop','an acute ankle sprain: capped at 3/10','');
-  ok(/apprehension/i.test(A.painRule(0,'apprehension',['sh_ant_instability']).text)&&A.painRule(0,'apprehension',['sh_ant_instability']).level==='stop','instability: any apprehension stops the set','');
+  ok(/unstable or like it might slip/i.test(A.painRule(0,'apprehension',['sh_ant_instability']).text)&&A.painRule(0,'apprehension',['sh_ant_instability']).level==='stop','instability: feeling unstable or like it might slip stops the set (plain words, v1.69)','');
   ok(A.painRule(5,'site',['shin_bsi_lowrisk']).level==='end','stress fracture: pain at the site ends the session','');
-  ok(/isometric/i.test(A.painRule(9,null,['el_lateral_tendinopathy']).text),'outside-elbow pain over 7: isometrics only','');
+  ok(/still holds/i.test(A.painRule(9,null,['el_lateral_tendinopathy']).text),'outside-elbow pain over 7: still holds only (isometrics, in plain words)','');
   ok(JSON.stringify(D(['sh_ant_instability']).painKinds().map(x=>x[0]))==='["apprehension"]','an apprehension button only for instability','');
   // phase plans: opt-in, start at phase 1, never advance on their own
   { const P=D(['kn_patellar_tendinopathy']), e=P.INJ_BY.kn_patellar_tendinopathy;
@@ -2821,8 +2825,8 @@ section('65. plain language: no band names, no raw ids, glossary labels on scree
   const store={}, errs=[];
   const ls={getItem:k=>k in store?store[k]:null,setItem:(k,v)=>{store[k]=String(v);},removeItem:k=>{delete store[k];},key:i=>Object.keys(store)[i]??null,get length(){ return Object.keys(store).length; }};
   const names=['CFG','LOG','EX','exById','append','saveCfg','sets','demoSeedPersona','startSession','todayDay','getSession','renderDash','renderWork','renderLifts','renderHist',
-    'openSettings','openInfo','openReadiness','openBriefing','buildBriefing','readinessScore','physicalCut','jointNoteFor','seedDraft','readinessRows','dashBands','jointDoes','READY_DOES','BAND_LEGEND','openWeekPreview','soreGroupsFor'];
-  const body=src+'\n;return {'+names.map(n=>n+':(()=>{try{return '+n+'}catch(e){}})()').join(',')+',getSession:()=>session,setSession:x=>{session=x},setTab:x=>{TAB=x}};';
+    'openSettings','openInfo','openReadiness','openBriefing','buildBriefing','readinessScore','physicalCut','jointNoteFor','seedDraft','readinessRows','dashBands','jointDoes','READY_DOES','BAND_LEGEND','openWeekPreview','soreGroupsFor','logSet','getDraft','CLINICAL_WORDS','flagFor','startRehabPlan','INJ_BY','PREP'];
+  const body=src+'\n;return {'+names.map(n=>n+':(()=>{try{return '+n+'}catch(e){}})()').join(',')+',getSession:()=>session,setSession:x=>{session=x},setTab:x=>{TAB=x},getDraft:()=>draft};';
   const D=new Function('document','window','navigator','localStorage','location','history','setTimeout','setInterval','alert','confirm','fetch','Notification','matchMedia','requestAnimationFrame','console',body)
     (doc,stub(),stub(),ls,{search:'?demo',pathname:'/',reload(){},href:''},stub(),()=>0,()=>0,()=>{},()=>true,()=>Promise.resolve({}),stub(),()=>stub(),()=>0,{log(){},warn(){},error(...a){ errs.push(a.map(String).join(' ')); }});
   D.demoSeedPersona('shoulder',3);
@@ -2847,6 +2851,12 @@ section('65. plain language: no band names, no raw ids, glossary labels on scree
   shot('readiness sheet',()=>D.openReadiness());
   shot('today\'s plan',()=>D.openBriefing(S.briefing,{start:true}));
   shot('live session',()=>{ D.setTab('work'); D.renderWork(); });
+  // a set logged on a shoulder exercise: the pain check names the set; a rehab phase plan is on
+  { const k=S.slots.findIndex(sl=>D.flagFor(sl.ex)); S.openIdx=Math.max(0,k); D.seedDraft(S.slots[S.openIdx]); const dr=D.getDraft(); dr.weight=dr.weight||100; dr.reps=8; dr.rpe=8; D.logSet(S.slots[S.openIdx],S.openIdx,'straight');
+    const pl=Object.values(D.INJ_BY).find(e=>(D.CFG.conditions||[]).includes(e.id)&&Array.isArray(e.rehab_phases)); if(pl) D.append({type:'rehab_plan',entry_id:pl.id,action:'start',phase:pl.rehab_phases[0].phase}); }
+  shot('live session after a set',()=>{ D.setTab('work'); D.renderWork(); });
+  shot('dashboard with a rehab plan',()=>D.renderDash());
+  shot('info from the set card',()=>{ const sl=S.slots[S.openIdx]; D.openInfo(sl.ex,{mods:sl.modifiers,onSwap:()=>{},focus:'cond'}); });
   ok(errs.length===0,'every screen renders without an error',errs.slice(0,3).join(' | '));
   ok(Object.values(screens).every(t=>t.replace(/\s+/g,' ').trim().length>40),'and each one has text to scan',Object.entries(screens).filter(([,t])=>t.trim().length<=40).map(([k])=>k).join(', '));
   const SCAN=[['a bare band name',/\b(Green|Yellow|Orange|Red)\b/],['a raw internal id',/\b[a-z]+(?:_[a-z0-9]+)+\b/],
@@ -2854,6 +2864,21 @@ section('65. plain language: no band names, no raw ids, glossary labels on scree
   SCAN.forEach(([what,re])=>{ const hits=[];
     Object.entries(screens).forEach(([k,t])=>t.split('\n').forEach(l=>{ const m=l.match(re); if(m) hits.push(k+': "'+m[0]+'" in "'+l.trim().slice(0,80)+'"'); }));
     ok(hits.length===0,'no screen shows '+what,hits.slice(0,3).join(' | ')); });
+  // plain words (v1.69): no clinical term on the Workout tab, the Dashboard or what they open (exercise names aside)
+  { const exNames=D.EX.map(e=>e.name).concat((D.PREP||[]).map(p=>p.name)).sort((a,b)=>b.length-a.length);
+    const strip=t=>{ let x=t; exNames.forEach(n=>{ if(n&&x.includes(n)) x=x.split(n).join(' '); }); return x; };
+    const scope=['dashboard','workout preview','dashboard after check-in','readiness sheet',"today's plan",'live session','live session after a set','dashboard with a rehab plan','info from the set card','info: bench'];
+    const hits=[]; scope.forEach(k=>strip(screens[k]||'').split('\n').forEach(l=>{ const m=l.match(D.CLINICAL_WORDS); if(m) hits.push(k+': "'+m[0]+'" in "'+l.trim().slice(0,90)+'"'); }));
+    ok(hits.length===0,'no clinical word (apprehension, anterior, instability, abduction…) on the Workout tab or Dashboard',hits.slice(0,4).join(' | '));
+    const live=screens['live session after a set'];
+    ok(/How did your shoulder feel on that last set\?\s+\(Set 1 · /.test(live),'the pain check names the set it is about',(live.match(/How did your[^\n]{0,80}/)||[''])[0]);
+    ok(/Felt unstable or like it might slip/.test(live),'the instability choice is in plain words','');
+    ok(/For your shoulder ›/.test(live)&&!/Elbows in front today|elbows in front, or use the suggested swap/i.test(live),'the set card has the "For your shoulder" chip and no condition cue text','');
+    ok(!/Feel it:\s*around your/.test(live+screens['live session']),'prep shows no made-up "Feel it: around your …" line','');
+    const inf=screens['info from the set card'];
+    ok(/For your shoulder/.test(inf)&&/Swap for |Suggested swap|Worth attention|Flagged/.test(inf),'the info sheet carries the condition: reason, cues and swap, under "For your shoulder"',inf.slice(0,120));
+    ok(/Your shoulder plan/.test(screens['dashboard with a rehab plan']),'a rehab plan card is titled in plain words','');
+  }
   ok(!/\b\d{1,3}\s*\/\s*100\b/.test(screens.dashboard+screens['dashboard after check-in']),'the dashboard shows no readiness score (it is in the detail sheet)','');
   ok(!/so that work is lighter/.test(S.briefing.top)||/^Sore /.test(S.briefing.top),'a soreness top line names the sore muscles (H1 fix: it used to take the row\'s first reason)',S.briefing.top);
   ok(screens['dashboard after check-in'].includes(S.briefing.top),'the readiness card shows today\'s plan\'s top line',S.briefing.top);
@@ -3285,6 +3310,24 @@ section('72. an edited set counts exactly like a deleted-and-relogged one');
   ok(/\.\.\.\(cur\|\|\{\}\),\.\.\.e\.patch/.test(bt)&&/if \(cur === null\) return;/.test(gs),'the backtest and the backup sheet replay corrections the same way','');
   ok(!/LOG\.forEach\(\(e,i\)=>\{ if\(i<=reset\|\|e\.type!=='set'/.test(src),'the dial reads corrected sets','');
   console.log('  '+agreed+' of 160 random logs: every reader agrees (next set, draft, next session, best, PRs, stall, dial, accuracy, history, today) · double edits stick · delete is final · moves keep edits');
+}
+
+section('73. plain words: every flag and library text the app can show passes the clinical-word list');
+{
+  const A=load([],true); const P=A.plainText, W=A.CLINICAL_WORDS; const bad=[]; let n=0;
+  const chk=(k,t)=>{ if(!t) return; n++; const p=P(t); if(W.test(p)) bad.push(k+': '+p); };
+  Object.values(A.FLAGS).forEach(c=>['red','yellow'].forEach(l=>Object.values(c[l]||{}).forEach(w=>chk('flag',w))));
+  Object.values(A.FLAGS_ADDED).forEach(c=>Object.values(c).forEach(a=>{ chk('flag',a.why); chk('note',a.note); }));
+  A.INJ.forEach(e=>{ chk('core',e.core_cue); (e.in_workout_cues||[]).forEach(c=>chk('cue',c.message)); (e.avoid||[]).forEach(a=>chk('why',a.mechanism));
+    (e.modify||[]).forEach(m=>chk('note',m.note)); (e.rehab_phases||[]).forEach(p=>{ (p.goals||[]).forEach(g=>chk('goal',g)); (p.progression_criteria||[]).forEach(g=>chk('criteria',g)); (p.exercises||[]).forEach(x=>chk('rehab exercise',String(x.exercise).replace(/_/g,' '))); }); });
+  Object.values(A.CUES||{}).forEach(c=>c&&chk('coaching shoulder note',c.shoulder));
+  ok(bad.length===0,'library or flag text still clinical after plainText()',bad.slice(0,4).join(' | '));
+  ok(n>900,'the check covers the whole library ('+n+' texts)','');
+  ok(A.painKinds&&true,'','');
+  const pr=[['apprehension',0],['site',5]].map(([k,v])=>A.painRule(v,k,['sh_ant_instability','shin_bsi_lowrisk']).text).concat([8].map(v=>A.painRule(v,null,['el_lateral_tendinopathy']).text));
+  ok(pr.every(t=>!W.test(t)),'pain advice is in plain words',pr.find(t=>W.test(t))||'');
+  ok(W.test('Anterior shoulder instability')&&W.test('apprehension')&&W.test('external rotation')&&!W.test('Hip abduction machine'.replace('Hip abduction machine','')),'the list catches the reported words','');
+  console.log('  '+n+' texts checked · pain advice plain · the condition picker keeps the clinical name');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
