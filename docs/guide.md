@@ -123,7 +123,7 @@ Settings → Backups and your data shows how much is stored on this phone, and i
 Settings → Equipment says what your gym has: the gym type, then each kind of equipment. It changes which exercises the app picks from now on; anything you've logged still comes first, and nothing is ever removed.
 
 ### How this works
-Settings → Help → How this works searches this guide and the words the app uses. Help also starts the tour of any screen, replays the six "How your program works" cards built from your own plan, and replays the first-session hints. A tour can be ended at any step with End tour.
+Settings → Help → How this works searches this guide and the words the app uses. Help also starts the tour of any screen, replays the six "How your program works" cards built from your own plan, and replays the first-session hints. Reset tips brings back the short cards that explain things the first time they happen, such as your first check-in, deload or stall. A tour can be ended at any step with End tour.
 
 ### Version
 Settings → About shows the version you're running and what changed in each recent version. Diagnostics, or a long press on the version number, gives details to paste into a note.

@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.80.0 — 2026-10-12
+- The first time something new happens, a short card explains it: your first check-in, a suggestion that moved, an all-out set, a new block, a deload week, a joint flag, a stall card, a focused-deload offer and the rest timer.
+- Each says what's happening and why, with More for the guide, and shows once. Got it puts it away for good.
+- Settings → Help → Reset tips brings them all back.
+
 ## 1.79.0 — 2026-10-12
 - Setup shows where you are ("Step 3 of 9") with a progress bar, on its own screen with nothing of the app behind it.
 - After the plan, six short "How your program works" cards explain your blocks, a session, suggestions, readiness and joints, what to do when something hurts, and where help is, using your own plan. Skip any time; replay them from Settings → Help.

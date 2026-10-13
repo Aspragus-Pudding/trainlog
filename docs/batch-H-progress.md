@@ -73,6 +73,7 @@ Appendix A is complete (v1.68.0–v1.74.0).
 
 | Part | State | Version | Notes |
 |---|---|---|---|
+| 3c first-time tips | done | v1.80.0 | nine moments, in-flow cards, once each, Got it, More → guide, Reset tips; §87; D54 |
 | 3a/3b/3d setup header, How your program works, tours | done | v1.79.0 | Step N of M + bar; six cards from your plan after the preview (skip/replay); End tour, Back, scope line; §86; D53 |
 | 2 Settings tab, shorter Program | done | v1.78.0 | five tabs at 375 px; sync/backups/appearance/voice/words/equipment/rest/help/about/start over/maintainer in Settings; Edit program training only; Lifts = cards + library; changelog history in About; guide Settings tour; §85; D52 |
 | 1c rest per exercise | done | v1.77.0 | defaults 4:00/3:00/2:30/1:45 (research cited; repo research has no rest section), info sheet + Always on the rest bar, offer after 3 sessions; §84; D51 |

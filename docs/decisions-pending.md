@@ -1087,3 +1087,29 @@ back into `openSettings` (git history, v1.77.0).
   start with "Hints for the whole app".
 
 **To undo:** `howCards`, the `how` step, and `onbSteps` in index.html.
+
+---
+
+## D54. First-time tips (v1.80)
+
+**Chosen:**
+- **Cards in the page,** never a new overlay, so the v1.67 rule holds
+  (nothing new with fixed positioning). Each sits where its moment happens:
+  - the check-in sheet;
+  - the set card, for a suggestion priced from your last set, or an all-out
+    or test set;
+  - the dashboard top, for a new block's first week, a deload, or a joint
+    above your usual;
+  - above the dashboard cards, for the first stall or focused-deload card;
+  - the workout, while the first rest timer runs.
+- **"Fires once":** the first time the moment happens it's recorded
+  (`CFG.tipsSeen`). The card stays until you tap Got it, even across
+  redraws, and never fires again until Reset tips.
+- **For people already training:** the moments that are true now (you're
+  past your first block, a joint is above usual) show once on the next
+  visit. That's the once.
+- **"A suggestion changes from what you lifted"** shows on the first set
+  card whose suggestion comes from a previous set, whichever way it moved,
+  and explains up, hold and down together.
+
+**To undo:** `TIPS` and the `tipCard(...)` calls in index.html.
