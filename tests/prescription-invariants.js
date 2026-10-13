@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark','THEMES','lastTimeRows','navPush','navDrop','pickSlot','syncCurrent','advanceIfDone','ruleCurrent','editLogged','deleteLogged','correctionMap','corrected','dialRevealed','undoHistoryMove','plainText','CLINICAL_WORDS','CUES','painKinds','editPlan','planFor','startSession','savePlanToProgram','lastDayLine','newSlotFor','demoSeedPersona','equipmentScore','ONB_GYMS','estimateFromSet','saveKnown','e1rm','knownDefault','effortText','equipMissing','sliderParams','sliderProfile','sliderStop','DEFAULT_TOKENS','themeReport','themeTokens','themeByCode','readableTokens','VOICES','VOICE_MOMENTS','voice','voiceOn','themeToast','applyTheme'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark','THEMES','lastTimeRows','navPush','navDrop','pickSlot','syncCurrent','advanceIfDone','ruleCurrent','editLogged','deleteLogged','correctionMap','corrected','dialRevealed','undoHistoryMove','plainText','CLINICAL_WORDS','CUES','painKinds','editPlan','planFor','startSession','savePlanToProgram','lastDayLine','newSlotFor','demoSeedPersona','equipmentScore','ONB_GYMS','estimateFromSet','saveKnown','e1rm','knownDefault','effortText','equipMissing','sliderParams','sliderProfile','sliderStop','DEFAULT_TOKENS','themeReport','themeTokens','themeByCode','readableTokens','VOICES','VOICE_MOMENTS','voice','voiceOn','themeToast','applyTheme','slotRepRange','withReps','isMainSlot','saveCfg','userRange'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -3499,6 +3499,56 @@ section('81. voice packs: nine moments only; safety, pain, errors and data are n
   ok(!/voice\([^)]*(INJ_DISCLAIMER|INJ_CONSENT|INJ_REDFLAG_COPY|painRule|logError)/.test(src),'disclaimers, consent, red flags, pain rules and errors never go through voice()','');
   ok((src.match(/voice\('(\w+)'/g)||[]).every(x=>A.VOICE_MOMENTS.includes(x.slice(7,-1))),'every voice() call is one of the nine moments',(src.match(/voice\('(\w+)'/g)||[]).join(' '));
   console.log('  3 voices × 9 moments · no safety words · only celebratory toasts change · switch off works');
+}
+
+section('82. which rep range applies: the stored range is the range shown and priced, everywhere (fourth report)');
+{
+  const A=load([],true); A.demoSeedPersona&&A.demoSeedPersona('shoulder',3);
+  const C=A.CFG; C.repRanges={...(C.repRanges||{}), pushdown:[8,15]}; A.saveCfg&&A.saveCfg();
+  const raw=A.todayDay(); const id=raw.id;
+  const rangeOf=(slots,ex)=>{ const sl=slots.find(x=>x.ex===ex); return sl?sl.reps.join('-'):'none'; };
+  // a saved day edit holding a stale range (the Oct 12 report: pushdown 6-10 in a saved day)
+  C.dayOverrides={...(C.dayOverrides||{}), [id]:{slots:[{ex:'pushdown',role:'secondary',sets:3,reps:[6,10],rpe:8}].concat(raw.slots.filter(x=>x.ex!=='pushdown').map(x=>({...x})))}};
+  const gd=A.generatedDays().find(d=>d.id===id);
+  ok(rangeOf(gd.slots,'pushdown')==='8-15','a saved day edit with an old 6-10: the program shows your 8-15',rangeOf(gd.slots,'pushdown'));
+  // swapped in today, before the session (the old slot's range used to come along)
+  const r2=A.todayDay(); const k=r2.slots.findIndex(x=>x.ex!=='pushdown'&&x.role!=='primary');
+  A.editPlan(r2,d=>{ d.slots[k].ex='pushdown'; d.slots[k].reps=[5,8]; });
+  ok(rangeOf(A.planFor(r2).slots,'pushdown')==='8-15','swapped in before the session: 8-15, not the old slot\'s range',rangeOf(A.planFor(r2).slots,'pushdown'));
+  // the week editor's copy
+  const wk=A.generatedDays()[1]||A.generatedDays()[0];
+  // the session: started from the plan, and a swap mid-session
+  A.startSession(A.planFor(r2)); const S=A.getSession();
+  ok(rangeOf(S.slots,'pushdown')==='8-15','the session starts with 8-15',rangeOf(S.slots,'pushdown'));
+  const other=S.slots.find(x=>x.ex!=='pushdown'&&x.role==='accessory'); if(other){ const before=other.reps.join('-'); other.ex='curl'; Object.assign(other,A.slotRepRange(other));
+    ok(other.reps.join('-')!==before||A.slotRepRange(other).reps.join('-')===other.reps.join('-'),'a swap mid-session takes the new exercise\'s range',before+' -> '+other.reps.join('-')); }
+  // priced on it
+  const ps=S.slots.find(x=>x.ex==='pushdown'); const sug=A.suggestFor(ps);
+  ok(sug&&(sug.pr.reps==null||(sug.pr.reps>=8&&sug.pr.reps<=15)),'and the suggestion is priced inside 8-15',JSON.stringify(sug&&sug.pr&&sug.pr.reps));
+  // editing another exercise's range leaves this one alone
+  C.repRanges.curl=[12,20]; A.applyRepRange('curl');
+  ok(rangeOf(S.slots,'pushdown')==='8-15'&&rangeOf(A.generatedDays().find(d=>d.id===id).slots,'pushdown')==='8-15','editing another exercise\'s range leaves it alone','');
+  // a block change: still yours (not a main lift)
+  const rm=A.getRoadmap(); const strIdx=rm.findIndex(b=>b.type==='str');
+  if(strIdx>-1){ const saved=JSON.parse(JSON.stringify(rm)); A.setRoadmap([rm[strIdx]].concat(rm.filter((b,i)=>i!==strIdx)));
+    const gs=A.generatedDays().find(d=>d.id===id)||A.generatedDays()[0];
+    ok(rangeOf(gs.slots,'pushdown')==='8-15'||rangeOf(gs.slots,'pushdown')==='none','a strength block: your range still applies to a non-main lift',rangeOf(gs.slots,'pushdown'));
+    A.setRoadmap(saved); }
+  // after a reload: the same instance state from storage
+  const B=load([],true); B.demoSeedPersona&&B.demoSeedPersona('shoulder',3); B.CFG.repRanges={...(B.CFG.repRanges||{}), pushdown:[8,15]}; B.CFG.dayOverrides={[id]:JSON.parse(JSON.stringify(C.dayOverrides[id]))};
+  ok(rangeOf(B.generatedDays().find(d=>d.id===id).slots,'pushdown')==='8-15','after a reload, the same: 8-15','');
+  // a main lift follows the block, whatever range is set on it; elsewhere your range applies
+  const M=load([],true); M.demoSeedPersona&&M.demoSeedPersona('shoulder',3);
+  const day=M.todayDay(), prim=day.slots.find(x=>x.role==='primary');
+  if(prim){ M.CFG.goals=[prim.ex]; M.CFG.repRanges={[prim.ex]:[12,20]};
+    const p=M.slotRepRange({ex:prim.ex,role:'primary',reps:[1,1]}), sec=M.slotRepRange({ex:prim.ex,role:'secondary',reps:[1,1]});
+    ok(p.repSrc==='main'&&p.reps.join('-')!=='12-20','a main lift in its primary slot follows the block (and says so)',JSON.stringify(p));
+    ok(sec.reps.join('-')==='12-20'&&sec.repSrc==='exercise','the same lift in another slot uses your range',JSON.stringify(sec));
+    ok(/main lift: follows the block/.test(src),'the card says a main lift follows the block',''); }
+  // a this-session-only change stays for that session; saving a range replaces it
+  const sl={ex:'pushdown',role:'secondary',reps:[10,12],repSrc:'session',sets:[],sets_target:3};
+  ok(A.slotRepRange(sl).reps.join('-')==='10-12','a change for this session only stays for the session','');
+  console.log('  saved day edit · swap before and during · session · priced · other edits · block change · reload · main lift follows the block · session-only change');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

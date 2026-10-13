@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.75.0 — 2026-10-12
+- Fixed for good: a rep range you set on an exercise now shows everywhere straight away, including days you saved and exercises you swapped in. No more re-saving it.
+- A main lift in its main-lift slot follows the block's range (heavier in strength blocks), and its card says so. Your range for it applies everywhere else.
+- A change you make in the set panel for one session still lasts just that session.
+
 ## 1.74.0 — 2026-10-12
 - Every theme is now checked for readable text, warnings, buttons and chart colours. A few colours shifted a shade, including the default's buttons.
 - Type a colour code such as #FF66AA for the standard look in your colour. If it wouldn't be readable, the app adjusts it and says so.

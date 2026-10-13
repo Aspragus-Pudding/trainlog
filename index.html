@@ -9401,7 +9401,7 @@ Edit program → Have a code? has "Use this theme's voice", on by default.
 - Freshly updated · {v}
 - The latest · {v}
 </script>
-<script type="application/json" id="whats-new">{"version":"1.74.0","lines":["Every theme is now checked for readable text, warnings, buttons and chart colours. A few colours shifted a shade, including the default's buttons.","Type a colour code such as #FF66AA for the standard look in your colour. If it wouldn't be readable, the app adjusts it and says so.","Goblin, Terminal (1983) and Girlypop have their own voice for cheers and greetings. Pain, safety and data messages always stay plain.","\"Reset to the default look\" is always there, and \"Use this theme's voice\" turns the jokes off."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.75.0","lines":["Fixed for good: a rep range you set on an exercise now shows everywhere straight away, including days you saved and exercises you swapped in. No more re-saving it.","A main lift in its main-lift slot follows the block's range (heavier in strength blocks), and its card says so. Your range for it applies everywhere else.","A change you make in the set panel for one session still lasts just that session."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9968,7 +9968,7 @@ Edit program → Have a code? has "Use this theme's voice", on by default.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.74.0';
+const APP_VERSION='1.75.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -11330,6 +11330,32 @@ function schemeFor(role, blockType, weekOfBlock, blockWeeks, ex, taper){
   const ov=repRangeOverride(ex,role,blockType);
   return {sets:s, reps:ov?ov.reps:reps, rpe, repSrc:ov?ov.src:'block', repMuscle:ov&&ov.muscle||null, repCapped:!!(ov&&ov.capped)};
 }
+/* WHICH REP RANGE APPLIES (reported Oct 3, 7, 11 and 12: a saved range didn't show
+   until it was saved again). One rule, one function: every slot's range is worked
+   out here when it's read (generated days, saved day edits, today's edits, the week
+   editor, swaps, a session's slots), so a stored copy can never hold an old range.
+   Written down in CLAUDE.md; §82 tests it.
+   1. A change made in the set panel for this session only (repSrc 'session').
+   2. A main lift (a goal lift in a primary slot) follows its block, whatever
+      range you've set on the exercise; the card says so.
+   3. Otherwise a range you set on the exercise (info sheet, or setup's choice).
+   4. Otherwise the muscle default for non-primary work (MUSCLE_REP_RANGE).
+   5. Otherwise the block's range for the slot's role.
+   Deload blocks keep their fixed reps (schemeFor). Practice and intervention
+   slots keep the reps their table gave them. */
+const userRange=ex=>!!ex&&((CFG.repRanges||{})[ex.id]||ex.repRange)||null;
+const isMainSlot=sl=>!!sl&&sl.role==='primary'&&isMainLift(sl.ex);
+function slotRepRange(sl, phase){
+  phase=phase||currentPhase();
+  if(sl.repSrc==='session'&&Array.isArray(sl.reps)) return {reps:sl.reps.slice(), repSrc:'session', repMuscle:sl.repMuscle||null, repCapped:!!sl.repCapped};
+  if((sl.structure==='practice'||sl.iv)&&Array.isArray(sl.reps)) return {reps:sl.reps.slice(), repSrc:sl.repSrc||'block', repMuscle:sl.repMuscle||null, repCapped:!!sl.repCapped};
+  const ex=exById[sl.ex]; if(!ex||!phase) return {reps:(sl.reps||[8,12]).slice(), repSrc:sl.repSrc||'block', repMuscle:null, repCapped:false};
+  const main=isMainSlot(sl);
+  const sc=schemeFor(sl.role||'accessory', phase.type, phase.week, phase.weeks, main?{...ex,id:null,repRange:undefined}:ex, phase.taper);
+  return {reps:sc.reps.slice(), repSrc:main&&userRange(ex)?'main':sc.repSrc, repMuscle:sc.repMuscle, repCapped:sc.repCapped};
+}
+/* The slot with its range worked out by the rule (a copy; the input is untouched). */
+const withReps=(sl,phase)=>({...sl, ...slotRepRange(sl,phase)});
 /* The default rep range for an exercise as an accessory in the current
    block, ignoring any range you've set on it — so every exercise always
    resolves to one, and the info sheet can show what "default" means. */
@@ -11516,6 +11542,8 @@ function generatedDays(){
   const phase=currentPhase();
   const days=weekVolumeCap(applyInterventions(addPracticeDays(addMaintenance(applyDepFloor(activeSplit().template.map(t=>buildDay(t,phase))), phase), phase), phase));
   if(phase&&phase.refined&&phase.type==='hyp'&&!phase.onDeload) days.forEach(capSessionVolume);
+  // every range by the one rule, whatever a stored slot says
+  days.forEach(d=>{ d.slots=d.slots.map(sl=>withReps(sl,phase)); });
   return days;
 }
 
@@ -13665,7 +13693,7 @@ function exCard(slot,o){
         ?'Test set: one '+term('all-out-set')+', as many reps as you can · aim for '+slot.reps[1]+'+'
         :isTopBack(slot)
         ?term('top-set','Top set')+' × '+fmtRange(slot.reps)+' at '+term('rpe')+' '+slot.rpe+' · then '+Math.max(1,n-1)+' '+term('back-off-sets','back-off'+(n-1===1?'':'s'))+' −'+Math.round(backoffCfg().drop*100)+'%'
-        :n+' sets × '+fmtRange(slot.reps)+' reps · '+term('rpe')+' '+slot.rpe)+(slot.swapped?' · swapped':'')
+        :n+' sets × '+fmtRange(slot.reps)+' reps · '+term('rpe')+' '+slot.rpe)+(slot.repSrc==='main'?' · main lift: follows the block':'')+(slot.swapped?' · swapped':'')
     +(slot.prio?' · priority':'')
     +(slot.joint?' · <span style="color:var(--warn)">'+esc(slot.joint.joint)+': '+esc(slot.joint.msg)+'</span>':'')+'</div>'
     +(o.lastTime===false?'':lastTimeHtml(slot,o.rx))
@@ -14069,7 +14097,7 @@ function loadWeekEdits(){ try{ WEEKEDITS=JSON.parse(STORE.getItem(LS_WEEK)||'{}'
 function saveWeekEdits(){ try{ STORE.setItem(LS_WEEK,JSON.stringify(WEEKEDITS)); }catch{} }
 function weekPlanFor(day){
   const w=WEEKEDITS[day.id];
-  if(w&&w.stamp===planStamp()) return {...day,slots:w.slots,edited:true};
+  if(w&&w.stamp===planStamp()) return {...day,slots:w.slots.map(sl=>withReps(sl)),edited:true};
   return day;
 }
 function editWeekDay(day,fn){
@@ -14078,7 +14106,7 @@ function editWeekDay(day,fn){
   fn(copy); WEEKEDITS[day.id]=copy; saveWeekEdits();
 }
 function planFor(day){
-  if(PENDING&&PENDING.id===day.id&&PENDING.stamp===planStamp()) return PENDING;
+  if(PENDING&&PENDING.id===day.id&&PENDING.stamp===planStamp()) return {...PENDING, slots:PENDING.slots.map(sl=>withReps(sl))};
   return weekPlanFor(day);
 }
 const planStamp=()=>{ const p=currentPhase(); return `${p.idx}:${p.week}:${splitKeyFor(ROADMAP[p.idx])}:${completedCount()}`; };
@@ -15190,8 +15218,8 @@ function applyRepRange(exId){
   const p=currentPhase();
   const fix=sl=>{
     if(!sl||sl.ex!==exId) return 0;
-    const sc=schemeFor(sl.role||'accessory',p.type,p.week,p.weeks,ex);
-    sl.reps=sc.reps.slice(); sl.repSrc=sc.repSrc; sl.repMuscle=sc.repMuscle; sl.repCapped=sc.repCapped;
+    if(sl.repSrc==='session') delete sl.repSrc;          // a saved range replaces a this-session-only change
+    Object.assign(sl, slotRepRange(sl,p));
     return 1;
   };
   const fixAll=slots=>(slots||[]).reduce((n,sl)=>n+fix(sl),0);
@@ -15217,7 +15245,7 @@ function drawRepRangeEditor(host, ex){
     host.innerHTML=`<div class="qlab">Rep range · default for this exercise</div>
       <div class="row between sm"><span>${fmtRange(cur)} reps</span><span class="dim tiny">${esc(why)}</span></div>
       ${capNote?`<div class="anchor" style="color:var(--warn)">${esc(capNote)}</div>`:''}
-      <div class="anchor">Applies straight away — today's session, your saved days and every future session, including when it's your lead lift. To change it just for today, use the set panel during the session.</div>`;
+      <div class="anchor">Applies straight away: today's session, your saved days and every future session${isMainLift(ex.id)?'. As a main lift it follows the block in its main-lift slot; this range is used everywhere else':''}. To change it just for today, use the set panel during the session.</div>`;
     if(!editing){
       const b=el('button','btn s','Change default'); b.style.marginTop='var(--sp-2)';
       b.onclick=()=>{ editing=true; draw(); }; host.appendChild(b);
@@ -15345,7 +15373,7 @@ function openSwap(slot,idx){
   const cur=exById[slot.ex];
   exPicker('Swap '+cur.name, e=>e.id!==cur.id, e=>{
     const wasCur=session.slots[session.openIdx]===slot, before=session.slots[session.openIdx]||null;
-    slot.ex=e.id; slot.swapped=true; slot.sets=[];
+    slot.ex=e.id; slot.swapped=true; slot.sets=[]; if(slot.repSrc==='session'){ delete slot.repSrc; delete slot.repDefault; } Object.assign(slot, slotRepRange(slot));
     // swapping the exercise you're on keeps you on it; swapping another leaves the
     // panel (and the draft) where it was
     if(wasCur){ session.pick=slotUid(slot); seedDraft(slot); }
@@ -15374,7 +15402,7 @@ function entryPanel(slot,idx){
   const ex=exById[slot.ex], p=el('div',''); p.style.marginTop='var(--sp-3)';
   p.appendChild(el('div','hr'));
   { const fl=flagChip(slot, slot.sets.length?null:sw=>{ slot.ex=sw.ex; if(sw.modifiers) slot.modifiers=sw.modifiers; else delete slot.modifiers;
-      slot.swapped=true; seedDraft(slot); saveSession(); renderWork(); toast('Swapped to '+sw.name); });
+      slot.swapped=true; Object.assign(slot, slotRepRange(slot)); seedDraft(slot); saveSession(); renderWork(); toast('Swapped to '+sw.name); });
     if(fl) p.appendChild(fl);
     const pr=painReportEl(slot,idx); if(pr) p.appendChild(pr); }
   p.appendChild(techniqueBlock(slot));
@@ -15786,6 +15814,10 @@ function explainRx(slot, pr, o){
   }else if(slot.repSrc==='session'){
     parts.push(fmtRange(slot.reps)+' reps · changed for this session');
     detail.push('Rep range '+fmtRange(slot.reps)+' was changed for this session only'+(slot.repDefault?' (default '+fmtRange(slot.repDefault.reps)+')':'')+'. The exercise\'s default is unchanged.');
+  }else if(slot.repSrc==='main'){
+    const ur=userRange(exById[slot.ex]);
+    parts.push(fmtRange(slot.reps)+' reps · main lift, follows the '+bn+' block');
+    detail.push('Rep range '+fmtRange(slot.reps)+' is the '+bn+" block's range for a main lift. As a main lift it follows the block"+(ur?'; your '+fmtRange(ur)+' range applies when it\'s in another slot':'')+'.');
   }else if(slot.repSrc==='exercise'){
     parts.push(fmtRange(slot.reps)+' reps · set for this exercise');
     detail.push('Rep range '+fmtRange(slot.reps)+" was set on this exercise, overriding the block's range.");

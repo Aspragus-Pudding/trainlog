@@ -932,3 +932,32 @@ together). §80 says which rule it breaks.
 - **The setting:** "Use this theme's voice", on by default (`CFG.themeVoice`).
 
 **To edit:** `docs/voices.md`, then `node tools/embed-guide.js`.
+
+---
+
+# Big batch Part 1
+
+## D49. Which rep range applies (v1.75) ★
+
+**The cause, found in your log:**
+- **Frozen copies.** Every stored slot kept a copy of its range from when it
+  was stored. That covers saved day edits, today's edits, the week editor and
+  a session's slots.
+- **Swaps kept the old range.** Swapping an exercise in kept the range of the
+  one it replaced. On 12 Oct your pushdown showed 6–10, the range of the slot
+  it went into, until saving the editor rewrote the copies.
+
+**The fix:**
+- **One rule,** in `slotRepRange()`, applied on read everywhere. CLAUDE.md
+  has it under "Recurring bugs".
+
+**Your call, as the brief set it:**
+- **Main lifts follow the block.** A main lift is a goal lift in a primary
+  slot. Your incline machine (a goal lift with 10–15 set) follows the block
+  on the days it's the main lift. On the days it's a secondary lift, 10–15
+  applies. Your deadlift's 3–8 works the same way.
+- **Your past sets don't change.** Each logged set keeps the target it was
+  logged against, so the backtest is identical.
+
+**To undo:** in `slotRepRange`, drop the `main` branch (main lifts then take
+your range too).

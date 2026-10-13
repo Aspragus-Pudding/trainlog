@@ -167,6 +167,19 @@ it after a session starts. §71 and `tests/mobile.js` test it.
    say, until another card is tapped or this one is finished.
 4. Finishing an exercise moves on by rule 2.
 
+**Which rep range applies** (reported Oct 3, Oct 7, Oct 11, Oct 12: a saved
+range didn't show until it was saved again). `slotRepRange()` owns it. Every
+slot's range is worked out when it's read: generated days (saved day edits
+included), `planFor`/`weekPlanFor`, swaps and saving a range. A stored
+`reps` is never trusted. §82 tests it.
+1. A change made in the set panel for this session only (`repSrc:'session'`).
+2. A main lift (a goal lift in a primary slot) follows its block, whatever
+   range is set on the exercise; the card says "main lift: follows the block".
+3. Otherwise a range set on the exercise (`CFG.repRanges`, a custom
+   exercise's `repRange`).
+4. Otherwise the muscle default for non-primary work (`MUSCLE_REP_RANGE`).
+5. Otherwise the block's range for the slot's role.
+
 ## Architecture notes
 
 - **`EX`** is the exercise library array; **`exById`** is the lookup. Custom

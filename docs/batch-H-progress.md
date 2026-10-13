@@ -69,7 +69,11 @@ of Appendix A). Order: Appendix A by reported impact, then Parts 1–6, then 7�
 | A4 plain words in the workout | done | v1.69.0 | flag chip → info sheet "For your shoulder", plainText() + CLINICAL_WORDS, pain check names the set, no made-up Feel it, no pre-session banner; §65 scan + §73 corpus; test harness memory leak fixed (navigator.storage); D39 |
 | A2 which exercise is current | done | v1.68.0 | rule in CLAUDE.md, ruleCurrent/syncCurrent, §71, mobile.js reorder repro (fails on 1.67.0 on both engines, passes now); D37 |
 
-Appendix A is complete (v1.68.0–v1.74.0). Note: node 22.17 on this machine crashes intermittently (SIGSEGV/SIGILL) inside the invariant suite; a rerun passes. The ship script retries once on a crash, never on a failure.
+Appendix A is complete (v1.68.0–v1.74.0).
+
+| Part | State | Version | Notes |
+|---|---|---|---|
+| 1a rep range, one rule | done | v1.75.0 | slotRepRange() on read everywhere; main lifts follow the block; §82; fails on 1.74 (6-10), passes now (8-15); rule in CLAUDE.md; backtest identical; D49 | Note: node 22.17 on this machine crashes intermittently (SIGSEGV/SIGILL) inside the invariant suite; a rerun passes. The ship script retries once on a crash, never on a failure.
 
 ## Half-finished
 
