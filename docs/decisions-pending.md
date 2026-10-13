@@ -993,3 +993,29 @@ your range too).
 
 **To undo:** clear the usual on the info sheet (back to "the plain
 version"), or remove `withUsual` from `withReps`.
+
+---
+
+## D51. Rest per exercise (v1.77)
+
+**Chosen:**
+- **Defaults inside your ranges,** as judgement values: 4:00 for squats and
+  deadlifts as main lifts, 3:00 for other main lifts, 2:30 for other
+  compounds, 1:45 for isolation.
+  - **The research:** `docs/research/strength-programming.md` has no rest
+    section. The published work they sit inside: longer rests beat 1 minute
+    for strength in trained lifters (Schoenfeld et al. 2016; Grgic et al.
+    2018), and for size the benefit flattens past about 60–90 s (Singer et
+    al. 2024).
+- **Your squat and deadlift at 4–5 minutes.** The default for them as main
+  lifts is 4:00. For 4:30 or 5:00, tap it on the info sheet, or add 30 s
+  on the rest bar and tap "Always". Your phone's settings can't be changed
+  from here.
+- **The offer:** "actual rest" is the median gap between an exercise's
+  working sets in a session (gaps over 10 minutes are breaks). Three
+  sessions in a row at least 25% longer (or shorter) than the timer, plus
+  15 seconds, makes the app offer once to match.
+- **"Always" on the rest bar** appears only after you've changed the time
+  for that rest.
+
+**To undo / change:** `REST_DEFAULTS` and `restFor` in index.html.

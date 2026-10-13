@@ -73,6 +73,7 @@ Appendix A is complete (v1.68.0–v1.74.0).
 
 | Part | State | Version | Notes |
 |---|---|---|---|
+| 1c rest per exercise | done | v1.77.0 | defaults 4:00/3:00/2:30/1:45 (research cited; repo research has no rest section), info sheet + Always on the rest bar, offer after 3 sessions; §84; D51 |
 | 1b strapped deadlift: usual variant | done | v1.76.0 | cause: straps track vs plain track; CFG.usualMods drives slots, bests, goals, stall; labels; proposal after 3 in a row; real log: 93 kg -> 120 kg with straps as usual; §83; D50 |
 | 1a rep range, one rule | done | v1.75.0 | slotRepRange() on read everywhere; main lifts follow the block; §82; fails on 1.74 (6-10), passes now (8-15); rule in CLAUDE.md; backtest identical; D49 | Note: node 22.17 on this machine crashes intermittently (SIGSEGV/SIGILL) inside the invariant suite; a rerun passes. The ship script retries once on a crash, never on a failure.
 

@@ -129,6 +129,7 @@ everyone.
 | Coaching cues, and a shoulder note if you have that condition | everyone | Coaching cues |
 | Your setup notes and cues | everyone | Your setup and cues |
 | I usually do this (your usual variant: straps, bar position, grip…) | everyone | I usually do this |
+| Rest between sets (per exercise, and "Always" on the rest bar) | everyone | Rest between sets |
 | Diary for this exercise | everyone | Your history |
 | Warnings, suggested swap, "fine for you so far" | injury-prone | Flag block |
 | Not included automatically (per exercise) | injury-prone | exclusion block |

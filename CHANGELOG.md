@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.77.0 — 2026-10-12
+- Rest is now set per exercise: 4 minutes for squats and deadlifts as main lifts, 3 for other main lifts, 2:30 for other compounds and 1:45 for isolation work.
+- Change it on the exercise's info sheet, or add 30 seconds on the rest bar and tap "Always".
+- If you keep resting longer or shorter than the timer for three sessions, the app offers once to match it.
+
 ## 1.76.0 — 2026-10-12
 - New on each exercise's info sheet: "I usually do this". Set deadlifts to "with straps" and suggestions, best sets, goals, Today's plan and the stall check all use your strapped history.
 - Numbers say which version they're from ("120 kg · with straps"), and the other version is still logged and shown separately.

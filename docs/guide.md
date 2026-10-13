@@ -134,6 +134,9 @@ Keep one exercise out of generated sessions from its info sheet. It stays in the
 ### I usually do this
 If you always do an exercise one way, such as deadlifts with straps, set it here. Suggestions, best sets, goal tracking, Today's plan and the stall check then use that version, and its numbers say so ("120 kg · with straps"). Doing it another way is still logged as its own history. After three sessions in a row done the same way, the app offers to make it your usual.
 
+### Rest between sets
+How long the rest timer runs after a set of this exercise. The defaults are 4 minutes for squats and deadlifts as main lifts, 3 for other main lifts, 2:30 for other compounds and 1:45 for isolation work. Add 30 seconds on the rest bar and an "Always" button keeps that time for the exercise. If you keep resting longer or shorter for three sessions, the app offers to match it.
+
 ### Rep range for this exercise
 Save your own rep range for an exercise. It's used in every block except deloads, and you can reset it to the default.
 
@@ -246,7 +249,7 @@ Set types change how a set is done and logged: straight sets, myo-reps, rest-pau
 Modify records how you did the exercise, such as a pause, a tempo, a shorter range, a grip, straps or the bar position. A modified version keeps its own history, so it never distorts the normal one.
 
 ### The rest timer `#rest`
-The rest timer runs after each set and lets you know when it is time to go again. It sits at the bottom of the screen, and the page leaves room so it never covers the Log set button.
+The rest timer runs after each set, for as long as that exercise's rest, and lets you know when it is time to go again. Add 30 seconds and "Always" keeps that time for the exercise. It sits at the bottom of the screen, and the page leaves room so it never covers the Log set button.
 
 ### Finish session `[data-tour="finish"]`
 Finish session saves the workout. It asks how your joints felt on the exercises that matter for them and lets you add a diary note, and both are optional.

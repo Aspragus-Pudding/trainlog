@@ -321,6 +321,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:v
   <span class="pbar" id="restbar"></span>
   <span class="t" id="restt">0:00</span>
   <span class="lbl" id="restl">Rest</span>
+  <button class="btn s" id="restkeep" hidden>Always</button>
   <button class="btn s" id="rest30">+30s</button>
   <button class="btn s" id="restx">Skip</button>
 </div>
@@ -8755,6 +8756,9 @@ Keep one exercise out of generated sessions from its info sheet. It stays in the
 ### I usually do this
 If you always do an exercise one way, such as deadlifts with straps, set it here. Suggestions, best sets, goal tracking, Today's plan and the stall check then use that version, and its numbers say so ("120 kg · with straps"). Doing it another way is still logged as its own history. After three sessions in a row done the same way, the app offers to make it your usual.
 
+### Rest between sets
+How long the rest timer runs after a set of this exercise. The defaults are 4 minutes for squats and deadlifts as main lifts, 3 for other main lifts, 2:30 for other compounds and 1:45 for isolation work. Add 30 seconds on the rest bar and an "Always" button keeps that time for the exercise. If you keep resting longer or shorter for three sessions, the app offers to match it.
+
 ### Rep range for this exercise
 Save your own rep range for an exercise. It's used in every block except deloads, and you can reset it to the default.
 
@@ -8867,7 +8871,7 @@ Set types change how a set is done and logged: straight sets, myo-reps, rest-pau
 Modify records how you did the exercise, such as a pause, a tempo, a shorter range, a grip, straps or the bar position. A modified version keeps its own history, so it never distorts the normal one.
 
 ### The rest timer `#rest`
-The rest timer runs after each set and lets you know when it is time to go again. It sits at the bottom of the screen, and the page leaves room so it never covers the Log set button.
+The rest timer runs after each set, for as long as that exercise's rest, and lets you know when it is time to go again. Add 30 seconds and "Always" keeps that time for the exercise. It sits at the bottom of the screen, and the page leaves room so it never covers the Log set button.
 
 ### Finish session `[data-tour="finish"]`
 Finish session saves the workout. It asks how your joints felt on the exercises that matter for them and lets you add a diary note, and both are optional.
@@ -9404,7 +9408,7 @@ Edit program → Have a code? has "Use this theme's voice", on by default.
 - Freshly updated · {v}
 - The latest · {v}
 </script>
-<script type="application/json" id="whats-new">{"version":"1.76.0","lines":["New on each exercise's info sheet: \"I usually do this\". Set deadlifts to \"with straps\" and suggestions, best sets, goals, Today's plan and the stall check all use your strapped history.","Numbers say which version they're from (\"120 kg · with straps\"), and the other version is still logged and shown separately.","Do an exercise the same way three sessions running and the app offers to make that your usual. It never switches on its own."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.77.0","lines":["Rest is now set per exercise: 4 minutes for squats and deadlifts as main lifts, 3 for other main lifts, 2:30 for other compounds and 1:45 for isolation work.","Change it on the exercise's info sheet, or add 30 seconds on the rest bar and tap \"Always\".","If you keep resting longer or shorter than the timer for three sessions, the app offers once to match it."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9971,7 +9975,7 @@ Edit program → Have a code? has "Use this theme's voice", on by default.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.76.0';
+const APP_VERSION='1.77.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -11577,7 +11581,7 @@ const DAYS=[
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
-  profile:null,profileParams:{},profileSlider:null,effortWord:null,themeVoice:true,usualMods:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
+  profile:null,profileParams:{},profileSlider:null,effortWord:null,themeVoice:true,usualMods:{},restSec:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
   feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{},deprioritised:{muscles:[],patterns:[]},tour:{t1:'off',seen:{}},backupReminderDismissed:null,todayBriefing:null,onbDraft:null};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
@@ -14163,7 +14167,7 @@ function estSessionLength(day){
   day.slots.forEach(slot=>{
     const lb=previewRx(slot).lb;
     secs+=warmupRamp(slot,lb||0).length*WARMUP_RUNG_S;
-    secs+=slot.sets*(SET_TIME_S+(REST_BY_ROLE[slot.role]||120));
+    secs+=slot.sets*(SET_TIME_S+restFor(slot));
   });
   return Math.round(secs/60);
 }
@@ -14943,6 +14947,7 @@ function openInfo(exId, ctx){
       <div class="muted tiny" style="margin-top:var(--sp-2)">${REHAB_HOWTO[exId].cues.map(c=>'· '+esc(c)).join('<br>')}</div></div>`:''}
     <div class="qblock" id="inotes"></div>
     <div class="qblock" id="iusual"></div>
+    <div class="qblock" id="irest"></div>
     <div class="qblock" id="iexcl"></div>
     <div class="qblock" id="irr"></div>
     <div class="qblock"><div class="qlab">Counts toward</div>${vols}</div>
@@ -14969,6 +14974,7 @@ function openInfo(exId, ctx){
   if(ctx.focus==='cond'&&$('#icond')) try{ $('#icond').scrollIntoView({block:'start'}); }catch(e){}
   drawRepRangeEditor($('#irr'), ex);
   drawUsualEditor($('#iusual'), ex);
+  drawRestEditor($('#irest'), ex);
   if($('#ibar')) drawBarEditor($('#ibar'), ex);
   if($('#isled')) drawSledEditor($('#isled'), ex);
   if($('#istep')) drawStepEditor($('#istep'), ex);
@@ -15254,6 +15260,18 @@ function applyRepRange(exId){
   if(PENDING&&fixAll(PENDING.slots)) savePending();
   if(Object.values(WEEKEDITS||{}).reduce((n,d)=>n+fixAll(d&&d.slots),0)) saveWeekEdits();
   if(Object.values(CFG.dayOverrides||{}).reduce((n,d)=>n+fixAll(d&&d.slots),0)) saveCfg();
+}
+/* Rest between sets for this exercise: yours, or the default for its type. */
+function drawRestEditor(host, ex){
+  if(!host) return;
+  const own=(CFG.restSec||{})[ex.id], slot={ex:ex.id, role:isMainLift(ex.id)?'primary':'secondary'}, d=restDefault(slot);
+  host.innerHTML='<div class="qlab">Rest between sets</div><div class="row between sm"><span>'+fmtRest(own||d)+'</span><span class="dim tiny">'+(own?'set by you':'default for this kind of lift')+'</span></div>'
+    +'<div class="anchor">The rest timer starts at this after each set. Defaults: 4:00 for squats and deadlifts as main lifts, 3:00 for other main lifts, 2:30 for other compounds, 1:45 for isolation work. They\'re the app\'s judgement, inside the ranges studies support.</div>';
+  const c=el('div','chips'); c.style.marginTop='var(--sp-2)';
+  [60,90,105,120,150,180,240,300].forEach(v=>{ const b=el('button','chip',fmtRest(v)); b.style.cssText='font-size:var(--fs-1);padding:var(--sp-1) var(--sp-2)';
+    b.setAttribute('aria-pressed',(own||d)===v?'true':'false');
+    b.onclick=()=>{ CFG.restSec={...(CFG.restSec||{})}; if(v===d) delete CFG.restSec[ex.id]; else CFG.restSec[ex.id]=v; saveCfg(); drawRestEditor(host,ex); toast(ex.name+': rest '+fmtRest(v)); }; c.appendChild(b); });
+  host.appendChild(c);
 }
 /* "I usually do this": the variant suggestions, best sets, goals and Today's plan use. */
 function drawUsualEditor(host, ex){
@@ -18283,8 +18301,8 @@ function logSet(slot,idx,kind,extend,over){
   else if(pr){ toast(`New best on ${ex.name} · +${fmt(pr.gain,0)} lb`); if(navigator.vibrate) navigator.vibrate(80); }
   else toast(kind==='warmup'?'Warmup logged':allOut?'All-out set logged':group?`${group.pos===0?'Top set':TECHNIQUES[draft.tech].extend} logged`:`Set ${slot.sets.length} logged`);
   if(kind!=='warmup'){
-    const rest=draft.group?45:(REST_BY_ROLE[slot.role]||120);
-    startRest(rest, draft.group?'Cluster rest':`Rest · ${exById[slot.ex].name}`);
+    const rest=draft.group?45:restFor(slot);
+    startRest(rest, draft.group?'Cluster rest':`Rest · ${exById[slot.ex].name}`, draft.group?null:slot.ex);
   }
   if(allOut){ draft.tech='straight'; draft.rpe=slot.rpe; }   // one all-out set, then back to normal
   advanceIfDone(slot,idx);
@@ -21161,7 +21179,48 @@ function beep(){
   }catch{}
 }
 /* rest timer */
-const REST_BY_ROLE={primary:180, secondary:120, accessory:90};
+const REST_BY_ROLE={primary:180, secondary:120, accessory:90};   // kept for older callers; restFor() decides
+/* Rest per exercise (v1.77). Yours (CFG.restSec {exId: seconds}) wins; else a default
+   by type. JUDGEMENT DEFAULTS inside the ranges the brief set (heavy compounds 3-4
+   min, other compounds 2-3, isolation 1.5-2). The evidence they sit inside, not
+   derive from: longer rests beat 1 min for strength in trained lifters (Schoenfeld
+   et al. 2016, JSCR; Grgic et al. 2018, Sports Med), and for size the benefit
+   flattens past about 60-90 s (Singer et al. 2024, Frontiers). docs/research has no
+   rest section. */
+const REST_DEFAULTS={heavyLower:240, heavy:180, compound:150, isolation:105};
+function restDefault(slot){
+  const ex=exById[slot&&slot.ex]; if(!ex) return 120;
+  const fam=familyOf(ex);
+  if(fam==='isolation'||ex.rehab) return REST_DEFAULTS.isolation;
+  if(slot.role==='primary') return ['squat','hinge'].includes(fam)?REST_DEFAULTS.heavyLower:REST_DEFAULTS.heavy;
+  return REST_DEFAULTS.compound;
+}
+const restFor=slot=>{ const own=(CFG.restSec||{})[slot&&slot.ex]; return own>0?own:restDefault(slot); };
+const fmtRest=sec=>Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');
+/* How long you actually rest on an exercise, per session: the median gap between its
+   working sets (gaps over 10 minutes are interruptions, not rest). Derived from the
+   set times; never stored. */
+function restActuals(exId){
+  const by={};
+  sets().forEach(st=>{ if(st.exercise_id!==exId||st.set_kind==='warmup'||(st.group&&st.group.pos>0)) return; (by[st.session_id]=by[st.session_id]||[]).push(new Date(st.ts).getTime()); });
+  return Object.values(by).map(ts=>{ ts.sort((a,b)=>a-b); const g=[]; for(let i=1;i<ts.length;i++){ const d=(ts[i]-ts[i-1])/1000; if(d>20&&d<=600) g.push(d); }
+    if(!g.length) return null; g.sort((a,b)=>a-b); return {t:ts[0], sec:g[g.length>>1]}; }).filter(Boolean).sort((a,b)=>a.t-b.t);
+}
+/* Three sessions running clearly longer or shorter than the setting → offer once to match it. */
+PROPOSAL_SOURCES.push(()=>{
+  const ids=[...new Set((session?session.slots:[]).map(x=>x.ex).concat(sets().slice(-200).map(x=>x.exercise_id)))].filter(id=>exById[id]);
+  return ids.map(id=>{
+    const a=restActuals(id).slice(-3); if(a.length<3) return null;
+    const set=restFor({ex:id,role:'secondary'}), slot=(session&&session.slots.find(x=>x.ex===id))||{ex:id,role:isMainLift(id)?'primary':'secondary'}, cur=restFor(slot);
+    const longer=a.every(x=>x.sec>=cur*1.25+15), shorter=a.every(x=>x.sec<=cur*0.75-15);
+    if(!longer&&!shorter) return null;
+    const med=[...a.map(x=>x.sec)].sort((p,q)=>p-q)[1], to=Math.max(45,Math.min(600,Math.round(med/15)*15));
+    const nm=exById[id].name;
+    return {id:'rest:'+id+':'+(longer?'up':'down'), snoozeDays:3650, title:'Rest '+fmtRest(to)+' on '+nm+'?',
+      body:'Your last 3 sessions of '+nm+' you rested about '+fmtRest(to)+' between sets, and the timer is set to '+fmtRest(cur)+'. Set it to '+fmtRest(to)+'? You can change it any time on its info sheet.',
+      accept:{label:'Set it to '+fmtRest(to), fn:()=>{ CFG.restSec={...(CFG.restSec||{}),[id]:to}; saveCfg(); toast(nm+': rest '+fmtRest(to)); }}, decline:{label:'Keep '+fmtRest(cur)}};
+  }).filter(Boolean);
+});
 const LS_REST='trainlog.rest.v1';
 const LS_PEND='trainlog.pending.v1';
 const LS_WEEK='trainlog.weekedits.v1';
@@ -21171,13 +21230,14 @@ const LS_WEEK='trainlog.weekedits.v1';
 let rest={endsAt:0,total:0,label:'',fired:false}, restIv=null, restHide=null;
 function saveRest(){ try{ rest.endsAt?STORE.setItem(LS_REST,JSON.stringify(rest))
   :STORE.removeItem(LS_REST); }catch{} }
-function startRest(sec,label){
+function startRest(sec,label,exId){
   if(DEMO_QUIET) return;
-  rest={endsAt:Date.now()+sec*1000, total:sec, label:label||'Rest', fired:false};
+  rest={endsAt:Date.now()+sec*1000, total:sec, label:label||'Rest', fired:false, ex:exId||null, base:sec};
   saveRest(); showRest();
 }
 function showRest(){
   $('#restl').textContent=rest.label;
+  restKeepBtn();
   $('#rest').classList.add('on');
   document.body.classList.add('resting');
   clearInterval(restIv); tickRest();
@@ -21204,7 +21264,14 @@ function restoreRest(){
   }catch{}
 }
 $('#rest30').onclick=()=>{ clearTimeout(restHide); restHide=null;
-  rest.endsAt=Math.max(rest.endsAt,Date.now())+30000; rest.total+=30; rest.fired=false; saveRest(); tickRest(); };
+  rest.endsAt=Math.max(rest.endsAt,Date.now())+30000; rest.total+=30; rest.fired=false; saveRest(); tickRest(); restKeepBtn(); };
+/* "Always rest this long for this exercise": once you've added time, one tap keeps it. */
+function restKeepBtn(){
+  const b=$('#restkeep'); if(!b) return;
+  const show=!!(rest.ex&&exById[rest.ex]&&rest.total!==rest.base);
+  b.hidden=!show; if(show) b.setAttribute('aria-label','Always rest '+fmtRest(rest.total)+' for '+exById[rest.ex].name);
+}
+$('#restkeep').onclick=()=>{ if(!rest.ex) return; CFG.restSec={...(CFG.restSec||{}),[rest.ex]:rest.total}; saveCfg(); rest.base=rest.total; saveRest(); restKeepBtn(); toast(exById[rest.ex].name+': rest '+fmtRest(rest.total)+' from now on'); };
 $('#restx').onclick=stopRest;
 // resync the moment the screen comes back
 document.addEventListener('visibilitychange',()=>{
