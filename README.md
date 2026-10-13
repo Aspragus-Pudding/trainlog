@@ -53,9 +53,9 @@ then paste them into a message.
 - Your log stays on your phone. Nobody else can see it unless you set up a
   backup sheet, and then only the person who made that sheet.
 - **Back it up.** If you were given a backup sheet, it updates after every
-  session. If not, use **Lifts → Save backup** now and then and keep the file
+  session. If not, use **Settings → Save backup** now and then and keep the file
   in Files. The app reminds you if it's been over a week.
-- **Restore** from **Lifts → Restore from backup**. It checks the file first,
+- **Restore** from **Settings → Restore from backup**. It checks the file first,
   and restoring the same file twice changes nothing.
 
 ## Updates

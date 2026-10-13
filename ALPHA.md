@@ -9,7 +9,7 @@ For each tester:
    execute as you, access: anyone → copy the URL. It only appends rows. It
    has no way to read them back out, so sharing it between testers is safe.
 2. **Backup sheet (optional, one per tester, never shared):** same steps with
-   `AppsScript.gs`. Skip this and they back up by hand (Lifts → Save backup).
+   `AppsScript.gs`. Skip this and they back up by hand (Settings → Save backup).
 3. **Make their setup link.** Encode each URL in a browser console with
    `encodeURIComponent('https://script.google.com/macros/s/…/exec')`, then:
    ```
@@ -60,8 +60,8 @@ The first run is the setup (v1.64):
   asked.
 - **Backups:** the app offers one after the first session.
 
-Then six short cards explain the basics. They're under *How this works* on
-the Lifts tab.
+Then six short cards explain the basics. They're under *How this works* in
+Settings → Help.
 
 Defaults the alpha doesn't yet adapt to:
 - **Pounds only.** Kilograms is hidden in setup, because the engine prices in
@@ -125,7 +125,7 @@ Written to show testers.
   change anything else. If an address is already set, the app asks before
   replacing it. Settings checks that a backup address is a real Apps Script
   web app, and *Test it now* doesn't save it until you tap Save.
-- **Reset to a fresh install** (Lifts tab) deletes every `trainlog.` key,
+- **Reset to a fresh install** (Settings tab) deletes every `trainlog.` key,
   including any a future version adds, then reloads into setup.
 
 Two honest caveats:
@@ -163,7 +163,7 @@ silently replace an address that's already set; it asks first. So send the
 link before they start logging, and tell them to say no to any later prompt
 they weren't expecting.
 
-**Option B: manual backups.** They tap **Save backup** on the Lifts tab, which
+**Option B: manual backups.** They tap **Save backup** in Settings, which
 opens the share sheet straight into Files or iCloud. When their newest backup
 of either kind (a saved file or a sheet sync) is over a week old, a card on the
 Progress tab and a prompt after each session remind them; "Not now" holds it
@@ -191,7 +191,7 @@ visible size and safe areas.
 
 ## Theme codes
 
-Edit program → *Have a code?* Type one, tap Apply. It only changes the look,
+Settings → Appearance → *Have a code?* Type one, tap Apply. It only changes the look,
 and *Reset to the default look* undoes it. Codes aren't case-sensitive.
 
 | Code | What it looks like |

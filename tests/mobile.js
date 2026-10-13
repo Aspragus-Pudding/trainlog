@@ -188,7 +188,7 @@ async function tourCheck(page, d, tag){
   await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
   await page.evaluate(()=>demoReset({kind:'persona',key:'shoulder',weeks:4})); await page.waitForLoadState('load'); await sleep(2200);
   await page.evaluate(()=>{ CFG.seenVersion=APP_VERSION; CFG.tour={t1:'off',seen:{}}; saveCfg(); try{ $('#dlg').close(); }catch(e){} });
-  const TOURS=[['dash',()=>{ TAB='dash'; render(); }],['lifts',()=>{ TAB='lifts'; render(); }],['hist',()=>{ TAB='hist'; render(); }],
+  const TOURS=[['dash',()=>{ TAB='dash'; render(); }],['lifts',()=>{ TAB='lifts'; render(); }],['hist',()=>{ TAB='hist'; render(); }],['set',()=>{ TAB='set'; render(); }],
     ['settings',()=>{ openSettings(); }],['work',()=>{ try{ $('#dlg').close(); }catch(e){} startSession(todayDay()); $('#ckskip').click(); TAB='work'; render(); }]];
   for(const c of ['normal','toolbar+safe']){
     await applyCase(page,d,c);

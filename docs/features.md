@@ -70,14 +70,6 @@ everyone.
 | "Enter a recent set" for a goal lift: weight × reps (chips 1, 3, 5), or for the bodyweight class bodyweight only / added / assistance | everyone | Edit program → Goal lifts; setup's "I know my numbers"; Workout → Set starting estimates |
 | Exercise library (browse, search by name, muscle or equipment) | everyone | Exercise library card |
 | Add a custom exercise | advanced | Exercise library card |
-| Your data (events, sets, storage, version) | everyone | Your data card |
-| Backup reminder (over a week since the last backup) | everyone | Your data card |
-| Save backup (share sheet or download) | everyone | Your data card |
-| Send to sheet now | everyone with a sheet | Your data card |
-| Restore from backup / Restore from sheet | everyone | Your data card |
-| How this works: a searchable guide (what to do when something comes up, every setting, each screen, the glossary), tours, first-session hints | everyone | Your data card |
-| Rebuild with the program builder | advanced | Lifts, bottom |
-| Reset to a fresh install / Erase all data | advanced | Lifts, bottom (both confirm first) |
 
 ## Progress
 
@@ -113,14 +105,26 @@ everyone.
 | Not included automatically (exclusions) | injury-prone | Not included automatically |
 | Don't care about (muscles, movements) | advanced | Don't care about |
 | Joints without a condition (their usual) | injury-prone | Joints without a condition |
-| Setup checklists you've hidden | advanced | Setup checklists you've hidden |
-| Automatic backup (sheet address) | everyone with a sheet | Automatic backup |
-| Setup link | testers | Setup link |
-| Your name on notes | testers | Notes |
-| RPE or effort (the word for how hard a set was) | everyone | How hard a set was |
-| Theme code (LIGHT for a light look; dark is the default; or a #RRGGBB colour) | advanced | Have a code? |
-| Theme voice ("Use this theme's voice", Goblin, Terminal, Girlypop) | advanced | Have a code? |
+| Set up a new program (keeps every logged set) | everyone | bottom |
 | Delete my conditions and pain ratings | injury-prone | under the condition picker |
+
+## Settings
+
+| Setting | For | Where |
+|---|---|---|
+| Your name on notes | testers | You and your sheet |
+| Automatic backup (sheet address) | everyone with a sheet | You and your sheet |
+| Setup link | testers | You and your sheet |
+| Your data, Save backup, Send to sheet now, Restore (file or sheet), backup reminder | everyone | Backups and your data |
+| Theme code (LIGHT for a light look; dark is the default; or a #RRGGBB colour) | advanced | Appearance |
+| Theme voice ("Use this theme's voice", Goblin, Terminal, Girlypop) | advanced | Voice |
+| RPE or effort (the word for how hard a set was) | everyone | Words and units |
+| Equipment (gym type and what it has) | everyone | Equipment |
+| Rest between sets (per exercise; defaults by type) | everyone | Rest between sets |
+| How this works, tours, first-session hints, setup checklists you've hidden | everyone | Help |
+| Version, diagnostics, what's new by version | everyone | About |
+| Reset to a fresh install / Erase all data | advanced | Start over (both confirm first) |
+| Maintainer tools (open the demo) | maintainer only | hidden from testers |
 
 ## Exercise info sheet
 
@@ -153,7 +157,7 @@ everyone.
 | Setup preview: every part with a reason and "Customize this"; nothing saved until Start first session | everyone | end of setup |
 | Set up a new program (keeps every logged set) | everyone | Lifts, bottom |
 | Keep a backup (after your first session) | everyone | first session's summary; Progress and Lifts until done |
-| The program builder (rebuild the rest of a program) | advanced | Lifts → Rebuild |
+| The program builder (rebuild the rest of a program) | advanced | Edit program → Rebuild the rest |
 | Injury consent screen | injury-prone | first time you pick a condition |
 | Quick note (the pencil) | everyone | header, every screen |
 | Diagnostics (phone, browser, visible size, safe areas) with Copy | everyone | long-press the version number in Lifts |

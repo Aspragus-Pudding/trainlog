@@ -1019,3 +1019,40 @@ version"), or remove `withUsual` from `withReps`.
   for that rest.
 
 **To undo / change:** `REST_DEFAULTS` and `restFor` in index.html.
+
+---
+
+# Big batch Part 2
+
+## D52. A Settings tab, and a training-only Edit program (v1.78)
+
+**Chosen:**
+- **Five tabs fit at 375 px** with labels, checked on iPhone SE. No header
+  icon needed.
+- **Settings applies straight away,** with no Save. Edit program keeps its
+  draft and Save, because a program change is big and is recorded as one.
+- **What moved to Settings:**
+  - your sheet address, setup link and name;
+  - the whole backups card from Lifts;
+  - theme codes;
+  - the voice switch;
+  - RPE or effort;
+  - equipment (new to edit outside setup);
+  - a list of exercises with their own rest;
+  - help (the guide, every screen's tour, the first-session hints, hidden
+    checklists);
+  - about (version, diagnostics, what's new by version);
+  - reset and erase, as a "Start over" card that confirms first;
+  - maintainer tools, owner only: open the demo.
+- **Units stay pounds** (D26). Settings says so, because kilograms aren't
+  carried through the engine yet.
+- **Notifications:** the app has none, so there's no section.
+- **Energy balance, back-off sets, "how hard suggestions push" and stall
+  handling stay in Edit program.** They're training, though the brief's
+  list didn't name them.
+- **A bug the move removes:** Edit program's Save used to rewrite the sheet
+  address and your name from the draft. That could undo a change made
+  elsewhere. Those fields are gone from it.
+
+**To undo:** the `set` tab's markup, `renderSettings`, and the blocks put
+back into `openSettings` (git history, v1.77.0).

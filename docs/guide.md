@@ -2,7 +2,7 @@
 
 Trainlog builds your program, suggests the weight and reps for every set, and adjusts as you log. Every number it suggests can explain itself, and nothing it proposes happens until you accept it. Your log stays on your phone.
 
-This guide starts with what to do when something comes up, then every setting, then a tour of each screen. The screen tours are also the app's tours: the "?" at the top of each screen walks you through its part. In the app, Lifts → How this works searches all of it.
+This guide starts with what to do when something comes up, then every setting, then a tour of each screen. The screen tours are also the app's tours: the "?" at the top of each screen walks you through its part. In the app, Settings → Help → How this works searches all of it.
 
 ## When something comes up {guide:tasks}
 
@@ -34,10 +34,10 @@ The app proposes a deload when the signs show: readiness falling, the same weigh
 Before you start, the Workout tab is today's workout, with the same cards as the live session. Move exercises up or down, swap one, add or remove one, or change the number of sets; each set shows what you did last time. Changes are for today only. Tap "Save to program" to keep them for that day from now on, and Start begins the session in the order you've set.
 
 ### My gym doesn't have an exercise
-Tap the swap button on the exercise card and pick another, by muscle or by name. Anything you log comes first from then on. To change what the app assumes your gym has, use Set up a new program on the Lifts tab, and your logged sets stay.
+Tap the swap button on the exercise card and pick another, by muscle or by name. Anything you log comes first from then on. To change what the app assumes your gym has, use Settings → Equipment; anything you've logged still comes first.
 
 ### I want to change my program
-Edit program changes blocks, days, goal lifts and preferences, and the next session settles in with no step-up in load. On the Lifts tab, "Rebuild with the program builder" rebuilds the rest of the program from where you are, and "Set up a new program" starts a fresh one from its first block, keeping every logged set.
+Edit program changes blocks, days, goal lifts and preferences, and the next session settles in with no step-up in load. In Edit program, "Rebuild the rest with the program builder" rebuilds the rest of the program from where you are, and "Set up a new program" starts a fresh one from its first block, keeping every logged set.
 
 ### Pull-ups or dips are too hard
 Use an assisted version and type the assistance the machine shows. The app tracks it as total load against your bodyweight, and when you're strong enough it proposes the next version, such as less assistance or bodyweight only.
@@ -46,7 +46,7 @@ Use an assisted version and type the assistance the machine shows. The app track
 Set Edit program → Energy balance to deficit or surplus. A deficit trims volume a little, because recovery drops; a surplus allows a little more. Log your bodyweight at check-ins so pull-ups and dips stay priced right.
 
 ### I want to keep my data safe
-Lifts → Save backup makes a file you can keep in Files, and a backup sheet saves one automatically after each session. Restoring merges event by event and never deletes anything newer. The app reminds you after your first session, and again whenever a week passes without a backup.
+Settings → Save backup makes a file you can keep in Files, and a backup sheet saves one automatically after each session. Restoring merges event by event and never deletes anything newer. The app reminds you after your first session, and again whenever a week passes without a backup.
 
 ### Something looks wrong
 Tap the pencil at the top of any screen to leave a note about what broke, what was confusing, or an idea. If something on your phone looks wrong, long-press the version number in Lifts, tap Copy and paste it into the note. Every suggestion also has a "Why these numbers" view showing each step behind it, which is the quickest way to see where a number came from.
@@ -92,11 +92,14 @@ Muscles or movements you'd rather not spend time on. Muscles are picked last; a 
 ### Joints without a condition
 How a joint normally feels for you when you haven't picked a condition for it. Ratings at your usual only lengthen the warm-up; only ratings above it change loads.
 
+### Set up a new program
+At the bottom of Edit program. It runs setup again from your current answers and starts a fresh program from its first block today. Every logged set stays, and so does how each of your lifts progresses.
+
 ### Setup checklists you've hidden
 The short "before your first set" checklists you turned off for an exercise. Turn any of them back on here.
 
 ### Automatic backup
-The address of a backup sheet. When it's set, your log is sent there after each session, and Lifts → Restore from sheet can bring it back. Leave it empty to keep backups as files.
+The address of a backup sheet. When it's set, your log is sent there after each session, and Settings → Restore from sheet can bring it back. Leave it empty to keep backups as files.
 
 ### Setup link
 Paste the setup link you were given to connect your notes and your backup sheet in one step. It's needed because the home-screen app doesn't share Safari's storage.
@@ -112,6 +115,24 @@ Have a code? A theme code changes the app's colours. Dark is the standard look; 
 
 ### Theme voice
 Goblin, Terminal and Girlypop come with their own voice for cheers and greetings: a logged set, a new best, the end of a rest or a session. Untick "Use this theme's voice" to keep the colours and lose the jokes. Anything about pain, safety, errors or your data always stays plain.
+
+### Your data
+Settings → Backups and your data shows how much is stored on this phone, and it's where you save a backup, send one to your sheet now, and restore from a file or your sheet.
+
+### Equipment
+Settings → Equipment says what your gym has: the gym type, then each kind of equipment. It changes which exercises the app picks from now on; anything you've logged still comes first, and nothing is ever removed.
+
+### How this works
+Settings → Help → How this works searches this guide and the words the app uses. Help also starts the tour of any screen and replays the first-session hints.
+
+### Version
+Settings → About shows the version you're running and what changed in each recent version. Diagnostics, or a long press on the version number, gives details to paste into a note.
+
+### Reset to a fresh install / Erase all data
+Settings → Start over. Reset wipes everything and starts you as a new user; Erase deletes the log. Both ask first, so save a backup before either if you want to keep anything.
+
+### Maintainer tools
+Only the person who runs the app sees these, never a tester with a setup link. For now it opens the demo with fake data.
 
 ### Delete my conditions and pain ratings
 Removes your conditions and stops every past pain and joint rating from counting. The log itself is never rewritten; a marker records the point from which old ratings are ignored.
@@ -265,18 +286,6 @@ Your main lifts each have a card with the estimated max, the typical weekly sets
 ### The library `[data-tour="library"]`
 The library holds every built-in exercise, searchable by name, muscle or equipment, so typing smith, cable or band works. You can add your own exercise too, and if it is a version of a built-in one it inherits that exercise's cues and warnings.
 
-### Your data `[data-tour="data"]`
-Your data stays on this phone. This card shows how much is stored and which version of the app you are running.
-
-### Save a backup `[data-tour="backup"]`
-Save backup hands a copy of your whole log to the share sheet, so you can keep it in Files or anywhere else. Do it now and then, because browser storage can be cleared without warning.
-
-### Restore `[data-tour="restore"]`
-Restore from backup reads a backup file and merges it in event by event. Importing the same file twice changes nothing, and it never deletes anything newer.
-
-### This guide `[data-tour="help"]`
-How this works searches this whole guide: what to do when something comes up, every setting, and each screen. It also starts the screen tours again.
-
 ## Progress {tab:hist}
 
 ### Your main lifts `[data-tour="goal-card"]`
@@ -303,6 +312,32 @@ Notes collects what you have sent with the pencil, and you can mark each one don
 ### Sessions `[data-tour="sessions"]`
 Sessions lists every workout you have logged. Tap one to see its sets, how long it took and any diary entries you wrote.
 
+## Settings {tab:set}
+
+### You and your sheet `[data-tour="st-account"]`
+Your name on notes, the address of your backup sheet, and a setup link if you were given one. Everything here applies straight away.
+
+### Your data `[data-tour="data"]`
+Your data stays on this phone. This card shows how much is stored, and it's where you save and restore backups.
+
+### Save a backup `[data-tour="backup"]`
+Save backup hands a copy of your whole log to the share sheet, so you can keep it in Files or anywhere else. Do it now and then, because browser storage can be cleared without warning.
+
+### Restore `[data-tour="restore"]`
+Restore from backup reads a backup file and merges it in event by event. Importing the same file twice changes nothing, and it never deletes anything newer.
+
+### Appearance `[data-tour="st-appearance"]`
+Appearance holds the theme codes. Dark is the standard look, LIGHT gives a light one, and a colour code gives the standard look in your colour; Reset is always there.
+
+### Words, equipment and rest `[data-tour="st-equipment"]`
+Choose RPE or effort, say what your gym has, and see which exercises have their own rest time. Equipment only changes what the app picks from now on, never your history.
+
+### Help `[data-tour="help"]`
+How this works searches this whole guide: what to do when something comes up, every setting, and each screen. The tours of each screen start from here too.
+
+### About `[data-tour="st-about"]`
+The version you're running, diagnostics to paste into a note if something looks wrong, and what changed in each recent version.
+
 ## Edit program {screen:settings}
 
 ### Your blocks `[data-tour="set-blocks"]`
@@ -323,8 +358,4 @@ These are flagged exercises you have chosen to keep out of generated workouts. Y
 ### Don't care about `[data-tour="set-dep"]`
 Don't care about lets you put muscles and movements last. Muscles you pick are chosen last, and movements give their accessory slots to another movement that trains the same muscles, without any muscle dropping under its typical weekly range.
 
-### Automatic backup `[data-tour="set-backup"]`
-Automatic backup sends your log to a Google Sheet after each session, if you were given a sheet address. Leave it blank and back up by hand from the Lifts tab instead.
 
-### Setup link `[data-tour="set-setuplink"]`
-Setup link is where you paste the link you were given, which connects your backup sheet and the feedback notes in one step.

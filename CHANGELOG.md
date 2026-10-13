@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.78.0 — 2026-10-12
+- New Settings tab: your sheet and setup link, backups, appearance and theme codes, voice, RPE or effort, equipment, rest times, help and the app version.
+- Edit program now holds only training: blocks, your week, goal lifts, the strength/size slider, conditions, "don't care about" and Set up a new program.
+- The Lifts tab is your main lifts and the exercise library. Backups and "How this works" moved to Settings.
+- Settings → About lists what changed in each recent version.
+
 ## 1.77.0 — 2026-10-12
 - Rest is now set per exercise: 4 minutes for squats and deadlifts as main lifts, 3 for other main lifts, 2:30 for other compounds and 1:45 for isolation work.
 - Change it on the exercise's info sheet, or add 30 seconds on the rest bar and tap "Always".
