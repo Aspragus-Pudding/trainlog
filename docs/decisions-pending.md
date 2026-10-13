@@ -1056,3 +1056,34 @@ version"), or remove `withUsual` from `withReps`.
 
 **To undo:** the `set` tab's markup, `renderSettings`, and the blocks put
 back into `openSettings` (git history, v1.77.0).
+
+---
+
+# Big batch Part 3
+
+## D53. Setup's own place, "How your program works", tours (v1.79)
+
+**Chosen:**
+- **Setup already had its own screen** in v1.67 (no tab bar, nothing behind
+  it). What's new is the header: one count across the path ("Step 3 of 9";
+  13 steps in Build it together) with a thin bar. The plan preview is the
+  last step.
+- **The walkthrough sits inside setup,** between the plan and the first
+  session, so it's still its own place. The preview's button is Next, every
+  card has "Skip and start", and the last card starts the first session.
+- **Six cards,** each with one example from your plan, in an "In your
+  plan" box:
+  1. your first four blocks;
+  2. your first day's exercises;
+  3. your main lift's range and RPE, and what makes it step up;
+  4. your condition's joint;
+  5. a flagged exercise from your first week;
+  6. where help is.
+- **The words** follow your RPE-or-effort setting.
+- **Replay** is Settings → Help → How your program works. It's built from
+  the live program.
+- **Tours:** End tour replaces Skip, and Back is there from step two. The
+  first card says "A tour of this screen only"; the first-session hints
+  start with "Hints for the whole app".
+
+**To undo:** `howCards`, the `how` step, and `onbSteps` in index.html.

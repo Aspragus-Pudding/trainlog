@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.79.0 — 2026-10-12
+- Setup shows where you are ("Step 3 of 9") with a progress bar, on its own screen with nothing of the app behind it.
+- After the plan, six short "How your program works" cards explain your blocks, a session, suggestions, readiness and joints, what to do when something hurts, and where help is, using your own plan. Skip any time; replay them from Settings → Help.
+- Tours: "Skip" is now "End tour", Back is there from the second step, and the first card says what the tour covers.
+
 ## 1.78.0 — 2026-10-12
 - New Settings tab: your sheet and setup link, backups, appearance and theme codes, voice, RPE or effort, equipment, rest times, help and the app version.
 - Edit program now holds only training: blocks, your week, goal lifts, the strength/size slider, conditions, "don't care about" and Set up a new program.

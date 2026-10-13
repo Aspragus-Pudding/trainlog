@@ -73,6 +73,7 @@ Appendix A is complete (v1.68.0–v1.74.0).
 
 | Part | State | Version | Notes |
 |---|---|---|---|
+| 3a/3b/3d setup header, How your program works, tours | done | v1.79.0 | Step N of M + bar; six cards from your plan after the preview (skip/replay); End tour, Back, scope line; §86; D53 |
 | 2 Settings tab, shorter Program | done | v1.78.0 | five tabs at 375 px; sync/backups/appearance/voice/words/equipment/rest/help/about/start over/maintainer in Settings; Edit program training only; Lifts = cards + library; changelog history in About; guide Settings tour; §85; D52 |
 | 1c rest per exercise | done | v1.77.0 | defaults 4:00/3:00/2:30/1:45 (research cited; repo research has no rest section), info sheet + Always on the rest bar, offer after 3 sessions; §84; D51 |
 | 1b strapped deadlift: usual variant | done | v1.76.0 | cause: straps track vs plain track; CFG.usualMods drives slots, bests, goals, stall; labels; proposal after 3 in a row; real log: 93 kg -> 120 kg with straps as usual; §83; D50 |

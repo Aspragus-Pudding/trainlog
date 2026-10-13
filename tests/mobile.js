@@ -124,7 +124,9 @@ async function personaSetups(page, tag){
       await clickText(page,path2); await run();
       const atPreview=await page.evaluate(()=>ONB&&ONB.step);
       const foot=await checkLayer(page,'scr');
-      await clickText(page,'Start first session'); await sleep(400);
+      await clickText(page,'Next'); const how=await page.evaluate(()=>ONB&&ONB.step); const howFoot=await checkLayer(page,'scr');
+      ok(how==='how'&&howFoot.ok, tag+' persona '+name+': the plan leads into How your program works, its buttons in reach: '+JSON.stringify({how,howFoot}));
+      await clickText(page,'Skip and start'); await sleep(400);
       const after=await page.evaluate(()=>({checkin:document.getElementById('dlg').open&&/check-in/i.test((document.querySelector('#dlg h2')||{}).textContent||''), log:LOG.filter(e=>e.type==='program_edit').length, setupGone:document.getElementById('scr').hidden, draft:CFG.onbDraft}));
       ok(atPreview==='preview'&&foot.ok&&after.checkin&&after.log===1&&after.setupGone&&!after.draft, tag+' persona '+name+': '+JSON.stringify({atPreview,foot,after}));
     }catch(e){ ok(false, tag+' persona '+name+' failed: '+e.message); }

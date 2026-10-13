@@ -121,7 +121,7 @@ everyone.
 | RPE or effort (the word for how hard a set was) | everyone | Words and units |
 | Equipment (gym type and what it has) | everyone | Equipment |
 | Rest between sets (per exercise; defaults by type) | everyone | Rest between sets |
-| How this works, tours, first-session hints, setup checklists you've hidden | everyone | Help |
+| How this works, tours, How your program works, first-session hints, setup checklists you've hidden | everyone | Help |
 | Version, diagnostics, what's new by version | everyone | About |
 | Reset to a fresh install / Erase all data | advanced | Start over (both confirm first) |
 | Maintainer tools (open the demo) | maintainer only | hidden from testers |

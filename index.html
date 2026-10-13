@@ -228,6 +228,7 @@ input:not([type=checkbox]):not([type=radio]):not([type=file]):not(.numin),select
 .tourspot{position:fixed;border-radius:var(--r-btn);pointer-events:none;z-index:2147483000;box-shadow:0 0 0 200vmax var(--backdrop);outline:2px solid var(--accent);outline-offset:2px;transition:top .15s,left .15s,width .15s,height .15s}
 .tourspot.light{box-shadow:0 0 0 200vmax color-mix(in srgb, var(--backdrop) 40%, transparent)}
 .readycard .rsec{padding:var(--sp-3) 0}.readycard .rsec+.rsec{border-top:1px solid var(--line)}.readycard .rsec:first-child{padding-top:0}.readycard .rtap{display:block;width:100%;text-align:left;padding:var(--sp-1) 0;min-height:var(--tap)}.readycard .rtap .status{margin:0}
+.onbbar{display:block;height:3px;border-radius:2px;background:var(--line);margin-top:var(--sp-1);max-width:180px;overflow:hidden}.onbbar i{display:block;height:100%;background:var(--accent)}
 .tourcard{position:fixed;left:12px;right:12px;max-width:440px;margin:0 auto;z-index:2147483001;max-height:calc(var(--vvh) - 24px);overflow-y:auto;overscroll-behavior:contain;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:var(--sp-3) var(--sp-4);color:var(--ink);box-shadow:0 10px 30px color-mix(in srgb, var(--backdrop) 60%, transparent)}
 .tourcard h3{font-size:var(--fs-3);margin:0 0 var(--sp-2)}.tourcard p{font-size:var(--fs-2);line-height:1.5;margin:0;color:var(--muted)}
 dialog::backdrop{background:var(--backdrop,rgba(6,8,12,.78))}
@@ -8749,7 +8750,7 @@ Settings → Backups and your data shows how much is stored on this phone, and i
 Settings → Equipment says what your gym has: the gym type, then each kind of equipment. It changes which exercises the app picks from now on; anything you've logged still comes first, and nothing is ever removed.
 
 ### How this works
-Settings → Help → How this works searches this guide and the words the app uses. Help also starts the tour of any screen and replays the first-session hints.
+Settings → Help → How this works searches this guide and the words the app uses. Help also starts the tour of any screen, replays the six "How your program works" cards built from your own plan, and replays the first-session hints. A tour can be ended at any step with End tour.
 
 ### Version
 Settings → About shows the version you're running and what changed in each recent version. Diagnostics, or a long press on the version number, gives details to paste into a note.
@@ -9443,8 +9444,8 @@ Edit program → Have a code? has "Use this theme's voice", on by default.
 - Freshly updated · {v}
 - The latest · {v}
 </script>
-<script type="application/json" id="whats-new">{"version":"1.78.0","lines":["New Settings tab: your sheet and setup link, backups, appearance and theme codes, voice, RPE or effort, equipment, rest times, help and the app version.","Edit program now holds only training: blocks, your week, goal lifts, the strength/size slider, conditions, \"don't care about\" and Set up a new program.","The Lifts tab is your main lifts and the exercise library. Backups and \"How this works\" moved to Settings.","Settings → About lists what changed in each recent version."]}</script>
-<script type="application/json" id="whats-new-history">[{"version":"1.78.0","date":"2026-10-12","lines":["New Settings tab: your sheet and setup link, backups, appearance and theme codes, voice, RPE or effort, equipment, rest times, help and the app version.","Edit program now holds only training: blocks, your week, goal lifts, the strength/size slider, conditions, \"don't care about\" and Set up a new program.","The Lifts tab is your main lifts and the exercise library. Backups and \"How this works\" moved to Settings.","Settings → About lists what changed in each recent version."]},{"version":"1.77.0","date":"2026-10-12","lines":["Rest is now set per exercise: 4 minutes for squats and deadlifts as main lifts, 3 for other main lifts, 2:30 for other compounds and 1:45 for isolation work.","Change it on the exercise's info sheet, or add 30 seconds on the rest bar and tap \"Always\".","If you keep resting longer or shorter than the timer for three sessions, the app offers once to match it."]},{"version":"1.76.0","date":"2026-10-12","lines":["New on each exercise's info sheet: \"I usually do this\". Set deadlifts to \"with straps\" and suggestions, best sets, goals, Today's plan and the stall check all use your strapped history.","Numbers say which version they're from (\"120 kg · with straps\"), and the other version is still logged and shown separately.","Do an exercise the same way three sessions running and the app offers to make that your usual. It never switches on its own."]},{"version":"1.75.0","date":"2026-10-12","lines":["Fixed for good: a rep range you set on an exercise now shows everywhere straight away, including days you saved and exercises you swapped in. No more re-saving it.","A main lift in its main-lift slot follows the block's range (heavier in strength blocks), and its card says so. Your range for it applies everywhere else.","A change you make in the set panel for one session still lasts just that session."]},{"version":"1.74.0","date":"2026-10-12","lines":["Every theme is now checked for readable text, warnings, buttons and chart colours. A few colours shifted a shade, including the default's buttons.","Type a colour code such as #FF66AA for the standard look in your colour. If it wouldn't be readable, the app adjusts it and says so.","Goblin, Terminal (1983) and Girlypop have their own voice for cheers and greetings. Pain, safety and data messages always stay plain.","\"Reset to the default look\" is always there, and \"Use this theme's voice\" turns the jokes off."]},{"version":"1.73.0","date":"2026-10-12","lines":["The strength/size slider is back, on top of the five goals: slide between them, or tap a goal's name to snap to it.","In setup it's under Fine-tune after the goal question (open in Build it together), and shows your blocks as you move it.","In Edit program it re-plans the blocks after the one you're in, and the block cards update as you slide."]},{"version":"1.72.1","date":"2026-10-12","lines":["New setting: the app can say \"effort\" instead of RPE (Edit program → How hard a set was). Setup picks effort for newer lifters; if you've logged RPE you keep RPE.","Your own notes and diary are never reworded.","If the app had to use equipment you didn't tick in setup, the exercise says so (\"Needs a cable, which isn't ticked in your equipment\")."]},{"version":"1.72.0","date":"2026-10-12","lines":["\"I know my numbers\" now asks for a recent set you could do today, weight × reps, with quick chips for 1, 3 and 5 reps.","Pull-ups, chin-ups, dips and assisted versions: pick bodyweight only, added weight or assistance. 0 is accepted, and it asks for reps.","The same input is on each goal lift in Edit program (\"Enter a recent set\") and in Workout → Set starting estimates.","Fixed: an estimate for an assisted pull-up wasn't used for your first session's suggestion."]},{"version":"1.71.1","date":"2026-10-12","lines":["Setup's gym question: \"A bit of everything\" is now Commercial gym, and there's a new Home gym option (barbell, rack, bench, dumbbells, pull-up bar).","A home gym puts machines and cables last. Untick the pull-up bar and pull-ups go last too.","Build it together is now the recommended path. Build it for me says: \"Not sure what you want yet? Answer a few questions and we'll build a plan.\""]},{"version":"1.71.0","date":"2026-10-12","lines":["The dashboard's readiness card has room to breathe: Today's plan, Readiness and Joints each get their own section.","The numbers are back, each with what it does: \"Readiness 64 / 100 · Below par: longer warm-up, no step-ups today.\"","Joints show your rating against your usual: \"Shoulder 2 / 3 (usual 1): longer warm-up on pressing…\". Joints at their usual share one line.","Tap any of them, or \"What these numbers mean\", for the scales: the four readiness bands and how \"your usual\" works."]},{"version":"1.70.0","date":"2026-10-12","lines":["Before you start, the Workout tab is today's workout, with the same cards and controls as the live session: move, swap, add or remove exercises and change sets.","Each planned set shows what you did last time, and the top shows roughly how long it'll take.","Changes are for today. \"Save to program\" keeps them for that day from now on. Start begins in the order you set.","The separate Preview workout button is gone. Below the list, \"Last Upper B: 5 days ago, 2 PRs\" opens that session."]},{"version":"1.69.1","date":"2026-10-12","lines":["Errors the app records now sit in their own collapsed \"App errors\" group under Progress → Notes, apart from your own notes.","A long tour card now scrolls inside itself instead of running off a short screen, and its buttons stay in reach.","Every step of every screen tour is now checked on iPhone and Android screen sizes before an update ships."]}]</script>
+<script type="application/json" id="whats-new">{"version":"1.79.0","lines":["Setup shows where you are (\"Step 3 of 9\") with a progress bar, on its own screen with nothing of the app behind it.","After the plan, six short \"How your program works\" cards explain your blocks, a session, suggestions, readiness and joints, what to do when something hurts, and where help is, using your own plan. Skip any time; replay them from Settings → Help.","Tours: \"Skip\" is now \"End tour\", Back is there from the second step, and the first card says what the tour covers."]}</script>
+<script type="application/json" id="whats-new-history">[{"version":"1.79.0","date":"2026-10-12","lines":["Setup shows where you are (\"Step 3 of 9\") with a progress bar, on its own screen with nothing of the app behind it.","After the plan, six short \"How your program works\" cards explain your blocks, a session, suggestions, readiness and joints, what to do when something hurts, and where help is, using your own plan. Skip any time; replay them from Settings → Help.","Tours: \"Skip\" is now \"End tour\", Back is there from the second step, and the first card says what the tour covers."]},{"version":"1.78.0","date":"2026-10-12","lines":["New Settings tab: your sheet and setup link, backups, appearance and theme codes, voice, RPE or effort, equipment, rest times, help and the app version.","Edit program now holds only training: blocks, your week, goal lifts, the strength/size slider, conditions, \"don't care about\" and Set up a new program.","The Lifts tab is your main lifts and the exercise library. Backups and \"How this works\" moved to Settings.","Settings → About lists what changed in each recent version."]},{"version":"1.77.0","date":"2026-10-12","lines":["Rest is now set per exercise: 4 minutes for squats and deadlifts as main lifts, 3 for other main lifts, 2:30 for other compounds and 1:45 for isolation work.","Change it on the exercise's info sheet, or add 30 seconds on the rest bar and tap \"Always\".","If you keep resting longer or shorter than the timer for three sessions, the app offers once to match it."]},{"version":"1.76.0","date":"2026-10-12","lines":["New on each exercise's info sheet: \"I usually do this\". Set deadlifts to \"with straps\" and suggestions, best sets, goals, Today's plan and the stall check all use your strapped history.","Numbers say which version they're from (\"120 kg · with straps\"), and the other version is still logged and shown separately.","Do an exercise the same way three sessions running and the app offers to make that your usual. It never switches on its own."]},{"version":"1.75.0","date":"2026-10-12","lines":["Fixed for good: a rep range you set on an exercise now shows everywhere straight away, including days you saved and exercises you swapped in. No more re-saving it.","A main lift in its main-lift slot follows the block's range (heavier in strength blocks), and its card says so. Your range for it applies everywhere else.","A change you make in the set panel for one session still lasts just that session."]},{"version":"1.74.0","date":"2026-10-12","lines":["Every theme is now checked for readable text, warnings, buttons and chart colours. A few colours shifted a shade, including the default's buttons.","Type a colour code such as #FF66AA for the standard look in your colour. If it wouldn't be readable, the app adjusts it and says so.","Goblin, Terminal (1983) and Girlypop have their own voice for cheers and greetings. Pain, safety and data messages always stay plain.","\"Reset to the default look\" is always there, and \"Use this theme's voice\" turns the jokes off."]},{"version":"1.73.0","date":"2026-10-12","lines":["The strength/size slider is back, on top of the five goals: slide between them, or tap a goal's name to snap to it.","In setup it's under Fine-tune after the goal question (open in Build it together), and shows your blocks as you move it.","In Edit program it re-plans the blocks after the one you're in, and the block cards update as you slide."]},{"version":"1.72.1","date":"2026-10-12","lines":["New setting: the app can say \"effort\" instead of RPE (Edit program → How hard a set was). Setup picks effort for newer lifters; if you've logged RPE you keep RPE.","Your own notes and diary are never reworded.","If the app had to use equipment you didn't tick in setup, the exercise says so (\"Needs a cable, which isn't ticked in your equipment\")."]},{"version":"1.72.0","date":"2026-10-12","lines":["\"I know my numbers\" now asks for a recent set you could do today, weight × reps, with quick chips for 1, 3 and 5 reps.","Pull-ups, chin-ups, dips and assisted versions: pick bodyweight only, added weight or assistance. 0 is accepted, and it asks for reps.","The same input is on each goal lift in Edit program (\"Enter a recent set\") and in Workout → Set starting estimates.","Fixed: an estimate for an assisted pull-up wasn't used for your first session's suggestion."]},{"version":"1.71.1","date":"2026-10-12","lines":["Setup's gym question: \"A bit of everything\" is now Commercial gym, and there's a new Home gym option (barbell, rack, bench, dumbbells, pull-up bar).","A home gym puts machines and cables last. Untick the pull-up bar and pull-ups go last too.","Build it together is now the recommended path. Build it for me says: \"Not sure what you want yet? Answer a few questions and we'll build a plan.\""]},{"version":"1.71.0","date":"2026-10-12","lines":["The dashboard's readiness card has room to breathe: Today's plan, Readiness and Joints each get their own section.","The numbers are back, each with what it does: \"Readiness 64 / 100 · Below par: longer warm-up, no step-ups today.\"","Joints show your rating against your usual: \"Shoulder 2 / 3 (usual 1): longer warm-up on pressing…\". Joints at their usual share one line.","Tap any of them, or \"What these numbers mean\", for the scales: the four readiness bands and how \"your usual\" works."]},{"version":"1.70.0","date":"2026-10-12","lines":["Before you start, the Workout tab is today's workout, with the same cards and controls as the live session: move, swap, add or remove exercises and change sets.","Each planned set shows what you did last time, and the top shows roughly how long it'll take.","Changes are for today. \"Save to program\" keeps them for that day from now on. Start begins in the order you set.","The separate Preview workout button is gone. Below the list, \"Last Upper B: 5 days ago, 2 PRs\" opens that session."]}]</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -10011,7 +10012,7 @@ Edit program → Have a code? has "Use this theme's voice", on by default.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.78.0';
+const APP_VERSION='1.79.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -18896,7 +18897,8 @@ function renderSettings(v){
     c.appendChild(el('div','field','Show me around')).style.marginTop='var(--sp-3)';
     const ch=el('div','chips'); [['dash','Dashboard'],['work','Workout'],['lifts','Lifts'],['hist','Progress'],['set','Settings']].forEach(([k,lab])=>{ const b=el('button','chip',esc(lab)); b.onclick=()=>{ TAB=k; render(); setTimeout(()=>startTour(k),250); }; ch.appendChild(b); });
     const ep=el('button','chip','Edit program'); ep.onclick=()=>{ openSettings(); setTimeout(()=>startTour('settings'),300); }; ch.appendChild(ep); c.appendChild(ch);
-    const fr=el('button','btn s','Replay the first-session hints'); fr.style.marginTop='var(--sp-3)'; fr.onclick=()=>{ startFirstRun(); TAB='dash'; render(); toast('The first-session hints will show again as you go'); }; c.appendChild(fr);
+    const hiw=el('button','btn s','How your program works'); hiw.style.marginTop='var(--sp-3)'; hiw.onclick=()=>openHowItWorks(0); c.appendChild(hiw);
+    const fr=el('button','btn s','Replay the first-session hints'); fr.style.cssText='margin-top:var(--sp-2);margin-left:var(--sp-2)'; fr.onclick=()=>{ startFirstRun(); TAB='dash'; render(); toast('The first-session hints will show again as you go'); }; c.appendChild(fr);
     const off=Object.keys(CFG.checklistOff||{}).filter(id=>CFG.checklistOff[id]&&exById[id]);
     if(off.length){ c.appendChild(el('div','field','Setup checklists you\'ve hidden')).style.marginTop='var(--sp-3)';
       off.forEach(id=>{ const r=el('div','row between sm'); r.style.padding='4px 0'; r.innerHTML='<span>'+esc(exById[id].name)+'</span>';
@@ -19795,6 +19797,46 @@ function drawBuilder(rerun){
 let ONB=null;
 const ONB_Q=['goal','history','schedule','equipment','body','around','priorities','lifts'];
 const ONB_T=['split','days','reps','blocks'];
+/* "How your program works" (v1.80, Part 3b): six cards built from YOUR plan: your
+   blocks, one of your days, your main lift's range, your condition. Pure: setup
+   builds the context from the draft, Settings → Help from the live program. */
+function howCards(c){
+  const W=c.effortWord==='effort'?'effort':'RPE', exn=id=>(exById[id]||{name:id}).name, bl=c.blocks||[], day=c.day;
+  const blk=b=>esc(blockName(b))+', '+b.weeks+' week'+(b.weeks>1?'s':'')+(b.taper?' (lighter weeks before a test)':b.realize?', ending with a test set':'')+(b.deload?', then a deload week':'');
+  const ms=day&&((c.goals||[]).map(g=>day.slots.find(sl=>sl.ex===g)).find(Boolean)||day.slots[0]);
+  return [
+    {title:'Your blocks', body:'Your program is a run of blocks, each a few weeks with one job. Hypertrophy blocks build muscle with more sets at moderate weights; strength blocks go heavier for fewer reps. Between them the sets, reps and '+W+' change, and in a strength block each main lift gets one top set, then lighter back-off sets. A test set is one all-out set at the end of a strength block; it updates the number your strength work is planned from.',
+      example:bl.length?bl.slice(0,4).map((b,i)=>(i+1)+'. '+blk(b)).join('<br>')+(bl.length>4?'<br>…and '+(bl.length-4)+' more':''):''},
+    {title:'A session', body:'Every session goes the same way: a 30-second check-in, Today\'s plan (what\'s held back or steps up today, and why), then your exercises. Tap an exercise, check the numbers, do the set and tap Log set; the rest timer starts on its own. Tap Finish when you\'re done.',
+      example:day?'Your '+esc(day.name)+': '+day.slots.slice(0,5).map(sl=>esc(exn(sl.ex))+' '+sl.sets+' × '+fmtRange(sl.reps)).join(' · ')+(day.slots.length>5?' · …':''):''},
+    {title:'How suggestions work', body:(W==='effort'?'Effort':'RPE')+' is how hard a set was, out of 10: 10 means nothing left, 9 one rep left, 8 about two. Reach the top of the range at the target and the weight goes up next time; land harder than planned and it holds or comes down. The app learns from what you actually lift, so log the set you did, not the one you planned.',
+      example:ms?esc(exn(ms.ex))+': '+fmtRange(ms.reps)+' reps at '+W+' '+ms.rpe+' this block. Log '+ms.reps[1]+' reps at '+W+' '+ms.rpe+' and it adds weight next time.':''},
+    {title:'Readiness and joints', body:'Readiness, 0 to 100, comes from the check-in and sets your warm-up. A 2 for sleep, motivation or rest of life means nothing steps up that day, and a 1 is a sick day: everything one step lighter. Joints are rated 0 to 3 against your usual, and only a rating above your usual changes anything.',
+      example:c.area?'Your '+esc(c.area)+': on a day it\'s rated above your usual, the work that loads it is held at last time\'s weight; everything else carries on.':'A shoulder rated above your usual holds pressing, pulling and raises at last time\'s weight; everything else carries on.'},
+    {title:'When something hurts', body:'After a set on a joint you\'ve flagged, the app asks how it felt, out of 10, and says whether to carry on. A flagged exercise shows a "For your shoulder" chip (or knee, elbow and so on): tap it for the reason, the cues and a swap. If a joint keeps flaring, the dashboard offers a focused deload: those exercises lighter for two weeks, everything else as normal.',
+      example:c.flagged?esc(exn(c.flagged))+' carries a "For your '+esc(c.area||'joints')+'" chip. Tap it for what to watch and a swap.':(c.area?'Nothing in your first week is flagged for your '+esc(c.area)+'.':'You haven\'t picked anything to work around. Add it any time in Edit program.')},
+    {title:'Notes and help', body:'The pencil at the top saves a note from any screen, with where you were: use it for anything that looks wrong or confusing. The ? on each screen gives a short tour, and Settings → Help → How this works searches the whole guide.',
+      example:c.tester?'Your notes also go to the person who set this app up.':'You can replay these cards from Settings → Help.'}
+  ];
+}
+function howCardHtml(cards,i){ const c=cards[i];
+  return '<div class="dim tiny">How your program works · '+(i+1)+' of '+cards.length+'</div><h2 style="font-size:var(--fs-4);margin:var(--sp-1) 0 var(--sp-2)">'+esc(c.title)+'</h2>'
+    +'<div class="sm" style="line-height:1.55">'+esc(c.body)+'</div>'+(c.example?'<div class="qblock" style="margin-top:var(--sp-3)"><div class="qlab">In your plan</div><div class="sm" style="line-height:1.55">'+c.example+'</div></div>':''); }
+/* The live program's context (Settings → Help). */
+function howCtxLive(){
+  const days=generatedDays(), day=todayDay()||days[0], conds=CFG.conditions||[];
+  return {blocks:ROADMAP, day, goals:CFG.goals||[], effortWord:CFG.effortWord, area:conds.length?condArea(conds[0]):null,
+    flagged:conds.length?days.flatMap(d=>d.slots).map(sl=>sl.ex).find(id=>isWarning(flagFor(id)))||null:null, tester:isTester()};
+}
+function openHowItWorks(i){
+  const cards=howCards(howCtxLive()); i=Math.max(0,Math.min(cards.length-1,i||0));
+  sheet(howCardHtml(cards,i)+'<div class="row" style="gap:var(--sp-2);margin-top:var(--sp-3)">'+(i?'<button class="btn ghost grow" id="hwb">Back</button>':'<button class="btn ghost grow" id="hwx">Close</button>')+'<button class="btn pri grow" id="hwn">'+(i<cards.length-1?'Next':'Done')+'</button></div>');
+  if($('#hwb')) $('#hwb').onclick=()=>openHowItWorks(i-1);
+  if($('#hwx')) $('#hwx').onclick=()=>$('#dlg').close();
+  $('#hwn').onclick=()=>{ if(i<cards.length-1) openHowItWorks(i+1); else $('#dlg').close(); };
+}
+/* Every step on the path you're on, in order (the header's "Step 3 of 9"). */
+const onbSteps=O=>O&&O.path==='together'?[...ONB_Q,...ONB_T,'preview']:[...ONB_Q,'preview'];
 const ONB_GOALS=PROFILE_ORDER.map(k=>({k, profile:k, label:PROFILES[k].label, blurb:PROFILES[k].blurb}));
 const ONB_HISTORY=[['new','New to lifting','Under six months, or starting again after a long break'],['novice',EXPERIENCE.novice.label,'Weight goes up most times you train'],
   ['intermediate',EXPERIENCE.intermediate.label,'A new best every few weeks'],['advanced',EXPERIENCE.advanced.label,'A new best every few months']];
@@ -19982,9 +20024,11 @@ function drawOnboardingStep(){
     split:'A suggestion for '+(a.days||3)+' days, with the trade-offs.', days:'Each slot has a suggestion and two alternatives. Tap to choose, or pick anything.',
     reps:'Main lifts follow the block. Choose ranges for the rest, or keep the defaults.', blocks:'The order of your training blocks. Change any length.',
     preview:'Built from your answers. Nothing is saved until you start.'};
-  const prog=qi>=0?'Question '+(qi+1)+' of '+ONB_Q.length:ti>=0?'Build it together · step '+(ti+1)+' of '+ONB_T.length:(O.existing?'New program':'Setup');
+  // one count for the whole path (v1.79): the questions, the together steps, the plan
+  const PATH=onbSteps(O), pi=PATH.indexOf(step);
+  const prog=pi>=0?'Step '+(pi+1)+' of '+PATH.length+(step==='preview'?' · your plan':''):(O.existing?'New program':'Setup');
   screenOpen();
-  $('#scrHead').innerHTML='<span class="dim tiny">'+esc(prog)+'</span>';
+  $('#scrHead').innerHTML='<span class="grow"><span class="dim tiny">'+esc(prog)+'</span>'+(pi>=0?'<span class="onbbar" aria-hidden="true"><i style="width:'+Math.round((pi+1)/PATH.length*100)+'%"></i></span>':'')+'</span>';
   const ex=el('button','btn quiet s','Exit setup'); ex.onclick=onbExitAsk; $('#scrHead').appendChild(ex);
   const body=$('#scrBody'), newStep=O._shown!==step; O._shown=step;
   body.innerHTML='<h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-1)">'+esc(T[step]||'Continue setup')+'</h2><div class="muted sm" style="margin-bottom:var(--sp-4)">'+esc(SUB[step]||'')+'</div><div id="onb"></div>';
@@ -20128,6 +20172,20 @@ function drawOnboardingStep(){
       host.appendChild(w); });
     tnav(); return;
   }
+  // ── how your program works (after the preview; skippable)
+  if(step==='how'){
+    const days=onbDays(R,plan), conds=R.conds||[];
+    const flagged=conds.length?onbWith(R,plan,()=>days.flatMap(d=>d.slots).map(sl=>sl.ex).find(id=>isWarning(flagFor(id)))||null):null;
+    const cards=howCards({blocks:plan.blocks, day:days[0], goals:R.goals, effortWord:LOG.some(e=>e.type==='set'&&e.rpe!=null)?(CFG.effortWord||'rpe'):(R.history==='new'||R.history==='novice'?'effort':'rpe'),
+      area:conds.length?condArea(conds[0]):null, flagged, tester:isTester()});
+    const i=Math.max(0,Math.min(cards.length-1,O.howI||0));
+    body.innerHTML=howCardHtml(cards,i);
+    $('#scrHead').firstChild.innerHTML='<span class="dim tiny">Before you start</span>';
+    navBtn('Skip and start','ghost',onbApply);
+    navBtn('Back','ghost',()=>{ if(i>0){ O.howI=i-1; drawOnboarding(); } else onbBack(); });
+    navBtn(i<cards.length-1?'Next':'Start first session','pri',()=>{ if(i<cards.length-1){ O.howI=i+1; drawOnboarding(); } else onbApply(); });
+    return;
+  }
   // ── the preview (both paths end here)
   const days=onbDays(R,plan), why=onbReasons(R,plan,days);
   const item=(title,value,reason,to,extra)=>{ const w=el('div','qblock');
@@ -20149,7 +20207,7 @@ function drawOnboardingStep(){
   item('Session length',esc('About '+onbMinutes(days)+' minutes'),why.time,toQ('schedule'));
   item('Bodyweight',esc(R.bw?R.bw+' lb':'Not given'),why.body,toQ('body'));
   navBtn('Back','ghost',onbBack);
-  navBtn('Start first session','pri',onbApply);
+  navBtn('Next','pri',()=>{ O.howI=0; onbGo('how'); });
 }
 /* Confirm: everything is written here and only here. History is never touched. */
 function onbApply(){
@@ -20321,9 +20379,9 @@ function tourStep(){
   t.scrollIntoView({block:'center'});
   const last=TOUR.i===TOUR.steps.length-1, n=TOUR.i;
   setTimeout(()=>{ if(!TOUR) return; const keep={...TOUR};
-    tourShow({...st,title:st.title+'  ·  '+(n+1)+' of '+keep.steps.length},t,[
+    tourShow({...st,title:st.title+'  ·  '+(n+1)+' of '+keep.steps.length, body:(n===0?'A tour of this screen only. ':'')+st.body},t,[
       ...(n?[['Back',()=>{ TOUR=keep; TOUR.i=n-1; tourStep(); },'ghost']]:[]),
-      ['Skip',()=>tourEnd(),'ghost'],
+      ['End tour',()=>tourEnd(),'ghost'],
       [last?'Done':'Next',()=>{ if(last){ tourEnd(); return; } TOUR=keep; TOUR.i=n+1; tourStep(); },'pri']]);
     TOUR={...keep, step:st, target:t}; tourPlace(); },160);
 }
@@ -20341,7 +20399,8 @@ function tourTick(){
     if(st.attrs.when==='session'&&!session) continue;
     const t=tourEl(st.sel); if(!t||!tourInView(t)) continue;
     TOUR={tier:1};
-    tourShow(st,t,[["Don't show again",()=>{ tt.t1='off'; saveCfg(); tourEnd(); },'ghost'],['Got it',()=>{ tourSeen(st.id); tourEnd(); setTimeout(tourTick,250); },'pri']],true);
+    const firstHint=!Object.keys(tt.seen||{}).length;
+    tourShow(firstHint?{...st,body:'Hints for the whole app, one at a time as you reach each part. '+st.body}:st,t,[["Don't show again",()=>{ tt.t1='off'; saveCfg(); tourEnd(); },'ghost'],['Got it',()=>{ tourSeen(st.id); tourEnd(); setTimeout(tourTick,250); },'pri']],true);
     TOUR={tier:1, step:st, target:t};
     return;
   }
