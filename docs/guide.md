@@ -131,6 +131,9 @@ If an exercise loads something you're working around, its info sheet says why, s
 ### Not included automatically, per exercise
 Keep one exercise out of generated sessions from its info sheet. It stays in the library, and you can still add it yourself.
 
+### I usually do this
+If you always do an exercise one way, such as deadlifts with straps, set it here. Suggestions, best sets, goal tracking, Today's plan and the stall check then use that version, and its numbers say so ("120 kg · with straps"). Doing it another way is still logged as its own history. After three sessions in a row done the same way, the app offers to make it your usual.
+
 ### Rep range for this exercise
 Save your own rep range for an exercise. It's used in every block except deloads, and you can reset it to the default.
 

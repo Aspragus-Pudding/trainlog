@@ -8752,6 +8752,9 @@ If an exercise loads something you're working around, its info sheet says why, s
 ### Not included automatically, per exercise
 Keep one exercise out of generated sessions from its info sheet. It stays in the library, and you can still add it yourself.
 
+### I usually do this
+If you always do an exercise one way, such as deadlifts with straps, set it here. Suggestions, best sets, goal tracking, Today's plan and the stall check then use that version, and its numbers say so ("120 kg · with straps"). Doing it another way is still logged as its own history. After three sessions in a row done the same way, the app offers to make it your usual.
+
 ### Rep range for this exercise
 Save your own rep range for an exercise. It's used in every block except deloads, and you can reset it to the default.
 
@@ -9401,7 +9404,7 @@ Edit program → Have a code? has "Use this theme's voice", on by default.
 - Freshly updated · {v}
 - The latest · {v}
 </script>
-<script type="application/json" id="whats-new">{"version":"1.75.0","lines":["Fixed for good: a rep range you set on an exercise now shows everywhere straight away, including days you saved and exercises you swapped in. No more re-saving it.","A main lift in its main-lift slot follows the block's range (heavier in strength blocks), and its card says so. Your range for it applies everywhere else.","A change you make in the set panel for one session still lasts just that session."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.76.0","lines":["New on each exercise's info sheet: \"I usually do this\". Set deadlifts to \"with straps\" and suggestions, best sets, goals, Today's plan and the stall check all use your strapped history.","Numbers say which version they're from (\"120 kg · with straps\"), and the other version is still logged and shown separately.","Do an exercise the same way three sessions running and the app offers to make that your usual. It never switches on its own."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9968,7 +9971,7 @@ Edit program → Have a code? has "Use this theme's voice", on by default.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.75.0';
+const APP_VERSION='1.76.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -10961,6 +10964,21 @@ function modLabel(m){
 const mergeMods=(a,b)=>cleanMods({...(cleanMods(a)||{}),...(cleanMods(b)||{})});
 /* A signature back to words, for history headings. */
 function modLabelFromSig(sig){ return modLabel(sigMods(sig))||sig; }
+/* "I usually do this" (v1.76): one variant per exercise (CFG.usualMods {exId: mods}),
+   e.g. deadlift strapped. A planned slot with no variant chosen gets it, so the
+   suggestion, Today's plan and the stall engine read that track; best sets and goal
+   tracking read it too, and say which it is ("120 kg · strapped"). Doing it another
+   way is still logged as its own track. A slot set back to plain carries plain:true. */
+const usualMods=exId=>cleanMods((CFG.usualMods||{})[exId]);
+const usualSig=exId=>modSig(usualMods(exId));
+const usualLabel=exId=>modLabel(usualMods(exId));
+const usualTag=exId=>{ const l=usualLabel(exId); return l?' · '+l:''; };
+function setSlotMods(sl, mods){
+  const m=cleanMods(mods);
+  if(m){ sl.modifiers=m; delete sl.plain; }
+  else{ delete sl.modifiers; if(usualMods(sl.ex)) sl.plain=true; else delete sl.plain; }
+}
+const withUsual=sl=>sl.modifiers===undefined&&!sl.plain&&usualMods(sl.ex)?{...sl, modifiers:usualMods(sl.ex)}:sl;
 function sigMods(sig){
   const m={};
   String(sig||'').split(',').filter(Boolean).forEach(p=>{
@@ -11355,7 +11373,7 @@ function slotRepRange(sl, phase){
   return {reps:sc.reps.slice(), repSrc:main&&userRange(ex)?'main':sc.repSrc, repMuscle:sc.repMuscle, repCapped:sc.repCapped};
 }
 /* The slot with its range worked out by the rule (a copy; the input is untouched). */
-const withReps=(sl,phase)=>({...sl, ...slotRepRange(sl,phase)});
+const withReps=(sl,phase)=>{ const u=withUsual(sl); return {...u, ...slotRepRange(u,phase)}; };
 /* The default rep range for an exercise as an accessory in the current
    block, ignoring any range you've set on it — so every exercise always
    resolves to one, and the info sheet can show what "default" means. */
@@ -11559,7 +11577,7 @@ const DAYS=[
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
-  profile:null,profileParams:{},profileSlider:null,effortWord:null,themeVoice:true,experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
+  profile:null,profileParams:{},profileSlider:null,effortWord:null,themeVoice:true,usualMods:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
   feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{},deprioritised:{muscles:[],patterns:[]},tour:{t1:'off',seen:{}},backupReminderDismissed:null,todayBriefing:null,onbDraft:null};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
@@ -12110,6 +12128,7 @@ function setE1RM(st){
   return L==null?null:e1rm(L+bwOffset(ex,st.ts),st.reps);
 }
 function bestE1RM(id, sig){ let b=null;
+  if(sig===undefined) sig=usualSig(id);   // the lift = your usual variant
   for(const s of sets()){
     if(s.set_kind==='warmup'||!onTrack(s,id,sig)) continue;
     const v=setE1RM(s);
@@ -12117,7 +12136,7 @@ function bestE1RM(id, sig){ let b=null;
   }
   // a stated estimate is for the unmodified lift only
   // the class keeps its estimate on the movement's track (v1.72); one saved under the exercise itself still counts
-  if(!b&&!sig){ const e=statedE1RM(trackRoot(id))??statedE1RM(id); if(e) b={v:e+bwOffset(exById[id]),reps:null,stated:true}; }   // (class: bwOffset is 0 — the estimate is what you'd lift in total)
+  if(!b&&(!sig||sig===usualSig(id))){ const e=statedE1RM(trackRoot(id))??statedE1RM(id); if(e) b={v:e+bwOffset(exById[id]),reps:null,stated:true}; }   // (class: bwOffset is 0 — the estimate is what you'd lift in total)
   return b; }
 /* one best e1RM per calendar day, oldest first */
 /* Each session's best working set for one exercise, newest first — the one
@@ -12128,6 +12147,7 @@ function bestE1RM(id, sig){ let b=null;
    prIds(). Derived on read, never stored. Not exerciseSessionHistory(): that
    one feeds the engine and picks the heaviest set by design. */
 function sessionBests(exId, sig){
+  if(sig===undefined) sig=usualSig(exId);
   const by=new Map();
   for(const st of sets()){
     if(st.set_kind==='warmup'||!onTrack(st,exId,sig)) continue;
@@ -12184,6 +12204,7 @@ function openExerciseHistory(exId, back){
 }
 let GOAL_HIST_OPEN={};
 function e1rmSeries(id, sig){
+  if(sig===undefined) sig=usualSig(id);
   const byDay={};
   for(const st of sets()){
     if(st.set_kind==='warmup'||!onTrack(st,id,sig)) continue;
@@ -12991,7 +13012,7 @@ function nextPrescriptionCore(slot){
         +' Once you log a set it has its own history.'};
   }
   if(!last){
-    const b=bestE1RM(slot.ex);
+    const b=bestE1RM(slot.ex, tr.sig);
     if(b){
       // priced for the top of the range, so it is prescribed for the top of the range
       const p=pct1RM(hi+(10-slot.rpe))||70;
@@ -13343,7 +13364,7 @@ function mainLiftRateCard(){
     if(r==='standard'){
       // the date of the most recent new high (oldest first), and only while the
       // lift is still being trained — a lift you've stopped doing isn't stalled
-      const bests=sessionBests(id,'').filter(b=>b.e1!=null).reverse();
+      const bests=sessionBests(id,usualSig(id)).filter(b=>b.e1!=null).reverse();
       let max=-1, peakTs=null; bests.forEach(b=>{ if(b.e1>max+0.5){ max=b.e1; peakTs=b.ts; } });
       const recent=bests.length&&(Date.now()-new Date(bests[bests.length-1].ts))/864e5<=10;
       if(peakTs&&recent){ const wks=Math.floor((Date.now()-new Date(peakTs))/864e5/7), lim=CFG.stallWeeks||4;
@@ -13600,7 +13621,7 @@ function renderDash(){
     prs.forEach(x=>{
       const ex=exById[x.exercise_id], v2=setE1RM(x);
       cp.appendChild(el('div','row between sm',
-        `<span class="muted">${esc(ex?ex.name:x.exercise_id)}</span>
+        `<span class="muted">${esc(ex?ex.name:x.exercise_id)}${modLabel(x.modifiers)?' · '+esc(modLabel(x.modifiers)):''}</span>
          <span>${fmt(v2,0)} lb <span class="dim tiny">· ${new Date(x.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></span>`));
     });
     v.appendChild(cp);
@@ -14050,12 +14071,12 @@ function openWeekPreview(openDayId){
     ctl.appendChild(mk('Swap','Swap exercise',()=>{
       const cur=exById[sl.ex];
       exPicker('Swap '+(cur?cur.name:''), e=>e.id!==sl.ex, e=>{
-        editWeekDay(rawDay,d=>{ d.slots[i].ex=e.id; d.slots[i].swapped=true; });
+        editWeekDay(rawDay,d=>{ d.slots[i].ex=e.id; d.slots[i].swapped=true; delete d.slots[i].modifiers; delete d.slots[i].plain; });
         openWeekPreview(active);
       }, {muscle:primaryMuscle(cur)});
     }));
     ctl.appendChild(mk('Modify','Pause, tempo, range or grip',()=>openModifierEditor(sl.ex, sl.modifiers,
-      mods=>{ editWeekDay(rawDay,d=>{ if(mods) d.slots[i].modifiers=mods; else delete d.slots[i].modifiers; }); openWeekPreview(active); },
+      mods=>{ editWeekDay(rawDay,d=>{ setSlotMods(d.slots[i],mods); }); openWeekPreview(active); },
       ()=>openWeekPreview(active))));
     const rm=mk(icon('remove'),'Remove exercise',()=>{ editWeekDay(rawDay,d=>{ d.slots.splice(i,1); }); openWeekPreview(active); });
     rm.style.color='var(--skip)'; ctl.appendChild(rm);
@@ -14192,7 +14213,7 @@ function planCard(slot, key, o){
     if(slot.sets>1) less.onclick=()=>editPlan(rawDay,d=>{ if(d.slots[i].sets>1) d.slots[i].sets--; });
     const more=el('button','btn s','+'); more.setAttribute('aria-label','One set more on '+ex.name); more.onclick=()=>editPlan(rawDay,d=>{ d.slots[i].sets++; });
     const mod=el('button','btn s ghost','Modify'); mod.setAttribute('aria-label','Pause, tempo, range or grip');
-    mod.onclick=()=>openModifierEditor(slot.ex, slot.modifiers, mods=>{ editPlan(rawDay,d=>{ if(mods) d.slots[i].modifiers=mods; else delete d.slots[i].modifiers; }); $('#dlg').close(); }, ()=>$('#dlg').close());
+    mod.onclick=()=>openModifierEditor(slot.ex, slot.modifiers, mods=>{ editPlan(rawDay,d=>{ setSlotMods(d.slots[i],mods); }); $('#dlg').close(); }, ()=>$('#dlg').close());
     const rm=el('button','btn s ghost',icon('remove')); rm.setAttribute('aria-label','Remove '+ex.name+' from today'); rm.style.color='var(--skip)';
     rm.onclick=()=>editPlan(rawDay,d=>{ d.slots.splice(i,1); });
     scb.append(less,more,mod,rm); sc.appendChild(scb); body.appendChild(sc);
@@ -14892,7 +14913,7 @@ const CUES=(()=>{ try{ const a=JSON.parse(document.getElementById('coaching-cues
 function cueFor(exId){ const ex=exById[exId]; if(CUES[exId]) return CUES[exId]; if(ex&&ex.gen){ const p=genChain(ex).find(x=>CUES[x.id]); if(p) return CUES[p.id]; } return undefined; }
 function openInfo(exId, ctx){
   ctx=ctx||{};
-  const ex=exById[exId], b=bestE1RM(exId), last=lastSetFor(exId);
+  const ex=exById[exId], b=bestE1RM(exId), last=lastSetFor(exId, usualSig(exId));
   const mode={percentage:'Percentage — load set from your estimated max',
               double:'Double progression — climb the rep range, then add load',
               rep:'Rep target — add reps before external load'}[ex.prog];
@@ -14921,6 +14942,7 @@ function openInfo(exId, ctx){
       <div class="sm" style="margin-top:var(--sp-2)"><b>Feel it:</b> ${esc(REHAB_HOWTO[exId].feel)}</div>
       <div class="muted tiny" style="margin-top:var(--sp-2)">${REHAB_HOWTO[exId].cues.map(c=>'· '+esc(c)).join('<br>')}</div></div>`:''}
     <div class="qblock" id="inotes"></div>
+    <div class="qblock" id="iusual"></div>
     <div class="qblock" id="iexcl"></div>
     <div class="qblock" id="irr"></div>
     <div class="qblock"><div class="qlab">Counts toward</div>${vols}</div>
@@ -14946,6 +14968,7 @@ function openInfo(exId, ctx){
   if($('#icswap')) $('#icswap').onclick=()=>{ $('#dlg').close(); ctx.onSwap(fl.swap); };
   if(ctx.focus==='cond'&&$('#icond')) try{ $('#icond').scrollIntoView({block:'start'}); }catch(e){}
   drawRepRangeEditor($('#irr'), ex);
+  drawUsualEditor($('#iusual'), ex);
   if($('#ibar')) drawBarEditor($('#ibar'), ex);
   if($('#isled')) drawSledEditor($('#isled'), ex);
   if($('#istep')) drawStepEditor($('#istep'), ex);
@@ -15232,6 +15255,18 @@ function applyRepRange(exId){
   if(Object.values(WEEKEDITS||{}).reduce((n,d)=>n+fixAll(d&&d.slots),0)) saveWeekEdits();
   if(Object.values(CFG.dayOverrides||{}).reduce((n,d)=>n+fixAll(d&&d.slots),0)) saveCfg();
 }
+/* "I usually do this": the variant suggestions, best sets, goals and Today's plan use. */
+function drawUsualEditor(host, ex){
+  if(!host) return;
+  const u=usualLabel(ex.id), other=tracksFor(trackRoot(ex.id)).filter(sg=>sg!==usualSig(ex.id));
+  host.innerHTML='<div class="qlab">I usually do this</div><div class="row between sm"><span>'+(u?esc(u.charAt(0).toUpperCase()+u.slice(1)):'The plain version')+'</span></div>'
+    +'<div class="anchor">'+(u?'Suggestions, best sets, goals and Today\'s plan use it. Doing it another way is logged separately.':'If you always do it one way (straps, a bar position, a grip), set it here so suggestions and best sets follow it.')
+    +(other.length?' Also logged: '+other.map(sg=>esc(sg?modLabelFromSig(sg):'plain')).join(', ')+'.':'')+'</div>';
+  const b=el('button','btn s ghost',u?'Change':'Set my usual'); b.style.marginTop='var(--sp-2)';
+  b.onclick=()=>openModifierEditor(ex.id, usualMods(ex.id), mods=>{ CFG.usualMods={...(CFG.usualMods||{})}; if(mods) CFG.usualMods[ex.id]=mods; else delete CFG.usualMods[ex.id];
+    saveCfg(); render(); openInfo(ex.id); toast(mods?'Your usual: '+modLabel(mods):'Your usual: the plain version'); }, ()=>openInfo(ex.id));
+  host.appendChild(b);
+}
 /* The exercise's stored rep range — every slot, from now on. The per-session
    edit lives in the set panel and never touches this. */
 function drawRepRangeEditor(host, ex){
@@ -15360,7 +15395,7 @@ function exPicker(title, filterFn, onPick, opts){
 function openPlanSwap(rawDay,i){
   const cur=exById[planFor(rawDay).slots[i].ex];
   exPicker('Swap '+cur.name, e=>e.id!==cur.id, e=>{
-    editPlan(rawDay,d=>{ d.slots[i].ex=e.id; d.slots[i].swapped=true; });
+    editPlan(rawDay,d=>{ d.slots[i].ex=e.id; d.slots[i].swapped=true; delete d.slots[i].modifiers; delete d.slots[i].plain; });
   }, {muscle:primaryMuscle(cur)});
 }
 function openPlanAdd(rawDay){
@@ -15373,7 +15408,8 @@ function openSwap(slot,idx){
   const cur=exById[slot.ex];
   exPicker('Swap '+cur.name, e=>e.id!==cur.id, e=>{
     const wasCur=session.slots[session.openIdx]===slot, before=session.slots[session.openIdx]||null;
-    slot.ex=e.id; slot.swapped=true; slot.sets=[]; if(slot.repSrc==='session'){ delete slot.repSrc; delete slot.repDefault; } Object.assign(slot, slotRepRange(slot));
+    slot.ex=e.id; slot.swapped=true; slot.sets=[]; if(slot.repSrc==='session'){ delete slot.repSrc; delete slot.repDefault; }
+    delete slot.modifiers; delete slot.plain; if(usualMods(slot.ex)) slot.modifiers=usualMods(slot.ex); Object.assign(slot, slotRepRange(slot));
     // swapping the exercise you're on keeps you on it; swapping another leaves the
     // panel (and the draft) where it was
     if(wasCur){ session.pick=slotUid(slot); seedDraft(slot); }
@@ -15435,7 +15471,7 @@ function entryPanel(slot,idx){
   {
     const mb=el('button','warmtog',(modLabel(slot.modifiers)?'Modified: '+modLabel(slot.modifiers):'Pause, tempo, range or grip')+' ▸');mb.dataset.tour='modify';
     mb.onclick=()=>openModifierEditor(slot.ex, slot.modifiers, mods=>{
-      if(mods) slot.modifiers=mods; else delete slot.modifiers;
+      setSlotMods(slot,mods);
       seedDraft(slot); saveSession(); $('#dlg').close(); renderWork();
     }, ()=>{ $('#dlg').close(); renderWork(); });
     p.appendChild(mb);
@@ -16002,7 +16038,7 @@ const trainingWeeksOf=ph=>ph.deload?ph.weeks-1:ph.weeks;
 function muscleDropping(m){
   return EX.some(ex=>{
     if(primaryMuscle(ex)!==m) return false;
-    const b=sessionBests(ex.id,'').slice(0,3).map(x=>x.e1);
+    const b=sessionBests(ex.id,usualSig(ex.id)).slice(0,3).map(x=>x.e1);
     return b.length===3&&b.every(v=>v!=null)&&b[0]<b[1]&&b[1]<b[2];
   });
 }
@@ -16560,7 +16596,7 @@ const STALL_RECENT_DAYS=14, IV_SHARE=0.4, IV_PRACTICE_RPE=6.5, IV_WEEKS=6, IV_WO
   IV_OUTCOME_WEEKS=4, RATIO_FALL=0.03, RATIO_WEEKS=8, DIAGNOSE_WAIT_DAYS=10;
 const WEEK_MS=7*864e5;
 /* Per-session best e1RM on the lift's unmodified track, oldest first. */
-const liftBests=exId=>sessionBests(exId,'').filter(b=>b.e1!=null).reverse();
+const liftBests=exId=>sessionBests(exId,usualSig(exId)).filter(b=>b.e1!=null).reverse();
 function stallState(exId){
   if(!exById[exId]||!isMainLift(exId)||!mainEligible(exById[exId])) return null;
   if(rateOf(exId)==='fast') return null;
@@ -17279,6 +17315,22 @@ function flagChip(slot, onSwap){
   b.onclick=()=>openInfo(slot.ex,{mods:slot.modifiers, onSwap, focus:'cond'});
   return b;
 }
+/* Three sessions in a row with the same variant → ask once to make it your usual. Never switches on its own. */
+PROPOSAL_SOURCES.push(()=>{
+  const byEx={};
+  sets().forEach(st=>{ if(st.set_kind==='warmup'||LIGHT_ROLES.includes(st.role)||!exById[st.exercise_id]) return;
+    const m=byEx[st.exercise_id]||(byEx[st.exercise_id]=[]), last=m[m.length-1], sig=modSig(st.modifiers);
+    if(last&&last.sid===st.session_id){ if(last.sig!==sig) last.mixed=true; } else m.push({sid:st.session_id, sig}); });
+  return Object.entries(byEx).map(([id,m])=>{
+    const L=m.slice(-3); if(L.length<3||L.some(x=>x.mixed)) return null;
+    const sig=L[0].sig; if(!sig||L.some(x=>x.sig!==sig)||sig===usualSig(id)) return null;
+    const lab=modLabelFromSig(sig), nm=exById[id].name;
+    return {id:'usual:'+id+':'+sig, snoozeDays:60, title:'Make "'+lab+'" your usual for '+nm+'?',
+      body:'You\'ve done '+nm+' '+lab+' the last 3 times. As your usual, it\'s what suggestions, best sets, goals and Today\'s plan use. Doing it another way is still logged separately.',
+      accept:{label:'Make it my usual', fn:()=>{ CFG.usualMods={...(CFG.usualMods||{}),[id]:sigMods(sig)}; saveCfg(); toast(nm+': '+lab+' is now your usual'); }},
+      decline:{label:'Not now'}};
+  }).filter(Boolean);
+});
 /* "It's bothered you" → ask once whether to stop including it automatically. */
 PROPOSAL_SOURCES.push(()=>{
   const out=[];
@@ -18669,7 +18721,7 @@ function renderLifts(){
   goalIds.forEach(id=>{
     if(!exById[id]) return;
     const ex=exById[id], b=bestE1RM(id), c=el('div','card');
-    const head=el('div','pad',`<div class="exname">${esc(ex.name)}</div>
+    const head=el('div','pad',`<div class="exname">${esc(ex.name)}${usualTag(id)?'<span class="dim tiny" style="font-weight:500">'+esc(usualTag(id))+'</span>':''}</div>
       <div class="exmeta">${b?`${term('estimated-max','Estimated max')} ${fmt(b.v,0)} lb · ${b.stated?'your stated starting point':'from '+b.reps+' reps'}`:'No working sets logged yet'}${ex.comparable===false?' · machine-specific, not comparable':''}</div>`);
     head.style.paddingBottom='var(--sp-2)'; c.appendChild(head);
     const m=Object.entries(ex.vol).find(([,w])=>w>=1)?.[0];
@@ -18953,7 +19005,7 @@ function renderHist(){
     const first=ser[0], last=ser[ser.length-1];
     const delta=(first&&last&&ser.length>1)?last.v-first.v:null;
     c.appendChild(el('div','row between',`
-      <span class="grow"><div style="font-weight:660;font-size:var(--fs-3)">${esc(ex.name)}</div>
+      <span class="grow"><div style="font-weight:660;font-size:var(--fs-3)">${esc(ex.name)}${usualTag(id)?'<span class="dim tiny" style="font-weight:500">'+esc(usualTag(id))+'</span>':''}</div>
         <div class="dim tiny">${ser.length} session${ser.length===1?'':'s'} with a usable estimate</div></span>
       <span style="text-align:right;flex:none">
         <div class="big" style="font-size:var(--fs-5)">${last?fmt(last.v,0):'—'}</div>
@@ -18985,6 +19037,8 @@ function renderHist(){
     { const t=tmFor(id); if(t&&t.src==='logged') c.appendChild(el('div','sm',
         '<span class="dim">'+term('training-max','Training max')+'</span> <b>'+fmt(t.tm,0)+' lb</b> <span class="dim tiny">· planning number, moved only by all-out test sets</span>')).style.marginTop='var(--sp-2)'; }
     // recent bests, expandable to every session — same rows as the info sheet's History
+    { const others=tracksFor(trackRoot(id)).filter(sg=>sg!==usualSig(id)).map(sg=>{ const bb=sessionBests(id,sg)[0]; return bb?(sg?modLabelFromSig(sg):'plain')+': '+typedLabel(bb.exercise_id||id,bb.weight)+' × '+bb.reps+' ('+new Date(bb.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})+')':null; }).filter(Boolean);
+      if(others.length) c.appendChild(el('div','dim tiny','Also logged: '+esc(others.join(' · ')))).style.marginTop='var(--sp-2)'; }
     const open=!!GOAL_HIST_OPEN[id], nAll=sessionBests(id).length;
     c.appendChild(el('div','field',open?'Best set, every session':'Best set, last three sessions')).style.marginTop='var(--sp-3)';
     c.appendChild(bestSetRows(id, open?0:3));

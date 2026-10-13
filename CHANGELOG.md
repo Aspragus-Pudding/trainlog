@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.76.0 — 2026-10-12
+- New on each exercise's info sheet: "I usually do this". Set deadlifts to "with straps" and suggestions, best sets, goals, Today's plan and the stall check all use your strapped history.
+- Numbers say which version they're from ("120 kg · with straps"), and the other version is still logged and shown separately.
+- Do an exercise the same way three sessions running and the app offers to make that your usual. It never switches on its own.
+
 ## 1.75.0 — 2026-10-12
 - Fixed for good: a rep range you set on an exercise now shows everywhere straight away, including days you saved and exercises you swapped in. No more re-saving it.
 - A main lift in its main-lift slot follows the block's range (heavier in strength blocks), and its card says so. Your range for it applies everywhere else.

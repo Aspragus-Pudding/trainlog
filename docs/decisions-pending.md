@@ -961,3 +961,35 @@ together). §80 says which rule it breaks.
 
 **To undo:** in `slotRepRange`, drop the `main` branch (main lifts then take
 your range too).
+
+---
+
+## D50. The strapped deadlift: your usual variant (v1.76) ★
+
+**Exact cause of 93 vs 120 kg:**
+- **Straps are a modifier,** and a modifier keeps its own history.
+- **Your 120 kg sets (8 and 12 Oct) are on the "with straps" track.**
+  Progress, goal tracking, the stall check and the plain deadlift slot all read
+  the plain track, whose best and latest set is 93 kg × 6 (15 Sep).
+- **Confirmed on your log:** today the app shows 93 kg × 6. With strapped set
+  as your usual, it shows 120 kg × 6.
+
+**Chosen:**
+- **`CFG.usualMods`, one usual variant per exercise.** You set it on the
+  info sheet with the same editor as Modify.
+- **A planned slot with no variant chosen gets the usual,** so suggestions
+  and Today's plan price from that history.
+- **"The lift" means the usual track everywhere:** best sets, the goal card,
+  the stall engine and the info sheet's best and last set.
+- **Numbers name the variant** ("· with straps"). The goal card and info
+  sheet list the other versions you've logged ("Also logged: plain: 93 kg ×
+  6").
+- **Choosing plain for one session stays plain** for that session.
+- **The proposal:** three sessions in a row the same way makes the app ask.
+  You have two strapped sessions, so it'll ask after the next one; or set it
+  now on the deadlift's info sheet. It never switches on its own.
+- **Engine pricing doesn't change:** a slot's own track is read exactly as
+  before, so the backtest is identical.
+
+**To undo:** clear the usual on the info sheet (back to "the plain
+version"), or remove `withUsual` from `withReps`.
