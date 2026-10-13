@@ -73,6 +73,7 @@ Appendix A is complete (v1.68.0–v1.74.0).
 
 | Part | State | Version | Notes |
 |---|---|---|---|
+| 6 ready for testers | done | docs | README rewritten, real-phone checklist (15 steps), tester welcome message, ALPHA updated; full mobile.js on 6 profiles; D58 |
 | 5 warm-ups that fit the day | done | v1.83.0 | main lifts → conditions → soreness with why; cap kept with a place per kind; your own warm-up/rehab items, per day or all; removals remembered; §90; D57 |
 | 4 number audit | done | v1.82.0 | docs/number-audit.md (39 items); sentences for block sparklines and landmark grids; intensity, events, tonnage headline removed; charts say what they're for; §89; D56 |
 | 3e demo Jump to | done | v1.81.0 | every block/week + shortcuts (strength, test, deload, stall); lands on the week (mobile.js, real browser); §88; D55 |

@@ -1185,3 +1185,29 @@ removed, with the one-line reason.
   each main-lift family.
 
 **To undo:** the old `buildPrep` is in git history (v1.82.0).
+
+---
+
+# Big batch Part 6
+
+## D58. Ready for testers (docs, no app change)
+
+**Chosen:**
+- **README.md (for testers)** is rewritten for this batch:
+  - the setup link now goes in Settings → You and your sheet;
+  - the "How your program works" cards and first-time tips;
+  - the Workout tab as today's editable workout;
+  - RPE or effort;
+  - the "For your shoulder" chip;
+  - Settings → About for the version and diagnostics;
+  - App errors in Notes;
+  - Android install.
+- **docs/real-phone-checklist.md** is the 10-minute check from v1.67,
+  updated for the new screens (15 steps).
+- **docs/tester-welcome.md** is a message to send with each tester's own
+  link: what it is, how to install, what to expect, and how to send notes.
+- **ALPHA.md** points at Settings for the setup link and diagnostics.
+- **No version bump.** Nothing in the app changed in Part 6, so there's no
+  CHANGELOG entry; that's reserved for what a user would notice.
+
+**To undo:** the files are docs; git history has the earlier versions.

@@ -21,7 +21,7 @@ For each tester:
 4. **Have them install it first, then apply the link.** On iPhone: open
    `https://aspragus-pudding.github.io/trainlog/` in Safari → Share → Add to
    Home Screen → open it from the home screen → go through setup →
-   Edit program → **Setup link** → paste the link → Apply → Save. (Assume the
+   Settings → You and your sheet → **Setup link** → paste the link → Apply. (Assume the
    home-screen app doesn't share Safari's storage, so a link opened in Safari
    wouldn't reach it. Pasting avoids the question. On Android or desktop,
    opening the link directly works.)
@@ -185,8 +185,8 @@ tester sends one with **Send to the developer** on the Notes card, and it then
 arrives like any note. Like every note, they're in the log, so an automatic
 backup to the tester's own sheet includes them.
 
-**Diagnostics:** ask a tester to long-press the version number in Lifts, tap
-Copy and paste it into a note. You get the phone, browser, home screen or not,
+**Diagnostics:** ask a tester to open Settings → About → Diagnostics (or
+long-press the version number there), tap Copy and paste it into a note. You get the phone, browser, home screen or not,
 visible size and safe areas.
 
 ## Theme codes
