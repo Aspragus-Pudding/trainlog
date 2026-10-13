@@ -117,6 +117,7 @@ everyone.
 | Automatic backup (sheet address) | everyone with a sheet | Automatic backup |
 | Setup link | testers | Setup link |
 | Your name on notes | testers | Notes |
+| RPE or effort (the word for how hard a set was) | everyone | How hard a set was |
 | Theme code (LIGHT for a light look; dark is the default) | advanced | Have a code? |
 | Delete my conditions and pain ratings | injury-prone | under the condition picker |
 

@@ -104,8 +104,11 @@ Paste the setup link you were given to connect your notes and your backup sheet 
 ### Your name on notes
 The name signed on notes you send with the pencil, so the person who set up the app knows who they're from.
 
+### RPE or effort
+The word the app uses for how hard a set was: RPE, the lifting term, or effort. Both mean the same thing: 10 is nothing left and 9 is one rep left. Setup picks effort for newer lifters and RPE for everyone else, and you can change it any time.
+
 ### Theme code
-Have a code? A theme code changes the app's colours. Reset goes back to the standard look, which follows your phone's light or dark setting.
+Have a code? A theme code changes the app's colours. Dark is the standard look; the code LIGHT gives a light one. Reset goes back to the standard look.
 
 ### Delete my conditions and pain ratings
 Removes your conditions and stops every past pain and joint rating from counting. The log itself is never rewritten; a marker records the point from which old ratings are ignored.

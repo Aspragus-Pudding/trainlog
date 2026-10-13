@@ -234,6 +234,18 @@ async function previewCheck(page, tag){
   ok(after[0]===before[1]&&after[1]===before[0]&&!hasPreview&&sess&&sess.join()===after.join(), tag+' the Workout tab is the preview: a tap moves an exercise and Start takes that order: '+JSON.stringify({before:before.slice(0,2),after:after.slice(0,2),hasPreview,sess:sess&&sess.slice(0,2)}));
   await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} session=null; saveSession(); stopRest(); TAB='dash'; render(); });
 }
+/* D10: with "effort" chosen, no screen says RPE (a real browser, the live set card and a sheet). */
+async function effortCheck(page, tag){
+  await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
+  await page.evaluate(()=>demoReset({kind:'persona',key:'shoulder',weeks:3})); await page.waitForLoadState('load'); await sleep(2200);
+  await page.evaluate(()=>{ CFG.seenVersion=APP_VERSION; CFG.tour={t1:'off',seen:{}}; CFG.effortWord='effort'; saveCfg(); try{ $('#dlg').close(); }catch(e){} startSession(todayDay()); $('#ckskip').click(); TAB='work'; render(); });
+  await sleep(400);
+  const work=await page.evaluate(()=>document.getElementById('v-work').innerText);
+  await page.evaluate(()=>openReadiness()); await sleep(300);
+  const sh=await page.evaluate(()=>document.getElementById('dlg').innerText);
+  ok(!/\bRPE\b/.test(work+sh)&&/\beffort\b/i.test(work), tag+' "effort" chosen: no RPE anywhere on the workout or a sheet: '+((work+sh).match(/.{0,30}\bRPE\b.{0,30}/)||[''])[0]);
+  await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} CFG.effortWord='rpe'; saveCfg(); session=null; saveSession(); stopRest(); TAB='dash'; render(); });
+}
 async function resumeCheck(page, tag){
   await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(1100);
   await clickText(page,'Build it for me'); await clickText(page,'Pure strength'); await clickText(page,'Next'); await clickText(page,'Progress takes months'); await clickText(page,'Next');
@@ -259,6 +271,7 @@ async function resumeCheck(page, tag){
       await reorderCheck(page,tag);
       await tourCheck(page,d,tag);
       await previewCheck(page,tag);
+      await effortCheck(page,tag);
     }catch(e){ ok(false,tag+' crashed: '+e.message); }
     ok(errs.length===0, tag+' no page errors: '+errs.slice(0,2).join(' | '));
     rows.push([tag, fails===f0?'pass':(fails-f0)+' failed']);

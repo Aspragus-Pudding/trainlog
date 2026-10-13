@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.72.1 — 2026-10-12
+- New setting: the app can say "effort" instead of RPE (Edit program → How hard a set was). Setup picks effort for newer lifters; if you've logged RPE you keep RPE.
+- Your own notes and diary are never reworded.
+- If the app had to use equipment you didn't tick in setup, the exercise says so ("Needs a cable, which isn't ticked in your equipment").
+
 ## 1.72.0 — 2026-10-12
 - "I know my numbers" now asks for a recent set you could do today, weight × reps, with quick chips for 1, 3 and 5 reps.
 - Pull-ups, chin-ups, dips and assisted versions: pick bodyweight only, added weight or assistance. 0 is accepted, and it asks for reps.

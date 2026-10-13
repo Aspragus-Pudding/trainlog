@@ -8722,8 +8722,11 @@ Paste the setup link you were given to connect your notes and your backup sheet 
 ### Your name on notes
 The name signed on notes you send with the pencil, so the person who set up the app knows who they're from.
 
+### RPE or effort
+The word the app uses for how hard a set was: RPE, the lifting term, or effort. Both mean the same thing: 10 is nothing left and 9 is one rep left. Setup picks effort for newer lifters and RPE for everyone else, and you can change it any time.
+
 ### Theme code
-Have a code? A theme code changes the app's colours. Reset goes back to the standard look, which follows your phone's light or dark setting.
+Have a code? A theme code changes the app's colours. Dark is the standard look; the code LIGHT gives a light one. Reset goes back to the standard look.
 
 ### Delete my conditions and pain ratings
 Removes your conditions and stops every past pain and joint rating from counting. The log itself is never rewritten; a marker records the point from which old ratings are ignored.
@@ -9126,7 +9129,7 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.72.0","lines":["\"I know my numbers\" now asks for a recent set you could do today, weight × reps, with quick chips for 1, 3 and 5 reps.","Pull-ups, chin-ups, dips and assisted versions: pick bodyweight only, added weight or assistance. 0 is accepted, and it asks for reps.","The same input is on each goal lift in Edit program (\"Enter a recent set\") and in Workout → Set starting estimates.","Fixed: an estimate for an assisted pull-up wasn't used for your first session's suggestion."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.72.1","lines":["New setting: the app can say \"effort\" instead of RPE (Edit program → How hard a set was). Setup picks effort for newer lifters; if you've logged RPE you keep RPE.","Your own notes and diary are never reworded.","If the app had to use equipment you didn't tick in setup, the exercise says so (\"Needs a cable, which isn't ticked in your equipment\")."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9693,7 +9696,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.72.0';
+const APP_VERSION='1.72.1';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -13287,7 +13290,7 @@ function exCard(slot,o){
     +(slot.joint?' · <span style="color:var(--warn)">'+esc(slot.joint.joint)+': '+esc(slot.joint.msg)+'</span>':'')+'</div>'
     +(o.lastTime===false?'':lastTimeHtml(slot,o.rx))
     +Object.entries(EX_NOTE_KINDS).map(([k,lab])=>{ const t=exNote(ex.id,k);
-      return t?'<div class="exnote"><span class="dim">'+esc(k==='setup'?'Setup':'Cue')+'</span> '+esc(t)+'</div>':''; }).join('');
+      return t?'<div class="exnote"><span class="dim">'+esc(k==='setup'?'Setup':'Cue')+'</span> <span data-raw>'+esc(t)+'</span></div>':''; }).join('');
   const body=el('div','exbody');
   head.appendChild(nameBtn); box.appendChild(head); box.appendChild(body);
   return {box,head,nameBtn,body};
@@ -13802,6 +13805,8 @@ function planCard(slot, key, o){
     draw(); body.appendChild(wrap);
   }
   const fl=flagChip(slot,null); if(fl) body.appendChild(fl);
+  { const miss=equipMissing(slot.ex, CFG.equipmentHave, CFG.equipment);
+    if(miss) body.appendChild(el('div','',"<span class='chip' style='font-size:var(--fs-1);padding:var(--sp-1) var(--sp-2);color:var(--muted)'>Needs "+esc(miss)+", which isn't ticked in your equipment</span>")).style.marginTop='var(--sp-2)'; }
   if(slot.dep){ const d=el('div','row'); d.style.cssText='gap:var(--sp-2);align-items:baseline;margin-top:var(--sp-2)';
     d.innerHTML='<span class="tiny" style="flex:none;padding:2px var(--sp-2);border-radius:var(--r-pill);background:var(--card-2);color:var(--muted)">your preference</span><span class="dim tiny grow">'+esc(slot.dep.why)+'</span>';
     const u=el('button','btn s ghost','Undo'); u.style.cssText='font-size:var(--fs-1);padding:var(--sp-1) var(--sp-2);flex:none';
@@ -14406,7 +14411,7 @@ function diaryRows(list){
     const r=el('div',''); r.style.cssText='padding:var(--sp-2) 0;border-top:1px solid var(--line)';
     const ex=d.exercise_id?exById[d.exercise_id]:null;
     const end=d.session_id?LOG.find(e=>e.type==='session_end'&&e.session_id===d.session_id):null;
-    r.appendChild(el('div','sm',esc(d.text)));
+    r.appendChild(el('div','sm',esc(d.text))).setAttribute('data-raw','');
     r.appendChild(el('div','dim tiny',esc([new Date(d.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'}),
       ex?ex.name:null, end?(end.day_name||'Session'):null].filter(Boolean).join(' · ')))).style.marginTop='2px';
     box.appendChild(r);
@@ -15890,14 +15895,17 @@ function planFromNow(o){
    rather than out, like dumbbells-only. Unset for everyone who hasn't answered it. */
 const HAVE_IMPLEMENTS={barbell:['barbell'], smith:['smith'], specialty:['specialty'], dumbbell:['dumbbell'], kettlebell:['kettlebell'],
   cable:['cable'], selector:['selector','machine'], plate:['plate','machine'], band:['band'], bodyweight:['bodyweight'], bench:[], pullup:[]};
-function haveScore(ex){
-  const have=CFG.equipmentHave; if(!Array.isArray(have)||!have.length) return 0;
+/* The equipment an exercise needs that isn't ticked (setup's specifics), in words; null
+   when it's covered or nothing was ticked. One rule for the ranking and the chip (D21). */
+function equipMissing(exId, have, gym){
+  const ex=exById[exId]; if(!ex||!Array.isArray(have)||!have.length) return null;
   const im=implementOf(ex);
   // a home gym without a pull-up bar: hanging pulls go last (only for the new Home gym answer, so nobody else's program moves)
-  if(CFG.equipment==='home'&&im==='bodyweight'&&ex.pattern==='vertical_pull'&&!have.includes('pullup')) return -500;
-  if(im==='bodyweight') return 0;
-  return have.some(h=>(HAVE_IMPLEMENTS[h]||[]).includes(im))?0:-500;
+  if(gym==='home'&&im==='bodyweight'&&ex.pattern==='vertical_pull'&&!have.includes('pullup')) return 'a pull-up bar';
+  if(im==='bodyweight') return null;
+  return have.some(h=>(HAVE_IMPLEMENTS[h]||[]).includes(im))?null:String(IMPLEMENT_LABEL[im]||im).toLowerCase();
 }
+function haveScore(ex){ return equipMissing(ex.id, CFG.equipmentHave, CFG.equipment)?-500:0; }
 function equipmentScore(ex){
   const q=CFG.equipment, im=implementOf(ex), hs=haveScore(ex);
   if(hs) return hs;
@@ -16716,6 +16724,19 @@ function exclusionList(conds, excluded, onChange){
   });
   return box;
 }
+/* "RPE" or "effort" on screen (D10, CFG.effortWord: 'rpe' or 'effort'; unset = RPE).
+   The app's copy says RPE; with effort chosen, every newly drawn text node gets the
+   word swapped, so no screen can miss it. Stored data always says rpe. Your own
+   notes and diary are left as you wrote them (data-raw). */
+const effortOn=()=>CFG.effortWord==='effort';
+const effortText=t=>String(t).replace(/(^|[.!?:]\s+)RPE\b/g,(m,a)=>a+'Effort').replace(/\bRPE\b/g,'effort');
+function effortPass(root){
+  if(!effortOn()||!root||typeof document.createTreeWalker!=='function') return;
+  try{ const w=document.createTreeWalker(root,4), fix=[]; let n;
+    while((n=w.nextNode())) if(/\bRPE\b/.test(n.nodeValue)&&!(n.parentElement&&n.parentElement.closest&&n.parentElement.closest('[data-raw]'))) fix.push(n);
+    fix.forEach(t=>{ t.nodeValue=effortText(t.nodeValue); }); }catch(e){}
+}
+try{ if(typeof MutationObserver==='function'&&document.body) new MutationObserver(ms=>{ if(!effortOn()) return; ms.forEach(m=>m.addedNodes&&m.addedNodes.forEach(x=>{ if(x.nodeType===3){ if(/\bRPE\b/.test(x.nodeValue)&&!(x.parentElement&&x.parentElement.closest&&x.parentElement.closest('[data-raw]'))) x.nodeValue=effortText(x.nodeValue); } else effortPass(x); })); }).observe(document.body,{childList:true,subtree:true}); }catch(e){}
 /* ---- plain words (v1.69) ----
    Library and flag text is research wording. Anywhere it's shown, except the
    condition picker's clinical name and the guide, it goes through plainText().
@@ -18634,7 +18655,7 @@ function renderHist(){
     const t=NOTE_TAGS.find(x=>x.id===n.tag);
     const r=el('div',''); r.style.cssText='padding:var(--sp-2) 0;border-top:1px solid var(--line)';
     r.innerHTML=`<div class="row between">
-        <span class="grow"><div class="sm">${esc(n.text)}</div>
+        <span class="grow"><div class="sm" data-raw>${esc(n.text)}</div>
           <div class="dim tiny" style="margin-top:2px">${esc(t?t.label:n.tag==='error'?'Error the app recorded':n.tag)} · ${
             new Date(n.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})}${
             n.app_version?' · v'+n.app_version:''}${n.screen?' · '+esc(n.screen):''}</div></span></div>`;
@@ -19495,7 +19516,7 @@ function drawOnboardingStep(){
     '<div class="tiny dim" style="margin-top:var(--sp-1)">'+plan.blocks.map((b,i)=>esc((i+1)+'. '+(plan.reasons[i]||''))).join('<br>')+'</div>');
   item('Your week',esc(splitOf(R.week).name+', '+R.days+' days'),why.week,O.path==='together'?toT('split'):toQ('schedule'));
   item('Exercises',esc(days.length+' days, '+days.reduce((t,d)=>t+d.slots.length,0)+' exercises'),'Picked from what your gym has, what you\'re working around and your priorities.',toT('days'),
-    days.map(d=>'<div class="sm" style="margin-top:var(--sp-2)"><b>'+esc(d.name)+'</b><div class="muted tiny">'+d.slots.map(sl=>esc((exById[sl.ex]||{name:sl.ex}).name)+' '+sl.sets+'×'+sl.reps[0]+(sl.reps[1]!==sl.reps[0]?'–'+sl.reps[1]:'')).join(' · ')+'</div></div>').join(''));
+    days.map(d=>'<div class="sm" style="margin-top:var(--sp-2)"><b>'+esc(d.name)+'</b><div class="muted tiny">'+d.slots.map(sl=>{ const miss=equipMissing(sl.ex,R.have,R.gym); return esc((exById[sl.ex]||{name:sl.ex}).name)+' '+sl.sets+'×'+sl.reps[0]+(sl.reps[1]!==sl.reps[0]?'–'+sl.reps[1]:'')+(miss?' <span style="color:var(--warn)">(needs '+esc(miss)+', not ticked)</span>':''); }).join(' · ')+'</div></div>').join(''));
   item('Main lifts',esc(R.goals.length?R.goals.map(id=>exById[id].name).join(', '):'None'),why.lifts+' '+why.numbers,toQ('lifts'));
   item('How fast your lifts progress',esc(ONB_HISTORY.find(h=>h[0]===R.history)[1]),why.progress,toQ('history'));
   item('Equipment',esc(EQUIPMENT[R.gym]),why.equipment,toQ('equipment'));
@@ -19515,6 +19536,8 @@ function onbApply(){
   if(hadSets&&keepSeed) CFG.rateSeed=keepSeed;   // a new program never resets how lifts you've already trained progress
   CFG.equipmentHave=R.have.slice(); CFG.slotPicks=JSON.parse(JSON.stringify(R.picks));
   const rr=onbRepRanges(R); if(Object.keys(rr).length) CFG.repRanges={...(CFG.repRanges||{}),...rr};
+  // the word for RPE: newer lifters get "effort"; anyone who's logged RPE keeps it (D10)
+  if(!LOG.some(e=>e.type==='set'&&e.rpe!=null)) CFG.effortWord=(R.history==='new'||R.history==='novice')?'effort':'rpe';
   CFG.introSeen=CFG.introSeen||false; saveCfg();
   if(R.bw) append({type:'bodyweight',bodyweight:R.bw});
   ONB=null; BUILDER=null; SETTINGS_DRAFT=null; CFG.onbDraft=null; saveCfg(); navDrop('onb-root'); screenClose();
@@ -20104,6 +20127,7 @@ function openSettings(){
         r.appendChild(b); cb.appendChild(r); });
       host.appendChild(cb);
     }
+    host.appendChild(wordsBlock());
     host.appendChild(themeBlock());
     if(S.syncUrl){
       const tb=el('button','btn s','Test it now'); tb.style.marginTop='var(--sp-2)';
@@ -20218,6 +20242,14 @@ function weekPicker(week, onChange){
   return box;
 }
 
+/* "RPE" or "Effort" (D10): applies straight away, stored in CFG.effortWord. */
+function wordsBlock(){
+  const b=el('div','qblock');
+  b.innerHTML='<div class="qlab">How hard a set was</div><div class="field">The word the app uses: RPE (the lifting term) or effort. It means the same: 10 is nothing left, 9 one rep left.</div>';
+  const c=el('div','chips'); [['rpe','RPE'],['effort','Effort']].forEach(([k,l])=>{ const x=el('button','chip',l); x.setAttribute('aria-pressed',(CFG.effortWord||'rpe')===k?'true':'false');
+    x.onclick=()=>{ CFG.effortWord=k; saveCfg(); render(); b.replaceWith(wordsBlock()); toast(k==='effort'?'The app says effort now':'The app says RPE now'); }; c.appendChild(x); });
+  b.appendChild(c); return b;
+}
 /* "Have a code?" — applies straight away and is stored in CFG.theme, so it
    rides along in backups. Not part of the settings draft: Cancel doesn't
    undo it, Reset does. */

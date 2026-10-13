@@ -818,3 +818,29 @@ welcome step.
 
 **To undo:** `estimateFromSet`, `knownSetInput` and `openKnownSet` in
 index.html.
+
+---
+
+## D45. Appendix A Part 0: what was already settled, and the two left (v1.72.1)
+
+- **D16 ("last time" beside each set)** shipped in v1.66.
+- **D17 (an Auto / Light / Dark setting)** wasn't built. On 9 Oct you asked
+  for dark as the default and light as a theme code, and that's what
+  shipped in v1.65.1. A setting would undo your later choice. In Part 2 the
+  Settings tab's Appearance holds the theme code (LIGHT) and the reset.
+- **D10 (RPE or effort)** is built as a setting. Your own reversal was about
+  what the app says by default, and that's still RPE.
+  - **Defaults:** setup picks "effort" for "new to lifting" and "novice", and
+    RPE for "intermediate" and "advanced". "2+ years" isn't a question, and
+    those two answers are the nearest. Anyone who has logged RPE keeps RPE.
+  - **How it works:** one pass swaps the word in every newly drawn text, so
+    no screen can miss it, and it keeps a capital at the start of a
+    sentence. Your notes, diary and setup notes are marked to be left alone.
+    The data still says `rpe`.
+- **D21 (a chip for equipment you didn't tick)** is built. When the
+  generator falls back to an exercise whose equipment you didn't tick, the
+  Workout tab's card and setup's preview say what it needs. It uses the same
+  rule as the ranking (`equipMissing`).
+
+**To undo:** `effortPass`/`wordsBlock` (D10), `equipMissing`'s chip
+lines (D21).
