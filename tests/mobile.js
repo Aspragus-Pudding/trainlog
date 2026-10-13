@@ -162,6 +162,26 @@ async function sheetMatrix(page, d, tag){
   const closed=await page.evaluate(()=>({open:document.getElementById('dlg').open, url:location.href}));
   ok(!closed.open&&/localhost/.test(closed.url), tag+' and "yes" closes it, still in the app: '+JSON.stringify(closed));
 }
+/* The move-up bug (Oct 4, Oct 7, Oct 11): real touch taps on the card buttons, then Log set. */
+async function tapSel(page,sel,n){ const r=await page.evaluate(([sel,n])=>{ const b=document.querySelectorAll(sel)[n]; if(!b) return null; b.scrollIntoView({block:'center'}); const q=b.getBoundingClientRect(); return {x:q.left+q.width/2,y:q.top+q.height/2}; },[sel,n||0]);
+  if(!r) throw new Error('nothing to tap: '+sel+' #'+(n||0)); await sleep(80); await page.touchscreen.tap(r.x,r.y); await sleep(300); }
+async function reorderCheck(page, tag){
+  await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
+  await page.evaluate(()=>demoReset({kind:'persona',key:'shoulder',weeks:3})); await page.waitForLoadState('load'); await sleep(2200);
+  await page.evaluate(()=>{ CFG.seenVersion=APP_VERSION; CFG.tour={t1:'off',seen:{}}; saveCfg(); try{ $('#dlg').close(); }catch(e){} startSession(todayDay()); });
+  await sleep(300); await page.evaluate(()=>{ $('#ckskip').click(); TAB='work'; render(); }); await sleep(300);
+  const UP='#v-work button[aria-label="Move earlier"]', LOGB='[data-tour="logset"]';
+  const state=()=>page.evaluate(()=>({order:session.slots.map(s=>s.ex), open:session.openIdx, logged:session.slots.map(s=>s.sets.length),
+    last:(LOG.filter(e=>e.type==='set'&&e.session_id===session.id).slice(-1)[0]||{}).exercise_id}));
+  // Oct 11: nothing logged on the current one, the second exercise moved up into its spot, then Log set
+  const s0=await state(); await tapSel(page,UP,0); const s1=await state(); await tapSel(page,LOGB); const s2=await state();
+  ok(s1.order[0]===s0.order[1]&&s1.open===0&&s2.last===s0.order[1]&&s2.logged[0]===1, tag+' moved up into the current spot, nothing logged: Log set logs the moved exercise: '+JSON.stringify({s0:s0.order.slice(0,3),s1:{o:s1.order.slice(0,3),open:s1.open},last:s2.last}));
+  // Oct 4 / Oct 7: mid-exercise on it, the third exercise moved up past it, then Log set stays on it
+  await tapSel(page,UP,1); await tapSel(page,UP,0);
+  const s3=await state(); await tapSel(page,LOGB); const s4=await state();
+  ok(s3.order[0]!==s0.order[1]&&s4.last===s0.order[1]&&s3.order[s3.open]===s0.order[1], tag+' mid-exercise, another moved up above it: Log set stays on the exercise in progress: '+JSON.stringify({order:s3.order.slice(0,3),open:s3.open,last:s4.last}));
+  await page.evaluate(()=>{ session=null; saveSession(); stopRest(); TAB='dash'; render(); });
+}
 async function resumeCheck(page, tag){
   await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(1100);
   await clickText(page,'Build it for me'); await clickText(page,'Pure strength'); await clickText(page,'Next'); await clickText(page,'Progress takes months'); await clickText(page,'Next');
@@ -184,6 +204,7 @@ async function resumeCheck(page, tag){
       await resumeCheck(page,tag);
       await personaSetups(page,tag);
       await sheetMatrix(page,d,tag);
+      await reorderCheck(page,tag);
     }catch(e){ ok(false,tag+' crashed: '+e.message); }
     ok(errs.length===0, tag+' no page errors: '+errs.slice(0,2).join(' | '));
     rows.push([tag, fails===f0?'pass':(fails-f0)+' failed']);

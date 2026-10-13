@@ -46,7 +46,7 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark','THEMES','lastTimeRows','navPush','navDrop'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark','THEMES','lastTimeRows','navPush','navDrop','pickSlot','syncCurrent','advanceIfDone','ruleCurrent'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
@@ -244,8 +244,9 @@ section('7. session mechanics');
 {
   const ev=[set('bench','a',135,8,8,5),set('ohp','a',95,10,8,5)];
   const A=load(ev);
-  const mkSlot=id=>({ex:id,role:'accessory',reps:[8,12],rpe:8,sets_target:3,sets:[]});
-  const S={id:'S',slots:[mkSlot('bench'),mkSlot('ohp'),mkSlot('curl')],openIdx:1,adj:null,ratings:{}};
+  const mkSlot=id=>({uid:id,ex:id,role:'accessory',reps:[8,12],rpe:8,sets_target:3,sets:[]});
+  // ohp was opened with a tap (the current-exercise rule's rule 3), so it holds through reorders
+  const S={id:'S',slots:[mkSlot('bench'),mkSlot('ohp'),mkSlot('curl')],openIdx:1,pick:'ohp',adj:null,ratings:{}};
   A.setSession(S);
   // REORDERING NEVER MOVES THE PANEL — it stays on the exercise you have open. These tests used to
   // assert the opposite (the panel followed the moved exercise), which is why "moving an exercise
@@ -256,7 +257,7 @@ section('7. session mechanics');
   A.moveSlot(0,1);                                    // bench down past curl
   ok(openEx()==='ohp','reorder of two others: the panel stays on ohp',`order ${S.slots.map(s=>s.ex)} open ${openEx()}`);
   const at=S.openIdx; A.moveSlot(at,-1);              // move the open exercise itself up
-  ok(openEx()==='ohp'&&S.openIdx===at-1,'moving the open exercise: the panel goes with it',`order ${S.slots.map(s=>s.ex)} open ${openEx()}`);
+  ok(openEx()==='ohp'&&S.openIdx===at-1,'moving the tapped exercise: the panel goes with it',`order ${S.slots.map(s=>s.ex)} open ${openEx()}`);
   // mid-exercise: a logged set on the open one, then move something else — the draft is untouched
   { const B=load(ev), T={id:'T',slots:[mkSlot('bench'),mkSlot('ohp'),mkSlot('curl')],openIdx:0,adj:null,ratings:{},startedAt:Date.now()};
     B.setSession(T); B.seedDraft(T.slots[0]); const d=B.getDraft(); d.weight=140; d.reps=8; d.rpe=8; B.logSet(T.slots[0],0,'straight');
@@ -264,7 +265,7 @@ section('7. session mechanics');
     ok(T.slots[T.openIdx].ex==='bench'&&B.getDraft().weight===w,'mid-exercise: moving another exercise keeps the panel and the draft (regression, reported twice)',T.slots[T.openIdx].ex+' '+B.getDraft().weight); }
   S.slots[0].sets.push({}); ok(A.moveSlot(0,1)===false,'moved an exercise that has logged sets','');
   // per-exercise set count on a collapsed card
-  const sl=S.slots[2]; S.openIdx=0;
+  const sl=S.slots[2]; S.openIdx=0; S.pick=null;
   ok(A.adjustSets(sl,2,1)&&sl.sets_target===4,'add a set on a collapsed exercise','');
   ok(A.adjustSets(sl,2,-1)&&sl.sets_target===3,'remove a set on a collapsed exercise','');
   sl.sets=[{},{},{}]; ok(A.adjustSets(sl,2,-1)===false&&sl.sets_target===3,'removed a set that was already logged','');
@@ -3134,6 +3135,79 @@ section('70. mobile layout: the visible viewport, one primitive, history, setup 
     const t=String(C.diagText()); ok(/^Trainlog \d+\.\d+\.\d+/.test(t)&&/Device: /.test(t)&&/Browser: /.test(t)&&/Installed to home screen: /.test(t)&&/Visible: /.test(t)&&/Safe areas: /.test(t),'diagnostics: version, device, browser, home screen, visible size, safe areas',t.split('\n')[0]); }
   ok(/getElementById\('appVer'\)|querySelector\('#appVer'\)/.test(src)&&/'pointerdown'/.test(src)&&/toggleDiag\(vr\)/.test(src),'diagnostics open on a long press of the version number in Lifts','');
   console.log('  no vh · viewport meta · fixed only in the primitive · one sheet, one screen · body scrolls, footer in flow · 16px inputs · history · draft + resume · errors in notes · diagnostics');
+}
+
+section('71. which exercise is current: one rule, both reported scenarios');
+{
+  const ev=[set('bench','a',135,8,8,5),set('ohp','a',95,10,8,5),set('curl','a',30,12,8,5),set('pulldown','a',100,10,8,5)];
+  const mk=id=>({uid:id,ex:id,role:'accessory',reps:[8,12],rpe:8,sets_target:3,sets:[]});
+  const fresh=(ids,o)=>{ const A=load(ev); const S={id:'C'+Math.random(),slots:ids.map(mk),openIdx:0,adj:null,ratings:{},startedAt:Date.now(),...(o||{})};
+    A.setSession(S); A.seedDraft(S.slots[S.openIdx]); return {A,S,cur:()=>S.openIdx>-1?S.slots[S.openIdx].ex:null}; };
+  const logOn=(A,S)=>{ const d=A.getDraft(); d.weight=d.weight||100; d.reps=d.reps||8; d.rpe=8; A.logSet(S.slots[S.openIdx],S.openIdx,'straight'); };
+  // Oct 4 / Oct 7: mid-exercise, another exercise moved up past it, Log set must stay put
+  { const {A,S,cur}=fresh(['bench','ohp','curl']); logOn(A,S); const w=A.getDraft().weight;
+    A.moveSlot(2,-1); A.moveSlot(1,-1);                       // curl moved all the way up, above bench
+    ok(cur()==='bench'&&A.getDraft().weight===w,'mid-exercise: moving another exercise above it keeps Log set on it (Oct 4, Oct 7)',S.slots.map(x=>x.ex)+' cur '+cur());
+    logOn(A,S); ok(S.slots.find(x=>x.ex==='bench').sets.length===2&&S.slots.find(x=>x.ex==='curl').sets.length===0,'the next Log set lands on the exercise you were in the middle of',''); }
+  // Oct 11: nothing logged on the current one, another moved up into its spot, Log set must follow
+  { const {A,S,cur}=fresh(['bench','ohp','curl']);
+    A.moveSlot(1,-1);                                         // ohp up into the first place
+    ok(cur()==='ohp','nothing logged yet: moving an exercise into the current spot makes it current (Oct 11)',S.slots.map(x=>x.ex)+' cur '+cur());
+    logOn(A,S); ok(S.slots[0].ex==='ohp'&&S.slots[0].sets.length===1&&S.slots[1].sets.length===0,'Log set then logs on the moved exercise',S.slots.map(x=>x.ex+':'+x.sets.length).join(' '));
+    ok(A.sets().filter(x=>x.session_id===S.id).every(x=>x.exercise_id==='ohp'),'the logged event is the moved exercise, not the old one',''); }
+  // moving the current one (untapped, nothing logged) down hands over to the new first unfinished
+  { const {A,S,cur}=fresh(['bench','ohp','curl']); A.moveSlot(0,1);
+    ok(cur()==='ohp','moving the current exercise down (nothing logged): the new first unfinished one is current',S.slots.map(x=>x.ex)+' cur '+cur()); }
+  // moving an exercise down below the current one changes nothing
+  { const {A,S,cur}=fresh(['bench','ohp','curl']); A.moveSlot(1,1);
+    ok(cur()==='bench','moving a later exercise down: the current one stays',cur()); }
+  // moving an exercise up that does not reach the first unfinished place changes nothing
+  { const {A,S,cur}=fresh(['bench','ohp','curl','pulldown']); A.moveSlot(3,-1);
+    ok(cur()==='bench','moving one up but not into the first unfinished place: the current one stays',S.slots.map(x=>x.ex)+' cur '+cur()); }
+  // a finished exercise above does not count: the first UNFINISHED place is what matters
+  { const {A,S,cur}=fresh(['bench','ohp','curl']); for(let k=0;k<3;k++) logOn(A,S);
+    ok(cur()==='ohp','finishing an exercise moves to the next unfinished one (rule 4)',cur());
+    A.moveSlot(2,-1); ok(cur()==='curl','moving one up past the current unstarted one makes it current (the finished one above is ignored)',S.slots.map(x=>x.ex)+' cur '+cur()); }
+  // an explicit tap wins over rules 1 and 2, until another tap or until it's finished
+  { const {A,S,cur}=fresh(['bench','ohp','curl']); logOn(A,S);   // mid-exercise on bench
+    A.pickSlot(2); ok(cur()==='curl','a tap on a card makes it current, even mid-exercise on another',cur());
+    A.moveSlot(1,-1); ok(cur()==='curl','a tapped exercise stays current through a reorder',S.slots.map(x=>x.ex)+' cur '+cur());
+    for(let k=0;k<3;k++) logOn(A,S);
+    ok(cur()==='ohp','finishing the tapped exercise returns to rule 2: the first unfinished one in list order',S.slots.map(x=>x.ex+':'+x.sets.length).join(' ')+' cur '+cur());
+    ok(S.pick==null,'finishing the tapped exercise clears the tap',String(S.pick)); }
+  { const {A,S,cur}=fresh(['bench','ohp','curl']); A.pickSlot(0);
+    ok(cur()===null&&S.openIdx===-1,'tapping the open card closes the panel',String(S.openIdx));
+    A.moveSlot(2,-1); ok(S.openIdx===-1,'a closed panel stays closed through a reorder',String(S.openIdx));
+    A.pickSlot(1); ok(cur()==='curl','tapping another card opens it',cur()); }
+  // a finished card can be opened with a tap (to add a set), and stays open through a reorder
+  { const {A,S,cur}=fresh(['bench','ohp','curl']); for(let k=0;k<3;k++) logOn(A,S); A.pickSlot(0);
+    ok(cur()==='bench','a tap opens a finished exercise',cur()); A.moveSlot(2,-1);
+    ok(cur()==='bench','a tapped finished exercise stays open through a reorder',cur()); }
+  // skipping ("Done with this one"): sets_target drops to what's logged, then rule 2
+  { const {A,S,cur}=fresh(['bench','ohp','curl']); logOn(A,S); const sl=S.slots[0]; sl.sets_target=sl.sets.length; A.advanceIfDone(sl,0);
+    ok(cur()==='ohp','skipping the rest of an exercise moves to the first unfinished one',cur()); }
+  // removing sets on the current exercise until it's done counts as finishing it
+  { const {A,S,cur}=fresh(['bench','ohp']); logOn(A,S); A.adjustSets(S.slots[0],0,-1); A.adjustSets(S.slots[0],0,-1);
+    ok(cur()==='ohp','taking the remaining sets off the current exercise moves on',cur()); }
+  // adding an exercise mid-session goes to the end and leaves the current one alone; with all done it opens
+  { const {A,S,cur}=fresh(['bench','ohp']); logOn(A,S);
+    S.slots.push(mk('pulldown')); A.syncCurrent(S.slots[0]); ok(cur()==='bench','adding an exercise mid-session keeps the current one',cur());
+    const B=fresh(['bench']); for(let k=0;k<3;k++) logOn(B.A,B.S); ok(B.S.openIdx===-1,'everything done: the panel closes','');
+    B.S.slots.push(mk('pulldown')); B.A.syncCurrent(null); ok(B.cur()==='pulldown','adding one after everything is done opens it',String(B.cur())); }
+  // randomised: whatever the moves, a slot with logged sets and sets left that was current stays current,
+  // and with no tap and nothing in progress the current one is always the first unfinished
+  for(let run=0;run<300;run++){
+    const {A,S,cur}=fresh(['bench','ohp','curl','pulldown']); let R=run*7919+1; const rnd=n=>{ R=(R*48271)%2147483647; return R%n; };
+    for(let step=0;step<12;step++){
+      const k=rnd(5), before=S.openIdx>-1?S.slots[S.openIdx]:null, mid=before&&before.sets.length&&before.sets.length<before.sets_target&&!S.pick;
+      if(k<2){ const i=rnd(S.slots.length); A.moveSlot(i,rnd(2)?1:-1);
+        if(mid) ok(S.slots[S.openIdx]===before,'random reorders: mid-exercise stays current',run+':'+step);
+        else if(!S.pick){ const f=S.slots.findIndex(x=>x.sets.length<x.sets_target); ok(S.openIdx===f,'random reorders: with nothing in progress the first unfinished is current',run+':'+step+' '+S.openIdx+' vs '+f); } }
+      else if(k===3){ A.pickSlot(rnd(S.slots.length)); }
+      else if(S.openIdx>-1) logOn(A,S);
+    }
+  }
+  console.log('  mid-exercise wins · moving into the first unfinished place takes it · a tap wins until finished · finishing moves on · skip, add, close');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

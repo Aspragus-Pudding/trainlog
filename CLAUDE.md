@@ -146,6 +146,23 @@ appear without bumping a cache name. Don't switch it back to cache-first. New
 versions install and *wait*; the in-app banner activates them, so a session is
 never swapped out mid-workout.
 
+## Recurring bugs: the written rules
+
+Bugs reported three or more times get a rule here, one function that owns it,
+and a regression test. Don't patch one branch; change the rule (and this text)
+or leave it alone.
+
+**Which exercise is current** (reported Oct 4, Oct 7, Oct 11, pulling both
+ways). `ruleCurrent()`/`syncCurrent()` own `session.openIdx`; nothing else sets
+it after a session starts. §71 and `tests/mobile.js` test it.
+1. Mid-exercise wins: the current exercise with at least one set logged and
+   sets left stays current however the list is reordered.
+2. Otherwise the current exercise is the first one in list order with sets
+   left, so moving one into the first unfinished place makes it current.
+3. Tapping a card makes it current (`pickSlot`, `session.pick`), whatever 1–2
+   say, until another card is tapped or this one is finished.
+4. Finishing an exercise moves on by rule 2.
+
 ## Architecture notes
 
 - **`EX`** is the exercise library array; **`exById`** is the lookup. Custom

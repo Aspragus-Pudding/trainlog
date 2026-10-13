@@ -9122,7 +9122,7 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.67.0","lines":["Setup now fills the screen, and its buttons stay above the keyboard and the browser's toolbar on every phone.","Back (Android back, the iPhone edge swipe, the browser's back) goes to the previous step or closes the popup. It no longer leaves the app.","Your setup answers are kept as you go. If you leave or the app closes, you can carry on where you were.","Something looks wrong on your phone? Long-press the version number in Lifts, tap Copy, and paste it into a note."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.68.0","lines":["Moving an exercise up into the current spot now makes it the one you log next. Before, Log set stayed on the old one.","If you're partway through an exercise, moving others around never takes Log set away from it.","Tapping an exercise's name makes it the current one until you finish it or tap another. Tapping the open one closes it."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9689,7 +9689,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.67.0';
+const APP_VERSION='1.68.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -13237,32 +13237,74 @@ function pctOfBest(slot, lb){
   return Math.round((lb+bwOffset(ex))/b.v*100)+'% of '+fmt(b.v,0)+' estimated max'
     +(ex.load==='bodyweight_plus'?(bwMissing(ex)?' (added weight only, no bodyweight logged)':' (incl. bodyweight)'):'');
 }
-/* Move an exercise one place. The open panel follows the exercise you moved —
-   moving one up means "I want to do this next" — unless a cluster is mid-flight,
-   where reseeding the draft would break the group. Exercises with logged sets
-   stay put, since their history belongs to that slot. */
+/* WHICH EXERCISE IS CURRENT (the one with the set panel and Log set). One rule,
+   because the pointer bug was reported three times pulling both ways (moving one
+   up stole the panel mid-exercise; moving one into the current spot didn't take
+   it). Written down in CLAUDE.md; §71 tests it.
+   1. Mid-exercise wins: the current exercise, with at least one set logged and
+      sets left, stays current however the list is reordered.
+   2. Otherwise the current exercise is the first one in list order with sets
+      left, so moving one into the first unfinished place makes it current.
+   3. Tapping a card makes it current, whatever 1–2 say, until another card is
+      tapped or this one is finished (session.pick; '-' = you closed the panel).
+   4. Finishing an exercise moves on by rule 2.
+   Slots are told apart by a uid, since reordering changes every index. */
+const slotLeft=s=>!!s&&s.sets.length<s.sets_target;
+function slotUid(s){ return s.uid||(s.uid=ulid()); }
+function ruleCurrent(before){
+  const sl=session.slots;
+  sl.forEach(slotUid);
+  if(session.pick==='-') return -1;
+  if(session.pick){ const i=sl.findIndex(s=>s.uid===session.pick); if(i>-1) return i; session.pick=null; }
+  if(before&&before.sets.length&&slotLeft(before)){ const i=sl.indexOf(before); if(i>-1) return i; }
+  return sl.findIndex(slotLeft);
+}
+/* Apply the rule after anything that can change it. `before` is the slot that was
+   current before the change (defaults to the one at openIdx). The draft is reseeded
+   only when the current exercise really changed, so typed numbers survive a reorder. */
+function syncCurrent(before){
+  if(!session||!session.slots) return;
+  if(before===undefined) before=session.slots[session.openIdx]||null;
+  if(draft.group&&before&&session.slots.includes(before)){ session.openIdx=session.slots.indexOf(before); return; }   // never jump mid-cluster
+  const i=ruleCurrent(before);
+  session.openIdx=i;
+  if(i>-1&&session.slots[i]!==before) seedDraft(session.slots[i]);
+}
+/* Rule 4: a finished exercise gives up an explicit pick, then the rule runs. */
+function finishedCheck(slot){
+  if(!slotLeft(slot)&&session.pick&&session.pick===slot.uid) session.pick=null;
+}
+/* Rule 3: a tap on a card. Tapping the open card closes the panel. */
+function pickSlot(i){
+  const s=session.slots[i]; if(!s) return;
+  if(session.openIdx===i){ session.pick='-'; session.openIdx=-1; }
+  else{ session.pick=slotUid(s); session.openIdx=i; seedDraft(s,true); }
+  saveSession();
+}
+/* Move an exercise one place. Exercises with logged sets stay put, since their
+   history belongs to that slot. Which exercise is current afterwards is decided
+   by the rule above, never here. */
 function moveSlot(i, dir){
   const j=i+dir, sl=session.slots;
   if(j<0||j>=sl.length||sl[i].sets.length) return false;
+  const before=sl[session.openIdx]||null;
   [sl[i],sl[j]]=[sl[j],sl[i]];
-  // The set panel stays on the exercise you have open — reordering never moves it.
-  // It used to jump to whichever exercise was moved (and reseed the draft), so moving
-  // anything mid-exercise stole the panel (reported on v1.20.0 and again on v1.44.0).
-  if(session.openIdx===i) session.openIdx=j; else if(session.openIdx===j) session.openIdx=i;
+  syncCurrent(before);
   saveSession(); return true;
 }
 /* +/- sets on any exercise, open or not. Never below what is already logged. */
 function adjustSets(slot, idx, delta){
   if(delta<0){ if(slot.sets_target<=slot.sets.length) return false; slot.sets_target--; }
   else slot.sets_target++;
-  if(session.openIdx===idx) advanceIfDone(slot,idx);
+  const before=session.slots[session.openIdx]||null;
+  finishedCheck(slot); syncCurrent(before);
   saveSession(); return true;
 }
 function openSessionAdd(){
   exPicker('Add an exercise', ()=>true, e=>{
-    const s=newSlotFor(e);
+    const s=newSlotFor(e), before=session.slots[session.openIdx]||null;
     session.slots.push({...s,sets_target:s.sets,sets:[]});
-    if(session.openIdx===-1){ session.openIdx=session.slots.length-1; seedDraft(session.slots[session.openIdx]); }
+    syncCurrent(before);
     saveSession(); renderWork(); toast('Added '+e.name);
   });
 }
@@ -13418,7 +13460,7 @@ function renderWork(){
     if(i>0) order.appendChild(mv(icon('up'),'Move earlier',()=>{ moveSlot(i,-1); renderWork(); }));
     if(i<session.slots.length-1) order.appendChild(mv(icon('down'),'Move later',()=>{ moveSlot(i,1); renderWork(); }));
     const needsRate = slot.sets.length>0 && slot.sets.length>=slot.sets_target && !session.ratings[slot.ex];
-    nameBtn.onclick=()=>{session.openIdx=open?-1:i; if(!open) seedDraft(slot,true); renderWork();};
+    nameBtn.onclick=()=>{ pickSlot(i); renderWork(); };
     const icons=el('div','exicons');
     if(needsRate){
       const rateBtn=el('button','iconbtn',icon('star')); rateBtn.style.color='var(--warn)';
@@ -14784,8 +14826,13 @@ function openPlanAdd(rawDay){
 function openSwap(slot,idx){
   const cur=exById[slot.ex];
   exPicker('Swap '+cur.name, e=>e.id!==cur.id, e=>{
+    const wasCur=session.slots[session.openIdx]===slot, before=session.slots[session.openIdx]||null;
     slot.ex=e.id; slot.swapped=true; slot.sets=[];
-    seedDraft(slot); saveSession(); renderWork();
+    // swapping the exercise you're on keeps you on it; swapping another leaves the
+    // panel (and the draft) where it was
+    if(wasCur){ session.pick=slotUid(slot); seedDraft(slot); }
+    syncCurrent(before);
+    saveSession(); renderWork();
     toast('Swapped to '+e.name);
   }, {muscle:primaryMuscle(cur)});
 }
@@ -16625,7 +16672,7 @@ function painReportEl(slot, idx){
     if(r.level==='stop'||r.level==='end'){
       const row=el('div','row'); row.style.cssText='gap:var(--sp-2);margin-top:var(--sp-2);flex-wrap:wrap';
       const sw=el('button','btn s','Swap exercise'); sw.onclick=()=>openSwap(slot,idx);
-      const mv=el('button','btn s ghost','Done with this one'); mv.onclick=()=>{ slot.sets_target=slot.sets.length; saveSession(); advanceIfDone(slot,idx); renderWork(); };
+      const mv=el('button','btn s ghost','Done with this one'); mv.onclick=()=>{ slot.sets_target=slot.sets.length; advanceIfDone(slot,idx); saveSession(); renderWork(); };
       row.append(sw,mv);
       if(r.level==='end'){ const en=el('button','btn s ghost','Finish the session'); en.onclick=()=>openPost(); row.appendChild(en); }
       box.appendChild(row);
@@ -17496,15 +17543,13 @@ function logSet(slot,idx,kind,extend,over){
   renderWork();
 }
 
-/* Move to the next unfinished exercise once this one is complete. Used by both
-   logging a set and skipping one, so the two can't drift apart. */
+/* Once this exercise is complete, move on by the current-exercise rule (rule 4,
+   then rule 2). Used by both logging a set and skipping one, so the two can't
+   drift apart. All done → -1, the panel collapses. */
 function advanceIfDone(slot,idx){
   if(draft.group) return;                       // never jump mid-cluster
-  if(slot.sets.length<slot.sets_target) return;
-  if(session.openIdx!==idx) return;
-  const nx=session.slots.findIndex((s,j)=>j>idx&&s.sets.length<s.sets_target);
-  if(nx>-1){ session.openIdx=nx; seedDraft(session.slots[nx]); }
-  else session.openIdx=-1;                      // everything done — collapse
+  if(slotLeft(slot)) return;
+  finishedCheck(slot); syncCurrent();
 }
 
 /* 1–5 segmented control with a fixed descriptor under the chosen value */

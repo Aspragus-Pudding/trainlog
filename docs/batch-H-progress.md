@@ -29,6 +29,8 @@ in `docs/decisions-pending.md`.
 
 Maintainer export as of 8 Oct (169 sets): load mean |error| 5.0 lb, reps 2.0, exact load 90. Every version in this run must be IDENTICAL (nothing here touches prescriptions). v1.62.0: every number identical; only the "basis" text column differs ("from e1RM" → "from your estimated max"), compared with that column cut. Script: scratchpad btcompare.sh <ref>.
 
+Big batch (12 Oct) baseline, maintainer export as of 12 Oct (215 suggestions): load mean |error| 5.7 lb, reps 1.8, exact load 123. Only Parts 1a and 1b (and A1 if edited sets change what is read) may move it.
+
 ## Merged
 
 H3–H5 were merged to main once (bf84262), as v1.65.0. At that point:
@@ -45,6 +47,17 @@ H3–H5 were merged to main once (bf84262), as v1.65.0. At that point:
 ## Mobile layout fix (priority, v1.67.0)
 
 Root causes, the one-primitive fix, history, setup draft, diagnostics and error notes: D30–D36. tests/mobile.js: 894 checks on 6 device/engine combinations; §70 lints the rules.
+
+## Big batch, 12 Oct ("ready to hand to anyone")
+
+Appendix A (the 11 Oct combined batch) had not shipped; only D16 (v1.66) was in.
+D10 and D17 were already reversed at your request in v1.65.1 (RPE back, dark
+default, light as the LIGHT code); D10's label setting is still built (Part 0
+of Appendix A). Order: Appendix A by reported impact, then Parts 1–6, then 7–8.
+
+| Part | State | Version | Notes |
+|---|---|---|---|
+| A2 which exercise is current | done | v1.68.0 | rule in CLAUDE.md, ruleCurrent/syncCurrent, §71, mobile.js reorder repro (fails on 1.67.0 on both engines, passes now); D37 |
 
 ## Half-finished
 

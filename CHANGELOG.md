@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.68.0 — 2026-10-12
+- Moving an exercise up into the current spot now makes it the one you log next. Before, Log set stayed on the old one.
+- If you're partway through an exercise, moving others around never takes Log set away from it.
+- Tapping an exercise's name makes it the current one until you finish it or tap another. Tapping the open one closes it.
+
 ## 1.67.0 — 2026-10-11
 - Setup now fills the screen, and its buttons stay above the keyboard and the browser's toolbar on every phone.
 - Back (Android back, the iPhone edge swipe, the browser's back) goes to the previous step or closes the popup. It no longer leaves the app.

@@ -607,3 +607,29 @@ That looks wrong in dark.
   The 5-minute real-phone checklist in the report covers those.
 
 **To change:** `PROFILES` and `CASES` at the top of `tests/mobile.js`.
+
+---
+
+# Big batch, 12 Oct (Appendix A first, then Parts 1–8)
+
+## D37. Which exercise is current: the written rule's edges (v1.68)
+
+**Question:** your four rules leave a few edges open.
+
+**Chosen:**
+- **First unfinished means anywhere in the list,** including above the
+  exercise you just finished. Finishing one goes to the first exercise in
+  list order with sets left, not the next one down. Before, it went to the
+  next one down.
+- **Tapping the open card closes it** and keeps it closed through reorders,
+  until you tap a card.
+- **A finished card can still be opened with a tap** (to add a set), and
+  stays open until you tap another or log a set on it.
+- **Swapping the exercise you're on keeps you on it.** Swapping another one
+  leaves the set panel and what you've typed alone. Before, swapping any
+  exercise reseeded the set panel with the swapped one's numbers.
+- **Open sessions from before the update** keep their open card. The rule
+  applies from the next change.
+
+**To undo:** `ruleCurrent()` in index.html is the whole rule; CLAUDE.md's
+"Recurring bugs" section says what it must do.
