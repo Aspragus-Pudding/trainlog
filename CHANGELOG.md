@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.83.0 — 2026-10-12
+- The warm-up fits the day: first the main lifts (a squat day warms hips, knees and back), then your conditions, then anything sore. Each item says why ("for today's back squat", "for your shoulder").
+- Edit warm-up: add from the library, create your own warm-up or rehab exercises, reorder yours and remove suggestions, for one day or every session.
+- A suggestion you remove isn't suggested again for that day. Your rehab exercises come after training.
+
 ## 1.82.0 — 2026-10-12
 - Every number now earns its place. Edit program's block lines are a sentence: "About 10 sets a week per muscle in week 1, rising to 16 by week 4."
 - The Lifts card says this week's sets for its muscle against a typical range, labelled as a rough guide.

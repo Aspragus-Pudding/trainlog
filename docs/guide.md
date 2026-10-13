@@ -33,6 +33,9 @@ The app proposes a deload when the signs show: readiness falling, the same weigh
 ### I want to change today's workout
 Before you start, the Workout tab is today's workout, with the same cards as the live session. Move exercises up or down, swap one, add or remove one, or change the number of sets; each set shows what you did last time. Changes are for today only. Tap "Save to program" to keep them for that day from now on, and Start begins the session in the order you've set.
 
+### I want my own warm-up
+The warm-up at the top of a workout is built from the day's main lifts, then your conditions, then anything sore, and each item says why it's there. Tap Edit warm-up to stop a suggestion for that day, add one from the library, or create your own warm-up or rehab exercise, for that day or every session. Rehab ones come after training.
+
 ### My gym doesn't have an exercise
 Tap the swap button on the exercise card and pick another, by muscle or by name. Anything you log comes first from then on. To change what the app assumes your gym has, use Settings → Equipment; anything you've logged still comes first.
 

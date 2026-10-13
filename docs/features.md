@@ -49,6 +49,7 @@ everyone.
 | Smith bar weight question (once per exercise) | everyone | set panel, Smith exercises |
 | Plate calculator, bar and sled weights | everyone | set panel, barbell and plate-loaded machines |
 | Warm-up ramp | everyone | set panel |
+| Warm-up (prep) from today's main lifts, your conditions and anything sore, each with why; Edit warm-up: add, remove, reorder, create your own (warm-up or rehab), per day or every session | everyone | Workout, Prep card |
 | Set types (straight, myo-reps, rest-pause, drop, all-out) | advanced | set panel |
 | Modify (pause, tempo, range, grip, straps, bar position) | advanced | set panel |
 | Change range for today | advanced | set panel |

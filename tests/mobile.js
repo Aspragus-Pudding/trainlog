@@ -141,6 +141,8 @@ async function sheetMatrix(page, d, tag){
     ["today's plan",()=>{ $('#ckgo').click(); }, false],
     ['readiness',()=>{ $('#dlg').close(); openReadiness(); }, false],
     ['exercise info',()=>{ $('#dlg').close(); openInfo('bench'); }, true],
+    ['warm-up editor',()=>{ $('#dlg').close(); openPrepEditor(session?session.dayName:todayDay().name); }, true],
+    ['create a warm-up',()=>{ $('#dlg').close(); const n=session?session.dayName:todayDay().name; openPrepCreate(n,n); }, true],
     ['guide',()=>{ $('#dlg').close(); openGuide(); }, true],
     ['picker',()=>{ $('#dlg').close(); exPicker('Pick',()=>true,()=>{}); }, true],
     ['quick note',()=>{ $('#dlg').close(); openNote(); }, true],

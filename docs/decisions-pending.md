@@ -1156,3 +1156,32 @@ removed, with the one-line reason.
   not obedience).
 
 **To undo any one:** each is one place in index.html; the table names it.
+
+---
+
+# Big batch Part 5
+
+## D57. Warm-ups that fit the day (v1.83)
+
+**Chosen:**
+- **Three inputs, in your order:**
+  - **The day's main lifts** (primary slots and goal lifts, the first two).
+    Each maps to the areas its movement loads: squat → hips, knees, back;
+    hinge → hips, back; presses and pulls → shoulders and upper back. That
+    mapping is a judgement default.
+  - **Then your conditions.**
+  - **Then today's sore or flagged areas.**
+- **The cap is kept** (3, 5 or 7 by readiness), with one change: each kind
+  present gets a place first (two for the main lifts), then the rest fill in.
+  A strict "main lifts first" would have filled a 3-item warm-up with hip
+  prep and dropped your shoulder prep.
+- **Your own items always come,** after the suggestions and outside the cap:
+  this day's, then every session's, in your order.
+- **Custom items** are a name, an area, warm-up or rehab, an optional dose and
+  cues (`CFG.prepItems`). Rehab ones join the after-training block.
+- **"Don't suggest"** is remembered per day, or for every session
+  (`CFG.prepPlan`). Turned-off items can be brought back from the editor.
+- **No new library entries.** The library's prep list was enough to cover
+  each main-lift family.
+
+**To undo:** the old `buildPrep` is in git history (v1.82.0).
