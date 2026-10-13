@@ -118,7 +118,8 @@ everyone.
 | Setup link | testers | Setup link |
 | Your name on notes | testers | Notes |
 | RPE or effort (the word for how hard a set was) | everyone | How hard a set was |
-| Theme code (LIGHT for a light look; dark is the default) | advanced | Have a code? |
+| Theme code (LIGHT for a light look; dark is the default; or a #RRGGBB colour) | advanced | Have a code? |
+| Theme voice ("Use this theme's voice", Goblin, Terminal, Girlypop) | advanced | Have a code? |
 | Delete my conditions and pain ratings | injury-prone | under the condition picker |
 
 ## Exercise info sheet

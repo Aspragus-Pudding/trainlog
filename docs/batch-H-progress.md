@@ -58,6 +58,7 @@ of Appendix A). Order: Appendix A by reported impact, then Parts 1–6, then 7�
 | Part | State | Version | Notes |
 |---|---|---|---|
 | A1 edit = delete + relog | done | v1.68.1 | corrections merge (one rule: correctionMap/corrected), edits recompute the next set, readers that skipped corrections fixed; §72; backtest: one row (20 Sep double edit) moved, error 10 → 0 reps; D38 |
+| A7 readable themes + voice packs | done | v1.74.0 | THEME_RULES (text 4.5, shapes 3, ΔE 20, no saturated-on-saturated), accent-fill token, every built-in nudged to pass, #RRGGBB codes nudged on apply; docs/voices.md (Goblin, Terminal, Girlypop × 9 moments), only celebratory toasts voiced; §80, §81; D47, D48 |
 | A8 strength ↔ size slider | done | v1.73.0 | stops = profiles, ratio blends, nearer stop for the rest; setup (Fine-tune / open in together, live blocks) and Edit program (re-plans from the next block); sequencer never returns an empty plan; §79; D46 |
 | A0 decision changes | done | v1.72.1 | D16 was in (1.66); D17 superseded by your 9 Oct choice (LIGHT code); D10 RPE/effort setting (display pass, setup default, notes untouched); D21 equipment chip; §78, mobile effortCheck; D45 |
 | A10 I know my numbers | done | v1.72.0 | weight × reps + chips, class: bw/added/assist (0 ok), stored on the track; same input in setup, starting estimates, Edit program; §77; harness compiles the app once (32 s); D44 |
@@ -67,6 +68,8 @@ of Appendix A). Order: Appendix A by reported impact, then Parts 1–6, then 7�
 | A6 app errors grouped, tour steps tested | done | v1.69.1 | errors collapsed apart from notes, last in the copy; every tour step in mobile.js (all passed on 1.67 too); card capped at the visible height; D40 |
 | A4 plain words in the workout | done | v1.69.0 | flag chip → info sheet "For your shoulder", plainText() + CLINICAL_WORDS, pain check names the set, no made-up Feel it, no pre-session banner; §65 scan + §73 corpus; test harness memory leak fixed (navigator.storage); D39 |
 | A2 which exercise is current | done | v1.68.0 | rule in CLAUDE.md, ruleCurrent/syncCurrent, §71, mobile.js reorder repro (fails on 1.67.0 on both engines, passes now); D37 |
+
+Appendix A is complete (v1.68.0–v1.74.0). Note: node 22.17 on this machine crashes intermittently (SIGSEGV/SIGILL) inside the invariant suite; a rerun passes. The ship script retries once on a crash, never on a failure.
 
 ## Half-finished
 

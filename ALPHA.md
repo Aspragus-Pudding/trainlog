@@ -196,14 +196,18 @@ and *Reset to the default look* undoes it. Codes aren't case-sensitive.
 
 | Code | What it looks like |
 |---|---|
-| `GIRLYPOP` | Soft pink, hot-pink accent, bows on the header and on new-best badges. |
-| `GOBLIN` | Moss, dirt brown, candlelight amber. Heavier type, and the pop-up messages get feral ("Set 2 hoarded"). |
-| `TERMINAL` | Phosphor green on black, monospace, square corners, a blinking cursor after the readiness score. |
+| `GIRLYPOP` | Soft pink, hot-pink accent, bows on the header and on new-best badges, and its own voice ("Set 2. Obsessed."). |
+| `LIGHT` | The standard look on a light background. |
+| `GOBLIN` | Moss, dirt brown, candlelight amber. Heavier type, and its own voice ("Set 2 hoarded"). |
+| `TERMINAL` | Phosphor green on black, monospace, square corners, and a 1983 voice ("> SET 2 OK."). |
 | `SUNSET` | Deep plum shading to burnt orange, coral accent. The soft one for a dim room. |
 | `HIGHVIS` | Black and white with a safety-yellow accent, bigger and heavier text. The accessibility option. |
 
-Warnings stay warning-coloured in every theme, and the three block colours stay
-distinct. Error and backup messages are never reworded.
+A colour code (#FF66AA) gives the standard look with that accent, adjusted if it
+wouldn't be readable. Every theme passes the same readability rules (text
+4.5:1, shapes and chart marks 3:1). A theme's voice only changes cheers and
+greetings, and it can be switched off. Pain, safety, error and data messages are
+never reworded. The lines are in `docs/voices.md`.
 
 ## Before you hand it out
 

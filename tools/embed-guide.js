@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /* Copies docs/guide.md into index.html's <script type="text/markdown"
-   id="guide-md">, and docs/glossary.md into id="glossary-md", byte-for-byte.
+   id="guide-md">, docs/glossary.md into id="glossary-md" and docs/voices.md into
+   id="voices-md" (theme voice packs), byte-for-byte.
    The guide is the user guide (tasks, every setting) and the app's tours (the
    screen sections; every "###" is an entry); the glossary is the app's tap-for-definition text (every "##" is an
    entry). Run after editing either:
@@ -10,7 +11,8 @@ const fs=require('fs'), path=require('path');
 const root=path.join(__dirname,'..'), file=path.join(root,'index.html');
 let html=fs.readFileSync(file,'utf8');
 [['guide.md','guide-md',md=>md.split('\n').filter(l=>/^### /.test(l)).length+' entries'],
- ['glossary.md','glossary-md',md=>md.split('\n').filter(l=>/^## /.test(l)).length+' entries']].forEach(([name,id,count])=>{
+ ['glossary.md','glossary-md',md=>md.split('\n').filter(l=>/^## /.test(l)).length+' entries'],
+ ['voices.md','voices-md',md=>md.split('\n').filter(l=>/^## /.test(l)).length+' voices']].forEach(([name,id,count])=>{
   const md=fs.readFileSync(path.join(root,'docs',name),'utf8');
   if(/<\/script/i.test(md)) throw new Error('docs/'+name+' must not contain </script');
   const re=new RegExp('(<script type="text/markdown" id="'+id+'">)[\\s\\S]*?(</script>)');

@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.74.0 — 2026-10-12
+- Every theme is now checked for readable text, warnings, buttons and chart colours. A few colours shifted a shade, including the default's buttons.
+- Type a colour code such as #FF66AA for the standard look in your colour. If it wouldn't be readable, the app adjusts it and says so.
+- Goblin, Terminal (1983) and Girlypop have their own voice for cheers and greetings. Pain, safety and data messages always stay plain.
+- "Reset to the default look" is always there, and "Use this theme's voice" turns the jokes off.
+
 ## 1.73.0 — 2026-10-12
 - The strength/size slider is back, on top of the five goals: slide between them, or tap a goal's name to snap to it.
 - In setup it's under Fine-tune after the goal question (open in Build it together), and shows your blocks as you move it.

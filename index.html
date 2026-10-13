@@ -10,12 +10,15 @@
 <style>
 :root{
   --bg:#0B0D12; --card:#16191F; --card-2:#1F232B; --line:#2A2F39;
-  --ink:#F2F4F8; --muted:#8E95A3; --dim:#5B6370;
+  --ink:#F2F4F8; --muted:#8E95A3; --dim:#606876;
   /* semantic: block type. these carry meaning, not decoration */
-  --hyp:#4C8DFF; --str:#E8A33D; --peak:#E8546B; --deload:#6B7280; --on-block:#fff;
+  --hyp:#4C8DFF; --str:#E8A33D; --peak:#E8546B; --deload:#7A8190; --on-block:#0B0D12;
   /* interface accent (buttons, selection, charts) — separate from the block
      colours so a theme can change one without the other */
   --accent:#4C8DFF; --on-accent:#fff; --accent-soft:rgba(76,141,255,.16);
+  /* a filled accent (buttons, selected chips) carries on-accent text, so it may be a
+     shade deeper than the accent used for text and links (readability rules, v1.74) */
+  --accent-fill:#2F6FEB;
   /* warnings and danger: joint flags, ease-off, backup nags. must always read
      as warnings, whatever the theme */
   --warn:#E8A33D; --warn-soft:rgba(232,163,61,.1); --danger:#E8546B; --sug:var(--warn);
@@ -94,7 +97,7 @@ section{display:none;padding-top:var(--sp-4)} section.on{display:block}
    Every button is at least 44px tall to tap; .s is smaller to look at, not to hit. */
 .btn{background:var(--surface-2);border-radius:var(--r-btn);padding:var(--sp-2) var(--sp-4);min-height:var(--tap);font-size:var(--fs-3);font-weight:600;position:relative}
 .btn:active{background:var(--line)}
-.btn.go{background:var(--go);color:var(--on-accent)} .btn.pri,.btn.primary{background:var(--accent);color:var(--on-accent)}
+.btn.go{background:var(--go);color:var(--on-accent)} .btn.pri,.btn.primary{background:var(--accent-fill);color:var(--on-accent)}
 .btn.wide{width:100%;text-align:center} .btn.s{padding:var(--sp-1) var(--sp-3);font-size:var(--fs-2);min-height:36px}
 .btn.s::after{content:'';position:absolute;inset:-4px 0}
 .btn.ghost{background:transparent;border:1px solid var(--line)}
@@ -105,7 +108,7 @@ section{display:none;padding-top:var(--sp-4)} section.on{display:block}
 .seg{display:flex;background:var(--surface-2);border-radius:var(--r-btn);padding:var(--sp-1);gap:var(--sp-1)}
 .seg button{flex:1;min-height:38px;padding:0 var(--sp-1);border-radius:calc(var(--r-btn) - 3px);font-size:var(--fs-3);font-weight:600;color:var(--muted);position:relative}
 .seg button::after{content:'';position:absolute;inset:-3px 0}
-.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.seg button[aria-pressed="true"]{background:var(--accent-fill);color:var(--on-accent)}
 .anchor{font-size:var(--fs-1);color:var(--muted);margin-top:var(--sp-2);min-height:17px}
 .qblock{background:var(--surface);border-radius:var(--r);padding:var(--sp-4);margin-bottom:var(--sp-3);box-shadow:var(--e-1)}
 .qlab{font-size:var(--fs-3);font-weight:650;margin-bottom:var(--sp-3);line-height:1.35}
@@ -145,7 +148,7 @@ section{display:none;padding-top:var(--sp-4)} section.on{display:block}
 .srow{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;min-height:var(--tap)}
 .sidx{width:26px;height:26px;border-radius:50%;background:var(--surface-2);color:var(--muted);
   display:grid;place-items:center;font-size:var(--fs-1);font-weight:600;flex:none}
-.sidx.done{background:var(--accent);color:var(--on-accent)}
+.sidx.done{background:var(--accent-fill);color:var(--on-accent)}
 .sload{font-size:var(--fs-3);font-weight:600;color:var(--accent)}
 .sload.empty{color:var(--dim);font-weight:500;padding:0;text-align:left;font-size:var(--fs-3);line-height:1.45}
 .lastval{color:var(--dim);font-weight:500;font-size:var(--fs-2)}
@@ -261,7 +264,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 .chip{border:1px solid var(--line);background:var(--surface-2);border-radius:var(--r-pill);
   padding:var(--sp-1) var(--sp-3);min-height:36px;font-size:var(--fs-2);color:var(--muted);position:relative}
 .chip::after{content:'';position:absolute;inset:-4px 0}
-.chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:600}
+.chip[aria-pressed="true"]{background:var(--accent-fill);color:var(--on-accent);border-color:var(--accent-fill);font-weight:600}
 .chip.warn[aria-pressed="true"]{background:var(--stop);border-color:var(--stop)}
 .chips{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
 input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:var(--r-s);
@@ -8726,7 +8729,10 @@ The name signed on notes you send with the pencil, so the person who set up the 
 The word the app uses for how hard a set was: RPE, the lifting term, or effort. Both mean the same thing: 10 is nothing left and 9 is one rep left. Setup picks effort for newer lifters and RPE for everyone else, and you can change it any time.
 
 ### Theme code
-Have a code? A theme code changes the app's colours. Dark is the standard look; the code LIGHT gives a light one. Reset goes back to the standard look.
+Have a code? A theme code changes the app's colours. Dark is the standard look; the code LIGHT gives a light one, and a colour code such as #FF66AA gives the standard look in your colour, adjusted if it wouldn't be readable. Every theme is checked for readable text. Reset goes back to the standard look.
+
+### Theme voice
+Goblin, Terminal and Girlypop come with their own voice for cheers and greetings: a logged set, a new best, the end of a rest or a session. Untick "Use this theme's voice" to keep the colours and lose the jokes. Anything about pain, safety, errors or your data always stays plain.
 
 ### Delete my conditions and pain ratings
 Removes your conditions and stops every past pain and joint rating from counting. The log itself is never rewritten; a marker records the point from which old ratings are ignored.
@@ -9129,7 +9135,273 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.73.0","lines":["The strength/size slider is back, on top of the five goals: slide between them, or tap a goal's name to snap to it.","In setup it's under Fine-tune after the goal question (open in Build it together), and shows your blocks as you move it.","In Edit program it re-plans the blocks after the one you're in, and the block cards update as you slide."]}</script>
+<script type="text/markdown" id="voices-md"># Voices
+
+Some theme codes come with their own voice. A voice only replaces the app's
+motivational and celebratory lines, at nine moments:
+
+- `checkin`: the greeting at the top of the check-in.
+- `start`: when a session starts.
+- `set`: a set logged. `{n}` is the set number.
+- `pr`: a new best. `{ex}` is the exercise and `{gain}` how much higher.
+- `rest`: the rest timer ending.
+- `finish`: a session saved.
+- `streak`: weeks in a row with a session. `{weeks}` is how many.
+- `empty`: a screen with nothing on it yet.
+- `whatsnew`: the title of the "What's new" card. `{v}` is the version.
+
+Nothing else is ever voiced. Pain and joint prompts, red flags, anything about
+injuries and conditions, disclaimers and consent, the focused-deload and
+sick-day explanations, the "why" lines on numbers, errors, and anything about
+your data or backups always stay in the plain default voice. A test fails if a
+voice line touches any of them.
+
+To add a voice: a `## CODE` section with the theme's code, then a `### moment`
+heading for each moment and one line per variant (aim for 5 to 10, so it
+doesn't repeat every session). Then run `node tools/embed-guide.js`. In the app,
+Edit program → Have a code? has "Use this theme's voice", on by default.
+
+## GOBLIN
+
+### checkin
+- Back from the surface. How are the bones?
+- The candles are lit. Tell the goblin how you slept.
+- Sniff, sniff. Ready for the pit?
+- Another day in the burrow. How's the body holding up?
+- The hoard awaits. First, the counting of bones.
+- Grr. Morning. How rested is the goblin today?
+- Crawl in, sit down, report your condition.
+
+### start
+- Into the pit.
+- The dungeon is open. Go take what's yours.
+- Lights low, iron heavy. Begin.
+- Hoarding season starts now.
+- Down the tunnel you go.
+- The iron has been waiting. Go.
+- Torch lit. Time to dig.
+
+### set
+- Set {n} hoarded.
+- Set {n} dragged back to the burrow.
+- Set {n} stashed with the rest of the loot.
+- Set {n}. The pile grows.
+- Set {n} gnawed clean.
+- Set {n} added to the hoard.
+- Set {n}. Grr.
+
+### pr
+- New hoard record on {ex} · {gain}
+- {ex}: biggest loot yet · {gain}
+- The hoard has never been this heavy. {ex} · {gain}
+- {ex} record clawed out of the dark · {gain}
+- New treasure: {ex} · {gain}
+- {ex} · {gain}. The other goblins will hear of this.
+- A shinier record on {ex} · {gain}
+
+### rest
+- Rest over. Back to the pit.
+- Enough lurking. Next set.
+- The candle has burned down a notch. Go.
+- Up from the corner. The iron calls.
+- Rest done. Back to the digging.
+- Break's over, goblin.
+- Shake off the dust. Next set.
+
+### finish
+- Loot stashed.
+- Session hoarded. Back to the burrow.
+- The dungeon is cleared for today.
+- All loot counted and stored.
+- Done. The hoard is bigger than this morning.
+- Session stashed under the floorboards.
+- Back to the dark to grow stronger.
+
+### streak
+- {weeks} weeks in a row in the pit.
+- {weeks} weeks of steady hoarding.
+- The burrow has seen you {weeks} weeks running.
+- {weeks} weeks without missing a raid.
+- {weeks} weeks in a row. The hoard approves.
+- Unbroken for {weeks} weeks.
+
+### empty
+- Nothing in the hoard yet.
+- The cave is empty. For now.
+- No loot here yet. Go get some.
+- Just dust and echoes so far.
+- An empty corner of the burrow.
+- Nothing stashed here yet.
+
+### whatsnew
+- New scrawls on the wall · {v}
+- The goblins changed things · {v}
+- Fresh from the forge · {v}
+- What the goblins built · {v}
+- New in the burrow · {v}
+- Tunnel works complete · {v}
+
+## TERMINAL
+
+### checkin
+- > STATUS REQUEST. REPORT SLEEP, MOTIVATION, BODY.
+- > SYSTEM CHECK BEFORE RUN.
+- > LOAD USER.DAT... READY FOR INPUT.
+- > HELLO, OPERATOR. HOW ARE THE SYSTEMS?
+- > DIAGNOSTICS FIRST. ENTER VALUES.
+- > BOOT COMPLETE. AWAITING CHECK-IN.
+- > PRE-FLIGHT. ANSWER THE PROMPTS.
+
+### start
+- > RUN WORKOUT.EXE
+- > SESSION STARTED. GOOD LUCK, OPERATOR.
+- > EXECUTING PROGRAM...
+- > LOAD "TRAINING",8,1
+- > READY. RUN.
+- > PROGRAM LOADED. BEGIN.
+- > INITIALISING IRON SUBROUTINE...
+
+### set
+- > SET {n} WRITTEN TO DISK.
+- > SET {n} OK.
+- > SET {n} SAVED.
+- > SET {n} COMPLETE.
+- > SET {n} ACCEPTED.
+- > APPEND SET {n}... DONE.
+- > SET {n} LOGGED. READY.
+
+### pr
+- > NEW HIGH SCORE: {ex} · {gain}
+- > RECORD BROKEN: {ex} · {gain}
+- > {ex}: BEST EVER · {gain}
+- > HIGH SCORE TABLE UPDATED. {ex} · {gain}
+- > NEW PERSONAL BEST DETECTED. {ex} · {gain}
+- > {ex} · {gain}. ENTER YOUR INITIALS.
+- > ACHIEVEMENT UNLOCKED: {ex} · {gain}
+
+### rest
+- > TIMER EXPIRED. RESUME.
+- > REST COMPLETE. PRESS ANY KEY.
+- > COOLDOWN FINISHED.
+- > READY.
+- > NEXT SET QUEUED.
+- > INTERRUPT: REST OVER.
+- > CONTINUE? Y
+
+### finish
+- > SESSION SAVED. SYSTEM HALTED.
+- > PROGRAM ENDED NORMALLY.
+- > WORKOUT.EXE EXITED WITH CODE 0.
+- > SAVED. GOOD NIGHT, OPERATOR.
+- > END OF RUN.
+- > SHUTDOWN COMPLETE.
+- > SESSION CLOSED.
+
+### streak
+- > {weeks} CONSECUTIVE WEEKS. UPTIME GOOD.
+- > STREAK: {weeks} WEEKS.
+- > {weeks} WEEKS WITHOUT A CRASH.
+- > CONTINUOUS OPERATION: {weeks} WEEKS.
+- > {weeks} WEEK RUN. STABLE.
+- > UPTIME {weeks} WEEKS AND COUNTING.
+
+### empty
+- > NO RECORDS FOUND.
+- > DIRECTORY EMPTY.
+- > 0 FILES.
+- > NOTHING HERE YET. READY.
+- > EOF.
+- > NOTHING TO DISPLAY.
+
+### whatsnew
+- > PATCH NOTES {v}
+- > UPDATE {v} INSTALLED.
+- > README.TXT · {v}
+- > NEW IN VERSION {v}
+- > CHANGELOG {v}
+- > FIRMWARE {v} LOADED.
+
+## GIRLYPOP
+
+### checkin
+- Hi gorgeous. How are we feeling today?
+- Quick vibe check before we lift.
+- Morning, superstar. How did you sleep?
+- Let's check in with that beautiful body.
+- How's my favourite lifter doing?
+- Tell me everything. How are you, babe?
+- Vibe check, then we slay.
+
+### start
+- Let's get it, queen.
+- Main character energy, activated.
+- Time to slay.
+- Your era starts now.
+- Hot girl lift, in progress.
+- Okay, let's do the thing.
+- Serving strength today.
+
+### set
+- Set {n}, done and dusted.
+- Set {n}. Obsessed.
+- Set {n} served.
+- Set {n}. That was cute.
+- Set {n}, ate that.
+- Set {n} in the bag.
+- Set {n}. Iconic.
+
+### pr
+- New best on {ex} · {gain}. You ate.
+- {ex} personal best · {gain}. Iconic behaviour.
+- {ex} · {gain}. We love a glow-up.
+- Brand new best on {ex} · {gain}. Obsessed.
+- {ex} · {gain}. She's stronger than ever.
+- {ex} PR · {gain}. Put it on the vision board.
+- {ex} · {gain}. That's the one.
+
+### rest
+- Break's over, babe.
+- Rest done. Back to slaying.
+- Okay, hydrated? Next set.
+- Pause over. Let's go again.
+- Time for your next moment.
+- Rest done, main character.
+- Back to it, gorgeous.
+
+### finish
+- Session saved. You did that.
+- Workout served.
+- That's a wrap, superstar.
+- Done and done. So proud.
+- Session saved. Go get a treat.
+- Another one for the highlight reel.
+- Saved. Glowing, honestly.
+
+### streak
+- {weeks} weeks in a row. Consistency queen.
+- {weeks} weeks straight. We love a routine.
+- {weeks} weeks of showing up for yourself.
+- {weeks} weeks running. The dedication.
+- {weeks} weeks in a row. Obsessed with you.
+- {weeks} weeks strong.
+
+### empty
+- Nothing here yet, but it's giving potential.
+- A blank page. Your era starts here.
+- Empty for now. Go make it cute.
+- Nothing yet. Soon though.
+- Clean slate, babe.
+- Nothing to see yet.
+
+### whatsnew
+- Fresh updates · {v}
+- A little glow-up · {v}
+- What's new and cute · {v}
+- New drop · {v}
+- Freshly updated · {v}
+- The latest · {v}
+</script>
+<script type="application/json" id="whats-new">{"version":"1.74.0","lines":["Every theme is now checked for readable text, warnings, buttons and chart colours. A few colours shifted a shade, including the default's buttons.","Type a colour code such as #FF66AA for the standard look in your colour. If it wouldn't be readable, the app adjusts it and says so.","Goblin, Terminal (1983) and Girlypop have their own voice for cheers and greetings. Pain, safety and data messages always stay plain.","\"Reset to the default look\" is always there, and \"Use this theme's voice\" turns the jokes off."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9696,7 +9968,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.73.0';
+const APP_VERSION='1.74.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -11259,7 +11531,7 @@ const DAYS=[
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
-  profile:null,profileParams:{},profileSlider:null,effortWord:null,experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
+  profile:null,profileParams:{},profileSlider:null,effortWord:null,themeVoice:true,experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
   feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{},deprioritised:{muscles:[],patterns:[]},tour:{t1:'off',seen:{}},backupReminderDismissed:null,todayBriefing:null,onbDraft:null};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
@@ -11342,25 +11614,25 @@ const saveCfg=()=>{try{STORE.setItem(LS_CFG,JSON.stringify(CFG))}catch{}};
    Toast rewordings match exact messages (or a RegExp); anything not listed —
    every error and data-safety message — stays in plain wording. */
 const THEME_TOKENS=['bg','card','card-2','line','ink','muted','dim','hyp','str','peak','deload','on-block',
-  'accent','on-accent','accent-soft','warn','warn-soft','danger','go','skip','ok','steel','pr','on-pr','bar','backdrop','r','font'];
+  'accent','on-accent','accent-soft','accent-fill','warn','warn-soft','danger','go','skip','ok','caution','steel','pr','on-pr','bar','backdrop','r','font'];
 const BOW_MASK="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20'%3E%3Cpath d='M12 8C9 3 2 1 2 6s7 6 10 2zM12 8c3-5 10-7 10-2s-7 6-10 2zM11 9l-4 9 3-1 2 2 1-9zM13 9l4 9-3-1-2 2-1-9z'/%3E%3Ccircle cx='12' cy='8' r='2.2'/%3E%3C/svg%3E\") center/contain no-repeat";
 const THEMES=[
   {code:'LIGHT', name:'Light', blurb:'The standard look on a light background.',
-   tokens:{bg:'#F4F5F7','card':'#FFFFFF','card-2':'#EEF0F3',line:'#E3E6EB',ink:'#12151A',muted:'#5A626F',dim:'#8A919D',
-     hyp:'#2F6FEB',str:'#C46F00',peak:'#D9344F',deload:'#7A818C','on-block':'#FFFFFF',
-     accent:'#2F6FEB','on-accent':'#FFFFFF','accent-soft':'rgba(47,111,235,.10)',
-     warn:'#C46F00','warn-soft':'rgba(196,111,0,.10)',danger:'#D9344F',go:'#1F8F4C',skip:'#D9344F',ok:'#1F9D55',caution:'#B89400',
-     steel:'#9AA1AC',pr:'#C46F00','on-pr':'#FFFFFF',bar:'rgba(244,245,247,.94)',backdrop:'rgba(18,21,26,.42)',r:'14px',
+   tokens:{bg:'#F4F5F7','card':'#FFFFFF','card-2':'#EEF0F3',line:'#E3E6EB',ink:'#12151A',muted:'#5A626F',dim:'#878E9B',
+     hyp:'#2165EA',str:'#A55E00',peak:'#D62844',deload:'#696F79','on-block':'#FFFFFF',
+     accent:'#2165EA','on-accent':'#FFFFFF','accent-soft':'rgba(33,101,234,.10)',
+     warn:'#A55E00','warn-soft':'rgba(165,94,0,.10)',danger:'#D62844',go:'#1F8F4C',skip:'#D62844',ok:'#1F9D55',caution:'#B39000',
+     steel:'#8C94A0',pr:'#A55E00','on-pr':'#FFFFFF',bar:'rgba(244,245,247,.94)',backdrop:'rgba(18,21,26,.42)',r:'14px',
      font:'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'},
    // light background under a white status bar: an accent band behind the clock keeps it readable
    css:`:root{--e-1:0 1px 2px rgba(16,24,40,.05),0 0 0 1px rgba(16,24,40,.05);--e-2:0 16px 40px rgba(16,24,40,.18)}
      header{background:linear-gradient(to bottom,var(--accent) env(safe-area-inset-top),var(--bar) env(safe-area-inset-top))}`},
   {code:'GIRLYPOP', name:'Girlypop', blurb:'Soft pink, hot-pink accent, bows.',
    tokens:{bg:'#FFF0F5','card':'#FFFFFF','card-2':'#FFE3EE',line:'#F5C6D8',ink:'#3A1F2D',muted:'#80526A',dim:'#A87990',
-     hyp:'#7C62D9',str:'#C8661F',peak:'#23887E',deload:'#9C8792','on-block':'#FFFFFF',
-     accent:'#D6307A','on-accent':'#FFFFFF','accent-soft':'rgba(214,48,122,.12)',
-     warn:'#B86200','warn-soft':'rgba(184,98,0,.1)',danger:'#D21F3C',go:'#23874F',skip:'#D21F3C',ok:'#23874F',
-     steel:'#C9A3B5',pr:'#D6307A','on-pr':'#FFFFFF',bar:'rgba(255,240,245,.94)',backdrop:'rgba(90,30,60,.38)',r:'18px',
+     hyp:'#755AD7',str:'#AE581B',peak:'#207C73',deload:'#7E6873','on-block':'#FFFFFF',
+     accent:'#CE2972',caution:'#B18F0D','on-accent':'#FFFFFF','accent-soft':'rgba(206,41,114,.12)',
+     warn:'#A95A00','warn-soft':'rgba(184,98,0,.1)',danger:'#D21F3C',go:'#23874F',skip:'#D21F3C',ok:'#23874F',
+     steel:'#B8869E',pr:'#CE2972','on-pr':'#FFFFFF',bar:'rgba(255,240,245,.94)',backdrop:'rgba(90,30,60,.38)',r:'18px',
      font:'ui-rounded,"SF Pro Rounded",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'},
    // light background under a white status bar: a pink band behind the clock keeps it readable
    css:`header{background:linear-gradient(to bottom,var(--accent) env(safe-area-inset-top),var(--bar) env(safe-area-inset-top))}
@@ -11370,25 +11642,18 @@ const THEMES=[
      .pr::before{content:'';display:inline-block;width:11px;height:9px;margin-right:4px;vertical-align:-1px;background:currentColor;-webkit-mask:${BOW_MASK};mask:${BOW_MASK}}`},
   {code:'GOBLIN', name:'Goblin', blurb:'Moss, dirt and candlelight. For basement gyms.',
    tokens:{bg:'#11130C','card':'#1B1F13','card-2':'#252A1A',line:'#353B25',ink:'#ECE6CE',muted:'#A9A386',dim:'#858066',
-     hyp:'#86B84C',str:'#C98A44',peak:'#C2533F',deload:'#6F6A58','on-block':'#14170E',
-     accent:'#F0A830','on-accent':'#1A1408','accent-soft':'rgba(240,168,48,.15)',
-     warn:'#F2C14E','warn-soft':'rgba(242,193,78,.1)',danger:'#F05A45',go:'#6FA83F',skip:'#F05A45',ok:'#9BCB5A',
-     steel:'#5F6648',pr:'#F0A830','on-pr':'#1A1408',bar:'rgba(17,19,12,.95)',backdrop:'rgba(5,6,3,.82)',r:'8px',
+     hyp:'#86B84C',str:'#C98A44',peak:'#CB6B5A',deload:'#8C856F','on-block':'#14170E',
+     accent:'#F0A830',caution:'#F6D866','on-accent':'#1A1408','accent-soft':'rgba(240,168,48,.15)',
+     warn:'#F7DA80','warn-soft':'rgba(247,218,128,.1)',danger:'#F05A45',go:'#6FA83F',skip:'#F05A45',ok:'#9BCB5A',
+     steel:'#656C4C',pr:'#F0A830','on-pr':'#1A1408',bar:'rgba(17,19,12,.95)',backdrop:'rgba(5,6,3,.82)',r:'8px',
      font:'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'},
    css:`body{font-weight:500}h1,h2,h3,.day,.exname,.count,.snum{font-weight:850}.btn,.qlab{font-weight:700}
-     .card,.ex,.qblock,.sheet{box-shadow:inset 0 0 0 1px rgba(240,168,48,.06)}`,
-   toasts:[[/^Set (\d+) logged$/,'Set $1 hoarded'],['Warmup logged','Warmup gnawed'],['Top set logged','Top set hoarded'],
-     ['Rest done','Rest over. Back to the pit'],['Session saved','Loot stashed'],['Session ended','Back to the burrow'],
-     [/^New best on (.+) · (.+)$/,'New hoard record on $1 · $2'],['Set deleted','Set flung into the dark'],
-     ['Set updated','Set re-scratched'],['Program saved','Scheme scrawled'],['Workout cancelled','Fled the dungeon'],
-     ['Note saved','Scribbled on the wall'],['Note saved and sent','Scribbled on the wall and sent by crow'],
-     ['Backup downloaded','Hoard copied'],['Marked done','Done. Grr'],[/^Added (.+)$/,'Dragged in $1'],
-     [/^Swapped to (.+)$/,'Swapped for $1. Mine now'],['Rated','Grunted']]},
+     .card,.ex,.qblock,.sheet{box-shadow:inset 0 0 0 1px rgba(240,168,48,.06)}`},
   {code:'TERMINAL', name:'Terminal', blurb:'Phosphor green on black. 1983 called.',
    tokens:{bg:'#000000','card':'#030903','card-2':'#0A170B',line:'#174A1F',ink:'#3DFF6E',muted:'#27C24E',dim:'#1A8A37',
      hyp:'#C2FFD0',str:'#3DDC63',peak:'#1E9E40',deload:'#6E8A74','on-block':'#000000',
-     accent:'#3DFF6E','on-accent':'#000000','accent-soft':'rgba(61,255,110,.14)',
-     warn:'#FFC233','warn-soft':'rgba(255,194,51,.1)',danger:'#FF4A3D',go:'#3DFF6E',skip:'#FF4A3D',ok:'#3DFF6E',
+     accent:'#3DFF6E',caution:'#FBCB3C','on-accent':'#000000','accent-soft':'rgba(61,255,110,.14)',
+     warn:'#FFC233','warn-soft':'rgba(255,194,51,.1)',danger:'#FF4A3D',go:'#3DFF6E',skip:'#FF4A3D',ok:'#B6FFC8',
      steel:'#1F6B33',pr:'#3DFF6E','on-pr':'#000000',bar:'rgba(0,0,0,.96)',backdrop:'rgba(0,0,0,.86)',r:'0px',
      font:'ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace'},
    css:`*{border-radius:0!important}h1,h2,h3,.day,.count{letter-spacing:0}
@@ -11397,10 +11662,10 @@ const THEMES=[
      @keyframes tlblink{50%{opacity:0}}`},
   {code:'SUNSET', name:'Sunset', blurb:'Plum to burnt orange. Easy in a dim room.',
    tokens:{bg:'#1D1027','card':'#2A1631','card-2':'#3A1F39',line:'#4C2A44',ink:'#FBEDE4',muted:'#CDAAA6',dim:'#987580',
-     hyp:'#F6C177',str:'#F0874B',peak:'#E25C8C',deload:'#8A6C79','on-block':'#2A0F14',
-     accent:'#FF7A59','on-accent':'#2A0F14','accent-soft':'rgba(255,122,89,.16)',
+     hyp:'#F6C177',str:'#F0874B',peak:'#E25C8C',deload:'#9A7F8B','on-block':'#2A0F14',
+     accent:'#FF7A59',caution:'#FBD358','on-accent':'#2A0F14','accent-soft':'rgba(255,122,89,.16)',
      warn:'#FFD166','warn-soft':'rgba(255,209,102,.1)',danger:'#FF5A5F',go:'#6BCB77',skip:'#FF5A5F',ok:'#8CD790',
-     steel:'#7A5068',pr:'#FF7A59','on-pr':'#2A0F14',bar:'rgba(29,16,39,.94)',backdrop:'rgba(15,5,20,.8)',r:'14px',
+     steel:'#895A75',pr:'#FF7A59','on-pr':'#2A0F14',bar:'rgba(29,16,39,.94)',backdrop:'rgba(15,5,20,.8)',r:'14px',
      font:'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'},
    css:`html{background:#3B1A22}body{background:linear-gradient(180deg,#1D1027 0%,#2B1230 45%,#3B1A22 100%);min-height:100dvh}
      .card,.ex,.qblock{background:linear-gradient(165deg,#2A1631 0%,#35182C 60%,#3E1E26 100%)}
@@ -11408,8 +11673,8 @@ const THEMES=[
   {code:'HIGHVIS', name:'High visibility', blurb:'Maximum contrast, larger text. The accessibility option.',
    tokens:{bg:'#000000','card':'#0D0D0D','card-2':'#262626',line:'#8C8C8C',ink:'#FFFFFF',muted:'#E6E6E6',dim:'#C4C4C4',
      hyp:'#70C8FF',str:'#FFA94D',peak:'#FF7AA8',deload:'#B0B0B0','on-block':'#000000',
-     accent:'#FFE600','on-accent':'#000000','accent-soft':'rgba(255,230,0,.2)',
-     warn:'#FFE600','warn-soft':'rgba(255,230,0,.14)',danger:'#FF5A5A',go:'#4CFF7A',skip:'#FF5A5A',ok:'#4CFF7A',
+     accent:'#FFE600',caution:'#FBB72E','on-accent':'#000000','accent-soft':'rgba(255,230,0,.2)',
+     warn:'#FF9F1A','warn-soft':'rgba(255,159,26,.14)',danger:'#FF5A5A',go:'#4CFF7A',skip:'#FF5A5A',ok:'#4CFF7A',
      steel:'#A0A0A0',pr:'#FFE600','on-pr':'#000000',bar:'#000000',backdrop:'rgba(0,0,0,.9)',r:'10px',
      font:'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'},
    css:`html{zoom:1.1}body{font-weight:500}.muted,.dim,.tiny,.sm{font-weight:500}
@@ -11417,7 +11682,88 @@ const THEMES=[
      .card,.ex,.qblock,.sheet{border:1.5px solid #5A5A5A}.btn.ghost,.chip{border-color:#BDBDBD}
      :focus-visible{outline:3px solid var(--accent)!important;outline-offset:2px}`}
 ];
-const themeByCode=c=>{ c=String(c||'').trim().toUpperCase(); return c?THEMES.find(t=>t.code===c)||null:null; };
+/* ---- readability, enforced (v1.74, Appendix A Part 7a) ----
+   One set of rules for every theme: body text 4.5:1, captions and UI shapes and
+   chart marks 3:1 (WCAG 2.x contrast), chart series that appear together at least
+   ΔE 20 apart, and no saturated text on a saturated background. Built-in themes
+   must pass as written (§80 fails the build otherwise). A code you type as a colour
+   (#RRGGBB, an accent) is checked on apply and nudged until it passes. The chart
+   palette is the theme's checked tokens: accent, ok, warn, steel, block colours. */
+const DEFAULT_TOKENS={bg:'#0B0D12',card:'#16191F','card-2':'#1F232B',line:'#2A2F39',ink:'#F2F4F8',muted:'#8E95A3',dim:'#606876',
+  hyp:'#4C8DFF',str:'#E8A33D',peak:'#E8546B',deload:'#7A8190','on-block':'#0B0D12',accent:'#4C8DFF','on-accent':'#FFFFFF','accent-fill':'#2F6FEB',
+  warn:'#E8A33D',danger:'#E8546B',ok:'#4ADE80',caution:'#F2D04B',steel:'#6E7787',pr:'#E8A33D','on-pr':'#111111'};
+const THEME_RULES=[
+  ['ink',['bg','card','card-2'],4.5,'text'],['muted',['bg','card','card-2'],4.5,'secondary text'],['dim',['bg','card'],3,'captions and dates'],
+  ['accent',['bg','card'],4.5,'links and quiet buttons'],['on-accent',['accent-fill'],4.5,'button text'],['accent-fill',['card'],3,'button shape'],
+  ['warn',['bg','card'],4.5,'warning text'],['danger',['bg','card'],4.5,'warning text'],['ok',['card'],3,'status dot'],['caution',['card'],3,'status dot'],
+  ['hyp',['bg','card'],4.5,'block label'],['str',['bg','card'],4.5,'block label'],['peak',['bg','card'],4.5,'block label'],['deload',['bg','card'],4.5,'block label'],
+  ['on-block',['hyp','str','peak'],4.5,'text on a block colour'],['on-pr',['pr'],4.5,'PR badge'],['steel',['card'],3,'chart bars']];
+const SERIES_PAIRS=[['accent','ok'],['accent','warn'],['ok','warn'],['hyp','str'],['hyp','peak'],['str','peak'],['accent','steel']];
+const TEXT_ROLES=['ink','muted','dim','accent','warn','danger'];
+function rgbOf(c, under){
+  c=String(c||'').trim(); let m=c.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if(m){ let h=m[1]; if(h.length===3) h=h.split('').map(x=>x+x).join(''); return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)); }
+  m=c.match(/^rgba?\(([^)]+)\)$/i);
+  if(m){ const p=m[1].split(',').map(parseFloat), a=p.length>3?p[3]:1, u=under||[0,0,0]; return [0,1,2].map(i=>Math.round(p[i]*a+u[i]*(1-a))); }
+  return null;
+}
+const relLum=rgb=>{ const f=v=>{ v/=255; return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4); }; return 0.2126*f(rgb[0])+0.7152*f(rgb[1])+0.0722*f(rgb[2]); };
+const contrastOf=(a,b)=>{ const A=relLum(a),B=relLum(b); return (Math.max(A,B)+0.05)/(Math.min(A,B)+0.05); };
+function labOf(rgb){ const f=v=>{ v/=255; return v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4); }; const [r,g,b]=rgb.map(f);
+  const h=t=>t>0.008856?Math.cbrt(t):7.787*t+16/116;
+  const X=h((r*0.4124+g*0.3576+b*0.1805)/0.95047), Y=h(r*0.2126+g*0.7152+b*0.0722), Z=h((r*0.0193+g*0.1192+b*0.9505)/1.08883);
+  return [116*Y-16,500*(X-Y),200*(Y-Z)]; }
+const deltaE=(a,b)=>{ const A=labOf(a),B=labOf(b); return Math.hypot(A[0]-B[0],A[1]-B[1],A[2]-B[2]); };
+function hslOf([r,g,b]){ r/=255;g/=255;b/=255; const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn; let h=0,s=0; const l=(mx+mn)/2;
+  if(d){ s=l>0.5?d/(2-mx-mn):d/(mx+mn); h=mx===r?((g-b)/d+(g<b?6:0)):mx===g?(b-r)/d+2:(r-g)/d+4; h/=6; } return [h,s,l]; }
+function rgbFromHsl([h,s,l]){ const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q; const f=t=>{ if(t<0)t+=1; if(t>1)t-=1; return t<1/6?p+(q-p)*6*t:t<1/2?q:t<2/3?p+(q-p)*(2/3-t)*6:p; };
+  return [f(h+1/3),f(h),f(h-1/3)].map(v=>Math.round(v*255)); }
+const hexOf=rgb=>'#'+rgb.map(v=>Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0')).join('').toUpperCase();
+const saturated=rgb=>{ const [,s,l]=hslOf(rgb); return s>=0.8&&l>0.2&&l<0.8; };
+/* Every token a theme ends up with: its own, else the default's (accent-fill: its accent). */
+function themeTokens(t){
+  const own=(t&&t.tokens)||{};
+  return {...DEFAULT_TOKENS, ...own, 'accent-fill':own['accent-fill']||(t?own.accent:null)||DEFAULT_TOKENS['accent-fill']};
+}
+/* Every rule a token set breaks, in words. Empty = readable. */
+function themeReport(k){
+  const out=[], bgRgb=rgbOf(k.bg);
+  THEME_RULES.forEach(([fg,bgs,min,what])=>bgs.forEach(bg=>{ const B=rgbOf(k[bg],bgRgb), F=rgbOf(k[fg],B); if(!F||!B) return;
+    const r=contrastOf(F,B); if(r<min-1e-9) out.push({fg,bg,min,ratio:Math.round(r*100)/100,what}); }));
+  SERIES_PAIRS.forEach(([a,b])=>{ const A=rgbOf(k[a],rgbOf(k.card)), B=rgbOf(k[b],rgbOf(k.card)); if(!A||!B) return; const d=deltaE(A,B); if(d<20) out.push({fg:a,bg:b,min:20,ratio:Math.round(d*10)/10,what:'chart colours too alike'}); });
+  TEXT_ROLES.forEach(fg=>['bg','card'].forEach(bg=>{ const B=rgbOf(k[bg],bgRgb), F=rgbOf(k[fg],B); if(F&&B&&saturated(F)&&saturated(B)) out.push({fg,bg,min:0,ratio:0,what:'saturated text on a saturated background'}); }));
+  return out;
+}
+/* Nudge failing colours' lightness (hue and saturation kept) until every rule
+   passes. Returns {tokens, changed:[token names]}. */
+function readableTokens(k0){
+  const k={...k0}, changed=new Set();
+  for(let pass=0;pass<6;pass++){
+    const bad=themeReport(k); if(!bad.length) break;
+    bad.forEach(x=>{
+      const fixFg=x.fg==='on-accent'?'accent-fill':x.fg==='on-block'||x.fg==='on-pr'?null:x.fg;
+      if(x.what==='chart colours too alike'||x.what==='saturated text on a saturated background'){
+        const c=rgbOf(k[x.what==='chart colours too alike'?x.bg:x.fg],rgbOf(k.card)); if(!c) return; const [h,s,l]=hslOf(c), up=relLum(rgbOf(k.card))<0.18;
+        k[x.what==='chart colours too alike'?x.bg:x.fg]=hexOf(rgbFromHsl([h,Math.min(s,0.75),Math.max(0,Math.min(1,l+(up?0.08:-0.08)))])); changed.add(x.what==='chart colours too alike'?x.bg:x.fg); return; }
+      if(!fixFg){ const B=rgbOf(k[x.bg]); k[x.fg]=contrastOf([255,255,255],B)>=contrastOf([11,13,18],B)?'#FFFFFF':'#0B0D12'; changed.add(x.fg); return; }
+      const target=x.fg==='on-accent'?rgbOf(k['on-accent']):rgbOf(k[x.bg],rgbOf(k.bg));
+      let c=rgbOf(k[fixFg],rgbOf(k.card)); const [h,s,l0]=hslOf(c); let l=l0; const up=relLum(target)<0.18;
+      for(let i=0;i<100&&contrastOf(x.fg==='on-accent'?target:c,x.fg==='on-accent'?c:target)<x.min;i++){ l=Math.max(0,Math.min(1,l+(up?0.01:-0.01))); c=rgbFromHsl([h,s,l]); }
+      k[fixFg]=hexOf(c); changed.add(fixFg);
+    });
+  }
+  return {tokens:k, changed:[...changed]};
+}
+/* A colour typed as a code (#RRGGBB) is a theme: the standard look with that accent,
+   made readable before it's applied. */
+function customTheme(code){
+  const m=String(code||'').trim().match(/^#?([0-9a-f]{6})$/i); if(!m) return null;
+  const hx='#'+m[1].toUpperCase(), base={...DEFAULT_TOKENS, accent:hx, 'accent-fill':hx};
+  const r=readableTokens(base), rgb=rgbOf(r.tokens.accent);
+  return {code:hx, name:'Your colour '+hx, blurb:'The standard look with your accent.', custom:true, adjusted:r.changed,
+    tokens:{...r.tokens,'accent-soft':'rgba('+rgb.join(',')+',.16)'}};
+}
+const themeByCode=c=>{ c=String(c||'').trim().toUpperCase(); if(!c) return null; return THEMES.find(t=>t.code===c)||customTheme(c)||null; };
 let THEME=null, THEME_ON;
 function applyTheme(){
   try{
@@ -11426,15 +11772,49 @@ function applyTheme(){
     THEME=t; THEME_ON=code;
     let st=document.getElementById('themecss');
     if(!st){ st=document.createElement('style'); st.id='themecss'; document.head.appendChild(st); }
-    st.textContent=t?':root{'+THEME_TOKENS.map(k=>'--'+k+':'+t.tokens[k]).join(';')+(t.tokens.caution?';--caution:'+t.tokens.caution:';--caution:color-mix(in srgb,var(--warn) 55%,#F5D547)')+'}\n'+(t.css||''):'';
+    const tk=themeTokens(t);
+    st.textContent=t?':root{'+THEME_TOKENS.filter(k=>tk[k]!=null).map(k=>'--'+k+':'+tk[k]).join(';')+'}\n'+(t.css||''):'';
     if(t) document.documentElement.dataset.themed=code; else delete document.documentElement.dataset.themed;
     document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.setAttribute('content',t?t.tokens.bg:m.getAttribute('data-default')||'#0B0D12'));
   }catch(err){ console.error('theme failed', err); }
 }
+/* ---- voice packs (v1.74, Appendix A Part 7b) ----
+   docs/voices.md, embedded as voices-md: per theme code, lines for nine moments.
+   A voice replaces only those moments' lines; everything about pain, injuries,
+   safety, consent, the "why" lines, errors and your data stays in the plain
+   voice (§81 checks every pack). Off with "Use this theme's voice". */
+const VOICE_MOMENTS=['checkin','start','set','pr','rest','finish','streak','empty','whatsnew'];
+function parseVoices(md){
+  const out={}; let code=null, mom=null;
+  String(md||'').split(/\r?\n/).forEach(l=>{
+    let m=l.match(/^## ([A-Z0-9]+)\s*$/); if(m){ code=m[1]; out[code]={}; mom=null; return; }
+    m=l.match(/^### ([a-z]+)\s*$/); if(m&&code){ mom=VOICE_MOMENTS.includes(m[1])?m[1]:null; if(mom) out[code][mom]=[]; return; }
+    m=l.match(/^- (.+)$/); if(m&&code&&mom) out[code][mom].push(m[1].trim());
+  });
+  return out;
+}
+const VOICES=(()=>{ try{ return parseVoices(document.getElementById('voices-md').textContent); }catch{ return {}; } })();
+const voiceOn=()=>!!(THEME&&VOICES[THEME.code]&&CFG.themeVoice!==false);
+function voice(moment, fallback, vars){
+  if(!voiceOn()) return fallback;
+  const L=VOICES[THEME.code][moment]; if(!L||!L.length) return fallback;
+  return L[Math.floor(Math.random()*L.length)].replace(/\{(\w+)\}/g,(m,k)=>vars&&vars[k]!=null?String(vars[k]):m);
+}
+/* Toasts: only the four celebratory ones can be voiced. Every other message,
+   including anything about data, errors or safety, passes through unchanged. */
 function themeToast(m){
-  const list=THEME&&THEME.toasts; if(!list) return m;
-  for(const [k,v] of list){ if(typeof k==='string'?k===m:k.test(m)) return typeof k==='string'?v:m.replace(k,v); }
+  if(!voiceOn()) return m;
+  let x=m.match(/^Set (\d+) logged$/); if(x) return voice('set',m,{n:x[1]});
+  x=m.match(/^New best on (.+) · (\+.+)$/); if(x) return voice('pr',m,{ex:x[1],gain:x[2]});
+  if(m==='Rest done') return voice('rest',m);
+  if(m==='Session saved') return voice('finish',m);
   return m;
+}
+/* Weeks in a row (ending this week or last) with at least one finished session. */
+function weeksInARow(){
+  const wk=ts=>Math.floor((weekStart(new Date(ts)).getTime())/(7*864e5));
+  const have=new Set(LOG.filter(e=>e.type==='session_end'&&!e.cancelled&&(e.sets_done==null||e.sets_done>0)).map(e=>wk(e.ts)));
+  let w=wk(Date.now()); if(!have.has(w)) w--; let n=0; while(have.has(w)){ n++; w--; } return n;
 }
 
 /* An in-progress session survives a reload. Without this, backgrounding the
@@ -12962,7 +13342,7 @@ function whatsNewCard(){
   if(!WHATS_NEW||WHATS_NEW.version!==APP_VERSION||CFG.seenVersion===APP_VERSION||DEMO) return null;
   if(!LOG.some(e=>e.type==='set')){ CFG.seenVersion=APP_VERSION; saveCfg(); return null; }   // a new install has nothing to compare against
   const c=el('div','card pad');
-  c.appendChild(el('div','row between','<span style="font-weight:650">What\'s new in '+esc(APP_VERSION)+'</span>'));
+  c.appendChild(el('div','row between','<span style="font-weight:650">'+esc(voice('whatsnew','What\'s new in '+APP_VERSION,{v:APP_VERSION}))+'</span>'));
   const ul=el('ul','sm'); ul.style.cssText='margin:var(--sp-2) 0 0;padding-left:var(--sp-4);line-height:1.5';
   (WHATS_NEW.lines||[]).forEach(t=>ul.appendChild(el('li','',esc(t))));
   c.appendChild(ul);
@@ -15387,6 +15767,7 @@ function startSession(day){
     openIdx:0,ratings:{},adj:null,score:null,
     slots:day.slots.map(s=>({...s,sets_target:s.sets,sets:[]}))};
   session.startedAt=Date.now(); saveSession(); seedDraft(session.slots[0]); openCheckin();
+  { const vs=voice('start',''); if(vs) setTimeout(()=>toast(vs),350); }
 }
 /* Plain-language account of how a prescribed number was reached: the block,
    where the load came from, and each adjustment that actually applied. */
@@ -17894,7 +18275,8 @@ function jointChips(hostSel,store){
 
 function openCheckin(){
   const st={bodyweight:null,sleep:3,motivation:3,recovery:3,sore:{},joints:{}};
-  sheet(`<h2 data-tour="checkin" style="font-size:var(--fs-5);margin-bottom:var(--sp-3)">Readiness check-in</h2><div id="ck"></div>
+  const greet=voice('checkin','');
+  sheet(`<h2 data-tour="checkin" style="font-size:var(--fs-5);margin-bottom:var(--sp-3)">Readiness check-in</h2>${greet?'<div class="muted sm" style="margin:calc(-1 * var(--sp-2)) 0 var(--sp-3)">'+esc(greet)+'</div>':''}<div id="ck"></div>
     <div class="row" style="gap:var(--sp-2)">
       <button class="btn ghost grow" id="ckskip">Skip</button>
       <button class="btn go grow" id="ckgo">Start training</button></div>`);
@@ -18716,7 +19098,7 @@ function renderHist(){
     }
     return r;
   };
-  if(!rep||!own.length) cn.appendChild(el('div','empty','Tap the ✎ button any time to jot something down.<br>Notes sync to your backup sheet automatically.'));
+  if(!rep||!own.length){ const vo=voice('empty',''); cn.appendChild(el('div','empty',(vo?esc(vo)+'<br>':'')+'Tap the ✎ button any time to jot something down.<br>Notes sync to your backup sheet automatically.')); }
   if(rep){
     // newest 8 first; the rest one tap away — the copy below holds exactly this list
     (NOTES_SHOW_ALL?own:own.slice(0,8)).forEach(n=>cn.appendChild(noteRow(n)));
@@ -18815,7 +19197,7 @@ function openSessionSummary(endEv, score){
       ${moved||`<div class="dim tiny" style="margin-top:var(--sp-1)">${Object.keys(a).some(id=>b[id])?'Same top sets as last time.':'No lifts in common with last time.'}</div>`}`;
   }
   sheet(`<h2 style="font-size:var(--fs-4);margin-bottom:2px">${esc(endEv.day_name||'Session')} done</h2>
-    <div class="muted tiny" style="margin-bottom:var(--sp-3)">${new Date(endEv.ts).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</div>
+    <div class="muted tiny" style="margin-bottom:var(--sp-3)">${new Date(endEv.ts).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}${(n=>n>=2?' · '+esc(voice('streak',n+' weeks in a row with a session',{weeks:n})):'')(weeksInARow())}</div>
     <div class="sgrid" style="border-radius:var(--r-btn);overflow:hidden;margin-bottom:var(--sp-3)">
       <div class="scell"><div class="snum">${ss.length}</div><div class="slab">${ss.length===1?'set':'sets'}</div></div>
       <div class="scell"><div class="snum">${ton?Math.round(ton).toLocaleString():'—'}</div><div class="slab">lb moved</div></div>
@@ -20320,7 +20702,7 @@ function wordsBlock(){
 function themeBlock(){
   const b=el('div','qblock');
   b.innerHTML=`<div class="qlab">Have a code?</div>
-    <div class="field">Theme codes change how the app looks. Nothing else.</div>
+    <div class="field">Theme codes change how the app looks. Nothing else. A colour code such as #FF66AA gives the standard look with your colour.</div>
     <div class="row" style="gap:var(--sp-2)">
       <input type="text" id="thcode" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Enter a code"
         style="flex:1;min-width:0;background:var(--card-2);border:none;border-radius:var(--r-s);color:var(--ink);padding:var(--sp-3);font:inherit">
@@ -20339,14 +20721,19 @@ function themeBlock(){
   const msg=b.querySelector('#thmsg');
   b.querySelector('#thgo').onclick=()=>{
     const t=themeByCode(b.querySelector('#thcode').value);
-    if(!t){ msg.textContent='No theme by that name.'; return; }
-    CFG.theme=t.code; saveCfg(); applyTheme(); b.replaceWith(themeBlock());
+    if(!t){ msg.textContent='No theme by that name. A colour code such as #FF66AA works too.'; return; }
+    CFG.theme=t.code; saveCfg(); applyTheme(); const nb=themeBlock(); b.replaceWith(nb);
+    if(t.custom&&t.adjusted&&t.adjusted.length) nb.querySelector('#thmsg').textContent='On: '+t.name+'. Adjusted '+(t.adjusted.includes('accent')||t.adjusted.includes('accent-fill')?'the colour':'some colours')+' so text stays readable.';
   };
-  if(THEME){
-    const r=el('button','btn s','Reset to the default look'); r.style.marginTop='var(--sp-2)';
-    r.onclick=()=>{ CFG.theme=null; saveCfg(); applyTheme(); b.replaceWith(themeBlock()); };
-    b.appendChild(r);
-  }
+  if(THEME&&VOICES[THEME.code]){ const vl=el('label',''); vl.style.cssText='display:flex;gap:var(--sp-2);align-items:center;margin-top:var(--sp-2);cursor:pointer';
+    vl.innerHTML='<input type="checkbox"'+(CFG.themeVoice!==false?' checked':'')+'><span class="sm">Use this theme\'s voice</span>';
+    vl.querySelector('input').onchange=e=>{ CFG.themeVoice=e.target.checked; saveCfg(); render(); }; b.appendChild(vl);
+    b.appendChild(el('div','dim tiny','Only cheers and greetings change. Anything about pain, safety or your data stays plain.')); }
+  // always there, one tap
+  const r=el('button','btn s','Reset to the default look'); r.style.marginTop='var(--sp-2)';
+  if(!THEME){ r.disabled=true; r.style.opacity='.5'; }
+  r.onclick=()=>{ CFG.theme=null; saveCfg(); applyTheme(); b.replaceWith(themeBlock()); toast('Back to the default look'); };
+  b.appendChild(r);
   return b;
 }
 

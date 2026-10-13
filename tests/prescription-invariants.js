@@ -46,12 +46,13 @@ const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets
   'programPosition','splitKeyFor','todayDay','generatedDays','MUSCLE_ORDER','sessionTonnage','primaryMuscle','lintRoadmap','SPLITS','roundLoads','shownLoad','LB','SCALE_SPEC','fromNeutral','jointDriftNote','jointBaseline','splitOf','weekTemplate','validWeek','DAY_TYPES','WEEK_STYLES','styleOfWeek','weekCoverage','splitFor','openFeedbackNotes','notesReport','applyRepRange','applyBarOverrides','loadable','warmupRamp','sessionBests','rebalance','rebalanceDraft','refE1','aimFor','stepUp','draftLocked','loadFor','diaryEntries','exNote','saveExNote','NOTE_TAGS','familyOf','mainEligible','customSpecificity','resolveEx','modSig','modLabel','modLabelFromSig','lastSetFor','prIds','bestE1RM','tracksFor','setTrack','cleanMods','buildDay','backoffLoad','tmFor','ensureInitialTM','isRealizationWeek','amrapPct','amrapRx','checklistItems','videoDue','stickingPending','PROFILES','profileParams','activeProposals','sequenceBlocks','PROFILE_ORDER','migratePeak','addMaintenance','effortRamp','muscleDropping','capSessionVolume','deloadSignals','weeksWithoutDeload','builderDefaults','builderPlan','applyBuilder','EXPERIENCE','blockLen','rateOf','rateState','tmFor','RATE_LABEL','setE1RM','moveHistory','lastHistoryMove','undoHistoryMove',
   'stallState','stallPlan','stallCard','interventions','activeIntervention','startIntervention','stopIntervention','ivOutcome','ivFailures',
   'ownRatios','stickingDiagnosis','specializationCheck','addedExposureFor','applyInterventions','addPracticeDays','rpeScatter','STALL_TABLES',
-  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark','THEMES','lastTimeRows','navPush','navDrop','pickSlot','syncCurrent','advanceIfDone','ruleCurrent','editLogged','deleteLogged','correctionMap','corrected','dialRevealed','undoHistoryMove','plainText','CLINICAL_WORDS','CUES','painKinds','editPlan','planFor','startSession','savePlanToProgram','lastDayLine','newSlotFor','demoSeedPersona','equipmentScore','ONB_GYMS','estimateFromSet','saveKnown','e1rm','knownDefault','effortText','equipMissing','sliderParams','sliderProfile','sliderStop'];
+  'FAMILY_STICKING','TRACKED_FAMILIES','variantOptions','deloadStopsVolume','inDeficit','onTrack','IV_SHARE','flagFor','applyShape','suggestionAccuracy','allOutNext','importBackup','finishImport','applySetupLink','mergeCustom','buildPrep','BUILDER_QUICK','ENGINE','ENGINE_IDS','trackHistory','floorFor','ceilingFor','stepDown','focusedDeload','startFocusedDeload','fdCovers','dialEffective','calibratingNow','traceLines','bandOf','globalReadiness','soreGroupsFor','adjHits','applyReadinessSets','INJ','hasLegacy','exTags','modSig','exerciseVerdict','jointQuestionFor','likelyFlaggedFor','isWarning','libraryFlag','painRule','painKinds','activeRehabPlans','startRehabPlan','rehabPlan','INJ_BY','phaseMinWeeks','injConsented','INJ_CONSENT','INJ_DISCLAIMER','redFlagged','clearPainData','preSessionCues','activeProposals','generatedDays','dialRevealed','dialStated','dashBands','jointBand','fatigueBand','coarseHold','APP_VERSION','CUT_NAME','overallJointScore','applyStepOverrides','gridFloor','STEP_DEFAULT','authoredFlag','FLAGS','FLAGS_ADDED','repsAfterStep','implementOf','IMPLEMENT_LABEL','genChain','resolveEx','exMatches','builtinTwin','cueFor','CUES','strapsApply','isChartFree','INJ','LIB_GEN','IMPLEMENTS','libraryFlag','bwClass','trackRoot','sysOf','typedOf','engLb','bwInfoAt','latestBodyweight','classTypedRx','BW_CLASS','classProgress','handoffDue','classVersion','isMainLift','liftBests','stallState','e1rmSeries','bestE1RM','activeProposals','amrapRx','applyStepOverrides','smithUnasked','barKg','applyBarOverrides','solvePlates','BAR_DEFAULT','setE1RM','previewRx','warmupRamp','MOVEMENT_TYPES_LIST','directMuscles','depByMuscle','parseTutorial','STORE','backupDue','backupReminder','restoreFromText','backupText','lastTimeHtml','typedLabel','buildBriefing','briefRow','GLOSSARY','readinessRows','jointDoes','ICONS','icon','BAND_COLOR','DESIGN_DIRECTION','guideSearch','guideEntries','miniSpark','THEMES','lastTimeRows','navPush','navDrop','pickSlot','syncCurrent','advanceIfDone','ruleCurrent','editLogged','deleteLogged','correctionMap','corrected','dialRevealed','undoHistoryMove','plainText','CLINICAL_WORDS','CUES','painKinds','editPlan','planFor','startSession','savePlanToProgram','lastDayLine','newSlotFor','demoSeedPersona','equipmentScore','ONB_GYMS','estimateFromSet','saveKnown','e1rm','knownDefault','effortText','equipMissing','sliderParams','sliderProfile','sliderStop','DEFAULT_TOKENS','themeReport','themeTokens','themeByCode','readableTokens','VOICES','VOICE_MOMENTS','voice','voiceOn','themeToast','applyTheme'];
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
 const EMBEDS={injuries:EMBED('injuries'),'movement-tags':EMBED('movement-tags'),'coaching-cues':EMBED('coaching-cues'),'glossary-md':(html.match(/<script type="text\/markdown" id="glossary-md">([\s\S]*?)<\/script>/)||[])[1]||'',
-  'guide-md':(html.match(/<script type="text\/markdown" id="guide-md">([\s\S]*?)<\/script>/)||[])[1]||''};
+  'guide-md':(html.match(/<script type="text\/markdown" id="guide-md">([\s\S]*?)<\/script>/)||[])[1]||'',
+  'voices-md':(html.match(/<script type="text\/markdown" id="voices-md">([\s\S]*?)<\/script>/)||[])[1]||''};
 function docWithData(){ const d=stub(); return new Proxy(d,{get(t,k){ if(k==='getElementById') return id=>id in EMBEDS?{textContent:EMBEDS[id]}:stub(); return d[k]; }}); }
 let LOAD_FN=null;
 function load(events, withData){
@@ -3444,6 +3445,60 @@ section('79. the strength ↔ size slider: five stops are the five profiles; eve
   ok(/'Changes apply from the next block\. The block you\\'re in stays as it is\.'/.test(src)||/Changes apply from the next block/.test(src),'Edit program says changes apply from the next block','');
   ok(/O\.path==='together'\|\|O\.fineTune/.test(src),'setup: open in Build it together, under Fine-tune in Build it for me','');
   console.log('  stops = profiles · '+n+' positions valid · strength share falls along the slider · setup and Edit program');
+}
+
+section('80. theme codes are readable: every built-in passes every rule; a typed colour is nudged until it does');
+{
+  const A=load([]);
+  // the default tokens in the script match the stylesheet's :root
+  const root=(html.match(/:root\{([\s\S]*?)\n\}/)||[])[1]||''; const css={}; root.replace(/--([a-z0-9-]+):\s*([^;]+);/g,(m,k,v)=>{ css[k]=v.trim(); });
+  const norm=v=>String(v).toUpperCase().replace(/^#FFF$/,'#FFFFFF').replace(/^#111$/,'#111111');
+  const drift=Object.entries(A.DEFAULT_TOKENS).filter(([k,v])=>css[k]&&norm(css[k])!==norm(v)).map(([k,v])=>k+' '+v+' vs css '+css[k]);
+  ok(drift.length===0,'DEFAULT_TOKENS matches :root',drift.join(', '));
+  const themes=[{code:'(default)',tokens:{}}].concat(A.THEMES);
+  themes.forEach(t=>{ const rep=A.themeReport(A.themeTokens(t.code==='(default)'?null:t));
+    ok(rep.length===0,'theme '+t.code+' passes every readability rule',rep.slice(0,4).map(x=>x.what+': '+x.fg+' on '+x.bg+' '+x.ratio+' < '+x.min).join(' | ')); });
+  ok(A.THEMES.length>=6,'every built-in theme is audited ('+A.THEMES.length+' + the default)','');
+  // a typed colour: nudged until it passes, and the change is reported
+  ['#FFFF00','#00FF00','#0000FF','#FF00FF','#202020','#FFFFFF','#E8546B','#7C62D9'].forEach(c=>{
+    const t=A.themeByCode(c); const rep=t?A.themeReport(A.themeTokens(t)):['none'];
+    ok(t&&t.custom&&rep.length===0,'a typed colour '+c+' becomes a readable theme',rep.slice?rep.slice(0,2).map(x=>x.what+' '+x.fg+'/'+x.bg+' '+x.ratio).join(' | '):'');
+  });
+  const dark=A.themeByCode('#202020'); ok(dark.adjusted.length>0,'a colour too dark to read on the cards is adjusted, and the app knows what it changed',JSON.stringify(dark.adjusted));
+  ok(A.themeByCode('nonsense')===null&&A.themeByCode('girlypop').code==='GIRLYPOP','codes still work by name; anything else is not a theme','');
+  ok(/Reset to the default look/.test(src)&&/Adjusted /.test(src),'reset is always there, and an adjusted colour says so','');
+  console.log('  '+themes.length+' themes pass: text 4.5:1, captions/shapes/marks 3:1, chart colours ΔE 20, no saturated-on-saturated · typed colours nudged');
+}
+
+section('81. voice packs: nine moments only; safety, pain, errors and data are never voiced');
+{
+  const vm=html.match(/<script type="text\/markdown" id="voices-md">([\s\S]*?)<\/script>/);
+  ok(vm&&vm[1]===fs.readFileSync(path.join(__dirname,'..','docs','voices.md'),'utf8'),'docs/voices.md is embedded byte-for-byte (node tools/embed-guide.js)','');
+  const A=load([],true), V=A.VOICES||{};
+  ['GOBLIN','TERMINAL','GIRLYPOP'].forEach(c=>{ ok(V[c]&&A.VOICE_MOMENTS.every(m=>(V[c][m]||[]).length>=5),'the '+c+' voice has 5+ lines for every moment',c+': '+A.VOICE_MOMENTS.map(m=>m+' '+((V[c]||{})[m]||[]).length).join(', ')); });
+  // no voice line touches safety, pain, injuries, the why lines, errors or data
+  const BANNED=/\b(pain|painful|injur\w*|hurt\w*|ache\w*|sore\w*|joint\w*|doctor|physio\w*|medical|deload\w*|sick|consent|backup\w*|data|sheet|error\w*|delete\w*|lost|warning|flag\w*|swap\w*|red flag|disclaimer|safe\w*)\b/i;
+  const bad=[]; Object.entries(V).forEach(([c,ms])=>Object.entries(ms).forEach(([m,L])=>L.forEach(l=>{ if(BANNED.test(l)||/!/.test(l)) bad.push(c+'/'+m+': '+l); })));
+  ok(bad.length===0,'no voice line mentions pain, injuries, safety, errors or data (and none shouts)',bad.slice(0,3).join(' | '));
+  // only the four celebratory toasts can change; every other toast in the app passes through untouched
+  const lits=[...new Set([...src.matchAll(/toast\('([^'\\]+)'\)/g)].map(m=>m[1]))];
+  const extra=['Backup downloaded','Set deleted','Cluster deleted','Warmup deleted','Set updated','Workout cancelled','Log erased','Note saved','Note saved and sent','Program saved','Session ended'];
+  const allowed=new Set(['Rest done','Session saved']);
+  Object.keys(V).forEach(code=>{
+    const B=load([],true); B.CFG.theme=code; B.CFG.themeVoice=true;
+    const tb=B.themeByCode(code); if(!tb) return;
+    // themeToast reads THEME: set it through applyTheme's state
+    B.CFG.theme=code; try{ B.applyTheme(); }catch(e){}
+    const changed=lits.concat(extra).filter(m=>B.themeToast(m)!==m);
+    ok(changed.every(m=>allowed.has(m)),code+': only "Rest done" and "Session saved" (plus set/PR toasts) are voiced among the app\'s toasts',changed.filter(m=>!allowed.has(m)).slice(0,4).join(' | '));
+    const v=B.themeToast('Set 3 logged'), p=B.themeToast('New best on Bench press · +5 lb');
+    ok(B.voiceOn()&&v!=='Set 3 logged'&&/3/.test(v)&&!/\{/.test(v)&&/Bench press/.test(p)&&/\+5 lb/.test(p),code+': set and PR toasts are voiced, with their numbers filled in',v+' | '+p);
+    B.CFG.themeVoice=false; ok(B.themeToast('Set 3 logged')==='Set 3 logged'&&B.voice('checkin','')==='','"Use this theme\'s voice" off: the plain voice everywhere','');
+  });
+  // safety copy is never routed through voice()
+  ok(!/voice\([^)]*(INJ_DISCLAIMER|INJ_CONSENT|INJ_REDFLAG_COPY|painRule|logError)/.test(src),'disclaimers, consent, red flags, pain rules and errors never go through voice()','');
+  ok((src.match(/voice\('(\w+)'/g)||[]).every(x=>A.VOICE_MOMENTS.includes(x.slice(7,-1))),'every voice() call is one of the nine moments',(src.match(/voice\('(\w+)'/g)||[]).join(' '));
+  console.log('  3 voices × 9 moments · no safety words · only celebratory toasts change · switch off works');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

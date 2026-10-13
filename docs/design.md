@@ -46,12 +46,24 @@ Seven roles. The CSS name on the left is what components use. The older names
 | Role | CSS | Dark | Light | Use |
 |---|---|---|---|---|
 | surface | `--bg`, `--surface`, `--surface-2`, `--line` | #0B0D12 / #16191F / #1F232B / #2A2F39 | #F4F5F7 / #FFFFFF / #EEF0F3 / #E3E6EB | page, cards, inputs and chips, dividers |
-| text | `--text`, `--muted`, `--dim` | #F2F4F8 / #8E95A3 / #5B6370 | #12151A / #5A626F / #8A919D | primary, secondary, tertiary text |
-| accent | `--accent`, `--on-accent`, `--accent-soft` | #4C8DFF | #2F6FEB | buttons, selection, links, charts. Not for status. |
+| text | `--text`, `--muted`, `--dim` | #F2F4F8 / #8E95A3 / #606876 | #12151A / #5A626F / #878E9B | primary, secondary, tertiary text |
+| accent | `--accent`, `--on-accent`, `--accent-soft`, `--accent-fill` | #4C8DFF (fill #2F6FEB) | #2165EA | links, selection, charts; buttons and selected chips use the fill, which carries the button text. Not for status. |
 | ok | `--ok` | #4ADE80 | #1F9D55 | the "no change" dot |
-| caution | `--caution` | #F2D04B | #B89400 | the "careful" dot: longer warm-up, no step-ups |
-| warn | `--warn` | #E8A33D | #C46F00 | the "held" dot, condition warnings, suggested numbers |
-| stop | `--stop` (= `--danger`) | #E8546B | #D9344F | the "lighter" dot, destructive actions, failed reps |
+| caution | `--caution` | #F2D04B | #B39000 | the "careful" dot: longer warm-up, no step-ups |
+| warn | `--warn` | #E8A33D | #A55E00 | the "held" dot, condition warnings, suggested numbers |
+| stop | `--stop` (= `--danger`) | #E8546B | #D62844 | the "lighter" dot, destructive actions, failed reps |
+
+**Readability, enforced (v1.74).** Every theme, the default included, passes
+the same rules (`THEME_RULES` in index.html; §80 fails the build otherwise):
+- **Text:** body and secondary text at least 4.5:1 on every surface,
+  including warning text, links and the labels on block colours.
+- **Shapes and marks:** captions, button shapes, status dots and chart marks
+  at least 3:1.
+- **Chart colours** that appear together are at least ΔE 20 apart.
+- **No saturated text on a saturated background.**
+
+A colour code you type (#RRGGBB) gets the same check, and its lightness is
+nudged until it passes. The chart palette is the theme's checked tokens.
 
 Block colours (`--hyp`, `--str`, `--peak`, `--deload`) only appear where the
 colour means a block type. The four dots map one to one: no change → ok,

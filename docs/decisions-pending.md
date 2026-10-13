@@ -869,3 +869,66 @@ lines (D21).
 
 **To undo:** `profileSlider`, `sliderParams` and the `set-balance` block in
 `openSettings`.
+
+---
+
+## D47. Readable themes (v1.74) ★
+
+**Every built-in theme failed something,** the default included. For
+example, white text on the default blue button was 3.2:1, and Terminal's
+"ok" chart colour was the same green as its accent.
+
+**Chosen rules,** one list in index.html (`THEME_RULES`) that §80 runs on
+every theme:
+- **Text** at 4.5:1. That covers secondary text, warning text, links and
+  block-colour labels.
+- **Captions and dates** (`dim`) at 3:1. They're the tertiary meta line, and
+  4.5 would make them as loud as secondary text.
+- **Shapes** at 3:1: button shapes, status dots and chart marks.
+- **Chart colours** that share a chart at least ΔE 20 apart.
+- **No saturated text on a saturated background.**
+
+**What changed to pass:**
+- **The default.** One new token, `--accent-fill` (#2F6FEB), for buttons and
+  selected chips. Links keep the bright #4C8DFF; no single blue can carry
+  both. `dim` and the deload label are a shade lighter. Text on block
+  colours is dark.
+- **The built-in themes.** Each failing colour had its lightness nudged until
+  it passed, keeping its hue. Three colours were picked by hand:
+  - **Goblin's warning gold** is paler (#F7DA80), so it isn't the same as the
+    amber accent.
+  - **Terminal's "ok"** is a pale phosphor (#B6FFC8), not the accent green.
+  - **High visibility's warning** is orange (#FF9F1A), not the accent yellow.
+- **Every theme now names its caution colour,** rather than mixing one in CSS.
+
+**Custom codes:** your brief asked for custom codes, and there weren't any,
+so a colour code (`#RRGGBB`) is now a theme. It's the standard look with that
+accent, nudged until it passes, and the theme card says when it adjusted
+anything.
+
+**To undo a colour:** edit it in `THEMES` (or `:root` and `DEFAULT_TOKENS`
+together). §80 says which rule it breaks.
+
+---
+
+## D48. Voice packs (v1.74)
+
+**Chosen:**
+- **Three voices** in `docs/voices.md` (embedded like the guide): Goblin,
+  Terminal (your "1983") and Girlypop. Each has 6 to 8 lines for each of
+  nine moments: check-in greeting, session start, set logged, new best,
+  rest done, session saved, a weeks-in-a-row streak, empty states and the
+  What's new title.
+- **No exclamation marks,** per the app's copy style, even in a voice.
+- **Toasts:** only "Set N logged", "New best…", "Rest done" and "Session
+  saved" can be voiced. Goblin's old reword list is gone, because it also
+  reworded data messages ("Backup downloaded", "Set deleted").
+- **The streak line is new,** in plain words too: "3 weeks in a row with a
+  session" on the session summary from two weeks on.
+- **Safety:** §81 checks that no voice line mentions pain, injuries,
+  safety, errors or data. It also checks that every other toast in the app
+  passes through untouched, and that safety copy never goes through
+  `voice()`.
+- **The setting:** "Use this theme's voice", on by default (`CFG.themeVoice`).
+
+**To edit:** `docs/voices.md`, then `node tools/embed-guide.js`.
