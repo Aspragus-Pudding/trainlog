@@ -844,3 +844,28 @@ index.html.
 
 **To undo:** `effortPass`/`wordsBlock` (D10), `equipMissing`'s chip
 lines (D21).
+
+---
+
+## D46. The strength ↔ size slider (v1.73)
+
+**Chosen:**
+- **0 to 100 in steps of 5,** with the five goals at 0, 25, 50, 75 and 100.
+  Each stop is exactly that goal.
+- **Between stops** the strength share blends in a straight line. Strength
+  tests, peaking and exercise specificity come from the nearer goal: they're
+  choices, not amounts, so a "half" doesn't exist.
+- **A fix in the block sequencer.** Between Size first and Pure size on a
+  short plan (10% strength, no tests, 12 weeks), it found no layout and
+  returned an empty plan. It now falls back to hypertrophy blocks only, as
+  Pure size does. None of the five goals reached this case, so no existing
+  program changes.
+- **Edit program re-plans from the next block.** Moving the slider re-plans
+  the blocks after the current one, the same way "Rebuild the rest" does,
+  and the cards show it straight away. Saving keeps it; Cancel drops it.
+  Other unsaved block edits in the same visit are replaced when you move it.
+- **The position is kept** as `CFG.profileSlider`, so it rides along in
+  backups.
+
+**To undo:** `profileSlider`, `sliderParams` and the `set-balance` block in
+`openSettings`.

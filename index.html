@@ -8684,7 +8684,7 @@ Up to three main lifts get priority, their own strength tracking and the tests i
 Your target date, whether it's fixed, and an optional test date. If you fall behind, the app offers to move a date that isn't fixed. Blocks are an order, not dates, so they keep their length.
 
 ### Strength : size balance
-The share of strength blocks against hypertrophy blocks, set by the goal you picked in setup. More strength means more heavy blocks and more frequent strength tests.
+A slider from strength to size, with the five goals as stops; tap a goal's name to snap to it. Between two goals, the share of strength blocks blends and the rest follows the nearer goal. In Edit program it re-plans the blocks after the one you're in, and the block cards show the result as you move it.
 
 ### Energy balance
 Deficit, maintenance or surplus. It trims or adds a little volume, because what you can recover from changes with how much you eat. The multipliers are judgement defaults.
@@ -9129,7 +9129,7 @@ the guide.
 - Also called: bands (green, yellow, orange, red)
 - Means: The dot's colour shows how much a status changes training. Green: no change. Yellow: careful, so a longer warm-up or no step-ups. Orange: held, so loads stay where they were. Red: lighter, so a cut, a sick day or a deload suggested. The sentence next to it always says what it does.
 </script>
-<script type="application/json" id="whats-new">{"version":"1.72.1","lines":["New setting: the app can say \"effort\" instead of RPE (Edit program → How hard a set was). Setup picks effort for newer lifters; if you've logged RPE you keep RPE.","Your own notes and diary are never reworded.","If the app had to use equipment you didn't tick in setup, the exercise says so (\"Needs a cable, which isn't ticked in your equipment\")."]}</script>
+<script type="application/json" id="whats-new">{"version":"1.73.0","lines":["The strength/size slider is back, on top of the five goals: slide between them, or tap a goal's name to snap to it.","In setup it's under Fine-tune after the goal question (open in Build it together), and shows your blocks as you move it.","In Edit program it re-plans the blocks after the one you're in, and the block cards update as you slide."]}</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -9696,7 +9696,7 @@ the guide.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.72.1';
+const APP_VERSION='1.73.0';
 /* ---------- Demo mode (open the app with ?demo) ----------
    A full copy of the app on fake data, for trying things and edge cases.
    ISOLATION: every read and write the app makes goes through STORE. In demo
@@ -11259,7 +11259,7 @@ const DAYS=[
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
   goals:[],units:'lb',onboarded:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
-  profile:null,profileParams:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
+  profile:null,profileParams:{},profileSlider:null,effortWord:null,experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
   feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{},deprioritised:{muscles:[],patterns:[]},tour:{t1:'off',seen:{}},backupReminderDismissed:null,todayBriefing:null,onbDraft:null};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
    backup sheet and the shared feedback sheet for them, then strips itself
@@ -15697,6 +15697,40 @@ function profileParams(){
   const base=PROFILES[CFG.profile]||PROFILES.even_mix, o=CFG.profileParams||{};
   return {...base, ...['ratio','testEvery','peaks','specificity'].reduce((a,k)=>(o[k]!=null?{...a,[k]:o[k]}:a),{})};
 }
+/* The strength ↔ size slider (v1.73, on top of the five profiles): 0 is pure
+   strength, 100 pure size, the profiles sit at 0, 25, 50, 75 and 100. At a stop
+   it IS that profile, exactly. Between stops the strength share blends linearly;
+   tests, peaking and specificity come from the nearer stop (judgement default:
+   those are choices, not quantities). CFG.profileSlider keeps the position. */
+const PROFILE_SHORT={pure_strength:'Pure strength',strength_first:'Strength first',even_mix:'Even mix',size_first:'Size first',pure_size:'Pure size'};
+const sliderStop=k=>Math.max(0,PROFILE_ORDER.indexOf(k))*25;
+function sliderProfile(pos){ return PROFILE_ORDER[Math.max(0,Math.min(4,Math.round((+pos||0)/25)))]; }
+function sliderParams(pos){
+  pos=Math.max(0,Math.min(100,+pos||0));
+  const lo=Math.min(3,Math.floor(pos/25)), t=(pos-lo*25)/25, A=PROFILES[PROFILE_ORDER[lo]], B=PROFILES[PROFILE_ORDER[lo+1]], near=t<0.5?A:B;
+  return {ratio:Math.round((A.ratio+(B.ratio-A.ratio)*t)*100)/100, testEvery:near.testEvery, peaks:near.peaks, specificity:near.specificity};
+}
+function sliderWords(pos){
+  const p=sliderParams(pos), at=PROFILE_ORDER.find((k,i)=>i*25===pos);
+  const tests=p.testEvery===0?'no strength tests':p.testEvery===1?'a strength test every block':'a strength test every '+(p.testEvery===2?'2nd':'3rd')+' block';
+  return (at?PROFILE_SHORT[at]:'Between '+PROFILE_SHORT[PROFILE_ORDER[Math.floor(pos/25)]]+' and '+PROFILE_SHORT[PROFILE_ORDER[Math.ceil(pos/25)]])+': about '+Math.round(p.ratio*100)+'% of the time in strength blocks, '+tests+'.';
+}
+/* The control: a slider with the five profiles as labelled stops (tap a label to snap). */
+function profileSlider(pos, onChange){
+  const w=el('div','pslider');
+  const draw=()=>{
+    w.innerHTML='<div class="row between tiny dim"><span>Strength</span><span>Size</span></div>'
+      +'<input type="range" min="0" max="100" step="5" value="'+pos+'" aria-label="Strength to size" style="width:100%;accent-color:var(--accent);min-height:var(--tap)">'
+      +'<div class="chips" style="gap:var(--sp-1)"></div><div class="sm" style="margin-top:var(--sp-2)">'+esc(sliderWords(pos))+'</div>';
+    const r=w.querySelector('input');
+    r.oninput=()=>{ pos=+r.value; w.querySelector('.sm').textContent=sliderWords(pos); };
+    r.onchange=()=>{ pos=+r.value; onChange(pos); };
+    const c=w.querySelector('.chips');
+    PROFILE_ORDER.forEach((k,i)=>{ const b=el('button','chip',esc(PROFILE_SHORT[k])); b.style.cssText='font-size:var(--fs-1);padding:var(--sp-1) var(--sp-2)';
+      b.setAttribute('aria-pressed',pos===i*25?'true':'false'); b.onclick=()=>{ pos=i*25; onChange(pos); }; c.appendChild(b); });
+  };
+  draw(); return w;
+}
 const EXPERIENCE={
   novice:{label:'Still adding weight most sessions', short:'Novice'},
   intermediate:{label:'Progress takes weeks', short:'Intermediate'},
@@ -15852,6 +15886,13 @@ function sequenceBlocks(o){
         for(let j=0;j<lead;j++) blocks.push(mk('str',sw[si2++]));
         for(let c=0;c<best.n;c++){ blocks.push(mk('hyp',hw[hi2++])); for(let j=0;j<best.k;j++) blocks.push(mk('str',sw[si2++])); }
         if(!endStr&&hi2<hw.length) blocks.push(mk('hyp',hw[hi2++]));
+        left=0;
+      }
+      // no layout fits (a small strength share with no tests, on a short plan — only reachable
+      // between the slider's stops): hypertrophy blocks only, as pure size does, never an empty plan
+      else if(left>=SEQ.hyp[0]){
+        const n=Math.max(1,Math.ceil(left/SEQ.hyp[1]),Math.round(left/8)), base=Math.floor(left/n);
+        for(let i=0;i<n;i++) blocks.push(mk('hyp',base+(i<left-base*n?1:0)));
         left=0;
       }
     }
@@ -19217,7 +19258,8 @@ function onbResolve(O){
   const st=WEEK_STYLES.find(x=>x.k===(O.t.style||ONB_AUTO_STYLE[days])&&(x.min||WEEK_MIN)<=days)||WEEK_STYLES[0];
   const gym=a.gym||'mixed';
   const repRanges={};
-  return {goal:g.k, profile:g.profile, params:{},
+  const sl=a.slider!=null?Math.max(0,Math.min(100,a.slider)):null;
+  return {goal:g.k, profile:sl!=null?sliderProfile(sl):g.profile, params:sl!=null?sliderParams(sl):{}, slider:sl!=null?sl:sliderStop(g.profile),
     history:a.history||'new', experience:a.history==='intermediate'||a.history==='advanced'?a.history:'novice',
     days, minutes:a.minutes||60, style:st.k, week:st.make(days), gym, have:a.have||ONB_HAVE_DEFAULT[gym],
     bw:a.bw>0?a.bw:null, conds:a.conds.slice(), excluded:a.excluded.slice(), emphasis:a.emphasis.slice(0,3), dep:{muscles:[...a.dep.muscles],patterns:[...a.dep.patterns]},
@@ -19413,7 +19455,17 @@ function drawOnboardingStep(){
     return;
   }
   if(step==='goal'){
-    ONB_GOALS.forEach(g=>card(a.goal===g.k,g.label,g.blurb,()=>{ a.goal=g.k; drawOnboarding(); }));
+    ONB_GOALS.forEach(g=>card(a.goal===g.k,g.label,g.blurb,()=>{ a.goal=g.k; a.slider=null; drawOnboarding(); }));
+    const open=O.path==='together'||O.fineTune;
+    if(O.path!=='together'){ const t=el('button','warmtog','Fine-tune '+(open?'▾':'▸')); t.setAttribute('aria-expanded',open?'true':'false'); t.onclick=()=>{ O.fineTune=!O.fineTune; drawOnboarding(); }; host.appendChild(t); }
+    if(open){
+      const w=el('div','qblock'); w.innerHTML='<div class="qlab">Strength ↔ size</div>';
+      const pos=a.slider!=null?a.slider:sliderStop(a.goal||'size_first');
+      w.appendChild(profileSlider(pos,v=>{ a.slider=v; a.goal=sliderProfile(v); drawOnboarding(); }));
+      // the plan, live
+      try{ const {plan}=onbPlan(O); w.appendChild(el('div','dim tiny','Your blocks: '+esc(plan.blocks.map(b=>blockName(b)+' '+b.weeks+' wk').join(' → ')))).style.marginTop='var(--sp-2)'; }catch(e){}
+      host.appendChild(w);
+    }
   }
   if(step==='history') ONB_HISTORY.forEach(([k,l,sub])=>card(a.history===k,l,sub,()=>{ a.history=k; drawOnboarding(); }));
   if(step==='schedule'){
@@ -19534,7 +19586,7 @@ function onbApply(){
   const hadSets=LOG.some(e=>e.type==='set'), keepSeed=CFG.rateSeed;
   applyBuilder(onbDraft(R), plan);
   if(hadSets&&keepSeed) CFG.rateSeed=keepSeed;   // a new program never resets how lifts you've already trained progress
-  CFG.equipmentHave=R.have.slice(); CFG.slotPicks=JSON.parse(JSON.stringify(R.picks));
+  CFG.equipmentHave=R.have.slice(); CFG.slotPicks=JSON.parse(JSON.stringify(R.picks)); CFG.profileSlider=R.slider;
   const rr=onbRepRanges(R); if(Object.keys(rr).length) CFG.repRanges={...(CFG.repRanges||{}),...rr};
   // the word for RPE: newer lifters get "effort"; anyone who's logged RPE keeps it (D10)
   if(!LOG.some(e=>e.type==='set'&&e.rpe!=null)) CFG.effortWord=(R.history==='new'||R.history==='novice')?'effort':'rpe';
@@ -19792,7 +19844,8 @@ function openSettings(){
       split: (s=>Array.isArray(s)?[...s]:s)(programSplitSpec()), syncUrl: CFG.syncUrl||'', feedbackUrl: CFG.feedbackUrl||'', testerName: CFG.testerName||'',
       energy: CFG.energy||'maintenance', conds: normalizeConditions(CFG.conditions), excluded: [...(CFG.excludedEx||[])],
       jointUsual: {...(CFG.jointUsual||{})}, dep:{muscles:[...((CFG.deprioritised||{}).muscles||[])],patterns:[...((CFG.deprioritised||{}).patterns||[])]},
-      backoff: {...backoffCfg()}, autoIntervene: !!CFG.autoIntervene, dial: dialStated(null)
+      backoff: {...backoffCfg()}, autoIntervene: !!CFG.autoIntervene, dial: dialStated(null),
+      slider: CFG.profileSlider!=null?CFG.profileSlider:sliderStop(CFG.profile||'even_mix'), sliderMoved:false
     };
   }
   const S=SETTINGS_DRAFT;
@@ -19871,6 +19924,16 @@ function openSettings(){
         gl.appendChild(est); }
     });
     host.appendChild(gl);
+
+    // strength ↔ size: re-plans the blocks after the one you're in (live, in the cards below)
+    const ss=el('div','qblock'); ss.dataset.tour='set-balance';
+    ss.innerHTML='<div class="qlab">Strength ↔ size</div><div class="field">Changes apply from the next block. The block you\'re in stays as it is.</div>';
+    ss.appendChild(profileSlider(S.slider,v=>{ S.slider=v; S.sliderMoved=true;
+      try{ const weeks=CFG.target?Math.max(SEQ.hyp[0],weeksBetween(isoToday(),CFG.target)):BUILDER_DEFAULT_WEEKS;
+        const r=planFromNow({params:sliderParams(v), experience:CFG.experience||'intermediate', weeks, testWeek:CFG.testDate?weeksBetween(isoToday(),CFG.testDate):null, targetFixed:!!CFG.targetFixed, goals:S.goals});
+        S.draft=r.blocks.map(b=>({...b,hyp:[...(b.hyp||[])]})); }catch(e){ console.error(e); }
+      draw(); }));
+    host.appendChild(ss);
 
     const bl=el('div','qblock');bl.dataset.tour='set-blocks';
     bl.innerHTML=`<div class="qlab">Blocks <span class="dim tiny" style="font-weight:400">· ${S.draft.reduce((a,b)=>a+blockLen(b),0)} weeks total</span></div>`;
@@ -20183,6 +20246,7 @@ function openSettings(){
     if(JSON.stringify(ROADMAP.map(b=>[b.type,b.weeks,b.week||b.split||null]))!==JSON.stringify(S.draft.map(b=>[b.type,b.weeks,b.week||b.split||null]))||splitOf(S.split).key!==splitOf(programSplitSpec()).key)
       append({type:'program_edit',what:'settings'});
     if(S.dial!==dialStated(null)) append({type:'dial_set',value:S.dial});
+    if(S.sliderMoved){ CFG.profile=sliderProfile(S.slider); CFG.profileParams=sliderParams(S.slider); CFG.profileSlider=S.slider; }
     ROADMAP=S.draft; saveCfg(); SETTINGS_DRAFT=null;
     $('#dlg').close(); render(); toast('Program saved');
   };

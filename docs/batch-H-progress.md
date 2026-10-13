@@ -58,6 +58,7 @@ of Appendix A). Order: Appendix A by reported impact, then Parts 1–6, then 7�
 | Part | State | Version | Notes |
 |---|---|---|---|
 | A1 edit = delete + relog | done | v1.68.1 | corrections merge (one rule: correctionMap/corrected), edits recompute the next set, readers that skipped corrections fixed; §72; backtest: one row (20 Sep double edit) moved, error 10 → 0 reps; D38 |
+| A8 strength ↔ size slider | done | v1.73.0 | stops = profiles, ratio blends, nearer stop for the rest; setup (Fine-tune / open in together, live blocks) and Edit program (re-plans from the next block); sequencer never returns an empty plan; §79; D46 |
 | A0 decision changes | done | v1.72.1 | D16 was in (1.66); D17 superseded by your 9 Oct choice (LIGHT code); D10 RPE/effort setting (display pass, setup default, notes untouched); D21 equipment chip; §78, mobile effortCheck; D45 |
 | A10 I know my numbers | done | v1.72.0 | weight × reps + chips, class: bw/added/assist (0 ok), stored on the track; same input in setup, starting estimates, Edit program; §77; harness compiles the app once (32 s); D44 |
 | A9 setup wording | done | v1.71.1 | Commercial gym, Home gym (machines last; pull-up bar), Build it together recommended; §76; D43 |

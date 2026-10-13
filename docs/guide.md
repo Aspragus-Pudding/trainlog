@@ -66,7 +66,7 @@ Up to three main lifts get priority, their own strength tracking and the tests i
 Your target date, whether it's fixed, and an optional test date. If you fall behind, the app offers to move a date that isn't fixed. Blocks are an order, not dates, so they keep their length.
 
 ### Strength : size balance
-The share of strength blocks against hypertrophy blocks, set by the goal you picked in setup. More strength means more heavy blocks and more frequent strength tests.
+A slider from strength to size, with the five goals as stops; tap a goal's name to snap to it. Between two goals, the share of strength blocks blends and the rest follows the nearer goal. In Edit program it re-plans the blocks after the one you're in, and the block cards show the result as you move it.
 
 ### Energy balance
 Deficit, maintenance or surplus. It trims or adds a little volume, because what you can recover from changes with how much you eat. The multipliers are judgement defaults.

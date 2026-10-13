@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.73.0 — 2026-10-12
+- The strength/size slider is back, on top of the five goals: slide between them, or tap a goal's name to snap to it.
+- In setup it's under Fine-tune after the goal question (open in Build it together), and shows your blocks as you move it.
+- In Edit program it re-plans the blocks after the one you're in, and the block cards update as you slide.
+
 ## 1.72.1 — 2026-10-12
 - New setting: the app can say "effort" instead of RPE (Edit program → How hard a set was). Setup picks effort for newer lifters; if you've logged RPE you keep RPE.
 - Your own notes and diary are never reworded.
