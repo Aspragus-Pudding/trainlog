@@ -92,7 +92,7 @@ everyone.
 
 | Setting | For | Where |
 |---|---|---|
-| Blocks: type, length, deload, focus muscles | advanced | Blocks (a card per block, with sets and intensity lines) |
+| Blocks: type, length, deload, focus muscles | advanced | Blocks (a card per block, with a sentence on its sets) |
 | Your week (days and day types) | everyone | Your week (a strip of your days) |
 | Goal lifts, ranked | everyone | Goal lifts |
 | Dates: target date, fixed or not, test date | advanced | Dates |

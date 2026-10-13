@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.82.0 — 2026-10-12
+- Every number now earns its place. Edit program's block lines are a sentence: "About 10 sets a week per muscle in week 1, rising to 16 by week 4."
+- The Lifts card says this week's sets for its muscle against a typical range, labelled as a rough guide.
+- Progress charts say what to read in them. The info sheet says "main muscle" or "helps" instead of 1.0 and 0.5.
+- Gone: the intensity line, the raw event count and tonnage as a headline. The % of your best now only shows on main lifts.
+
 ## 1.81.0 — 2026-10-12
 - Demo options has "Jump to…": any block and week of the demo program, with made-up training up to that point.
 - Shortcuts go straight to the first strength block, a test-set week, a deload week or a stall, so each can be seen on demand.

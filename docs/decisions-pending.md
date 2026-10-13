@@ -1132,3 +1132,27 @@ back into `openSettings` (git history, v1.77.0).
   chosen week, on WebKit and Chromium.
 
 **To undo:** `demoJumpTargets` and the `djump` block in `openDemo`.
+
+---
+
+# Big batch Part 4
+
+## D56. The number audit (v1.82)
+
+The full table is in `docs/number-audit.md`: 39 items, each kept, changed or
+removed, with the one-line reason.
+
+**Worth a second look:**
+- **The intensity % line in Edit program is gone.** It was the generator's
+  internal load target. The sets sentence says what changes week to week.
+- **"Typical weekly sets"** is now one sentence: this week's planned sets
+  for the muscle, against the typical range, called "a rough guide, not a
+  rule". Before, it was three grids of numbers that looked like science
+  (they're Grade D landmarks).
+- **% of your best** only shows on main lifts.
+- **The session summary's headline cell** is new bests instead of tonnage.
+- **Kept on purpose:** the readiness and joint numbers (each with what it
+  does), 3RM/5RM/10RM (for picking a weight), and suggestion accuracy (fit,
+  not obedience).
+
+**To undo any one:** each is one place in index.html; the table names it.

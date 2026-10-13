@@ -73,6 +73,7 @@ Appendix A is complete (v1.68.0–v1.74.0).
 
 | Part | State | Version | Notes |
 |---|---|---|---|
+| 4 number audit | done | v1.82.0 | docs/number-audit.md (39 items); sentences for block sparklines and landmark grids; intensity, events, tonnage headline removed; charts say what they're for; §89; D56 |
 | 3e demo Jump to | done | v1.81.0 | every block/week + shortcuts (strength, test, deload, stall); lands on the week (mobile.js, real browser); §88; D55 |
 | 3c first-time tips | done | v1.80.0 | nine moments, in-flow cards, once each, Got it, More → guide, Reset tips; §87; D54 |
 | 3a/3b/3d setup header, How your program works, tours | done | v1.79.0 | Step N of M + bar; six cards from your plan after the preview (skip/replay); End tour, Back, scope line; §86; D53 |

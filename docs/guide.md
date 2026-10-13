@@ -54,7 +54,7 @@ Tap the pencil at the top of any screen to leave a note about what broke, what w
 ## Every setting {guide:settings}
 
 ### Blocks
-Each block has a type (hypertrophy or strength), a length in weeks, an optional deload week at the end, a lead lift and up to three focus muscles. The small lines show each week's sets and intensity across the block. Change a length and everything after it shifts.
+Each block has a type (hypertrophy or strength), a length in weeks, an optional deload week at the end, a lead lift and up to three focus muscles. A line under each block says how its sets change week to week. Change a length and everything after it shifts.
 
 ### Your week
 How many days you train and what kind each day is: full body, upper, lower, push, pull or legs. Days run in order and repeat. A block can have its own week instead of the program's.
