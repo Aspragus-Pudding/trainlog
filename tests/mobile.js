@@ -219,6 +219,21 @@ async function tourCheck(page, d, tag){
   }
   await applyCase(page,d,'normal');
 }
+/* The Workout tab is the preview (Appendix A Part 3): a real tap moves an exercise, Start takes the order. */
+async function previewCheck(page, tag){
+  await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
+  await page.evaluate(()=>demoReset({kind:'persona',key:'shoulder',weeks:3})); await page.waitForLoadState('load'); await sleep(2200);
+  await page.evaluate(()=>{ CFG.seenVersion=APP_VERSION; CFG.tour={t1:'off',seen:{}}; saveCfg(); try{ $('#dlg').close(); }catch(e){} TAB='work'; render(); });
+  await sleep(300);
+  const before=await page.evaluate(()=>planFor(todayDay()).slots.map(s=>s.ex));
+  await tapSel(page,'#v-work button[aria-label="Move earlier"]',0);
+  const after=await page.evaluate(()=>planFor(todayDay()).slots.map(s=>s.ex));
+  const hasPreview=await page.evaluate(()=>[...document.querySelectorAll('#v-work button')].some(b=>/Preview workout/.test(b.textContent)));
+  await tapSel(page,'#v-work [data-tour="start"]'); await sleep(300);
+  const sess=await page.evaluate(()=>session&&session.slots.map(s=>s.ex));
+  ok(after[0]===before[1]&&after[1]===before[0]&&!hasPreview&&sess&&sess.join()===after.join(), tag+' the Workout tab is the preview: a tap moves an exercise and Start takes that order: '+JSON.stringify({before:before.slice(0,2),after:after.slice(0,2),hasPreview,sess:sess&&sess.slice(0,2)}));
+  await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} session=null; saveSession(); stopRest(); TAB='dash'; render(); });
+}
 async function resumeCheck(page, tag){
   await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(1100);
   await clickText(page,'Build it for me'); await clickText(page,'Pure strength'); await clickText(page,'Next'); await clickText(page,'Progress takes months'); await clickText(page,'Next');
@@ -243,6 +258,7 @@ async function resumeCheck(page, tag){
       await sheetMatrix(page,d,tag);
       await reorderCheck(page,tag);
       await tourCheck(page,d,tag);
+      await previewCheck(page,tag);
     }catch(e){ ok(false,tag+' crashed: '+e.message); }
     ok(errs.length===0, tag+' no page errors: '+errs.slice(0,2).join(' | '));
     rows.push([tag, fails===f0?'pass':(fails-f0)+' failed']);

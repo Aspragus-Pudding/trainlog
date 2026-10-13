@@ -720,3 +720,26 @@ and `preSessionBanner(v)` back in `renderWork`.
 
 **To undo:** `ERRORS_OPEN` and the `errs` group in `renderHist`; the
 `.tourcard` max-height.
+
+---
+
+## D41. The Workout tab is the one editable preview (v1.70)
+
+**Chosen:**
+- **One list.** Before a session the Workout tab shows today's exercises
+  with the live cards: move up or down, info, swap, sets ±, Modify and
+  Remove. Each planned set shows the suggested numbers, with last time
+  beside them. The separate "Preview workout" sheet and button are gone.
+- **Today only by default.** Edits go to today's plan, as before. "Save to
+  program" is a button now; it used to be a checkbox you had to tick before
+  editing. It writes the day edit, and asks first.
+- **A day you've already saved** shows a line with "Use the generated plan".
+- **The "Recent" card is replaced** by the one line the brief asks for:
+  "Last Upper B: 5 days ago, 2 PRs". It opens that session. The rest of
+  your history is in Progress.
+- **Remove is preview only.** The live session still has no Remove (lower the
+  sets to what's logged instead), because removing an exercise mid-session
+  would orphan its logged sets.
+
+**To undo:** `renderPreview` and `planCard` in index.html. The old
+`openWorkoutPreview` is in git history (v1.69.1).

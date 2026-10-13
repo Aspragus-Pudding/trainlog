@@ -36,7 +36,7 @@ everyone.
 
 | Feature | For | Where |
 |---|---|---|
-| Today's plan preview, with swap, move and remove | everyone | Workout tab before you start |
+| Today's workout, editable before you start: move, swap, add or remove, sets ±, last time per set, estimated length; "Save to program"; "Last Upper B: 5 days ago" | everyone | Workout tab before you start |
 | "Your preference" chips (don't care about) | advanced | on preview cards that moved |
 | Readiness check-in (sleep, motivation, rest of life, soreness, joints, bodyweight) | everyone | before the first exercise |
 | "For your shoulder" chip on a flagged exercise: the reason, the cues and the swap on its info sheet | injury-prone | set card → info sheet |

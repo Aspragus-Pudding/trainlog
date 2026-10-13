@@ -58,6 +58,7 @@ of Appendix A). Order: Appendix A by reported impact, then Parts 1–6, then 7�
 | Part | State | Version | Notes |
 |---|---|---|---|
 | A1 edit = delete + relog | done | v1.68.1 | corrections merge (one rule: correctionMap/corrected), edits recompute the next set, readers that skipped corrections fixed; §72; backtest: one row (20 Sep double edit) moved, error 10 → 0 reps; D38 |
+| A3 Workout tab is the editable preview | done | v1.70.0 | live-card controls on plan cards, last time per set, Save to program button, last-day line, no Preview button; §75, mobile previewCheck; D41 |
 | A6 app errors grouped, tour steps tested | done | v1.69.1 | errors collapsed apart from notes, last in the copy; every tour step in mobile.js (all passed on 1.67 too); card capped at the visible height; D40 |
 | A4 plain words in the workout | done | v1.69.0 | flag chip → info sheet "For your shoulder", plainText() + CLINICAL_WORDS, pain check names the set, no made-up Feel it, no pre-session banner; §65 scan + §73 corpus; test harness memory leak fixed (navigator.storage); D39 |
 | A2 which exercise is current | done | v1.68.0 | rule in CLAUDE.md, ruleCurrent/syncCurrent, §71, mobile.js reorder repro (fails on 1.67.0 on both engines, passes now); D37 |

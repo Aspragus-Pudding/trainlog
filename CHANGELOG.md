@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.70.0 — 2026-10-12
+- Before you start, the Workout tab is today's workout, with the same cards and controls as the live session: move, swap, add or remove exercises and change sets.
+- Each planned set shows what you did last time, and the top shows roughly how long it'll take.
+- Changes are for today. "Save to program" keeps them for that day from now on. Start begins in the order you set.
+- The separate Preview workout button is gone. Below the list, "Last Upper B: 5 days ago, 2 PRs" opens that session.
+
 ## 1.69.1 — 2026-10-12
 - Errors the app records now sit in their own collapsed "App errors" group under Progress → Notes, apart from your own notes.
 - A long tour card now scrolls inside itself instead of running off a short screen, and its buttons stay in reach.

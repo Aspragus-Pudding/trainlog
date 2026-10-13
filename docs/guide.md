@@ -30,6 +30,9 @@ When a main lift goes a few weeks without a new best while you're training it ev
 ### I need a lighter week
 The app proposes a deload when the signs show: readiness falling, the same weights feeling harder, or a flared joint. You can also add one yourself in Edit program → Blocks with "Deload week at the end".
 
+### I want to change today's workout
+Before you start, the Workout tab is today's workout, with the same cards as the live session. Move exercises up or down, swap one, add or remove one, or change the number of sets; each set shows what you did last time. Changes are for today only. Tap "Save to program" to keep them for that day from now on, and Start begins the session in the order you've set.
+
 ### My gym doesn't have an exercise
 Tap the swap button on the exercise card and pick another, by muscle or by name. Anything you log comes first from then on. To change what the app assumes your gym has, use Set up a new program on the Lifts tab, and your logged sets stay.
 
