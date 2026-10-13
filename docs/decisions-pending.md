@@ -1113,3 +1113,22 @@ back into `openSettings` (git history, v1.77.0).
   and explains up, hold and down together.
 
 **To undo:** `TIPS` and the `tipCard(...)` calls in index.html.
+
+---
+
+## D55. Demo "Jump to…" (v1.81)
+
+**Chosen:**
+- **A jump rebuilds the same made-up lifter** with the weeks of training that
+  lead to the block and week you pick. Program position counts sessions,
+  and the made-up lifters attend every session, so the weeks land there.
+- **Shortcuts:** the first strength block, a test-set week, a deload week
+  and a stall. The stall uses "Stalls at week 8", 12 weeks in, because a
+  stall needs a lifter who stops progressing.
+- **Copied real log or fresh install:** Jump to asks you to pick a made-up
+  lifter first. It only rebuilds made-up lifters.
+- **Testing:** the demo clock only moves in a real browser (it swaps
+  `window.Date`), so `tests/mobile.js` checks that a jump lands on the
+  chosen week, on WebKit and Chromium.
+
+**To undo:** `demoJumpTargets` and the `djump` block in `openDemo`.

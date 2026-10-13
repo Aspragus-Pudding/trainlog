@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.81.0 — 2026-10-12
+- Demo options has "Jump to…": any block and week of the demo program, with made-up training up to that point.
+- Shortcuts go straight to the first strength block, a test-set week, a deload week or a stall, so each can be seen on demand.
+- It only touches the demo's own storage. Your real log is never written from the demo.
+
 ## 1.80.0 — 2026-10-12
 - The first time something new happens, a short card explains it: your first check-in, a suggestion that moved, an all-out set, a new block, a deload week, a joint flag, a stall card, a focused-deload offer and the rest timer.
 - Each says what's happening and why, with More for the guide, and shows once. Got it puts it away for good.

@@ -248,6 +248,15 @@ async function effortCheck(page, tag){
   ok(!/\bRPE\b/.test(work+sh)&&/\beffort\b/i.test(work), tag+' "effort" chosen: no RPE anywhere on the workout or a sheet: '+((work+sh).match(/.{0,30}\bRPE\b.{0,30}/)||[''])[0]);
   await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} CFG.effortWord='rpe'; saveCfg(); session=null; saveSession(); stopRest(); TAB='dash'; render(); });
 }
+/* Demo "Jump to…" (Part 3e) needs the demo clock, which only a real browser has. */
+async function jumpCheck(page, tag){
+  await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
+  await page.evaluate(()=>demoReset({kind:'persona',key:'responder',weeks:1})); await page.waitForLoadState('load'); await sleep(1800);
+  const t=await page.evaluate(()=>{ const T=demoJumpTargets(ROADMAP); return T.find(x=>x.test)||T.find(x=>x.type==='str'&&x.week===1); });
+  await page.evaluate(w=>demoReset({kind:'persona',key:'responder',weeks:Math.max(1,w)}),t.weeks); await page.waitForLoadState('load'); await sleep(3000);
+  const p=await page.evaluate(()=>{ const q=currentPhase(); return {idx:q.idx, week:q.week, type:q.type}; });
+  ok(p.idx===t.block&&Math.abs(p.week-t.week)<=1, tag+' demo Jump to lands on the chosen block and week: '+JSON.stringify({want:[t.block,t.week,t.label],got:p}));
+}
 async function resumeCheck(page, tag){
   await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(1100);
   await clickText(page,'Build it for me'); await clickText(page,'Pure strength'); await clickText(page,'Next'); await clickText(page,'Progress takes months'); await clickText(page,'Next');
@@ -274,6 +283,7 @@ async function resumeCheck(page, tag){
       await tourCheck(page,d,tag);
       await previewCheck(page,tag);
       await effortCheck(page,tag);
+      await jumpCheck(page,tag);
     }catch(e){ ok(false,tag+' crashed: '+e.message); }
     ok(errs.length===0, tag+' no page errors: '+errs.slice(0,2).join(' | '));
     rows.push([tag, fails===f0?'pass':(fails-f0)+' failed']);

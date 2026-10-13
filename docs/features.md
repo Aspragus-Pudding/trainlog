@@ -167,6 +167,7 @@ everyone.
 | Tap a dotted word for its definition (the glossary) | everyone | set cards, Lifts, Progress, readiness, Edit program |
 | First-session hints | everyone | first session only |
 | Demo mode (?demo) | maintainer | a separate address; never touches real data |
+| Demo → Jump to…: any block and week of the demo program, with made-up history up to it (shortcuts: strength block, test set, deload, stall) | maintainer | Demo options |
 | Update banner (activate a new version) | everyone | bottom, when an update is waiting |
 
 ## Maintainer-only, still visible to everyone
