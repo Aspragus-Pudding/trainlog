@@ -58,7 +58,7 @@ Set Edit program → Energy balance to deficit or surplus. A deficit trims volum
 Settings → Save backup makes a file you can keep in Files, and a backup sheet saves one automatically after each session. Restoring merges event by event and never deletes anything newer. The app reminds you after your first session, and again whenever a week passes without a backup.
 
 ### Something looks wrong
-Tap the pencil at the top of any screen to leave a note about what broke, what was confusing, or an idea. If something on your phone looks wrong, long-press the version number in Lifts, tap Copy and paste it into the note. Every suggestion also has a "Why these numbers" view showing each step behind it, which is the quickest way to see where a number came from.
+Tap the pencil at the top of any screen to leave a note about what broke, what was confusing, or an idea. If something on your phone looks wrong, open Settings → About, tap Diagnostics (or long-press the version number), then Copy, and paste it into the note. Every suggestion also has a "Why these numbers" view showing each step behind it, which is the quickest way to see where a number came from.
 
 ## Every setting {guide:settings}
 

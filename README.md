@@ -60,7 +60,7 @@ you were on. If you're offline they're kept and sent later. You can see what
 you've sent under **Progress → Notes**.
 
 **If your notes don't seem to arrive:** you probably haven't pasted the setup
-link (step 5 above). In the meantime, **Progress → Notes → Copy all notes**,
+link (step 5 above). In the meantime, tap **Progress → Notes → Copy all notes**,
 then paste them into a message.
 
 ## Your data

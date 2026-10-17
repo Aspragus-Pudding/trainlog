@@ -763,7 +763,7 @@ section('20. joint ladder — baseline, not absolute level');
   const slot={ex:'incline_machine',role:'primary',reps:[10,15],rpe:8,sets_target:3,sets:[],joint:A.jointNoteFor('horizontal_press')};
   A.setSession({id:'SJ',slots:[slot],adj:null,score:null});
   let w=A.suggestFor(slot).why;
-  ok(/shoulder: longer warmup — at your usual/.test(w.line),'line names the action and the reason (at your usual)',w.line);
+  ok(/shoulder: longer warm-up — at your usual/.test(w.line),'line names the action and the reason (at your usual)',w.line);
   ok(w.detail.some(d=>/your usual is moderate \(from your recent sessions\)/.test(d)&&/never change load/.test(d)),'detail names the usual and its source',JSON.stringify(w.detail));
   A=run(chronic.concat([3]),'moderate'); A.LOG.push(set('incline_machine','hj2',60,12,8,0.1));
   const slot2={ex:'incline_machine',role:'primary',reps:[10,15],rpe:8,sets_target:3,sets:[],joint:A.jointNoteFor('horizontal_press')};
@@ -3483,7 +3483,7 @@ section('81. voice packs: nine moments only; safety, pain, errors and data are n
   ok(bad.length===0,'no voice line mentions pain, injuries, safety, errors or data (and none shouts)',bad.slice(0,3).join(' | '));
   // only the four celebratory toasts can change; every other toast in the app passes through untouched
   const lits=[...new Set([...src.matchAll(/toast\('([^'\\]+)'\)/g)].map(m=>m[1]))];
-  const extra=['Backup downloaded','Set deleted','Cluster deleted','Warmup deleted','Set updated','Workout cancelled','Log erased','Note saved','Note saved and sent','Program saved','Session ended'];
+  const extra=['Backup downloaded','Set deleted','Cluster deleted','Warm-up deleted','Set updated','Workout cancelled','Log erased','Note saved','Note saved and sent','Program saved','Session ended'];
   const allowed=new Set(['Rest done','Session saved']);
   Object.keys(V).forEach(code=>{
     const B=load([],true); B.CFG.theme=code; B.CFG.themeVoice=true;

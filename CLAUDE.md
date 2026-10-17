@@ -360,7 +360,7 @@ included), `planFor`/`weekPlanFor`, swaps and saving a range. A stored
   `CFG.onbDraft` on every redraw (`onbSave`), and boot or the dashboard card resumes
   them (`openOnboardingResume`). `logError()` records errors as `note` events
   (tag `error`, `auto`); they're never sent unless a tester taps Send.
-  Diagnostics: a long press on the Lifts version (`diagText`).
+  Diagnostics: Settings → About, or a long press on the version (`diagText`).
 - **Guide (H5, v1.65).** `docs/guide.md` has three parts: `## … {guide:tasks}`,
   `## … {guide:settings}`, then the screen tours (`{tab:…}`, `{screen:settings}`,
   `{tier:1}`). Only screen sections become tours. `guideSearch()` searches

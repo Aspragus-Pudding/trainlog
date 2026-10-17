@@ -29,7 +29,7 @@ suggestion log and shown as "Why these numbers" on the Progress tab.
 | `joint_ladder` | joint | L3 hold · L4 −10% and −1 set · L5 no progression | 6-session trend |
 | `focused_deload` | exercise | pinned at hold / −10% / −20% of the starting load; exempt from one_step and floor | 1–3 weeks + 3-session ramp-back |
 | `condition_flag` | exercise | display only | while the condition is picked |
-| `calibrating` | global | no load step up | first session after a program, phase or profile change |
+| `calibrating` | global | no load step-up | first session after a program, phase or profile change |
 | `ceiling` | exercise | load ≤ what the last 6 sessions' e1RM supports at the reps and target RPE + 1 | guard |
 | `one_step` | exercise | load moves ≤ one increment per session (exempt: range_fit first fit, focused_deload, joint ladder cut, deload weeks, top sets/AMRAP/back-offs) | guard |
 | `floor` | exercise | load ≥ 85% of the best completed load in the last 6 sessions (exempt: focused_deload, ladder ≥ 4, range_fit first fit, deload weeks) | guard |

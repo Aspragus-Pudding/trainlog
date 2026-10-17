@@ -22,7 +22,7 @@ voice line touches any of them.
 To add a voice: a `## CODE` section with the theme's code, then a `### moment`
 heading for each moment and one line per variant (aim for 5 to 10, so it
 doesn't repeat every session). Then run `node tools/embed-guide.js`. In the app,
-Edit program → Have a code? has "Use this theme's voice", on by default.
+Settings → Voice has "Use this theme's voice", on by default.
 
 ## GOBLIN
 

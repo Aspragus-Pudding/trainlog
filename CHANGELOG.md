@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.85.2 — 2026-10-17
+- A typo pass across the app, the guide and the tester notes.
+- One spelling throughout: warm-up, step-up, specialisation. Two exercise names corrected (Overhead triceps extension machine, Reverse Nordic).
+- A failed backup sync now says your log is safe on this phone, and calls the sheet by the name Settings uses.
+
 ## 1.85.1 — 2026-10-17
 - The "Use the generated plan" button, and the line above it, are gone from the Workout tab.
 - Days you saved to your program stay as you saved them. Nothing you've logged changes.
