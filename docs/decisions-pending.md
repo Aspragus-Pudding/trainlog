@@ -1359,3 +1359,35 @@ any slot picks it set stay harmless: delete `CFG.rotation` to stop taking turns.
 subscription". It's your file, so I left it; the repo is public.
 
 **To undo:** v1.86.0 has the old names and icons.
+
+## D63. Today leads with today's plan; the program as a block track (v1.88.0)
+
+**Chosen:**
+- **Today's plan is always the first card.** After the check-in it's the day's
+  briefing. Before the check-in, the same briefing is worked out from the
+  planned day (`buildBriefing` on it, nothing written) and marked "Before your
+  check-in". The counts follow the sentence: a flagged exercise that still steps
+  up counts as pushing, "with a warning". One button: Go to Train (or Continue
+  during a session). Details opens the briefing.
+- **The readiness card loses its plan section on Today** (`readinessCard({plan:false})`)
+  so the sentence isn't shown twice. It shows only when there's a check-in today,
+  a joint above your usual, or fatigue.
+- **The countdown and the volume bars are gone.** The program is a block track:
+  - each block is a segment as long as its weeks, with this week marked;
+  - "Hypertrophy block · week 4 of 9 · next: Strength";
+  - a legend of the block types in your program.
+
+  `phaseChart` is deleted.
+- **Patterns, so colour isn't the only signal:**
+  - size is solid;
+  - strength is striped;
+  - a taper is dotted;
+  - a deload week is hollow.
+
+  The colours stay as they are until Part 3 swaps the palette; the brief says to
+  use the new brand's.
+- **A date shows only for a test day (`CFG.testDate`) or a fixed end
+  (`CFG.targetFixed`)**, as one small line with days to go. A target the app
+  worked out itself isn't shown.
+
+**To undo:** v1.87.0 has the countdown hero, `phaseChart` and the old card order.

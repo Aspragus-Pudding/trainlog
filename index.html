@@ -131,8 +131,18 @@ section{display:none;padding-top:var(--sp-4)} section.on{display:block}
 .status{display:flex;gap:var(--sp-2);align-items:baseline;margin-top:var(--sp-2);font-size:var(--fs-2);line-height:1.4}.status.sub{font-size:var(--fs-1);margin-top:var(--sp-1)}
 .sdot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none;transform:translateY(-1px)}
 .sw{width:9px;height:9px;border-radius:2px;display:block}
-.count{font-size:var(--fs-5);font-weight:800;letter-spacing:-.035em;line-height:1.05}
-.countsub{font-size:var(--fs-2);color:var(--muted);margin-top:2px}
+.track{position:relative;margin-top:var(--sp-3);padding-top:8px}
+.tsegs{display:flex;gap:3px;height:14px}
+.tseg{display:flex;min-width:3px}
+.blk{display:block;width:100%;height:100%;border-radius:3px}
+.blk.hyp{background:var(--hyp)}
+.blk.str{background:repeating-linear-gradient(135deg,var(--str) 0 4px,var(--card-2) 4px 7px)}
+.blk.peak{background:radial-gradient(circle,var(--peak) 0 1.7px,var(--card-2) 2px) 0 0/6px 6px}
+.blk.deload{background:transparent;box-shadow:inset 0 0 0 1.5px var(--deload)}
+.tnow{position:absolute;top:0;width:3px;height:26px;margin-left:-1.5px;background:var(--ink);border-radius:2px}
+.tleg{display:flex;flex-wrap:wrap;gap:var(--sp-3);margin-top:var(--sp-2);font-size:var(--fs-1);color:var(--muted)}
+.tleg span{display:inline-flex;align-items:center;gap:var(--sp-1)}
+.tleg .blk{display:inline-block;width:18px;height:10px}
 
 .ex{background:var(--surface);border-radius:var(--r);margin-bottom:var(--sp-3);overflow:hidden;box-shadow:var(--e-1)}
 .exhead{display:flex;align-items:flex-start;gap:var(--sp-2);padding:var(--sp-4) var(--sp-4) var(--sp-3);width:100%;text-align:left}
@@ -8859,11 +8869,14 @@ The Progress tab is where your lifts' trends, the reasons behind each suggestion
 
 ## Today {tab:dash}
 
-### Your target date `[data-tour="dash-hero"]`
-The top card counts down to your target date, projected from how often you actually train rather than from the calendar. Miss sessions and the date moves out; train more often and it comes closer. The bars underneath are your blocks in order.
+### Today's plan `[data-tour="dash-today"]`
+Today's plan leads the screen: today's workout and one sentence on what the app is doing to it. Before your check-in it is worked out from your plan; after it, from the check-in too. It counts what is held back and what is pushing.
 
-### Today's plan `[data-tour="briefing"]`
-After your check-in, Today's plan says what the app is doing to the workout and why: what it is holding back, what it is pushing, and what changed. Tap it to see it again, and tap any exercise in it for every step behind its numbers.
+### Details `[data-tour="briefing"]`
+Details lists each exercise that is held back, pushing or changed, with the reason. Tap any exercise in it for every step behind its numbers.
+
+### Program `[data-tour="dash-hero"]`
+Your program as one line of blocks, each as long as its weeks, with this week marked. Each block type has its own pattern as well as its colour: solid for size, striped for strength, dotted for a taper and hollow for a deload. The sentence under it says where you are and what comes next. A date shows only if you set a test day or a fixed end.
 
 ### Proposals `[data-tour="proposals"]`
 Cards here are proposals, such as a deload week, a change for a lift that has stalled, or switching between the assisted and unassisted version of an exercise. Nothing changes until you accept one, and declining hides the card for a while.
@@ -9457,8 +9470,8 @@ Settings → Voice has "Use this theme's voice", on by default.
 - Freshly updated · {v}
 - The latest · {v}
 </script>
-<script type="application/json" id="whats-new">{"version":"1.87.0","lines":["The tabs are Today, Train, Lifts, Progress and Settings, with new icons.","Same screens in the same places: Today was the Dashboard, Train was Workout.","The guide and the screen tours use the new names."]}</script>
-<script type="application/json" id="whats-new-history">[{"version":"1.87.0","date":"2026-10-17","lines":["The tabs are Today, Train, Lifts, Progress and Settings, with new icons.","Same screens in the same places: Today was the Dashboard, Train was Workout.","The guide and the screen tours use the new names."]},{"version":"1.86.0","date":"2026-10-17","lines":["The app's name now comes from one place, ready for the new name.","Backups, storage and your log don't change with the name. A backup made under any name restores the same way.","Nothing else looks different yet."]},{"version":"1.85.2","date":"2026-10-17","lines":["A typo pass across the app, the guide and the tester notes.","One spelling throughout: warm-up, step-up, specialisation. Two exercise names corrected (Overhead triceps extension machine, Reverse Nordic).","A failed backup sync now says your log is safe on this phone, and calls the sheet by the name Settings uses."]},{"version":"1.85.1","date":"2026-10-17","lines":["The \"Use the generated plan\" button, and the line above it, are gone from the Workout tab.","Days you saved to your program stay as you saved them. Nothing you've logged changes.","To change a saved day, edit it on the Workout tab and tap Save to program again."]},{"version":"1.85.0","date":"2026-10-17","lines":["Try new exercises: under Train a different day on the Workout tab, it swaps today's exercises for ones you haven't logged, with 2–3 options each for the same muscles and your equipment. Main lifts stay as planned.","Work up to RPE 7 at most. You're finding a starting point. It counts as a session and toward your week, and never as a stall or a missed suggestion.","Afterwards the app asks \"Keep any of these?\". You can use one instead of the exercise it stood in for, take turns with it (one each time you train that day), or forget it.","The app also suggests it at the start of a block and in a deload week, once each. It never starts one on its own."]},{"version":"1.84.0","date":"2026-10-13","lines":["Rehab and prehab exercises are tracked. After training, open one in the rehab block and log the dose, the pain during it, and how it moved.","Rehab starts with a feel-it stage: the same easy dose for 10 days and 3 sessions. After that it takes one small step a week at most (reps first, then a slower lowering, then load), and only when the pain stayed within the limit and was back to your usual by the next morning.","A flare-up steps back one level and holds there for a week. Prehab is the maintenance version: a rep a week, with the same pain check.","After three pain-free weeks at the top of the dose, the app asks whether to move the exercise to prehab. It never switches on its own.","Progress has a Rehab and prehab history, kept apart from training volume and bests."]},{"version":"1.83.0","date":"2026-10-12","lines":["The warm-up fits the day: first the main lifts (a squat day warms hips, knees and back), then your conditions, then anything sore. Each item says why (\"for today's back squat\", \"for your shoulder\").","Edit warm-up: add from the library, create your own warm-up or rehab exercises, reorder yours and remove suggestions, for one day or every session.","A suggestion you remove isn't suggested again for that day. Your rehab exercises come after training."]},{"version":"1.82.0","date":"2026-10-12","lines":["Every number now earns its place. Edit program's block lines are a sentence: \"About 10 sets a week per muscle in week 1, rising to 16 by week 4.\"","The Lifts card says this week's sets for its muscle against a typical range, labelled as a rough guide.","Progress charts say what to read in them. The info sheet says \"main muscle\" or \"helps\" instead of 1.0 and 0.5.","Gone: the intensity line, the raw event count and tonnage as a headline. The % of your best now only shows on main lifts."]},{"version":"1.81.0","date":"2026-10-12","lines":["Demo options has \"Jump to…\": any block and week of the demo program, with made-up training up to that point.","Shortcuts go straight to the first strength block, a test-set week, a deload week or a stall, so each can be seen on demand.","It only touches the demo's own storage. Your real log is never written from the demo."]},{"version":"1.80.0","date":"2026-10-12","lines":["The first time something new happens, a short card explains it: your first check-in, a suggestion that moved, an all-out set, a new block, a deload week, a joint flag, a stall card, a focused-deload offer and the rest timer.","Each says what's happening and why, with More for the guide, and shows once. Got it puts it away for good.","Settings → Help → Reset tips brings them all back."]},{"version":"1.79.0","date":"2026-10-12","lines":["Setup shows where you are (\"Step 3 of 9\") with a progress bar, on its own screen with nothing of the app behind it.","After the plan, six short \"How your program works\" cards explain your blocks, a session, suggestions, readiness and joints, what to do when something hurts, and where help is, using your own plan. Skip any time; replay them from Settings → Help.","Tours: \"Skip\" is now \"End tour\", Back is there from the second step, and the first card says what the tour covers."]},{"version":"1.78.0","date":"2026-10-12","lines":["New Settings tab: your sheet and setup link, backups, appearance and theme codes, voice, RPE or effort, equipment, rest times, help and the app version.","Edit program now holds only training: blocks, your week, goal lifts, the strength/size slider, conditions, \"don't care about\" and Set up a new program.","The Lifts tab is your main lifts and the exercise library. Backups and \"How this works\" moved to Settings.","Settings → About lists what changed in each recent version."]}]</script>
+<script type="application/json" id="whats-new">{"version":"1.88.0","lines":["Today opens with today's plan: the workout, one sentence on what the app is doing to it, and how many exercises are held back or pushing. It shows before your check-in too.","Your program is one line of blocks with this week marked, and a sentence: where you are and what comes next.","Each block type has a pattern as well as a colour. The countdown chart is gone; a date shows only if you set a test day or a fixed end."]}</script>
+<script type="application/json" id="whats-new-history">[{"version":"1.88.0","date":"2026-10-17","lines":["Today opens with today's plan: the workout, one sentence on what the app is doing to it, and how many exercises are held back or pushing. It shows before your check-in too.","Your program is one line of blocks with this week marked, and a sentence: where you are and what comes next.","Each block type has a pattern as well as a colour. The countdown chart is gone; a date shows only if you set a test day or a fixed end."]},{"version":"1.87.0","date":"2026-10-17","lines":["The tabs are Today, Train, Lifts, Progress and Settings, with new icons.","Same screens in the same places: Today was the Dashboard, Train was Workout.","The guide and the screen tours use the new names."]},{"version":"1.86.0","date":"2026-10-17","lines":["The app's name now comes from one place, ready for the new name.","Backups, storage and your log don't change with the name. A backup made under any name restores the same way.","Nothing else looks different yet."]},{"version":"1.85.2","date":"2026-10-17","lines":["A typo pass across the app, the guide and the tester notes.","One spelling throughout: warm-up, step-up, specialisation. Two exercise names corrected (Overhead triceps extension machine, Reverse Nordic).","A failed backup sync now says your log is safe on this phone, and calls the sheet by the name Settings uses."]},{"version":"1.85.1","date":"2026-10-17","lines":["The \"Use the generated plan\" button, and the line above it, are gone from the Workout tab.","Days you saved to your program stay as you saved them. Nothing you've logged changes.","To change a saved day, edit it on the Workout tab and tap Save to program again."]},{"version":"1.85.0","date":"2026-10-17","lines":["Try new exercises: under Train a different day on the Workout tab, it swaps today's exercises for ones you haven't logged, with 2–3 options each for the same muscles and your equipment. Main lifts stay as planned.","Work up to RPE 7 at most. You're finding a starting point. It counts as a session and toward your week, and never as a stall or a missed suggestion.","Afterwards the app asks \"Keep any of these?\". You can use one instead of the exercise it stood in for, take turns with it (one each time you train that day), or forget it.","The app also suggests it at the start of a block and in a deload week, once each. It never starts one on its own."]},{"version":"1.84.0","date":"2026-10-13","lines":["Rehab and prehab exercises are tracked. After training, open one in the rehab block and log the dose, the pain during it, and how it moved.","Rehab starts with a feel-it stage: the same easy dose for 10 days and 3 sessions. After that it takes one small step a week at most (reps first, then a slower lowering, then load), and only when the pain stayed within the limit and was back to your usual by the next morning.","A flare-up steps back one level and holds there for a week. Prehab is the maintenance version: a rep a week, with the same pain check.","After three pain-free weeks at the top of the dose, the app asks whether to move the exercise to prehab. It never switches on its own.","Progress has a Rehab and prehab history, kept apart from training volume and bests."]},{"version":"1.83.0","date":"2026-10-12","lines":["The warm-up fits the day: first the main lifts (a squat day warms hips, knees and back), then your conditions, then anything sore. Each item says why (\"for today's back squat\", \"for your shoulder\").","Edit warm-up: add from the library, create your own warm-up or rehab exercises, reorder yours and remove suggestions, for one day or every session.","A suggestion you remove isn't suggested again for that day. Your rehab exercises come after training."]},{"version":"1.82.0","date":"2026-10-12","lines":["Every number now earns its place. Edit program's block lines are a sentence: \"About 10 sets a week per muscle in week 1, rising to 16 by week 4.\"","The Lifts card says this week's sets for its muscle against a typical range, labelled as a rough guide.","Progress charts say what to read in them. The info sheet says \"main muscle\" or \"helps\" instead of 1.0 and 0.5.","Gone: the intensity line, the raw event count and tonnage as a headline. The % of your best now only shows on main lifts."]},{"version":"1.81.0","date":"2026-10-12","lines":["Demo options has \"Jump to…\": any block and week of the demo program, with made-up training up to that point.","Shortcuts go straight to the first strength block, a test-set week, a deload week or a stall, so each can be seen on demand.","It only touches the demo's own storage. Your real log is never written from the demo."]},{"version":"1.80.0","date":"2026-10-12","lines":["The first time something new happens, a short card explains it: your first check-in, a suggestion that moved, an all-out set, a new block, a deload week, a joint flag, a stall card, a focused-deload offer and the rest timer.","Each says what's happening and why, with More for the guide, and shows once. Got it puts it away for good.","Settings → Help → Reset tips brings them all back."]},{"version":"1.79.0","date":"2026-10-12","lines":["Setup shows where you are (\"Step 3 of 9\") with a progress bar, on its own screen with nothing of the app behind it.","After the plan, six short \"How your program works\" cards explain your blocks, a session, suggestions, readiness and joints, what to do when something hurts, and where help is, using your own plan. Skip any time; replay them from Settings → Help.","Tours: \"Skip\" is now \"End tour\", Back is there from the second step, and the first card says what the tour covers."]}]</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -10025,7 +10038,7 @@ Settings → Voice has "Use this theme's voice", on by default.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.87.0';
+const APP_VERSION='1.88.0';
 /* The app's name, in one place (batch M). Every on-screen "Trainlog" comes from
    here; docs embedded in the page write {app} and get it at read time (named()).
    tools/set-name.js copies it into <title> and the manifest. Renaming never
@@ -11907,7 +11920,7 @@ const THEMES=[
      warn:'#F7DA80','warn-soft':'rgba(247,218,128,.1)',danger:'#F05A45',go:'#6FA83F',skip:'#F05A45',ok:'#9BCB5A',
      steel:'#656C4C',pr:'#F0A830','on-pr':'#1A1408',bar:'rgba(17,19,12,.95)',backdrop:'rgba(5,6,3,.82)',r:'8px',
      font:'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'},
-   css:`body{font-weight:500}h1,h2,h3,.day,.exname,.count,.snum{font-weight:850}.btn,.qlab{font-weight:700}
+   css:`body{font-weight:500}h1,h2,h3,.day,.exname,.snum{font-weight:850}.btn,.qlab{font-weight:700}
      .card,.ex,.qblock,.sheet{box-shadow:inset 0 0 0 1px rgba(240,168,48,.06)}`},
   {code:'TERMINAL', name:'Terminal', blurb:'Phosphor green on black. 1983 called.',
    tokens:{bg:'#000000','card':'#030903','card-2':'#0A170B',line:'#174A1F',ink:'#3DFF6E',muted:'#27C24E',dim:'#1A8A37',
@@ -11916,7 +11929,7 @@ const THEMES=[
      warn:'#FFC233','warn-soft':'rgba(255,194,51,.1)',danger:'#FF4A3D',go:'#3DFF6E',skip:'#FF4A3D',ok:'#B6FFC8',
      steel:'#1F6B33',pr:'#3DFF6E','on-pr':'#000000',bar:'rgba(0,0,0,.96)',backdrop:'rgba(0,0,0,.86)',r:'0px',
      font:'ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace'},
-   css:`*{border-radius:0!important}h1,h2,h3,.day,.count{letter-spacing:0}
+   css:`*{border-radius:0!important}h1,h2,h3,.day{letter-spacing:0}
      .card,.ex,.qblock,.sheet{border:1px solid var(--line)}
      .rscore::after{content:'\\2588';margin-left:3px;font-size:.8em;animation:tlblink 1.05s steps(1) infinite}
      @keyframes tlblink{50%{opacity:0}}`},
@@ -13645,15 +13658,18 @@ function jointLines(){
   if(quiet.length) out.push({band:'Green', text:cap(list(quiet.map(b=>b.joint)))+': at your usual, no change.'});
   return out;
 }
-function readinessCard(){
+function readinessCard(o){
+  o=o||{};
   const lastR=[...LOG].reverse().find(e=>e.type==='readiness'), b=todayBriefing();
   const today=!!(lastR&&sameDay(lastR.ts)), jl=jointLines();
   if(!lastR&&!b&&!jl.length) return null;
+  // on Today the plan has its own card; this keeps readiness, joints and fatigue
+  if(o.plan===false&&!today&&!jl.length&&!fatigueBand().n) return null;
   const rc=el('div','card pad readycard'); rc.dataset.tour='dash-bands';
   const sec=(title,html)=>{ const d=el('div','rsec'); d.innerHTML='<div class="qlab">'+title+'</div>'+html; rc.appendChild(d); return d; };
   // 1. today's plan
-  const s1=sec(b?'Today\'s plan':'Today', '<div class="sm" style="line-height:1.45">'+esc(b?b.top:today?'Checked in. Start a session for today\'s plan.':'No check-in yet today. It sets the warm-up and whether anything steps up.')+'</div>');
-  if(b){ const bt=el('button','btn s ghost','Today\'s plan ›'); bt.dataset.tour='briefing'; bt.style.marginTop='var(--sp-2)';
+  const s1=o.plan===false?null:sec(b?'Today\'s plan':'Today', '<div class="sm" style="line-height:1.45">'+esc(b?b.top:today?'Checked in. Start a session for today\'s plan.':'No check-in yet today. It sets the warm-up and whether anything steps up.')+'</div>');
+  if(b&&s1){ const bt=el('button','btn s ghost','Today\'s plan ›'); bt.dataset.tour='briefing'; bt.style.marginTop='var(--sp-2)';
     bt.onclick=e=>{ e.stopPropagation(); openBriefing(b); }; s1.appendChild(bt); }
   // 2. readiness: the number, its word, what it does
   const tap=(html,band)=>{ const x=el('button','rtap',statusRow(band,html)); x.setAttribute('aria-label','What this means'); x.onclick=()=>openReadiness(); return x; };
@@ -13736,47 +13752,16 @@ function renderDash(){
     const b=el('button','btn pri','Continue setup'); b.style.marginTop='var(--sp-3)'; b.onclick=openOnboardingResume; c.appendChild(b); v.appendChild(c); }
   { const ph=currentPhase(); const tk=ph&&(ph.onDeload||ph.type==='deload')?'deload':ph&&ph.idx>0&&ph.week===1?'block':null; const tc=tk&&tipCard(tk); if(tc) v.appendChild(tc); }
   if(JOINTS.map(jointBand).some(b=>b&&b.band!=='Green')){ const tc=tipCard('joint'); if(tc) v.appendChild(tc); }
-  if(todayBriefing()){ const rc=readinessCard(); if(rc) v.appendChild(rc); }
+  v.appendChild(todayPlanCard());
+  { const rc=readinessCard({plan:false}); if(rc) v.appendChild(rc); }
   v.appendChild(proposalCards());
   activeRehabPlans().forEach(({e,plan})=>v.appendChild(rehabPlanCard(e,plan,true)));
   const p=currentPhase(), proj=programProjection();
-  const longDate=dt=>dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  const tgtDate=CFG.target?new Date(CFG.target+'T12:00'):null;
-  // countdown follows the projection; the original target is secondary when they differ
   const _mlc=mainLiftRateCard();
-  const differs=proj&&tgtDate&&Math.abs(proj.behindDays)>=1;
-
-  const hero=el('div','card pad');hero.dataset.tour='dash-hero';
-  hero.innerHTML=`<div style="text-align:center;margin-bottom:var(--sp-2)">
-      <div class="count">${proj?proj.days:'—'} days to go</div>
-      <div class="countsub">${proj?'Projected '+longDate(proj.end):tgtDate?longDate(tgtDate):'No target set'}</div>
-      ${differs?`<div class="dim tiny" style="margin-top:var(--sp-1)">Target ${longDate(tgtDate)}${CFG.targetFixed?' · fixed':''}</div>`:''}
-    </div><div id="chart"></div>`;
-  hero.innerHTML+=`
-    <div class="legend">
-      <span><i class="sw" style="background:var(--hyp)"></i>Hypertrophy</span>
-      <span><i class="sw" style="background:var(--str)"></i>Strength</span>
-      <span><i class="sw" style="background:var(--peak)"></i>Taper</span>
-      <span><i class="sw" style="background:var(--muted);height:2px;border-radius:0"></i>Intensity</span>
-    </div>`;
-  v.appendChild(hero);
+  v.appendChild(blockTrack(p));
   if(_mlc) v.appendChild(_mlc);
   { const fdc=focusedDeloadCard(); if(fdc) v.appendChild(fdc); }
-  $('#chart').appendChild(phaseChart(p));
   if(proj&&proj.behindDays!=null&&proj.behindDays>DRIFT_DAYS) v.appendChild(driftCard(proj,p));
-
-  const bp=blockProgress(p);
-  const today=el('div','card pad');
-  today.innerHTML=`<div class="row between">
-      <span><div class="phase ${p.type}">${esc(p.label)}</div>
-        <div class="wk">Week ${p.week} of ${p.weeks}</div></span>
-      <span class="dim tiny" style="text-align:right">week ${bp.weeksIn} of ${roadmapWeeks()}<br>overall</span>
-    </div>
-    <div style="height:5px;background:var(--card-2);border-radius:3px;overflow:hidden;margin-top:var(--sp-2)">
-      <div style="height:100%;width:${Math.round(p.week/p.weeks*100)}%;background:${TYPE_COLOR[p.type]};border-radius:3px"></div></div>`;
-  const go=el('button','btn go wide','Go to Train');go.dataset.tour='start';
-  go.style.marginTop='var(--sp-3)'; go.onclick=()=>{TAB='work';render();};
-  today.appendChild(go); v.appendChild(today);
 
   const from=weekStart(new Date()).getTime();
   const doneWk=LOG.filter(e=>e.type==='session_end'&&new Date(e.ts).getTime()>=from).length;
@@ -13791,7 +13776,6 @@ function renderDash(){
     }</div>`;
   v.appendChild(cw);
 
-  if(!todayBriefing()){ const rc=readinessCard(); if(rc) v.appendChild(rc); }
 
   const vol=volumeThisWeek(), keys=Object.keys(LANDMARKS).filter(m=>vol[m]);
   const c=el('div','card pad');
@@ -13847,36 +13831,55 @@ function renderDash(){
   v.appendChild(el('div','dim tiny',esc(APP_NAME)+' v'+APP_VERSION+' — include this in any bug report')).style.cssText='text-align:center;margin:var(--sp-3) 0 var(--sp-1)';
 }
 
-/* volume as bars coloured by block type, intensity as an overlaid line */
-function phaseChart(cur){
-  if(!ROADMAP.length) return el('div','empty','No blocks yet — open Edit program to build one.');
-  const W=600,H=132,padL=2,padB=16,top=8;
-  const weeks=[];
-  ROADMAP.forEach(b=>b.vol.forEach((vv,wi)=>weeks.push({
-    type:(b.deload&&wi>=b.weeks)?'deload':b.type, vol:vv, int:b.int[wi]})));
-  const n=weeks.length,bw=(W-padL*2)/n,maxV=Math.max(...weeks.map(w=>w.vol)),plotH=H-padB-top;
-  let elapsed=0; ROADMAP.slice(0,cur.idx).forEach(b=>elapsed+=b.weeks);
-  const curIdx=elapsed+cur.week-1;
-
-  let bars='',labels='',pts=[];
-  weeks.forEach((w,i)=>{
-    const h=(w.vol/maxV)*plotH*.82, x=padL+i*bw, y=top+plotH-h, on=i===curIdx;
-    if(on) bars+=`<rect x="${x+1}" y="${top}" width="${bw-2}" height="${plotH}" rx="2" fill="var(--ink)" opacity=".055"/>`;
-    bars+=`<rect x="${x+1}" y="${y}" width="${bw-2}" height="${h}" rx="1.5" fill="${TYPE_COLOR[w.type]}" opacity="${on?1:.52}"/>`;
-    pts.push([x+bw/2, top+plotH-(w.int/100)*plotH*.94]);
-  });
-  let acc=0;
-  ROADMAP.forEach(b=>{
-    const L=blockLen(b);
-    labels+=`<text x="${padL+(acc+L/2)*bw}" y="${H-4}" fill="${blockColor(b)}"
-             font-size="9.5" text-anchor="middle" opacity=".8">${L}w</text>`;
-    acc+=L;
-    if(acc<n) labels+=`<line x1="${padL+acc*bw}" y1="${top}" x2="${padL+acc*bw}" y2="${top+plotH}" stroke="var(--line)"/>`;
-  });
-  const path=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
-  const box=el('div','');
-  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:132px;display:block" aria-hidden="true">
-    ${bars}${labels}<path d="${path}" fill="none" stroke="var(--muted)" stroke-width="1.6" stroke-linejoin="round" opacity=".85"/></svg>`;
+/* Today's plan leads Today (batch M): the sentence, and what's held back or
+   pushed. After the check-in it's the day's briefing; before it, the same
+   briefing worked out from the planned day (no session, no check-in), marked
+   as before the check-in. One button: on to Train. */
+function todayPlanCard(){
+  const b=todayBriefing();
+  let day=null, pre=null;
+  if(!b&&ROADMAP.length){ try{ day=session?{name:session.dayName,slots:session.slots}:planFor(todayDay());
+    pre=day&&day.slots.length?buildBriefing({dayName:day.name, slots:day.slots.map(s=>Array.isArray(s.sets)?s:{...s,sets_target:s.sets,sets:[]})}):null; }catch(e){ pre=null; } }
+  const B=b||pre, name=session?session.dayName:b?b.day:day?day.name:'';
+  const c=el('div','card pad'); c.dataset.tour='dash-today';
+  // counted the way the sentence counts them: a flagged exercise that still steps up is pushing, with a warning
+  const rows=B?B.groups.flatMap(g=>g.rows.map(r=>({...r,group:g.key}))):[];
+  const held=rows.filter(r=>r.group==='hold'&&!r.flagOnly).length, push=rows.filter(r=>r.group==='push'||(r.flagOnly&&r.dir>0)).length, warn=rows.filter(r=>r.flagOnly).length;
+  const counts=[[held,'held back'],[push,'pushing'],[warn,'with a warning']].filter(([k])=>k).map(([k,w])=>k+' '+w);
+  c.innerHTML='<div class="qlab">Today\'s plan</div>'
+    +(name?'<div style="font-size:var(--fs-4);font-weight:700;margin:2px 0 var(--sp-1)">'+esc(name)+'</div>':'')
+    +'<div class="sm" style="line-height:1.45">'+esc(B?B.top:ROADMAP.length?'Nothing planned for today.':'No program yet. Set one up to see today\'s plan.')+'</div>'
+    +(counts.length?'<div class="dim tiny" style="margin-top:var(--sp-1)">'+esc(counts.join(' · '))+'</div>':'')
+    +(!b&&pre?'<div class="dim tiny" style="margin-top:var(--sp-1)">Before your check-in. It can change this when you start.</div>':'');
+  const row=el('div','row'); row.style.cssText='gap:var(--sp-2);margin-top:var(--sp-3)';
+  if(B){ const bt=el('button','btn ghost','Details'); bt.dataset.tour='briefing'; bt.onclick=e=>{ e.stopPropagation(); openBriefing(B); }; row.appendChild(bt); }
+  const go=el('button','btn go grow',session?'Continue '+session.dayName:'Go to Train'); go.dataset.tour='start';
+  go.onclick=()=>{ TAB='work'; render(); }; row.appendChild(go); c.appendChild(row);
+  return c;
+}
+/* The program as one line (batch M): each block a segment as long as its weeks, a
+   pattern for each type so colour is never the only signal (solid size, striped
+   strength, dotted peak, hollow deload), and the current week marked. Under it, a
+   sentence. A date shows only if you set a test or meet day, or a fixed end. */
+function blockTrack(p){
+  const box=el('div','card pad'); box.dataset.tour='dash-hero';
+  if(!ROADMAP.length){ box.innerHTML='<div style="font-weight:650">Program</div><div class="empty">No blocks yet. Open Edit program to build one.</div>'; return box; }
+  const total=roadmapWeeks(), kind=b=>b.taper?'peak':b.type;
+  let before=0; ROADMAP.slice(0,p.idx).forEach(b=>before+=blockLen(b));
+  const at=Math.min(total-1,before+Math.max(0,p.week-1));
+  const segs=ROADMAP.map(b=>{ const L=blockLen(b), main=Math.min(L,b.weeks||L), dl=L-main;
+    return '<span class="tseg" style="flex:'+main+'"><i class="blk '+kind(b)+'"></i></span>'+(dl>0?'<span class="tseg" style="flex:'+dl+'"><i class="blk deload"></i></span>':''); }).join('');
+  const cur=ROADMAP[p.idx], next=ROADMAP[p.idx+1];
+  const sentence=(p.onDeload?'Deload week':blockName(cur)+' block · week '+p.week+' of '+(cur.weeks||blockLen(cur)))+' · '+(next?'next: '+blockName(next):'the last block');
+  const kinds=[...new Set(ROADMAP.flatMap(b=>[kind(b),...(blockLen(b)>(b.weeks||blockLen(b))?['deload']:[])]))];
+  const NAME={hyp:TYPE_NAME.hyp,str:TYPE_NAME.str,peak:'Taper',deload:TYPE_NAME.deload||'Deload'};
+  const date=CFG.testDate?{what:'Test day',iso:CFG.testDate}:CFG.targetFixed&&CFG.target?{what:'Fixed end',iso:CFG.target}:null;
+  const left=date?Math.round((new Date(date.iso+'T12:00')-new Date(isoToday()+'T12:00'))/864e5):null;
+  box.innerHTML='<div class="row between"><span style="font-weight:650">Program</span><span class="dim tiny">week '+(at+1)+' of '+total+'</span></div>'
+    +'<div class="track" role="img" aria-label="'+esc(sentence)+'"><div class="tsegs">'+segs+'</div><span class="tnow" style="left:'+((at+0.5)/total*100).toFixed(2)+'%"></span></div>'
+    +'<div class="sm" style="margin-top:var(--sp-2)">'+esc(sentence)+'</div>'
+    +'<div class="tleg">'+kinds.map(k=>'<span><i class="blk '+k+'"></i>'+esc(NAME[k]||k)+'</span>').join('')+'</div>'
+    +(date&&left!=null&&left>=0?'<div class="dim tiny" style="margin-top:var(--sp-2)">'+esc(date.what)+': '+esc(new Date(date.iso+'T12:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}))+' · '+(left===0?'today':left+' day'+(left===1?'':'s')+' to go')+'</div>':'');
   return box;
 }
 

@@ -17,14 +17,14 @@ everyone.
 
 | Feature | For | Where |
 |---|---|---|
-| Target date countdown and block bars | everyone | top card |
+| Program: the blocks as one line with this week marked, where you are and what's next; a date only for a test day or a fixed end | everyone | Program card |
 | Proposals (deload, stall fixes, handoffs, focused-deload steps, exclusions) | everyone | cards under the top card, only when there's one |
 | What's new card after an update | everyone | top, once per version |
-| Today's plan (what the app is doing to today's workout, and why) | everyone | after the check-in; then a card on Today for the rest of the day |
+| Today's plan: today's workout, one sentence on what the app is doing to it, how many held back and pushing (before the check-in too); Details | everyone | first card |
 | Main lifts and how each one progresses | everyone | Main lifts card |
-| Start training | everyone | the training card |
+| Go to Train | everyone | Today's plan card |
 | This week's sessions | everyone | This week card |
-| Readiness: today's plan's top line, then a dot and a sentence for each joint and for fatigue | everyone | readiness card (leads Today on a training day) |
+| Readiness: a dot and a sentence for readiness, each joint and fatigue | everyone | readiness card, under Today's plan |
 | Readiness detail: each check-in answer and what it does, sore muscles and joints with the exercises they touch, the score, a legend | everyone | tap the readiness card |
 | Volume this week per muscle, with the typical range | advanced | Volume this week card |
 | Your phases | everyone | Your phases card |

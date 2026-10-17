@@ -109,3 +109,4 @@ No engine changes: the backtest must stay identical. Part 1 removes the look-ali
 |---|---|---|---|
 | 1.1 name in one place | done | v1.86.0 | APP_NAME + APP_SLUG + named() for {app} in docs; tools/set-name.js (title, home-screen title, manifest); storage keys untouched; §93; D61 |
 | 1.2 + 1.7 tabs, icons, borrowed phrases | done | v1.87.0 | Today / Train via TAB_LABEL; sunrise, plate, stepped bars, sliders; "Go to Train", "Start", "Your plan", "Program"; §94 bans the twelve phrases; D62 |
+| 1.3 Today | done | v1.88.0 | today's plan first (before the check-in too); block track with patterns (solid / striped / dotted / hollow); countdown and phase bars removed; date only for a test day or fixed end; D63 |

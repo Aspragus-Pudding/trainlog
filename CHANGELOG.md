@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.88.0 — 2026-10-17
+- Today opens with today's plan: the workout, one sentence on what the app is doing to it, and how many exercises are held back or pushing. It shows before your check-in too.
+- Your program is one line of blocks with this week marked, and a sentence: where you are and what comes next.
+- Each block type has a pattern as well as a colour. The countdown chart is gone; a date shows only if you set a test day or a fixed end.
+
 ## 1.87.0 — 2026-10-17
 - The tabs are Today, Train, Lifts, Progress and Settings, with new icons.
 - Same screens in the same places: Today was the Dashboard, Train was Workout.
