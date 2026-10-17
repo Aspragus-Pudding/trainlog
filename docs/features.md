@@ -13,18 +13,18 @@ by default.
 The bottom of this page lists anything maintainer-only that is still visible to
 everyone.
 
-## Dashboard
+## Today
 
 | Feature | For | Where |
 |---|---|---|
 | Target date countdown and block bars | everyone | top card |
 | Proposals (deload, stall fixes, handoffs, focused-deload steps, exclusions) | everyone | cards under the top card, only when there's one |
 | What's new card after an update | everyone | top, once per version |
-| Today's plan (what the app is doing to today's workout, and why) | everyone | after the check-in; then a dashboard card for the rest of the day |
+| Today's plan (what the app is doing to today's workout, and why) | everyone | after the check-in; then a card on Today for the rest of the day |
 | Main lifts and how each one progresses | everyone | Main lifts card |
 | Start training | everyone | the training card |
 | This week's sessions | everyone | This week card |
-| Readiness: today's plan's top line, then a dot and a sentence for each joint and for fatigue | everyone | readiness card (leads the dashboard on a training day) |
+| Readiness: today's plan's top line, then a dot and a sentence for each joint and for fatigue | everyone | readiness card (leads Today on a training day) |
 | Readiness detail: each check-in answer and what it does, sore muscles and joints with the exercises they touch, the score, a legend | everyone | tap the readiness card |
 | Volume this week per muscle, with the typical range | advanced | Volume this week card |
 | Your phases | everyone | Your phases card |
@@ -32,14 +32,14 @@ everyone.
 | Rehab phase plans in progress | injury-prone | cards near the top, if you started one |
 | Edit program | everyone | button at the bottom |
 
-## Workout
+## Train
 
 | Feature | For | Where |
 |---|---|---|
-| Today's workout, editable before you start: move, swap, add or remove, sets ±, last time per set, estimated length; "Save to program"; "Last Upper B: 5 days ago" | everyone | Workout tab before you start |
+| Today's workout, editable before you start: move, swap, add or remove, sets ±, last time per set, estimated length; "Save to program"; "Last Upper B: 5 days ago" | everyone | Train tab before you start |
 | "Your preference" chips (don't care about) | advanced | on preview cards that moved |
-| Try new exercises: exercises you haven't logged for the same muscles and your equipment, RPE 7 at most; never a stall or a missed suggestion | everyone | Workout tab → Train a different day (also offered at a block start and in a deload week) |
-| Take turns between two exercises (from Try new exercises), Stop taking turns | everyone | the exercise's card on the Workout tab |
+| Try new exercises: exercises you haven't logged for the same muscles and your equipment, RPE 7 at most; never a stall or a missed suggestion | everyone | Train tab → Train a different day (also offered at a block start and in a deload week) |
+| Take turns between two exercises (from Try new exercises), Stop taking turns | everyone | the exercise's card on the Train tab |
 | Readiness check-in (sleep, motivation, rest of life, soreness, joints, bodyweight) | everyone | before the first exercise |
 | "For your shoulder" chip on a flagged exercise: the reason, the cues and the swap on its info sheet | injury-prone | set card → info sheet |
 | Pain check after a set, naming the set ("Set 2 · 80 × 10"), in plain words | injury-prone | set card, after a set on a flagged joint |
@@ -51,7 +51,7 @@ everyone.
 | Smith bar weight question (once per exercise) | everyone | set panel, Smith exercises |
 | Plate calculator, bar and sled weights | everyone | set panel, barbell and plate-loaded machines |
 | Warm-up ramp | everyone | set panel |
-| Warm-up (prep) from today's main lifts, your conditions and anything sore, each with why; Edit warm-up: add, remove, reorder, create your own (warm-up or rehab), per day or every session | everyone | Workout, Prep card |
+| Warm-up (prep) from today's main lifts, your conditions and anything sore, each with why; Edit warm-up: add, remove, reorder, create your own (warm-up or rehab), per day or every session | everyone | Train, Prep card |
 | Set types (straight, myo-reps, rest-pause, drop, all-out) | advanced | set panel |
 | Modify (pause, tempo, range, grip, straps, bar position) | advanced | set panel |
 | Change range for today | advanced | set panel |
@@ -66,14 +66,14 @@ everyone.
 | Rehab or prehab, per exercise | injury-prone | rehab block, an open item |
 | Finish session: joint question per exercise, diary, ratings | everyone | Finish session |
 | Session summary: new bests, compared with last time | everyone | after finishing |
-| Keep any of these? (after trying new exercises): use instead, take turns, forget | everyone | session summary; dashboard card until answered |
+| Keep any of these? (after trying new exercises): use instead, take turns, forget | everyone | session summary; a card on Today until answered |
 
 ## Lifts
 
 | Feature | For | Where |
 |---|---|---|
 | Main lift cards (estimate, typical weekly sets, progression model) | everyone | top |
-| "Enter a recent set" for a goal lift: weight × reps (chips 1, 3, 5), or for the bodyweight class bodyweight only / added / assistance | everyone | Edit program → Goal lifts; setup's "I know my numbers"; Workout → Set starting estimates |
+| "Enter a recent set" for a goal lift: weight × reps (chips 1, 3, 5), or for the bodyweight class bodyweight only / added / assistance | everyone | Edit program → Goal lifts; setup's "I know my numbers"; Train → Set starting estimates |
 | Exercise library (browse, search by name, muscle or equipment) | everyone | Exercise library card |
 | Add a custom exercise | advanced | Exercise library card |
 
@@ -169,7 +169,7 @@ everyone.
 | Quick note (the pencil) | everyone | header, every screen |
 | Diagnostics (phone, browser, visible size, safe areas) with Copy | everyone | long-press the version number in Lifts |
 | Errors the app records, kept in your notes until you send them | everyone | Progress → Notes |
-| Exit setup, and Continue setup later (answers kept) | everyone | setup header; dashboard card; on reopening the app |
+| Exit setup, and Continue setup later (answers kept) | everyone | setup header; a card on Today; on reopening the app |
 | "?" tour of the current screen | everyone | header, and in Edit program |
 | Tap a dotted word for its definition (the glossary) | everyone | set cards, Lifts, Progress, readiness, Edit program |
 | First-session hints | everyone | first session only |

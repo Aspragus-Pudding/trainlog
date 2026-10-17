@@ -1327,3 +1327,35 @@ any slot picks it set stay harmless: delete `CFG.rotation` to stop taking turns.
   README.md and the repo's docs (for people, not the app), and comments.
 
 **To undo:** the strings were literal "Trainlog" in v1.85.2.
+
+## D62. Today and Train, our own tab icons, no borrowed phrases (v1.87.0)
+
+**Chosen:**
+- **Tab names live in one list, `TAB_LABEL`**, which the header, the tour chips and
+  the guide's tour picker read. The internal tab ids (`dash`, `work`) stay, so
+  nothing stored or linked changes.
+- **Icons:**
+  - Today is a sunrise.
+  - Train is a plate seen face-on.
+  - Lifts is stepped bars.
+  - Settings is two sliders.
+  - Progress keeps its trend line.
+
+  They're stand-ins drawn in the current style; Part 3 restyles all icons with
+  the chosen direction.
+- **Labels that echoed another app:**
+  - "Start training" became "Go to Train" on Today and "Start" on Train and
+    in the check-in.
+  - "Your program" as a heading became "Your plan" in setup and the builder,
+    and "Program" in Edit program.
+- **The banned list (§94)** covers the brief's twelve phrases. "Your Program" and
+  "Start Training" are banned in title case anywhere, and as a whole label in
+  any case. Sentences like "in your program" stay. The list is checked in the
+  script's strings, the page's static text, the guide, the glossary, the voices
+  and the What's new entries shown in the app.
+- **A comment naming another app** in index.html was reworded.
+
+**Worth knowing:** CLAUDE.md still says the app "replaces a JuggernautAI
+subscription". It's your file, so I left it; the repo is public.
+
+**To undo:** v1.86.0 has the old names and icons.

@@ -7,7 +7,7 @@ This guide starts with what to do when something comes up, then every setting, t
 ## When something comes up {guide:tasks}
 
 ### My shoulder, knee or another joint hurts
-Rate it in the check-in under "Anything hurting?", and after an exercise when the app asks. A rating above your usual holds or lightens only the movements that load that joint, and everything else carries on as planned. If it keeps flaring, the dashboard offers a focused deload for those exercises, and Edit program → What you're working around shows how the joint is doing against your usual. After a set on a joint you've flagged, the set card asks how it felt on that set, out of 10 (or whether it felt unstable), and says whether to carry on. A flagged exercise shows a "For your shoulder" chip (or knee, elbow and so on); tap it for the reason, the cues and a suggested swap. The app warns and suggests swaps but never stops you, and anything on a condition's "see a professional" list is worth getting checked.
+Rate it in the check-in under "Anything hurting?", and after an exercise when the app asks. A rating above your usual holds or lightens only the movements that load that joint, and everything else carries on as planned. If it keeps flaring, Today offers a focused deload for those exercises, and Edit program → What you're working around shows how the joint is doing against your usual. After a set on a joint you've flagged, the set card asks how it felt on that set, out of 10 (or whether it felt unstable), and says whether to carry on. A flagged exercise shows a "For your shoulder" chip (or knee, elbow and so on); tap it for the reason, the cues and a suggested swap. The app warns and suggests swaps but never stops you, and anything on a condition's "see a professional" list is worth getting checked.
 
 ### I'm sore today
 Mark the sore area in the check-in. Only the exercises that train that muscle start lighter, with a set fewer on the first two of them, and the rest of the session is unchanged. If soreness already cut that work last session without a missed rep since, it doesn't cut again.
@@ -22,16 +22,16 @@ Set Edit program → How hard suggestions push to "push a bit" or "push me", for
 The same setting works the other way: "ease off" or "hold me back" holds suggestions where they would have stepped up. For a few exercises only, start a focused deload from the exercise's info sheet, and everything else carries on.
 
 ### I missed a week
-Nothing is lost. The program counts sessions, not dates, so it picks up at the day you missed. The target date on the dashboard moves out to match your pace. Your first sessions back are worked out from your last sets, so log the effort honestly and the next suggestion adjusts if a lift feels heavy.
+Nothing is lost. The program counts sessions, not dates, so it picks up at the day you missed. The target date on Today moves out to match your pace. Your first sessions back are worked out from your last sets, so log the effort honestly and the next suggestion adjusts if a lift feels heavy.
 
 ### A lift has stalled
-When a main lift goes a few weeks without a new best while you're training it every week, the dashboard says so and proposes a stall fix. It checks the simple causes first, then suggests more practice of the lift itself. Nothing starts until you accept, and each fix has an undo.
+When a main lift goes a few weeks without a new best while you're training it every week, Today says so and proposes a stall fix. It checks the simple causes first, then suggests more practice of the lift itself. Nothing starts until you accept, and each fix has an undo.
 
 ### I need a lighter week
 The app proposes a deload when the signs show: readiness falling, the same weights feeling harder, or a flared joint. You can also add one yourself in Edit program → Blocks with "Deload week at the end".
 
 ### I want to change today's workout
-Before you start, the Workout tab is today's workout, with the same cards as the live session. Move exercises up or down, swap one, add or remove one, or change the number of sets; each set shows what you did last time. Changes are for today only. Tap "Save to program" to keep them for that day from now on, and Start begins the session in the order you've set.
+Before you start, the Train tab is today's workout, with the same cards as the live session. Move exercises up or down, swap one, add or remove one, or change the number of sets; each set shows what you did last time. Changes are for today only. Tap "Save to program" to keep them for that day from now on, and Start begins the session in the order you've set.
 
 ### I want my own warm-up
 The warm-up at the top of a workout is built from the day's main lifts, then your conditions, then anything sore, and each item says why it's there. Tap Edit warm-up to stop a suggestion for that day, add one from the library, or create your own warm-up or rehab exercise, for that day or every session. Rehab ones come after training.
@@ -40,7 +40,7 @@ The warm-up at the top of a workout is built from the day's main lifts, then you
 Rehab exercises come after training, in the rehab block. Tap one to log it: the dose, the pain during it, and how it moved. For the first 10 days and 3 sessions the dose stays the same (the feel-it stage). After that it goes up one small step a week at most (reps, then a slower lowering, then load), and only when the pain stayed within the limit and was back to your usual by the next check-in. If it hurts more than the limit, the next session steps back and holds for a week. Your history is under Progress → Rehab and prehab.
 
 ### I want to try new exercises
-On the Workout tab, tap Train a different day, then Try new exercises today. Today's exercises are swapped for ones you haven't logged, with 2–3 options each for the same muscles and your equipment. Your main lifts stay as planned. Work up to RPE 7 at most: you're finding a starting point, and nothing counts as a stall or a missed suggestion. Afterwards, for each one, choose Use instead, Take turns (one each time you train that day) or Forget. The app also offers this at the start of a block and in a deload week.
+On the Train tab, tap Train a different day, then Try new exercises today. Today's exercises are swapped for ones you haven't logged, with 2–3 options each for the same muscles and your equipment. Your main lifts stay as planned. Work up to RPE 7 at most: you're finding a starting point, and nothing counts as a stall or a missed suggestion. Afterwards, for each one, choose Use instead, Take turns (one each time you train that day) or Forget. The app also offers this at the start of a block and in a deload week.
 
 ### My gym doesn't have an exercise
 Tap the swap button on the exercise card and pick another, by muscle or by name. Anything you log comes first from then on. To change what the app assumes your gym has, use Settings → Equipment; anything you've logged still comes first.
@@ -87,7 +87,7 @@ From "hold me back" to "push me", one step either way on every suggestion. If yo
 In strength blocks, main lifts get one top set, then lighter back-off sets. Choose a fixed number of back-offs, or keep going until one feels as hard as the top set, at most two more than the plan.
 
 ### When a main lift stalls
-Off by default: the app proposes a stall fix on the dashboard and waits for you. Turn on starting automatically and it begins the fix itself, always with an undo card.
+Off by default: the app proposes a stall fix on Today and waits for you. Turn on starting automatically and it begins the fix itself, always with an undo card.
 
 ### What you're working around
 Pick any injuries or conditions. Exercises that load them carry a warning and a suggested swap, and are never removed unless you say so. Each condition's card shows how the joint is doing against your usual, the exercises it flags in your program, a focused deload for them, red-flag checks and an optional phase plan.
@@ -229,7 +229,7 @@ When you are done, finish the session here. It asks a couple of optional questio
 ### Progress `nav [data-tab="hist"]` {after:first-session}
 The Progress tab is where your lifts' trends, the reasons behind each suggestion and how well the suggestions fit you build up over your next few sessions.
 
-## Dashboard {tab:dash}
+## Today {tab:dash}
 
 ### Your target date `[data-tour="dash-hero"]`
 The top card counts down to your target date, projected from how often you actually train rather than from the calendar. Miss sessions and the date moves out; train more often and it comes closer. The bars underneath are your blocks in order.
@@ -240,8 +240,8 @@ After your check-in, Today's plan says what the app is doing to the workout and 
 ### Proposals `[data-tour="proposals"]`
 Cards here are proposals, such as a deload week, a change for a lift that has stalled, or switching between the assisted and unassisted version of an exercise. Nothing changes until you accept one, and declining hides the card for a while.
 
-### Start training `[data-tour="start"]`
-Start training opens today's workout. The app picks the day from your rotation, not from the weekday, so the program carries on from wherever you left it.
+### Go to Train `[data-tour="start"]`
+Go to Train opens today's workout. The app picks the day from your rotation, not from the weekday, so the program carries on from wherever you left it.
 
 ### Readiness `[data-tour="dash-bands"]`
 The readiness card has three parts: today's plan, your readiness out of 100 with what it does today, and each joint against your usual (0 none to 3 bad). Every number sits next to what it changes. Tap any of them for the scales: the four readiness bands, which set your warm-up, and how your usual is worked out.
@@ -258,7 +258,7 @@ Recent bests shows the best estimated max for each lift you have logged. It is a
 ### Edit program `[data-tour="edit-program"]`
 Edit program is where you change your blocks, goals, schedule, conditions and preferences. After a program change the next session is a settling-in session, with no step up in load.
 
-## Workout {tab:work}
+## Train {tab:work}
 
 ### Each exercise `#v-work .ex`
 Each exercise is a card, and tapping it opens the set panel. The faint numbers beside sets you haven't done yet are what you did last time. The order is a suggestion, and the card's controls let you move, swap or add exercises without changing your program.

@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.87.0 — 2026-10-17
+- The tabs are Today, Train, Lifts, Progress and Settings, with new icons.
+- Same screens in the same places: Today was the Dashboard, Train was Workout.
+- The guide and the screen tours use the new names.
+
 ## 1.86.0 — 2026-10-17
 - The app's name now comes from one place, ready for the new name.
 - Backups, storage and your log don't change with the name. A backup made under any name restores the same way.

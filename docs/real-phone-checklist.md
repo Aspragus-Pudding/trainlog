@@ -21,7 +21,7 @@ app) and one Android phone (installed from Chrome). Use the demo
    own blocks and days. **Skip and start** is in reach on each.
 
 ## A session
-7. The Workout tab, before Start: move an exercise up, swap one, add one, take
+7. The Train tab, before Start: move an exercise up, swap one, add one, take
    a set off one. **Start** begins in that order.
 8. A first-time card shows on the check-in. **Got it** removes it, and it
    doesn't come back on the next check-in.

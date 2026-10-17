@@ -285,7 +285,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:v
     <div>
       <div class="phase hyp" id="ph">Hypertrophy</div>
       <div class="wk" id="wk">Week 1</div>
-      <div class="day" id="dy">Dashboard</div>
+      <div class="day" id="dy">Today</div>
     </div>
     <div class="ctxbtns">
       <button class="notebtn" id="tourBtn" aria-label="Show me around this screen" style="font-weight:700;font-size:17px">?</button>
@@ -305,19 +305,19 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:v
 
 <nav>
   <button data-tab="dash" aria-current="page">
-    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-    Dashboard</button>
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h18"/><path d="M6.5 19a5.5 5.5 0 0 1 11 0"/><path d="M12 6.5V9M5.4 10.4l1.6 1.6M18.6 10.4L17 12"/></svg>
+    Today</button>
   <button data-tab="work">
-    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M5 8v8M19 8v8M8 6v12M16 6v12M8 12h8"/></svg>
-    Workout</button>
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2"/><path d="M12 3.5v3.2"/></svg>
+    Train</button>
   <button data-tab="lifts">
-    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4" stroke-linecap="round"/></svg>
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19h14M5 14h10M5 9h6M5 4v15"/></svg>
     Lifts</button>
   <button data-tab="hist">
     <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16"/><path d="M7 15l4-5 3 3 5-7"/></svg>
     Progress</button>
   <button data-tab="set">
-    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
     Settings</button>
 </nav>
 
@@ -8635,7 +8635,7 @@ This guide starts with what to do when something comes up, then every setting, t
 ## When something comes up {guide:tasks}
 
 ### My shoulder, knee or another joint hurts
-Rate it in the check-in under "Anything hurting?", and after an exercise when the app asks. A rating above your usual holds or lightens only the movements that load that joint, and everything else carries on as planned. If it keeps flaring, the dashboard offers a focused deload for those exercises, and Edit program → What you're working around shows how the joint is doing against your usual. After a set on a joint you've flagged, the set card asks how it felt on that set, out of 10 (or whether it felt unstable), and says whether to carry on. A flagged exercise shows a "For your shoulder" chip (or knee, elbow and so on); tap it for the reason, the cues and a suggested swap. The app warns and suggests swaps but never stops you, and anything on a condition's "see a professional" list is worth getting checked.
+Rate it in the check-in under "Anything hurting?", and after an exercise when the app asks. A rating above your usual holds or lightens only the movements that load that joint, and everything else carries on as planned. If it keeps flaring, Today offers a focused deload for those exercises, and Edit program → What you're working around shows how the joint is doing against your usual. After a set on a joint you've flagged, the set card asks how it felt on that set, out of 10 (or whether it felt unstable), and says whether to carry on. A flagged exercise shows a "For your shoulder" chip (or knee, elbow and so on); tap it for the reason, the cues and a suggested swap. The app warns and suggests swaps but never stops you, and anything on a condition's "see a professional" list is worth getting checked.
 
 ### I'm sore today
 Mark the sore area in the check-in. Only the exercises that train that muscle start lighter, with a set fewer on the first two of them, and the rest of the session is unchanged. If soreness already cut that work last session without a missed rep since, it doesn't cut again.
@@ -8650,16 +8650,16 @@ Set Edit program → How hard suggestions push to "push a bit" or "push me", for
 The same setting works the other way: "ease off" or "hold me back" holds suggestions where they would have stepped up. For a few exercises only, start a focused deload from the exercise's info sheet, and everything else carries on.
 
 ### I missed a week
-Nothing is lost. The program counts sessions, not dates, so it picks up at the day you missed. The target date on the dashboard moves out to match your pace. Your first sessions back are worked out from your last sets, so log the effort honestly and the next suggestion adjusts if a lift feels heavy.
+Nothing is lost. The program counts sessions, not dates, so it picks up at the day you missed. The target date on Today moves out to match your pace. Your first sessions back are worked out from your last sets, so log the effort honestly and the next suggestion adjusts if a lift feels heavy.
 
 ### A lift has stalled
-When a main lift goes a few weeks without a new best while you're training it every week, the dashboard says so and proposes a stall fix. It checks the simple causes first, then suggests more practice of the lift itself. Nothing starts until you accept, and each fix has an undo.
+When a main lift goes a few weeks without a new best while you're training it every week, Today says so and proposes a stall fix. It checks the simple causes first, then suggests more practice of the lift itself. Nothing starts until you accept, and each fix has an undo.
 
 ### I need a lighter week
 The app proposes a deload when the signs show: readiness falling, the same weights feeling harder, or a flared joint. You can also add one yourself in Edit program → Blocks with "Deload week at the end".
 
 ### I want to change today's workout
-Before you start, the Workout tab is today's workout, with the same cards as the live session. Move exercises up or down, swap one, add or remove one, or change the number of sets; each set shows what you did last time. Changes are for today only. Tap "Save to program" to keep them for that day from now on, and Start begins the session in the order you've set.
+Before you start, the Train tab is today's workout, with the same cards as the live session. Move exercises up or down, swap one, add or remove one, or change the number of sets; each set shows what you did last time. Changes are for today only. Tap "Save to program" to keep them for that day from now on, and Start begins the session in the order you've set.
 
 ### I want my own warm-up
 The warm-up at the top of a workout is built from the day's main lifts, then your conditions, then anything sore, and each item says why it's there. Tap Edit warm-up to stop a suggestion for that day, add one from the library, or create your own warm-up or rehab exercise, for that day or every session. Rehab ones come after training.
@@ -8668,7 +8668,7 @@ The warm-up at the top of a workout is built from the day's main lifts, then you
 Rehab exercises come after training, in the rehab block. Tap one to log it: the dose, the pain during it, and how it moved. For the first 10 days and 3 sessions the dose stays the same (the feel-it stage). After that it goes up one small step a week at most (reps, then a slower lowering, then load), and only when the pain stayed within the limit and was back to your usual by the next check-in. If it hurts more than the limit, the next session steps back and holds for a week. Your history is under Progress → Rehab and prehab.
 
 ### I want to try new exercises
-On the Workout tab, tap Train a different day, then Try new exercises today. Today's exercises are swapped for ones you haven't logged, with 2–3 options each for the same muscles and your equipment. Your main lifts stay as planned. Work up to RPE 7 at most: you're finding a starting point, and nothing counts as a stall or a missed suggestion. Afterwards, for each one, choose Use instead, Take turns (one each time you train that day) or Forget. The app also offers this at the start of a block and in a deload week.
+On the Train tab, tap Train a different day, then Try new exercises today. Today's exercises are swapped for ones you haven't logged, with 2–3 options each for the same muscles and your equipment. Your main lifts stay as planned. Work up to RPE 7 at most: you're finding a starting point, and nothing counts as a stall or a missed suggestion. Afterwards, for each one, choose Use instead, Take turns (one each time you train that day) or Forget. The app also offers this at the start of a block and in a deload week.
 
 ### My gym doesn't have an exercise
 Tap the swap button on the exercise card and pick another, by muscle or by name. Anything you log comes first from then on. To change what the app assumes your gym has, use Settings → Equipment; anything you've logged still comes first.
@@ -8715,7 +8715,7 @@ From "hold me back" to "push me", one step either way on every suggestion. If yo
 In strength blocks, main lifts get one top set, then lighter back-off sets. Choose a fixed number of back-offs, or keep going until one feels as hard as the top set, at most two more than the plan.
 
 ### When a main lift stalls
-Off by default: the app proposes a stall fix on the dashboard and waits for you. Turn on starting automatically and it begins the fix itself, always with an undo card.
+Off by default: the app proposes a stall fix on Today and waits for you. Turn on starting automatically and it begins the fix itself, always with an undo card.
 
 ### What you're working around
 Pick any injuries or conditions. Exercises that load them carry a warning and a suggested swap, and are never removed unless you say so. Each condition's card shows how the joint is doing against your usual, the exercises it flags in your program, a focused deload for them, red-flag checks and an optional phase plan.
@@ -8857,7 +8857,7 @@ When you are done, finish the session here. It asks a couple of optional questio
 ### Progress `nav [data-tab="hist"]` {after:first-session}
 The Progress tab is where your lifts' trends, the reasons behind each suggestion and how well the suggestions fit you build up over your next few sessions.
 
-## Dashboard {tab:dash}
+## Today {tab:dash}
 
 ### Your target date `[data-tour="dash-hero"]`
 The top card counts down to your target date, projected from how often you actually train rather than from the calendar. Miss sessions and the date moves out; train more often and it comes closer. The bars underneath are your blocks in order.
@@ -8868,8 +8868,8 @@ After your check-in, Today's plan says what the app is doing to the workout and 
 ### Proposals `[data-tour="proposals"]`
 Cards here are proposals, such as a deload week, a change for a lift that has stalled, or switching between the assisted and unassisted version of an exercise. Nothing changes until you accept one, and declining hides the card for a while.
 
-### Start training `[data-tour="start"]`
-Start training opens today's workout. The app picks the day from your rotation, not from the weekday, so the program carries on from wherever you left it.
+### Go to Train `[data-tour="start"]`
+Go to Train opens today's workout. The app picks the day from your rotation, not from the weekday, so the program carries on from wherever you left it.
 
 ### Readiness `[data-tour="dash-bands"]`
 The readiness card has three parts: today's plan, your readiness out of 100 with what it does today, and each joint against your usual (0 none to 3 bad). Every number sits next to what it changes. Tap any of them for the scales: the four readiness bands, which set your warm-up, and how your usual is worked out.
@@ -8886,7 +8886,7 @@ Recent bests shows the best estimated max for each lift you have logged. It is a
 ### Edit program `[data-tour="edit-program"]`
 Edit program is where you change your blocks, goals, schedule, conditions and preferences. After a program change the next session is a settling-in session, with no step up in load.
 
-## Workout {tab:work}
+## Train {tab:work}
 
 ### Each exercise `#v-work .ex`
 Each exercise is a card, and tapping it opens the set panel. The faint numbers beside sets you haven't done yet are what you did last time. The order is a suggestion, and the card's controls let you move, swap or add exercises without changing your program.
@@ -9457,8 +9457,8 @@ Settings → Voice has "Use this theme's voice", on by default.
 - Freshly updated · {v}
 - The latest · {v}
 </script>
-<script type="application/json" id="whats-new">{"version":"1.86.0","lines":["The app's name now comes from one place, ready for the new name.","Backups, storage and your log don't change with the name. A backup made under any name restores the same way.","Nothing else looks different yet."]}</script>
-<script type="application/json" id="whats-new-history">[{"version":"1.86.0","date":"2026-10-17","lines":["The app's name now comes from one place, ready for the new name.","Backups, storage and your log don't change with the name. A backup made under any name restores the same way.","Nothing else looks different yet."]},{"version":"1.85.2","date":"2026-10-17","lines":["A typo pass across the app, the guide and the tester notes.","One spelling throughout: warm-up, step-up, specialisation. Two exercise names corrected (Overhead triceps extension machine, Reverse Nordic).","A failed backup sync now says your log is safe on this phone, and calls the sheet by the name Settings uses."]},{"version":"1.85.1","date":"2026-10-17","lines":["The \"Use the generated plan\" button, and the line above it, are gone from the Workout tab.","Days you saved to your program stay as you saved them. Nothing you've logged changes.","To change a saved day, edit it on the Workout tab and tap Save to program again."]},{"version":"1.85.0","date":"2026-10-17","lines":["Try new exercises: under Train a different day on the Workout tab, it swaps today's exercises for ones you haven't logged, with 2–3 options each for the same muscles and your equipment. Main lifts stay as planned.","Work up to RPE 7 at most. You're finding a starting point. It counts as a session and toward your week, and never as a stall or a missed suggestion.","Afterwards the app asks \"Keep any of these?\". You can use one instead of the exercise it stood in for, take turns with it (one each time you train that day), or forget it.","The app also suggests it at the start of a block and in a deload week, once each. It never starts one on its own."]},{"version":"1.84.0","date":"2026-10-13","lines":["Rehab and prehab exercises are tracked. After training, open one in the rehab block and log the dose, the pain during it, and how it moved.","Rehab starts with a feel-it stage: the same easy dose for 10 days and 3 sessions. After that it takes one small step a week at most (reps first, then a slower lowering, then load), and only when the pain stayed within the limit and was back to your usual by the next morning.","A flare-up steps back one level and holds there for a week. Prehab is the maintenance version: a rep a week, with the same pain check.","After three pain-free weeks at the top of the dose, the app asks whether to move the exercise to prehab. It never switches on its own.","Progress has a Rehab and prehab history, kept apart from training volume and bests."]},{"version":"1.83.0","date":"2026-10-12","lines":["The warm-up fits the day: first the main lifts (a squat day warms hips, knees and back), then your conditions, then anything sore. Each item says why (\"for today's back squat\", \"for your shoulder\").","Edit warm-up: add from the library, create your own warm-up or rehab exercises, reorder yours and remove suggestions, for one day or every session.","A suggestion you remove isn't suggested again for that day. Your rehab exercises come after training."]},{"version":"1.82.0","date":"2026-10-12","lines":["Every number now earns its place. Edit program's block lines are a sentence: \"About 10 sets a week per muscle in week 1, rising to 16 by week 4.\"","The Lifts card says this week's sets for its muscle against a typical range, labelled as a rough guide.","Progress charts say what to read in them. The info sheet says \"main muscle\" or \"helps\" instead of 1.0 and 0.5.","Gone: the intensity line, the raw event count and tonnage as a headline. The % of your best now only shows on main lifts."]},{"version":"1.81.0","date":"2026-10-12","lines":["Demo options has \"Jump to…\": any block and week of the demo program, with made-up training up to that point.","Shortcuts go straight to the first strength block, a test-set week, a deload week or a stall, so each can be seen on demand.","It only touches the demo's own storage. Your real log is never written from the demo."]},{"version":"1.80.0","date":"2026-10-12","lines":["The first time something new happens, a short card explains it: your first check-in, a suggestion that moved, an all-out set, a new block, a deload week, a joint flag, a stall card, a focused-deload offer and the rest timer.","Each says what's happening and why, with More for the guide, and shows once. Got it puts it away for good.","Settings → Help → Reset tips brings them all back."]},{"version":"1.79.0","date":"2026-10-12","lines":["Setup shows where you are (\"Step 3 of 9\") with a progress bar, on its own screen with nothing of the app behind it.","After the plan, six short \"How your program works\" cards explain your blocks, a session, suggestions, readiness and joints, what to do when something hurts, and where help is, using your own plan. Skip any time; replay them from Settings → Help.","Tours: \"Skip\" is now \"End tour\", Back is there from the second step, and the first card says what the tour covers."]},{"version":"1.78.0","date":"2026-10-12","lines":["New Settings tab: your sheet and setup link, backups, appearance and theme codes, voice, RPE or effort, equipment, rest times, help and the app version.","Edit program now holds only training: blocks, your week, goal lifts, the strength/size slider, conditions, \"don't care about\" and Set up a new program.","The Lifts tab is your main lifts and the exercise library. Backups and \"How this works\" moved to Settings.","Settings → About lists what changed in each recent version."]},{"version":"1.77.0","date":"2026-10-12","lines":["Rest is now set per exercise: 4 minutes for squats and deadlifts as main lifts, 3 for other main lifts, 2:30 for other compounds and 1:45 for isolation work.","Change it on the exercise's info sheet, or add 30 seconds on the rest bar and tap \"Always\".","If you keep resting longer or shorter than the timer for three sessions, the app offers once to match it."]}]</script>
+<script type="application/json" id="whats-new">{"version":"1.87.0","lines":["The tabs are Today, Train, Lifts, Progress and Settings, with new icons.","Same screens in the same places: Today was the Dashboard, Train was Workout.","The guide and the screen tours use the new names."]}</script>
+<script type="application/json" id="whats-new-history">[{"version":"1.87.0","date":"2026-10-17","lines":["The tabs are Today, Train, Lifts, Progress and Settings, with new icons.","Same screens in the same places: Today was the Dashboard, Train was Workout.","The guide and the screen tours use the new names."]},{"version":"1.86.0","date":"2026-10-17","lines":["The app's name now comes from one place, ready for the new name.","Backups, storage and your log don't change with the name. A backup made under any name restores the same way.","Nothing else looks different yet."]},{"version":"1.85.2","date":"2026-10-17","lines":["A typo pass across the app, the guide and the tester notes.","One spelling throughout: warm-up, step-up, specialisation. Two exercise names corrected (Overhead triceps extension machine, Reverse Nordic).","A failed backup sync now says your log is safe on this phone, and calls the sheet by the name Settings uses."]},{"version":"1.85.1","date":"2026-10-17","lines":["The \"Use the generated plan\" button, and the line above it, are gone from the Workout tab.","Days you saved to your program stay as you saved them. Nothing you've logged changes.","To change a saved day, edit it on the Workout tab and tap Save to program again."]},{"version":"1.85.0","date":"2026-10-17","lines":["Try new exercises: under Train a different day on the Workout tab, it swaps today's exercises for ones you haven't logged, with 2–3 options each for the same muscles and your equipment. Main lifts stay as planned.","Work up to RPE 7 at most. You're finding a starting point. It counts as a session and toward your week, and never as a stall or a missed suggestion.","Afterwards the app asks \"Keep any of these?\". You can use one instead of the exercise it stood in for, take turns with it (one each time you train that day), or forget it.","The app also suggests it at the start of a block and in a deload week, once each. It never starts one on its own."]},{"version":"1.84.0","date":"2026-10-13","lines":["Rehab and prehab exercises are tracked. After training, open one in the rehab block and log the dose, the pain during it, and how it moved.","Rehab starts with a feel-it stage: the same easy dose for 10 days and 3 sessions. After that it takes one small step a week at most (reps first, then a slower lowering, then load), and only when the pain stayed within the limit and was back to your usual by the next morning.","A flare-up steps back one level and holds there for a week. Prehab is the maintenance version: a rep a week, with the same pain check.","After three pain-free weeks at the top of the dose, the app asks whether to move the exercise to prehab. It never switches on its own.","Progress has a Rehab and prehab history, kept apart from training volume and bests."]},{"version":"1.83.0","date":"2026-10-12","lines":["The warm-up fits the day: first the main lifts (a squat day warms hips, knees and back), then your conditions, then anything sore. Each item says why (\"for today's back squat\", \"for your shoulder\").","Edit warm-up: add from the library, create your own warm-up or rehab exercises, reorder yours and remove suggestions, for one day or every session.","A suggestion you remove isn't suggested again for that day. Your rehab exercises come after training."]},{"version":"1.82.0","date":"2026-10-12","lines":["Every number now earns its place. Edit program's block lines are a sentence: \"About 10 sets a week per muscle in week 1, rising to 16 by week 4.\"","The Lifts card says this week's sets for its muscle against a typical range, labelled as a rough guide.","Progress charts say what to read in them. The info sheet says \"main muscle\" or \"helps\" instead of 1.0 and 0.5.","Gone: the intensity line, the raw event count and tonnage as a headline. The % of your best now only shows on main lifts."]},{"version":"1.81.0","date":"2026-10-12","lines":["Demo options has \"Jump to…\": any block and week of the demo program, with made-up training up to that point.","Shortcuts go straight to the first strength block, a test-set week, a deload week or a stall, so each can be seen on demand.","It only touches the demo's own storage. Your real log is never written from the demo."]},{"version":"1.80.0","date":"2026-10-12","lines":["The first time something new happens, a short card explains it: your first check-in, a suggestion that moved, an all-out set, a new block, a deload week, a joint flag, a stall card, a focused-deload offer and the rest timer.","Each says what's happening and why, with More for the guide, and shows once. Got it puts it away for good.","Settings → Help → Reset tips brings them all back."]},{"version":"1.79.0","date":"2026-10-12","lines":["Setup shows where you are (\"Step 3 of 9\") with a progress bar, on its own screen with nothing of the app behind it.","After the plan, six short \"How your program works\" cards explain your blocks, a session, suggestions, readiness and joints, what to do when something hurts, and where help is, using your own plan. Skip any time; replay them from Settings → Help.","Tours: \"Skip\" is now \"End tour\", Back is there from the second step, and the first card says what the tour covers."]},{"version":"1.78.0","date":"2026-10-12","lines":["New Settings tab: your sheet and setup link, backups, appearance and theme codes, voice, RPE or effort, equipment, rest times, help and the app version.","Edit program now holds only training: blocks, your week, goal lifts, the strength/size slider, conditions, \"don't care about\" and Set up a new program.","The Lifts tab is your main lifts and the exercise library. Backups and \"How this works\" moved to Settings.","Settings → About lists what changed in each recent version."]}]</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -10018,14 +10018,14 @@ Settings → Voice has "Use this theme's voice", on by default.
 ]</script>
 <script>
 /* ══════════════════════════════════════════════════════════
-   TRAINLOG v2 — shell rebuilt on Juggernaut-derived patterns
+   v2 — the shell rebuilt
    · semantic block colours (hypertrophy / strength / peaking)
    · persistent phase-week-day context header
    · macrocycle chart: volume as bars, intensity as overlaid line
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.86.0';
+const APP_VERSION='1.87.0';
 /* The app's name, in one place (batch M). Every on-screen "Trainlog" comes from
    here; docs embedded in the page write {app} and get it at read time (named()).
    tools/set-name.js copies it into <title> and the manifest. Renaming never
@@ -13496,8 +13496,8 @@ function render(){
     const v=$('#v-'+TAB); if(v) v.innerHTML=`
       <div class="card pad" style="text-align:center">
         <div style="font-weight:650;margin-bottom:var(--sp-2)">Something went wrong on this screen</div>
-        <div class="muted tiny" style="margin-bottom:var(--sp-3)">Your logged data is untouched. Try going back to the dashboard.</div>
-        <button class="btn pri wide" id="recoverBtn">Back to dashboard</button>
+        <div class="muted tiny" style="margin-bottom:var(--sp-3)">Your logged data is untouched. Try going back to Today.</div>
+        <button class="btn pri wide" id="recoverBtn">Back to Today</button>
       </div>`;
     const rb=document.getElementById('recoverBtn');
     if(rb) rb.onclick=()=>{ TAB='dash'; PENDING=null; savePending(); render(); };
@@ -13510,7 +13510,7 @@ function renderInner(){
   const p=currentPhase();
   $('#ph').className='phase '+p.type; $('#ph').textContent=p.label;
   $('#wk').textContent=`Week ${p.week}`;
-  $('#dy').textContent=TAB==='dash'?'Dashboard':TAB==='lifts'?'Lifts':TAB==='hist'?'Progress':TAB==='set'?'Settings':(session?session.dayName:'Workout');
+  $('#dy').textContent=TAB==='work'?(session?session.dayName:TAB_LABEL.work):(TAB_LABEL[TAB]||'');
   $('#skipTop').hidden=!(TAB==='work'&&session);
   document.querySelectorAll('nav button').forEach(b=>
     b.setAttribute('aria-current',b.dataset.tab===TAB?'page':'false'));
@@ -13774,7 +13774,7 @@ function renderDash(){
     </div>
     <div style="height:5px;background:var(--card-2);border-radius:3px;overflow:hidden;margin-top:var(--sp-2)">
       <div style="height:100%;width:${Math.round(p.week/p.weeks*100)}%;background:${TYPE_COLOR[p.type]};border-radius:3px"></div></div>`;
-  const go=el('button','btn go wide','Start training  →');go.dataset.tour='start';
+  const go=el('button','btn go wide','Go to Train');go.dataset.tour='start';
   go.style.marginTop='var(--sp-3)'; go.onclick=()=>{TAB='work';render();};
   today.appendChild(go); v.appendChild(today);
 
@@ -13882,7 +13882,7 @@ function phaseChart(cur){
 
 /* ═══ WORKOUT ═══ */
 /* Card chrome and set rows shared by the live session and the preview, so what
-   you see before Start Training is what you get after it. */
+   you see before Start is what you get after it. */
 function srowEl(o){
   const r=el(o.onclick?'button':'div','srow');
   if(o.onclick){ r.style.cssText='width:100%;text-align:left'; r.onclick=o.onclick; if(o.aria) r.setAttribute('aria-label',o.aria); }
@@ -14525,7 +14525,7 @@ function estSessionLength(day){
 /* One exercise in a plan, before the session: the same card and set rows as
    the live session, weight × reps @ RPE on every set, the warmup ramp
    collapsed, and the explanation line. Both the training-tab preview and the
-   "Preview workout" sheet call this, so they can't drift apart. */
+   old preview sheet call this, so they can't drift apart. */
 const WARM_OPEN=new Set();
 /* The preview's prescription (no session yet): nextPrescription, handed back as the
    number you type for the bodyweight class (it prices on system load). */
@@ -14629,7 +14629,7 @@ function renderPreview(v){
     <div style="font-size:var(--fs-5);font-weight:790;letter-spacing:-.03em;margin:1px 0 2px">${esc(day.name)}</div>
     <div class="muted sm">${day.slots.length} exercises · ${day.slots.reduce((a,s)=>a+s.sets,0)} working sets${day.slots.length?' · ~'+estSessionLength(day)+' min (estimate)':''}</div>
     <div class="dim tiny" style="margin-top:var(--sp-1)">Based on how things stand now — the check-in may adjust this.</div>`;
-  const go=el('button','btn go wide', day.slots.length?'Start training  →':'No exercises — check your split');go.dataset.tour='start';
+  const go=el('button','btn go wide', day.slots.length?'Start':'No exercises — check your split');go.dataset.tour='start';
   go.style.marginTop='var(--sp-3)';
   if(day.slots.length) go.onclick=()=>{ startSession(day); PENDING=null; savePending(); }; else go.disabled=true;
   head.appendChild(go);
@@ -14638,7 +14638,7 @@ function renderPreview(v){
   const alt=el('button','btn ghost wide','Train a different day');
   alt.style.marginTop='var(--sp-2)';
   alt.onclick=()=>{
-    sheet(`<h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-3)">Pick a session</h2><div class="stack" id="pk2"></div>`
+    sheet(`<h2 tabindex="-1" autofocus style="font-size:var(--fs-4);margin-bottom:var(--sp-3);outline:none">Pick a session</h2><div class="stack" id="pk2"></div>`
       // now and then, not every day: new exercises in place of today's (main lifts stay)
       +(day.slots.length?`<div class="qblock" style="margin-top:var(--sp-3)"><div class="qlab">Something different</div><div class="dim tiny" style="margin-bottom:var(--sp-2);line-height:1.5">Swap today's exercises for ones you haven't done yet, for the same muscles. Your main lifts stay. Worth doing now and then, such as at the start of a block or in a deload week.</div><button class="btn s ghost" id="pknew">Try new exercises today</button></div>`:''));
     if($('#pknew')) $('#pknew').onclick=()=>{ $('#dlg').close(); openExplore(rawDay); };
@@ -15059,7 +15059,7 @@ const NOTE_TAGS=[
   {id:'ux',    label:'Annoying / confusing'},
   {id:'idea',  label:'Idea'}
 ];
-const TAB_LABEL={dash:'Dashboard',work:'Workout',lifts:'Lifts',hist:'Progress',set:'Settings'};
+const TAB_LABEL={dash:'Today',work:'Train',lifts:'Lifts',hist:'Progress',set:'Settings'};   // the tab names, one place (batch M)
 function openNote(prefillTag){
   let tag=prefillTag||'bug';
   /* Auto-context is WHERE YOU WERE when you wrote this, which is not always
@@ -17618,9 +17618,9 @@ function conditionPicker(sel, onChange, usual, opts){
         card.appendChild(redFlagChecklist(e,()=>onChange(sel.slice(),true)));
       }
       if(!setup&&Array.isArray(e.rehab_phases)&&!redFlagged(e.id)){
-        const pl=rehabPlan(e.id), pb=el('button','btn s ghost',pl?'Phase plan: '+(PHASE_LABEL[pl.phase]||pl.phase)+' — on your dashboard':'Start the phase plan (optional)');
+        const pl=rehabPlan(e.id), pb=el('button','btn s ghost',pl?'Phase plan: '+(PHASE_LABEL[pl.phase]||pl.phase)+' — on Today':'Start the phase plan (optional)');
         pb.style.cssText='margin-top:var(--sp-2);font-size:var(--fs-1);padding:var(--sp-1) var(--sp-2)';
-        if(!pl) pb.onclick=()=>{ if(startRehabPlan(e)){ toast('Phase plan started — it\'s on your dashboard'); onChange(sel.slice(),true); } };
+        if(!pl) pb.onclick=()=>{ if(startRehabPlan(e)){ toast('Phase plan started. It\'s on Today.'); onChange(sel.slice(),true); } };
         card.appendChild(pb);
       }
       const j=entryJoint(id);
@@ -18837,7 +18837,7 @@ function openCheckin(){
   sheet(`<h2 data-tour="checkin" style="font-size:var(--fs-5);margin-bottom:var(--sp-3)">Readiness check-in</h2>${greet?'<div class="muted sm" style="margin:calc(-1 * var(--sp-2)) 0 var(--sp-3)">'+esc(greet)+'</div>':''}<div id="ck"></div>
     <div class="row" style="gap:var(--sp-2)">
       <button class="btn ghost grow" id="ckskip">Skip</button>
-      <button class="btn go grow" id="ckgo">Start training</button></div>`);
+      <button class="btn go grow" id="ckgo">Start</button></div>`);
   const host=$('#ck');
   if(tipCk) host.parentNode.insertBefore(tipCk,host);
   const bw=el('div','qblock'); bw.innerHTML='<div class="qlab">Current bodyweight</div>';
@@ -19313,7 +19313,7 @@ function renderSettings(v){
     const hw=el('button','btn ghost wide','How this works'); hw.dataset.tour='help'; hw.onclick=openGuide; c.appendChild(hw);
     c.appendChild(el('div','dim tiny','A searchable guide: what to do when something comes up, every setting, each screen and the words the app uses.')).style.marginTop='var(--sp-1)';
     c.appendChild(el('div','field','Show me around')).style.marginTop='var(--sp-3)';
-    const ch=el('div','chips'); [['dash','Dashboard'],['work','Workout'],['lifts','Lifts'],['hist','Progress'],['set','Settings']].forEach(([k,lab])=>{ const b=el('button','chip',esc(lab)); b.onclick=()=>{ TAB=k; render(); setTimeout(()=>startTour(k),250); }; ch.appendChild(b); });
+    const ch=el('div','chips'); Object.entries(TAB_LABEL).forEach(([k,lab])=>{ const b=el('button','chip',esc(lab)); b.onclick=()=>{ TAB=k; render(); setTimeout(()=>startTour(k),250); }; ch.appendChild(b); });
     const ep=el('button','chip','Edit program'); ep.onclick=()=>{ openSettings(); setTimeout(()=>startTour('settings'),300); }; ch.appendChild(ep); c.appendChild(ch);
     const hiw=el('button','btn s','How your program works'); hiw.style.marginTop='var(--sp-3)'; hiw.onclick=()=>openHowItWorks(0); c.appendChild(hiw);
     const rt=el('button','btn s','Reset tips'); rt.style.cssText='margin-top:var(--sp-2);margin-left:var(--sp-2)'; rt.onclick=()=>{ CFG.tipsSeen={}; saveCfg(); toast('The first-time tips will show again as each moment comes up'); }; c.appendChild(rt);
@@ -20091,7 +20091,7 @@ function drawBuilder(rerun){
   const go=d=>{ B.i=Math.max(0,Math.min(steps.length-1,B.i+d)); openBuilder(); };
   const titles={path:B.rerun?'Rebuild your program':'Set up your program', goal:'What are you training for?', experience:'How are your lifts going?',
     schedule:'How do you train?', lifts:'Your main lifts', equipment:'What equipment do you have?', dates:'Any dates?',
-    constraints:'Anything you\'re working around?', avoid:'Anything you don\'t want included?', review:B.rerun?'Before and after':'Your program'};
+    constraints:'Anything you\'re working around?', avoid:'Anything you don\'t want included?', review:B.rerun?'Before and after':'Your plan'};
   const subs={path:B.rerun?'Builds the rest of your program from where you are. Finished blocks and the one you\'re in stay as they are. Nothing changes until you accept.':'About a minute. Every step can be skipped and changed later.',
     goal:'Sets the balance of strength and size blocks, and how often you test.', experience:'Sets how fast your main lifts start progressing. The program itself is the same either way.',
     schedule:'Days per week and the kind of days.', lifts:'Up to three. They get priority and their own strength tracking.',
@@ -20139,7 +20139,7 @@ function drawBuilder(rerun){
       const wk=B.experience==='advanced'?6:4;
       const why=B.experience==='novice'
         ?'You\'ll likely keep adding weight almost every session for a while. Each main lift stays on this faster progression until it stalls two sessions in a row, then it switches to the normal block progression on its own. You don\'t need to do anything.'
-        :'Your main lifts start on the normal progression: reps build up across each lift\'s range, then the load goes up. If a lift goes about '+wk+' weeks without a new best while you\'re training it every week, that\'s a stall — the dashboard will say so, and the program will need changing. If a lift starts climbing quickly again, it moves to adding load each session on its own at the start of the next block.';
+        :'Your main lifts start on the normal progression: reps build up across each lift\'s range, then the load goes up. If a lift goes about '+wk+' weeks without a new best while you\'re training it every week, that\'s a stall: Today will say so, and the program will need changing. If a lift starts climbing quickly again, it moves to adding load each session on its own at the start of the next block.';
       host.appendChild(el('div','qblock','<div class="sm" style="line-height:1.55">'+esc(why)+'</div>'));
     }
   }
@@ -20283,7 +20283,7 @@ function howCards(c){
       example:ms?esc(exn(ms.ex))+': '+fmtRange(ms.reps)+' reps at '+W+' '+ms.rpe+' this block. Log '+ms.reps[1]+' reps at '+W+' '+ms.rpe+' and it adds weight next time.':''},
     {title:'Readiness and joints', body:'Readiness, 0 to 100, comes from the check-in and sets your warm-up. A 2 for sleep, motivation or rest of life means nothing steps up that day, and a 1 is a sick day: everything one step lighter. Joints are rated 0 to 3 against your usual, and only a rating above your usual changes anything.',
       example:c.area?'Your '+esc(c.area)+': on a day it\'s rated above your usual, the work that loads it is held at last time\'s weight; everything else carries on.':'A shoulder rated above your usual holds pressing, pulling and raises at last time\'s weight; everything else carries on.'},
-    {title:'When something hurts', body:'After a set on a joint you\'ve flagged, the app asks how it felt, out of 10, and says whether to carry on. A flagged exercise shows a "For your shoulder" chip (or knee, elbow and so on): tap it for the reason, the cues and a swap. If a joint keeps flaring, the dashboard offers a focused deload: those exercises lighter for two weeks, everything else as normal.',
+    {title:'When something hurts', body:'After a set on a joint you\'ve flagged, the app asks how it felt, out of 10, and says whether to carry on. A flagged exercise shows a "For your shoulder" chip (or knee, elbow and so on): tap it for the reason, the cues and a swap. If a joint keeps flaring, Today offers a focused deload: those exercises lighter for two weeks, everything else as normal.',
       example:c.flagged?esc(exn(c.flagged))+' carries a "For your '+esc(c.area||'joints')+'" chip. Tap it for what to watch and a swap.':(c.area?'Nothing in your first week is flagged for your '+esc(c.area)+'.':'You haven\'t picked anything to work around. Add it any time in Edit program.')},
     {title:'Notes and help', body:'The pencil at the top saves a note from any screen, with where you were: use it for anything that looks wrong or confusing. The ? on each screen gives a short tour, and Settings → Help → How this works searches the whole guide.',
       example:c.tester?'Your notes also go to the person who set this app up.':'You can replay these cards from Settings → Help.'}
@@ -20450,7 +20450,7 @@ function onbSave(){ try{ if(!ONB||ONB.step==='resume') return; CFG.onbDraft={v:1
 const onbGo=(step,noPush)=>{ if(!noPush){ ONB.hist.push(ONB.step); navPush('onb',onbHistBack); } ONB.step=step; drawOnboarding(); };
 function onbHistBack(){ if(!ONB) return; if(ONB.hist.length){ ONB.step=ONB.hist.pop(); drawOnboarding(); } }
 function onbRootBack(){ if(!ONB) return; if(!confirm(ONB_EXIT_ASK)){ navPush('onb-root',onbRootBack); return; } onbExit(true); }
-const ONB_EXIT_ASK='Leave setup? Your answers are kept, and you can carry on from the dashboard.';
+const ONB_EXIT_ASK='Leave setup? Your answers are kept, and you can carry on from Today.';
 function onbExitAsk(){ if(confirm(ONB_EXIT_ASK)) onbExit(false); }
 function onbExit(fromBack){ onbSave(); ONB=null; if(!fromBack) navDrop('onb-root'); else { for(let k=NAV.length-1;k>=0;k--) if(NAV[k].kind==='onb'||NAV[k].kind==='onb-root') NAV.splice(k,1); }
   try{ if($('#dlg').open) $('#dlg').close(); }catch(e){} screenClose(); TAB='dash'; render(); }
@@ -20484,7 +20484,7 @@ function drawOnboardingStep(){
   const T={path:O.existing?'Set up a new program':'Welcome to '+APP_NAME, welcome:'Welcome to '+APP_NAME, restore:'Restore from a backup',
     goal:'What are you training for?', history:'How long have you been lifting?', schedule:'How often can you train?', equipment:'Where do you train?',
     body:'Your bodyweight', around:'Anything to work around?', priorities:'Anything to focus on, or skip?', lifts:'Any lifts you want to get stronger at?',
-    split:'How to split your week', days:'Your days', reps:'Rep ranges', blocks:'Your blocks', preview:'Your program'};
+    split:'How to split your week', days:'Your days', reps:'Rep ranges', blocks:'Your blocks', preview:'Your plan'};
   const SUB={welcome:'A program that adjusts to what you log. Pick how you want to set it up.', path:'Your logged history stays as it is. The new program starts from its first block today.',
     restore:'Bring back your log and settings from a backup file or your sheet.',
     goal:'Sets the balance of size and strength work, and how often you test.', history:'Sets how fast your main lifts start progressing. The rest of the program is the same either way.',
@@ -20741,10 +20741,11 @@ try{ if(DESIGN_DIRECTION!=='calm') document.documentElement.dataset.direction=DE
 /* The icon set: inline SVG paths on a 24 grid, 1.9 stroke. Used only for the
    tab bar, set card actions and the condition card. At most 24. */
 const ICONS={
-  dashboard:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
-  workout:'<path d="M5 8v8M19 8v8M8 6v12M16 6v12M8 12h8"/>',
-  lifts:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/>',
+  today:'<path d="M3 19h18"/><path d="M6.5 19a5.5 5.5 0 0 1 11 0"/><path d="M12 6.5V9M5.4 10.4l1.6 1.6M18.6 10.4L17 12"/>',
+  train:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2"/><path d="M12 3.5v3.2"/>',
+  lifts:'<path d="M5 19h14M5 14h10M5 9h6M5 4v15"/>',
   progress:'<path d="M4 19V5M4 19h16"/><path d="M7 15l4-5 3 3 5-7"/>',
+  settings:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
   swap:'<path d="M7 7h11l-3-3M17 17H6l3 3"/>',
   info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
   up:'<path d="M12 19V5M6 11l6-6 6 6"/>',
@@ -20896,7 +20897,7 @@ function guideSearch(q){
 }
 let GUIDE_Q='';
 function openGuide(){
-  const tabs=[['dash','Dashboard'],['work','Workout'],['lifts','Lifts'],['hist','Progress'],['set','Settings']];
+  const tabs=Object.entries(TAB_LABEL);
   sheet('<h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-2)">How this works</h2>'
     +'<input type="search" id="gQ" placeholder="Search: a sore shoulder, missed a week, RPE…" aria-label="Search the guide" style="width:100%;background:var(--surface-2);border:none;border-radius:var(--r-btn);color:var(--ink);padding:var(--sp-3);font:inherit;margin-bottom:var(--sp-3)">'
     +'<div id="gRes"></div>'
@@ -20951,7 +20952,7 @@ function openSettings(){
   }
   const S=SETTINGS_DRAFT;
 
-  sheet(`<div class="row between" style="align-items:flex-start"><h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-1)">Your program</h2><button class="notebtn" id="setTour" aria-label="Show me around Edit program" style="font-weight:700;font-size:var(--fs-3)">?</button></div>
+  sheet(`<div class="row between" style="align-items:flex-start"><h2 style="font-size:var(--fs-4);margin-bottom:var(--sp-1)">Program</h2><button class="notebtn" id="setTour" aria-label="Show me around Edit program" style="font-weight:700;font-size:var(--fs-3)">?</button></div>
     <div class="muted tiny" style="margin-bottom:var(--sp-4)">Blocks are an order, not dates. Change a length and everything after it shifts.</div>
     <div id="rm"></div>
     <button class="btn pri wide" id="rmsave" style="margin-top:var(--sp-1)">Save program</button>
@@ -21241,7 +21242,7 @@ function openSettings(){
     {
       const ai=el('div','qblock');
       ai.innerHTML=`<div class="qlab">When a main lift stalls</div>
-        <div class="field">The app proposes a change as a card on the dashboard. With auto-apply on, more practice and targeted variants start on their own, with an undo. Deloads, diagnosis and specialization always ask.</div>`;
+        <div class="field">The app proposes a change as a card on Today. With auto-apply on, more practice and targeted variants start on their own, with an undo. Deloads, diagnosis and specialization always ask.</div>`;
       const mc=el('div','chips'); mc.style.marginTop='var(--sp-2)';
       [[false,'Ask me first'],[true,'Start them automatically']].forEach(([v,l])=>{
         const c=el('button','chip',l); c.setAttribute('aria-pressed',S.autoIntervene===v?'true':'false');

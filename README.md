@@ -29,7 +29,7 @@ screen**, then follow steps 3 to 5.
 - The first time something happens (your first check-in, a suggestion that
   moved, an all-out set, a deload), a short card says what it is and why.
   **Got it** puts it away; **More** opens the guide.
-- Before you start, the **Workout** tab is today's workout. Move, swap, add or
+- Before you start, the **Train** tab is today's workout. Move, swap, add or
   remove exercises and change sets there. Changes are for today unless you tap
   **Save to program**.
 - The **check-in** asks how you slept and how you feel. 3 means normal; only
@@ -77,7 +77,7 @@ then paste them into a message.
 
 - New versions arrive on their own. When one is ready, a bar at the bottom
   says so. Tap it when you're ready. It never switches mid-workout.
-- A short "What's new" card on the dashboard tells you what changed, and
+- A short "What's new" card on **Today** tells you what changed, and
   **Settings → About** lists the recent versions.
 - The version number is in **Settings → About**. Please include it if you're
   reporting a bug (notes include it automatically).
@@ -86,7 +86,7 @@ then paste them into a message.
 ## If something goes wrong
 
 Your logged data is safe. If a screen shows "Something went wrong", tap
-**Back to dashboard** and carry on, then leave a note saying what you were
+**Back to Today** and carry on, then leave a note saying what you were
 doing.
 
 - **If something on your phone looks wrong**, such as a button you can't
