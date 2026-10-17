@@ -1421,3 +1421,32 @@ subscription". It's your file, so I left it; the repo is public.
 day (the old scale's 1 read "Sick, or wiped out").
 
 **To undo:** v1.88.0 has the five-box rows.
+
+## D65. Train: one line, handles, gestures, Start at the bottom (v1.90.0)
+
+**Chosen:**
+- **Header:**
+  - one line: the day, then "· Hypertrophy, week 3";
+  - a dim line under it: exercises, sets, about how long;
+  - ⋯ opens the whole week, another day (with Try new exercises) and starting
+    estimates when needed.
+- **One Start, after the list.** It's in the page flow, not fixed (§70).
+- **Reorder by a handle:** drag it, or use the arrow keys on it. Dropping moves
+  one step at a time (`moveSlotTo` → `moveSlot`), so the which-exercise rules
+  hold exactly as before. In a session, an exercise with sets logged keeps its
+  place.
+- **No info + swap pair on cards:**
+  - before you start, a tap on a card opens its details;
+  - in a session a tap still selects the exercise (rule 3 of which exercise is
+    current), and each card has a Details button;
+  - a long press (0.55 s) or a swipe left swaps;
+  - details have a "Swap this exercise" button, so every swap also has a plain
+    tap.
+- **Tests:** mobile.js drags the real handle (pointer events) in both regression
+  checks. §96 checks the shape and the drag rule.
+
+**Worth a second look:** gestures are invisible until you know them. The guide,
+README and features say so, and Details → Swap is the visible route. A
+first-time tip could teach the long press if testers miss it.
+
+**To undo:** v1.89.0 has the hero and the button pair.

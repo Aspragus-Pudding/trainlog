@@ -148,6 +148,7 @@ async function sheetMatrix(page, d, tag){
     ['quick note',()=>{ $('#dlg').close(); openNote(); }, true],
     ['edit program',()=>{ $('#dlg').close(); openSettings(); }, true],
     ['explore',()=>{ $('#dlg').close(); openExplore(todayDay()); }, false],
+    ['train menu',()=>{ $('#dlg').close(); const d=planFor(todayDay()); openTrainMenu(todayDay(),d); }, false],
     ['explore: keep any',()=>{ $('#dlg').close(); openExploreKeep({session_id:'none',explore_slots:[]}); }, false],
     ['finish session',()=>{ $('#dlg').close(); openPost(); }, true]];
   for(const [name,open,hasInput] of SHEETS){
@@ -171,19 +172,29 @@ async function sheetMatrix(page, d, tag){
 /* The move-up bug (Oct 4, Oct 7, Oct 11): real touch taps on the card buttons, then Log set. */
 async function tapSel(page,sel,n){ const r=await page.evaluate(([sel,n])=>{ const b=document.querySelectorAll(sel)[n]; if(!b) return null; b.scrollIntoView({block:'center'}); const q=b.getBoundingClientRect(); return {x:q.left+q.width/2,y:q.top+q.height/2}; },[sel,n||0]);
   if(!r) throw new Error('nothing to tap: '+sel+' #'+(n||0)); await sleep(80); await page.touchscreen.tap(r.x,r.y); await sleep(300); }
+/* drag an exercise's handle (batch M) so its card lands on another card's place */
+async function dragSlot(page,from,to){
+  const r=await page.evaluate(([f,t])=>{ const h=document.querySelector('#v-work .ex[data-slot="'+f+'"] [data-reorder]'), tb=document.querySelector('#v-work .ex[data-slot="'+t+'"]');
+    if(!h||!tb) return null; h.scrollIntoView({block:'center'}); const a=h.getBoundingClientRect(), b=tb.getBoundingClientRect(), box=h.closest('.ex').getBoundingClientRect();
+    return {x:a.left+a.width/2, y:a.top+a.height/2, dy:(b.top+b.height*(t<f?0.25:0.75))-(box.top+box.height/2)}; },[from,to]);
+  if(!r) throw new Error('no handle on exercise '+from);
+  await page.mouse.move(r.x,r.y); await page.mouse.down();
+  for(let k=1;k<=8;k++){ await page.mouse.move(r.x,r.y+r.dy*k/8); await sleep(16); }
+  await page.mouse.up(); await sleep(350);
+}
 async function reorderCheck(page, tag){
   await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
   await page.evaluate(()=>demoReset({kind:'persona',key:'shoulder',weeks:3})); await page.waitForLoadState('load'); await sleep(2200);
   await page.evaluate(()=>{ CFG.seenVersion=APP_VERSION; CFG.tour={t1:'off',seen:{}}; saveCfg(); try{ $('#dlg').close(); }catch(e){} startSession(todayDay()); });
   await sleep(300); await page.evaluate(()=>{ $('#ckskip').click(); TAB='work'; render(); }); await sleep(300);
-  const UP='#v-work button[aria-label="Move earlier"]', LOGB='[data-tour="logset"]';
+  const LOGB='[data-tour="logset"]';
   const state=()=>page.evaluate(()=>({order:session.slots.map(s=>s.ex), open:session.openIdx, logged:session.slots.map(s=>s.sets.length),
     last:(LOG.filter(e=>e.type==='set'&&e.session_id===session.id).slice(-1)[0]||{}).exercise_id}));
   // Oct 11: nothing logged on the current one, the second exercise moved up into its spot, then Log set
-  const s0=await state(); await tapSel(page,UP,0); const s1=await state(); await tapSel(page,LOGB); const s2=await state();
+  const s0=await state(); await dragSlot(page,1,0); const s1=await state(); await tapSel(page,LOGB); const s2=await state();
   ok(s1.order[0]===s0.order[1]&&s1.open===0&&s2.last===s0.order[1]&&s2.logged[0]===1, tag+' moved up into the current spot, nothing logged: Log set logs the moved exercise: '+JSON.stringify({s0:s0.order.slice(0,3),s1:{o:s1.order.slice(0,3),open:s1.open},last:s2.last}));
   // Oct 4 / Oct 7: mid-exercise on it, the third exercise moved up past it, then Log set stays on it
-  await tapSel(page,UP,1); await tapSel(page,UP,0);
+  await dragSlot(page,2,1); await dragSlot(page,1,0);
   const s3=await state(); await tapSel(page,LOGB); const s4=await state();
   ok(s3.order[0]!==s0.order[1]&&s4.last===s0.order[1]&&s3.order[s3.open]===s0.order[1], tag+' mid-exercise, another moved up above it: Log set stays on the exercise in progress: '+JSON.stringify({order:s3.order.slice(0,3),open:s3.open,last:s4.last}));
   await page.evaluate(()=>{ session=null; saveSession(); stopRest(); TAB='dash'; render(); });
@@ -225,19 +236,19 @@ async function tourCheck(page, d, tag){
   }
   await applyCase(page,d,'normal');
 }
-/* The Workout tab is the preview (Appendix A Part 3): a real tap moves an exercise, Start takes the order. */
+/* The Train tab is the preview (Appendix A Part 3; batch M): dragging a handle moves an exercise, Start takes the order. */
 async function previewCheck(page, tag){
   await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
   await page.evaluate(()=>demoReset({kind:'persona',key:'shoulder',weeks:3})); await page.waitForLoadState('load'); await sleep(2200);
   await page.evaluate(()=>{ CFG.seenVersion=APP_VERSION; CFG.tour={t1:'off',seen:{}}; saveCfg(); try{ $('#dlg').close(); }catch(e){} TAB='work'; render(); });
   await sleep(300);
   const before=await page.evaluate(()=>planFor(todayDay()).slots.map(s=>s.ex));
-  await tapSel(page,'#v-work button[aria-label="Move earlier"]',0);
+  await dragSlot(page,1,0);
   const after=await page.evaluate(()=>planFor(todayDay()).slots.map(s=>s.ex));
   const hasPreview=await page.evaluate(()=>[...document.querySelectorAll('#v-work button')].some(b=>/Preview workout/.test(b.textContent)));
   await tapSel(page,'#v-work [data-tour="start"]'); await sleep(300);
   const sess=await page.evaluate(()=>session&&session.slots.map(s=>s.ex));
-  ok(after[0]===before[1]&&after[1]===before[0]&&!hasPreview&&sess&&sess.join()===after.join(), tag+' the Workout tab is the preview: a tap moves an exercise and Start takes that order: '+JSON.stringify({before:before.slice(0,2),after:after.slice(0,2),hasPreview,sess:sess&&sess.slice(0,2)}));
+  ok(after[0]===before[1]&&after[1]===before[0]&&!hasPreview&&sess&&sess.join()===after.join(), tag+' the Train tab is the preview: a drag moves an exercise and Start takes that order: '+JSON.stringify({before:before.slice(0,2),after:after.slice(0,2),hasPreview,sess:sess&&sess.slice(0,2)}));
   await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} session=null; saveSession(); stopRest(); TAB='dash'; render(); });
 }
 /* D10: with "effort" chosen, no screen says RPE (a real browser, the live set card and a sheet). */

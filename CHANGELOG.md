@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.90.0 — 2026-10-17
+- Train shows the day and its block on one line, the exercise list, and one Start button at the bottom. The whole week and another day are under ⋯.
+- Drag an exercise's handle to reorder. Tap a card for its details, and long-press or swipe it left to swap.
+- During a session, Details on each card opens the exercise, with a Swap button there too.
+
 ## 1.89.0 — 2026-10-17
 - The check-in asks what's off today. Tap All good, or tap what's off (poor sleep, low motivation, stress, feeling sick, a sore area, a joint) and say a little or a lot.
 - Anything you don't tap counts as normal. "Better than usual?" covers a great night or feeling fresh.
