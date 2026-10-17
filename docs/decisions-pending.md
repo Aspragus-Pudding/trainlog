@@ -733,7 +733,10 @@ and `preSessionBanner(v)` back in `renderWork`.
 - **Today only by default.** Edits go to today's plan, as before. "Save to
   program" is a button now; it used to be a checkbox you had to tick before
   editing. It writes the day edit, and asks first.
-- **A day you've already saved** shows a line with "Use the generated plan".
+- **A day you've already saved** showed a line with "Use the generated plan".
+  Removed in v1.85.1 at your request (17 Oct): a saved day stays saved, and
+  there's no button back to the generated plan. To undo, restore that block in
+  `renderPreview` from v1.85.0.
 - **The "Recent" card is replaced** by the one line the brief asks for:
   "Last Upper B: 5 days ago, 2 PRs". It opens that session. The rest of
   your history is in Progress.

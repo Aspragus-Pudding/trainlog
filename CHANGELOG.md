@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.85.1 — 2026-10-17
+- The "Use the generated plan" button, and the line above it, are gone from the Workout tab.
+- Days you saved to your program stay as you saved them. Nothing you've logged changes.
+- To change a saved day, edit it on the Workout tab and tap Save to program again.
+
 ## 1.85.0 — 2026-10-17
 - Try new exercises: under Train a different day on the Workout tab, it swaps today's exercises for ones you haven't logged, with 2–3 options each for the same muscles and your equipment. Main lifts stay as planned.
 - Work up to RPE 7 at most. You're finding a starting point. It counts as a session and toward your week, and never as a stall or a missed suggestion.
