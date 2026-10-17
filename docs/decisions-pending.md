@@ -1466,3 +1466,29 @@ first-time tip could teach the long press if testers miss it.
   sticking point.
 
 **To undo:** v1.90.0.
+
+## D67. Three brand directions, and a stop for your pick (Part 2, docs only)
+
+**Chosen:**
+- **The three directions:**
+  - **Logbook**, from the brief: paper and ink, signal orange, IBM Plex Sans
+    with Plex Mono numbers. Signature: ruled set rows.
+  - **Chalk**, from the brief: graphite, chalk and acid lime, Barlow with
+    Barlow Condensed. Signature: big condensed numbers.
+  - **Grove**, my own: sage, forest and tomato, Work Sans with Fraunces.
+    Signature: sets drawn as plates, each as long as its load.
+- **Every palette is a full token set**, with the same keys as the app's themes, in
+  `docs/design/brand-directions/tokens.json`. Each passes the app's own
+  `themeReport` in light and dark. Grove light needed three lightness nudges,
+  which the app's `readableTokens` made.
+- **The content is the demo's made-up lifter**, read from the running app
+  (`src/data.js`), not invented.
+- **No block palette uses blue for size, orange for strength or red for a peak.**
+  Patterns (solid, striped, dotted, hollow) carry the type as well as colour.
+- **Fonts are all SIL OFL 1.1.** The mockups fetch them from Google Fonts; the app
+  will inline a Latin WOFF2 subset as base64 so it stays one file and works
+  offline from the first load, about 150 to 250 KB, with `fonts/OFL.txt` alongside.
+  That's a proposal for Part 3.
+- **No screenshots of other apps** are in the repo.
+
+**Waiting on you:** which direction (or a mix). Part 3 starts after your pick.

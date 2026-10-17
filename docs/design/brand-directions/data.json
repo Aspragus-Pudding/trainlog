@@ -1,0 +1,164 @@
+{
+ "app": "Trainlog",
+ "date": "Sat 17 Oct",
+ "day": "Full body A",
+ "block": "Hypertrophy",
+ "week": 4,
+ "weeks": 9,
+ "plan": {
+  "top": "3 step-ups planned. 1 carries a warning with a suggested swap. Everything else is on plan.",
+  "held": 0,
+  "push": 3,
+  "warn": 1
+ },
+ "joints": [
+  {
+   "band": "Green",
+   "text": "Shoulder 0 / 3 (usual 1): longer warm-up on pressing, pulling and raises, loads unchanged."
+  },
+  {
+   "band": "Green",
+   "text": "Wrist, elbow, low back, hip, knee and ankle: at your usual, no change."
+  }
+ ],
+ "program": {
+  "blocks": [
+   {
+    "type": "hyp",
+    "name": "Hypertrophy",
+    "weeks": 9,
+    "len": 9,
+    "deload": false
+   },
+   {
+    "type": "str",
+    "name": "Strength",
+    "weeks": 3,
+    "len": 3,
+    "deload": false
+   },
+   {
+    "type": "hyp",
+    "name": "Hypertrophy",
+    "weeks": 9,
+    "len": 9,
+    "deload": false
+   },
+   {
+    "type": "str",
+    "name": "Strength",
+    "weeks": 3,
+    "len": 3,
+    "deload": false
+   }
+  ],
+  "idx": 0,
+  "at": 3,
+  "total": 24,
+  "sentence": "Hypertrophy block · week 4 of 9 · next: Strength"
+ },
+ "thisWeek": {
+  "done": 4,
+  "planned": 5
+ },
+ "minutes": 84,
+ "slots": [
+  {
+   "name": "Back squat",
+   "sets": 6,
+   "reps": [
+    6,
+    8
+   ],
+   "rpe": 8,
+   "lb": 195,
+   "rx": 8,
+   "last": {
+    "w": "240 lb",
+    "reps": 3
+   },
+   "why": "hypertrophy block · from your estimated max",
+   "flag": null,
+   "main": true
+  },
+  {
+   "name": "Barbell bench press",
+   "sets": 5,
+   "reps": [
+    8,
+    12
+   ],
+   "rpe": 8,
+   "lb": 145,
+   "rx": 8,
+   "last": {
+    "w": "180 lb",
+    "reps": 3
+   },
+   "why": "hypertrophy block · priced for your range · shoulder: longer warm-up — at your usual",
+   "flag": "shoulder",
+   "main": true
+  },
+  {
+   "name": "Neutral cable row",
+   "sets": 3,
+   "reps": [
+    8,
+    12
+   ],
+   "rpe": 8,
+   "lb": 130,
+   "rx": 12,
+   "last": {
+    "w": "130 lb",
+    "reps": 11
+   },
+   "why": "hypertrophy block · reps in reserve · shoulder: longer warm-up — at your usual",
+   "flag": null,
+   "main": false
+  },
+  {
+   "name": "Incline DB curl",
+   "sets": 4,
+   "reps": [
+    8,
+    15
+   ],
+   "rpe": 8,
+   "lb": 45,
+   "rx": 10,
+   "last": {
+    "w": "45 lb",
+    "reps": 10
+   },
+   "why": "8–15 reps · biceps default · from your last set",
+   "flag": null,
+   "main": false
+  },
+  {
+   "name": "Standing calf raise",
+   "sets": 4,
+   "reps": [
+    10,
+    15
+   ],
+   "rpe": 8,
+   "lb": 160,
+   "rx": 10,
+   "last": {
+    "w": "160 lb",
+    "reps": 10
+   },
+   "why": "10–15 reps · calves default · from your last set",
+   "flag": null,
+   "main": false
+  }
+ ],
+ "soreAreas": [
+  "Pecs / shoulders / triceps",
+  "Lats / traps / biceps",
+  "Upper back",
+  "Glutes / hamstrings",
+  "Quads"
+ ]
+}

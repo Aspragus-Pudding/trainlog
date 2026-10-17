@@ -113,3 +113,5 @@ No engine changes: the backtest must stay identical. Part 1 removes the look-ali
 | 1.4 check-in | done | v1.89.0 | All good in one tap; chips + a little / a lot; better than usual = 4; same stored values (§95: 6,912 combinations, same score, cut, event); post-session rows left for next; D64 ★ |
 | 1.5 Train | done | v1.90.0 | one line + ⋯; Start at the bottom; reorder handles (drag or arrow keys, one-step rule); tap → details, long-press / swipe left → swap, Details → Swap; mobile drags the handle; §96; D65 |
 | 1.6 sentences first | done | v1.91.0 | details lead sentence; one-line finish; the week in words; no tiles, no coloured landmark rows; §97; D66 |
+| 2 brand directions | done, waiting for your pick | docs | Logbook, Chalk, Grove: tokens (all pass themeReport), type (OFL), icons, signature, how each differs; 24 screenshots at 390 px; docs/design/brand-directions/; D67 |
+| 3 apply the direction | not started | | after your pick |
