@@ -24,6 +24,7 @@ AppsScript.gs           Google Sheets backup receiver (lives in Apps Script, not
 FeedbackScript.gs       append-only receiver for testers' notes (CFG.feedbackUrl), never readable back
 CHANGELOG.md            what changed per version, newest first; the top entry is embedded as the in-app "What's new" card
 tools/embed-changelog.js   copies CHANGELOG.md's top entry into index.html
+tools/set-name.js          copies APP_NAME (the app's name, one constant) into <title> and the manifest; embedded docs write {app}
 docs/guide.md           the user guide, by task ("When something comes up"), every setting, and the in-app tours (screen sections; each ### a step, target in backticks); embedded byte-for-byte
 tools/embed-guide.js       copies docs/guide.md and docs/glossary.md into index.html (§62 fails if they differ, or an entry is under 8 words)
 tools/library-report.js    the library by implement, and every generated entry whose tags/flags differ from its parent (with the reason)

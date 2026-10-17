@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.86.0 — 2026-10-17
+- The app's name now comes from one place, ready for the new name.
+- Backups, storage and your log don't change with the name. A backup made under any name restores the same way.
+- Nothing else looks different yet.
+
 ## 1.85.2 — 2026-10-17
 - A typo pass across the app, the guide and the tester notes.
 - One spelling throughout: warm-up, step-up, specialisation. Two exercise names corrected (Overhead triceps extension machine, Reverse Nordic).

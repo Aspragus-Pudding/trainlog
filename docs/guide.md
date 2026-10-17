@@ -1,6 +1,6 @@
-# How Trainlog works
+# How {app} works
 
-Trainlog builds your program, suggests the weight and reps for every set, and adjusts as you log. Every number it suggests can explain itself, and nothing it proposes happens until you accept it. Your log stays on your phone.
+{app} builds your program, suggests the weight and reps for every set, and adjusts as you log. Every number it suggests can explain itself, and nothing it proposes happens until you accept it. Your log stays on your phone.
 
 This guide starts with what to do when something comes up, then every setting, then a tour of each screen. The screen tours are also the app's tours: the "?" at the top of each screen walks you through its part. In the app, Settings → Help → How this works searches all of it.
 

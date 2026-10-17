@@ -100,3 +100,11 @@ Appendix A is complete (v1.68.0–v1.74.0).
 - `node tests/injury-validate.js` (all checks passed)
 - backtest against the maintainer's export must stay identical (fetch with curl, delete after)
 - APP_VERSION bump + CHANGELOG entry + `node tools/embed-changelog.js`
+
+## Batch M, 17 Oct ("an identity of our own")
+
+No engine changes: the backtest must stay identical. Part 1 removes the look-alikes; Part 2 is three brand directions, then a stop for your pick; Part 3 applies it.
+
+| Part | State | Version | Notes |
+|---|---|---|---|
+| 1.1 name in one place | done | v1.86.0 | APP_NAME + APP_SLUG + named() for {app} in docs; tools/set-name.js (title, home-screen title, manifest); storage keys untouched; §93; D61 |

@@ -1302,3 +1302,28 @@ squat at its deload dose).
 
 **To undo:** v1.84.0 has no Explore day. `CFG.exploreKept`, `CFG.rotation` and
 any slot picks it set stay harmless: delete `CFG.rotation` to stop taking turns.
+
+---
+
+# Batch M: an identity of our own
+
+## D61. The name in one place (v1.86.0)
+
+**Chosen:**
+- **`APP_NAME`** sits next to `APP_VERSION`. Everything on screen reads it: the
+  header line, setup's welcome, backups (the share title and the file name, via
+  `APP_SLUG`), the restore check's message and the diagnostics.
+- **Docs embedded in the page write `{app}`** (`docs/guide.md`, and any new
+  glossary, voice or What's new text). `named()` swaps in the name when they're
+  read. The embedded copies stay byte-identical to the files.
+- **`tools/set-name.js`** copies the name into what a script can't reach: the
+  `<title>`, the new `apple-mobile-web-app-title` meta (the home-screen label on
+  iPhone) and the manifest's `name` and `short_name` (cut to 12 characters).
+  Renaming is: change one line, run the tool.
+- **Never renamed:** storage keys (`trainlog.jsonl.v1` and the rest), the demo
+  prefix, event types and the backup format. A rename can't touch data. §93 loads
+  a renamed build and restores a backup from the old one.
+- **Left alone:** old CHANGELOG entries past the 12 shown in the app (history),
+  README.md and the repo's docs (for people, not the app), and comments.
+
+**To undo:** the strings were literal "Trainlog" in v1.85.2.
