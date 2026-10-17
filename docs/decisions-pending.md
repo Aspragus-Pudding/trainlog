@@ -1391,3 +1391,33 @@ subscription". It's your file, so I left it; the repo is public.
   worked out itself isn't shown.
 
 **To undo:** v1.87.0 has the countdown hero, `phaseChart` and the old card order.
+
+## D64. The check-in as "what's off today" (v1.89.0)
+
+**Chosen:**
+- **All good** is one tap. It's shown while nothing is picked, and saves the
+  all-neutral check-in: everything 3, each sore area 3 (as the old rows started),
+  no joints.
+- **Chips for what's off:** slept badly, low motivation, stressed or run-down,
+  feeling sick, Sore (then the area), A joint (the existing joint chips,
+  mild / moderate / bad). Each of the first four asks "a little" or "a lot".
+- **Mapping (`checkinValues`):**
+  - untapped is 3, a little is 2, a lot is 1;
+  - "Better than usual?" (slept well, keen to train, fresh) is 4;
+  - stress and feeling sick both write "rest of life", and the lower answer
+    counts, so "feeling sick, a lot" is the sick day it always was.
+- **Not recordable any more: the 5s.** "Better than usual" uses 4 everywhere. A 5
+  only ever made the warm-up shorter, so nothing a suggestion depends on is lost.
+- **One way to write it:** `checkinEvent(st)` builds the same event as before
+  (`joint_scale:3`). §95 runs 6,912 chip combinations against an independently
+  written table of the old answers, and checks the score, the load cut and the
+  event are identical.
+- **Bodyweight** is one folded line; Change opens the stepper.
+- **Left alone:** the five-box rows after a session (session RPE, soreness after,
+  quick ratings). The brief names the check-in; they're the same pattern, so
+  worth doing next.
+
+**Worth a second look:** losing the 5s, and stress "a lot" counting as the sick
+day (the old scale's 1 read "Sick, or wiped out").
+
+**To undo:** v1.88.0 has the five-box rows.

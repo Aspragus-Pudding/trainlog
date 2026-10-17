@@ -7,10 +7,10 @@ This guide starts with what to do when something comes up, then every setting, t
 ## When something comes up {guide:tasks}
 
 ### My shoulder, knee or another joint hurts
-Rate it in the check-in under "Anything hurting?", and after an exercise when the app asks. A rating above your usual holds or lightens only the movements that load that joint, and everything else carries on as planned. If it keeps flaring, Today offers a focused deload for those exercises, and Edit program → What you're working around shows how the joint is doing against your usual. After a set on a joint you've flagged, the set card asks how it felt on that set, out of 10 (or whether it felt unstable), and says whether to carry on. A flagged exercise shows a "For your shoulder" chip (or knee, elbow and so on); tap it for the reason, the cues and a suggested swap. The app warns and suggests swaps but never stops you, and anything on a condition's "see a professional" list is worth getting checked.
+Tap A joint in the check-in and pick it, and after an exercise when the app asks. A rating above your usual holds or lightens only the movements that load that joint, and everything else carries on as planned. If it keeps flaring, Today offers a focused deload for those exercises, and Edit program → What you're working around shows how the joint is doing against your usual. After a set on a joint you've flagged, the set card asks how it felt on that set, out of 10 (or whether it felt unstable), and says whether to carry on. A flagged exercise shows a "For your shoulder" chip (or knee, elbow and so on); tap it for the reason, the cues and a suggested swap. The app warns and suggests swaps but never stops you, and anything on a condition's "see a professional" list is worth getting checked.
 
 ### I'm sore today
-Mark the sore area in the check-in. Only the exercises that train that muscle start lighter, with a set fewer on the first two of them, and the rest of the session is unchanged. If soreness already cut that work last session without a missed rep since, it doesn't cut again.
+In the check-in, tap Sore and pick the area. Only the exercises that train that muscle start lighter, with a set fewer on the first two of them, and the rest of the session is unchanged. If soreness already cut that work last session without a missed rep since, it doesn't cut again.
 
 ### I slept badly or I'm feeling rough
 A 2 for sleep, motivation or rest of life means nothing steps up today, and a 1 means a sick day: everything one step lighter, today only. Your warm-up gets longer too. None of it carries over to your next session.
@@ -209,7 +209,7 @@ Change a custom exercise's name, equipment or muscles. Its history stays with it
 Your first session is ready to go whenever you are at the gym. The app keeps your place in the program by sessions rather than by days, so a missed day never skips a workout.
 
 ### The check-in `[data-tour="checkin"]`
-Before each workout the check-in asks how you slept, how you feel and how sore you are. Three means normal, and only low answers change anything, mostly by lightening the work for the muscles that are sore.
+Before each workout the check-in asks what's off today. Tap All good if nothing is; otherwise tap what's off, such as poor sleep, low motivation, stress, feeling sick, a sore area or a joint, and say whether it's a little or a lot. Anything you don't tap counts as normal, and only what's off changes the workout.
 
 ### An exercise `#v-work .ex` {when:session}
 Each exercise is a card. Open it to see the suggested weight and reps for your first set, worked out from your history and today's check-in.

@@ -40,7 +40,7 @@ everyone.
 | "Your preference" chips (don't care about) | advanced | on preview cards that moved |
 | Try new exercises: exercises you haven't logged for the same muscles and your equipment, RPE 7 at most; never a stall or a missed suggestion | everyone | Train tab → Train a different day (also offered at a block start and in a deload week) |
 | Take turns between two exercises (from Try new exercises), Stop taking turns | everyone | the exercise's card on the Train tab |
-| Readiness check-in (sleep, motivation, rest of life, soreness, joints, bodyweight) | everyone | before the first exercise |
+| Check-in: All good in one tap, or chips for what's off (poor sleep, low motivation, stress, feeling sick, a sore area, a joint), each a little or a lot; better than usual; bodyweight | everyone | before the first exercise |
 | "For your shoulder" chip on a flagged exercise: the reason, the cues and the swap on its info sheet | injury-prone | set card → info sheet |
 | Pain check after a set, naming the set ("Set 2 · 80 × 10"), in plain words | injury-prone | set card, after a set on a flagged joint |
 | Exercise cards: last time (also faintly beside each planned set), setup notes, cues, warnings | everyone | each card |

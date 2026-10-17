@@ -32,8 +32,9 @@ screen**, then follow steps 3 to 5.
 - Before you start, the **Train** tab is today's workout. Move, swap, add or
   remove exercises and change sets there. Changes are for today unless you tap
   **Save to program**.
-- The **check-in** asks how you slept and how you feel. 3 means normal; only
-  low answers change anything.
+- The **check-in** asks what's off today. Tap **All good** if nothing is;
+  otherwise tap what is (sleep, motivation, stress, soreness, a joint) and say
+  a little or a lot. Only what you tap changes anything.
 - **Amber numbers are suggestions.** Change the weight and the reps
   recompute, or the other way round.
 - **RPE** is how hard the set was: 10 means nothing left, 8 means

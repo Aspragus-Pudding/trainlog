@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.89.0 — 2026-10-17
+- The check-in asks what's off today. Tap All good, or tap what's off (poor sleep, low motivation, stress, feeling sick, a sore area, a joint) and say a little or a lot.
+- Anything you don't tap counts as normal. "Better than usual?" covers a great night or feeling fresh.
+- The app stores the same answers as before, so suggestions and your history read exactly as they did.
+
 ## 1.88.0 — 2026-10-17
 - Today opens with today's plan: the workout, one sentence on what the app is doing to it, and how many exercises are held back or pushing. It shows before your check-in too.
 - Your program is one line of blocks with this week marked, and a sentence: where you are and what comes next.
