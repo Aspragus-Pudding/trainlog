@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.85.0 — 2026-10-17
+- Try new exercises: under Train a different day on the Workout tab, it swaps today's exercises for ones you haven't logged, with 2–3 options each for the same muscles and your equipment. Main lifts stay as planned.
+- Work up to RPE 7 at most. You're finding a starting point. It counts as a session and toward your week, and never as a stall or a missed suggestion.
+- Afterwards the app asks "Keep any of these?". You can use one instead of the exercise it stood in for, take turns with it (one each time you train that day), or forget it.
+- The app also suggests it at the start of a block and in a deload week, once each. It never starts one on its own.
+
 ## 1.84.0 — 2026-10-13
 - Rehab and prehab exercises are tracked. After training, open one in the rehab block and log the dose, the pain during it, and how it moved.
 - Rehab starts with a feel-it stage: the same easy dose for 10 days and 3 sessions. After that it takes one small step a week at most (reps first, then a slower lowering, then load), and only when the pain stayed within the limit and was back to your usual by the next morning.

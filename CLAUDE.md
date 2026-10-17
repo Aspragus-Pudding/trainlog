@@ -343,6 +343,13 @@ included), `planFor`/`weekPlanFor`, swaps and saving a range. A stored
   them: a feel-it stage first, then at most one step per window. The pain gate is
   `painRule` plus the next check-in against `jointBaseline`. A flare steps back and
   holds. Graduating to prehab is a proposal (`CFG.rehabMode`).
+- **Explore day (v1.85; on screen "Try new exercises", inside Train a different day).** `exploreDay()` swaps every slot except main lifts for
+  `exploreOptions()`. Options are never logged, same pattern and muscle, suit your
+  equipment, and nothing the library marks red. Their sets carry `explore:true`, and
+  `suggestionAccuracy` and `dialRevealed` skip them. `pickExposure()` doesn't count
+  explore-only exercises toward the auto-pick until they're kept (`CFG.exploreKept`).
+  "Use instead" goes to `slotPicks` or the saved day; "Take turns" goes to
+  `CFG.rotation`, applied by `rotateSlots()` in `buildDay`.
 - **`PENDING`** holds pre-workout plan edits until the session starts.
 - **Readiness** drives load adjustment (discrete tiers) and warmup length
   (continuous score). Adjustments are downward-only by design.

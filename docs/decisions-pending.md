@@ -1216,7 +1216,7 @@ removed, with the one-line reason.
 
 # Big batch Part 7
 
-## D59. Rehab and prehab as tracked exercises (v1.84.0)
+## D59. Rehab and prehab as tracked exercises (v1.84.0) ★
 
 **Chosen:**
 - **Its own event, `rehab_set`**, not a `set` with a tag. A `set` reaches
@@ -1250,3 +1250,52 @@ quick end of the brief's ranges. Both are constants (`STEP_DAYS`, `FEEL_DAYS`).
 
 **To undo:** the old block ticked items without logging them (v1.83.0). Any
 `rehab_set` events already logged stay in the log and are ignored by the old code.
+
+---
+
+# Big batch Part 8
+
+## D60. Explore day, shown as "Try new exercises" (v1.85.0) ★
+
+**Chosen:**
+- **Main lifts keep their slot.** Their weekly exposure is what progression,
+  the fast/standard rate and the stall checks read. Practice and intervention work
+  stay too. Everything else is explored when something new fits.
+- **Options:** never logged (by movement, so assisted and weighted pull-ups count
+  as one), same pattern, and training the slot's main muscle directly. Each
+  must suit your equipment, and can't be excluded, rehab, manual-only or a
+  specialty bar. Your equipment ranks first, then a different implement from the
+  one it stands in for. At most 3 options and 3 sets, capped at RPE 7 (the RPE
+  cap is from the brief; the counts are judgement defaults).
+- **Nothing the injury library marks red for one of your picks is offered as a
+  first try.** Amber ones are offered, with their chip. This departs from "flags
+  never steer generation", in the safer direction: Explore suggests exercises you
+  haven't tried, and a red one is a poor first try. You can still add any
+  exercise yourself.
+- **What counts:** sets carry `explore:true`. They count as volume and the
+  session counts toward the week and the rotation. Suggestion accuracy and the
+  dial skip them, and so does `tests/prospective.js`. An exercise you only
+  explored doesn't count toward the auto-pick until you keep it
+  (`pickExposure`), so trying something once doesn't quietly replace a slot.
+- **Keep any of these?** is in the session summary, and stays as a dashboard
+  card for 21 days until answered.
+  - **Use instead** sets the slot's pick (`CFG.slotPicks`), or the saved
+    day's slot if you have one.
+  - **Take turns** adds it to `CFG.rotation` {day: {exercise: [others]}}: one
+    each time you train that day, counted from your sessions. The Workout card
+    shows "Takes turns with …" and a Stop button.
+  - **Forget** records the answer only.
+- **Offered** as a proposal in week 1 of each block and in a deload week, once each
+  (keyed by block), and not within 7 days of another Explore day. Also any day
+  from Workout → Train a different day → **Try new exercises today**: tucked
+  away there on purpose, because it's for now and then (your call, 17 Oct). The
+  name says what it does; "Explore" stays only as the internal name.
+- **The summary's "Compared with last time"** is skipped for an Explore day; the
+  previous normal session isn't comparable.
+
+**Worth a second look:** keeping red-flagged exercises out of the options, and
+the main lifts staying put (an Explore day in a deload week still includes your
+squat at its deload dose).
+
+**To undo:** v1.84.0 has no Explore day. `CFG.exploreKept`, `CFG.rotation` and
+any slot picks it set stay harmless: delete `CFG.rotation` to stop taking turns.

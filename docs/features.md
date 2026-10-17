@@ -38,6 +38,8 @@ everyone.
 |---|---|---|
 | Today's workout, editable before you start: move, swap, add or remove, sets ±, last time per set, estimated length; "Save to program"; "Last Upper B: 5 days ago" | everyone | Workout tab before you start |
 | "Your preference" chips (don't care about) | advanced | on preview cards that moved |
+| Try new exercises: exercises you haven't logged for the same muscles and your equipment, RPE 7 at most; never a stall or a missed suggestion | everyone | Workout tab → Train a different day (also offered at a block start and in a deload week) |
+| Take turns between two exercises (from Try new exercises), Stop taking turns | everyone | the exercise's card on the Workout tab |
 | Readiness check-in (sleep, motivation, rest of life, soreness, joints, bodyweight) | everyone | before the first exercise |
 | "For your shoulder" chip on a flagged exercise: the reason, the cues and the swap on its info sheet | injury-prone | set card → info sheet |
 | Pain check after a set, naming the set ("Set 2 · 80 × 10"), in plain words | injury-prone | set card, after a set on a flagged joint |
@@ -64,6 +66,7 @@ everyone.
 | Rehab or prehab, per exercise | injury-prone | rehab block, an open item |
 | Finish session: joint question per exercise, diary, ratings | everyone | Finish session |
 | Session summary: new bests, compared with last time | everyone | after finishing |
+| Keep any of these? (after trying new exercises): use instead, take turns, forget | everyone | session summary; dashboard card until answered |
 
 ## Lifts
 

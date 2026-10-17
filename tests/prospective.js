@@ -50,7 +50,7 @@ console.log('Prospective check — '+S.length+' working sets, '+first.ts.slice(0
 console.log('Excluded '+synthetic.size+' automation-made session(s): '+[...synthetic].map(k=>bySess[k][0].ts.slice(0,16)).join(', ')+'\n');
 
 /* 1. suggested load increases */
-const withSug=S.filter(s=>s.suggestion&&s.suggestion.lb!=null);
+const withSug=S.filter(s=>s.suggestion&&s.suggestion.lb!=null&&!s.explore);   // an Explore day is a first try, never a missed suggestion
 const prevOnTrack=s=>{ let p=null; for(const x of S){ if(x===s) break; if(x.exercise_id===s.exercise_id&&JSON.stringify(x.modifiers||null)===JSON.stringify(s.modifiers||null)) p=x; } return p; };
 const rows=withSug.map(s=>{ const sg=s.suggestion, shown=sg.shown?lbOf(sg.shown):sg.lb, L=lbOf(s.weight), prev=prevOnTrack(s);
   const up=prev&&shown>lbOf(prev.weight)+0.5;

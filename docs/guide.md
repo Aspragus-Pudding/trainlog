@@ -39,6 +39,9 @@ The warm-up at the top of a workout is built from the day's main lifts, then you
 ### I'm doing rehab for an injury
 Rehab exercises come after training, in the rehab block. Tap one to log it: the dose, the pain during it, and how it moved. For the first 10 days and 3 sessions the dose stays the same (the feel-it stage). After that it goes up one small step a week at most (reps, then a slower lowering, then load), and only when the pain stayed within the limit and was back to your usual by the next check-in. If it hurts more than the limit, the next session steps back and holds for a week. Your history is under Progress → Rehab and prehab.
 
+### I want to try new exercises
+On the Workout tab, tap Train a different day, then Try new exercises today. Today's exercises are swapped for ones you haven't logged, with 2–3 options each for the same muscles and your equipment. Your main lifts stay as planned. Work up to RPE 7 at most: you're finding a starting point, and nothing counts as a stall or a missed suggestion. Afterwards, for each one, choose Use instead, Take turns (one each time you train that day) or Forget. The app also offers this at the start of a block and in a deload week.
+
 ### My gym doesn't have an exercise
 Tap the swap button on the exercise card and pick another, by muscle or by name. Anything you log comes first from then on. To change what the app assumes your gym has, use Settings → Equipment; anything you've logged still comes first.
 

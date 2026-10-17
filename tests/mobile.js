@@ -147,6 +147,8 @@ async function sheetMatrix(page, d, tag){
     ['picker',()=>{ $('#dlg').close(); exPicker('Pick',()=>true,()=>{}); }, true],
     ['quick note',()=>{ $('#dlg').close(); openNote(); }, true],
     ['edit program',()=>{ $('#dlg').close(); openSettings(); }, true],
+    ['explore',()=>{ $('#dlg').close(); openExplore(todayDay()); }, false],
+    ['explore: keep any',()=>{ $('#dlg').close(); openExploreKeep({session_id:'none',explore_slots:[]}); }, false],
     ['finish session',()=>{ $('#dlg').close(); openPost(); }, true]];
   for(const [name,open,hasInput] of SHEETS){
     try{ await page.evaluate(new Function('('+open.toString()+')()')); }catch(e){ ok(false,tag+' open '+name+': '+e.message); continue; }

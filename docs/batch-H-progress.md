@@ -73,6 +73,7 @@ Appendix A is complete (v1.68.0–v1.74.0).
 
 | Part | State | Version | Notes |
 |---|---|---|---|
+| 8 Explore day ("Try new exercises") | done | v1.85.0 | inside Train a different day (your call: rare, plain name) + proposals at block start and deload; never-logged options by pattern/muscle/equipment, nothing red; main lifts stay; RPE 7, 3 sets; explore sets skip accuracy/dial/auto-pick; Keep any of these? use / take turns / forget; §92; D60 |
 | 7 rehab and prehab, tracked | done | v1.84.0 | rehab_set events (never sets); feel-it 10 days + 3 sessions; one step a week max (reps → slow lowering → load); library pain rule + next-morning check; flare steps back and holds; graduation proposed; Progress history card; §91; D59 |
 | 6 ready for testers | done | docs | README rewritten, real-phone checklist (15 steps), tester welcome message, ALPHA updated; full mobile.js on 6 profiles: 2050 checks, 0 failed; D58 |
 | 5 warm-ups that fit the day | done | v1.83.0 | main lifts → conditions → soreness with why; cap kept with a place per kind; your own warm-up/rehab items, per day or all; removals remembered; §90; D57 |
