@@ -3069,7 +3069,7 @@ section('68. screen pass: the guide covers every setting, search works, sizes ar
   const rawR=[...(css+noThemes).matchAll(/border-radius:\s*([0-9.]+)px/g)].filter(m=>+m[1]>4);
   ok(rawR.length===0,'radii are tokens (hairline 1–4px roundings aside)',rawR.slice(0,3).map(m=>m[0]).join(' '));
   // icons: set card actions come from the icon set; no hand-drawn 24-grid icons outside it and the tab bar
-  ok(/mv\(icon\('up'\)/.test(src)&&/mv\(icon\('down'\)/.test(src)&&/el\('button','iconbtn',icon\('info'\)\)/.test(src)&&/el\('button','iconbtn',icon\('swap'\)\)/.test(src)&&/icon\('star'\)/.test(src),'set card actions use the icon set','');
+  ok(/el\('button','iconbtn grip',icon\('grip'\)\)/.test(src)&&/el\('button','iconbtn',icon\('star'\)\)/.test(src)&&/el\('button','iconbtn',icon\('more'\)\)/.test(src),'set card actions use the icon set (the handle, the rating star, ⋯; batch M)','');
   const stray=(src.match(/viewBox=\\?"0 0 24 24\\?"/g)||[]).length;
   ok(stray===1,'no other 24-grid icons are drawn by hand in the script (icon() is the one)',String(stray));
   // Part 7: block cards with sparklines, the week strip, the condition card, rehab and prep order
