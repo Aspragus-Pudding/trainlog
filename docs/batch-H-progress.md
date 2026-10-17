@@ -73,6 +73,8 @@ Appendix A is complete (v1.68.0–v1.74.0).
 
 | Part | State | Version | Notes |
 |---|---|---|---|
+| 9 Detail level (not built) | recorded | roadmap | Simple / Standard / Everything specced in roadmap/ROADMAP.md: one detail() helper, Simple never hides a warning, lists from docs/number-audit.md; open question on hiding RPE |
+| after 8 | done | v1.85.1, v1.85.2 | your asks (17 Oct): no "Use the generated plan" button; typo pass (30 fixes across app, guide, README, library) |
 | 8 Explore day ("Try new exercises") | done | v1.85.0 | inside Train a different day (your call: rare, plain name) + proposals at block start and deload; never-logged options by pattern/muscle/equipment, nothing red; main lifts stay; RPE 7, 3 sets; explore sets skip accuracy/dial/auto-pick; Keep any of these? use / take turns / forget; §92; D60 |
 | 7 rehab and prehab, tracked | done | v1.84.0 | rehab_set events (never sets); feel-it 10 days + 3 sessions; one step a week max (reps → slow lowering → load); library pain rule + next-morning check; flare steps back and holds; graduation proposed; Progress history card; §91; D59 |
 | 6 ready for testers | done | docs | README rewritten, real-phone checklist (15 steps), tester welcome message, ALPHA updated; full mobile.js on 6 profiles: 2050 checks, 0 failed; D58 |

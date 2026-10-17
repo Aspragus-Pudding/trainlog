@@ -34,6 +34,39 @@ The evidence behind the spec is in `docs/research/`:
 profiles) and `lift-specific.md` (per-lift decision tables, diagnostic
 ratios, specialization — batch C ports its tables as data).
 
+## Next, not built yet: a "Detail level" setting
+
+Recorded 13 Oct 2026 (big batch, Part 9). It's left out of that batch on
+purpose: Part 4's number audit had to come first, because it settles what each
+number on screen is for.
+
+**One setting, three levels.** Settings → Appearance → **Detail level**:
+Simple, Standard (the default) or Everything. It's stored as `CFG.detailLevel`
+and only changes what's shown, never what's computed or logged.
+
+| Level | Who it's for | What changes |
+|---|---|---|
+| **Simple** | A new lifter, or someone who just wants the workout | Each set shows its weight, reps and a single line saying why. "Why these numbers" opens to the sentence, not the trace. No estimated-max line, no %-of-best, no weekly set ranges. Progress shows the lift cards and notes only. |
+| **Standard** | Today's app | Everything Part 4 kept. |
+| **Everything** | The maintainer and curious testers | Readiness score, the full modifier trace on every set, suggestion accuracy, weekly volume grids and joint-trend numbers, shown expanded by default. |
+
+**Rules for building it:**
+- Use one helper, `detail(level)`, called where a number is drawn. Don't write
+  a second copy of any screen.
+- Simple never hides a warning, a flag, a pain check, a proposal or a safety
+  message. Hiding detail must never hide a reason to stop or swap.
+- Base the Simple and Everything lists on `docs/number-audit.md`. Its "what does
+  the user do with this?" column already says which numbers a beginner can act on.
+- §65 (plain words) applies at every level. Everything isn't a licence for
+  jargon: it shows more numbers, in the same words.
+- Setup asks about it only indirectly: a beginner's experience answer sets
+  Simple, which they can change in Settings.
+
+**Open question for the maintainer:** should Simple also hide the RPE input
+and log every set at the target (logging what you did, not how hard)? That
+changes the data the engine learns from, so it's a decision for you, not a
+display setting.
+
 ## Decisions made
 
 **Program progress counts sessions, not calendar days.** The rotation already
