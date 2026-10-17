@@ -202,6 +202,9 @@ and *Reset to the default look* undoes it. Codes aren't case-sensitive.
 | `TERMINAL` | Phosphor green on black, monospace, square corners, and a 1983 voice ("> SET 2 OK."). |
 | `SUNSET` | Deep plum shading to burnt orange, coral accent. The soft one for a dim room. |
 | `HIGHVIS` | Black and white with a safety-yellow accent, bigger and heavier text. The accessibility option. |
+| `LOGBOOK` | A training notebook: warm paper, ink, signal orange, ruled set rows and mono numbers. |
+| `CHALK` | Graphite and chalk white with an acid-lime accent; condensed capitals and big condensed numbers. |
+| `GROVE` | Sage and forest with a tomato accent; a soft serif for numbers, and logged sets on rounded plates. |
 
 A colour code (#FF66AA) gives the standard look with that accent, adjusted if it
 wouldn't be readable. Every theme passes the same readability rules (text

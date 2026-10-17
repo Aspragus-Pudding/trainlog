@@ -1492,3 +1492,29 @@ first-time tip could teach the long press if testers miss it.
 - **No screenshots of other apps** are in the repo.
 
 **Waiting on you:** which direction (or a mix). Part 3 starts after your pick.
+
+## D68. The three directions are theme codes; the standard look stays (v1.92.0)
+
+**Your call (17 Oct):** Logbook, Chalk and Grove become codes, not the app's look.
+
+**Chosen:**
+- **LOGBOOK** (paper, light), **CHALK** (graphite, dark) and **GROVE** (sage, light),
+  each in its default mode, with the token sets from
+  `docs/design/brand-directions/tokens.json`. They pass §80 like every theme.
+- **Their signatures, in CSS:**
+  - Logbook: ruled set rows and a margin rule down each exercise.
+  - Chalk: condensed capitals and big condensed numbers.
+  - Grove: logged sets on rounded plates. They're full-width pills; drawing each
+    plate as long as its load would need a change to the set rows, not just the
+    theme.
+- **Type is the nearest system font, not the open fonts:**
+  - Logbook uses the system mono for numbers.
+  - Chalk uses Avenir Next Condensed on iPhone, Roboto Condensed on Android,
+    then Bahnschrift or Arial Narrow.
+  - Grove uses New York or Georgia.
+
+  A code downloads nothing and works offline. The app stays one file.
+- **Not added:** the other mode of each direction (Logbook dark, Chalk light, Grove
+  dark). They're ready in tokens.json and would each be one more entry.
+
+**To undo:** remove the three entries from `THEMES` (v1.91.0 has none).

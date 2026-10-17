@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.92.0 — 2026-10-17
+- Three new theme codes: LOGBOOK (paper, ink and ruled set rows), CHALK (graphite and acid lime, big condensed numbers) and GROVE (sage and tomato, serif numbers).
+- Enter one in Settings → Appearance → Have a code?. The standard look doesn't change.
+- Like every theme, they pass the readability rules, and they need no download.
+
 ## 1.91.0 — 2026-10-17
 - An exercise's details start with a sentence: how many hard sets of it you're doing a week this block, and the muscle it counts toward.
 - The finish screen says it in one line: sets, time and new bests.
