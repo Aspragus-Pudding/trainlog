@@ -65,7 +65,7 @@ everyone.
 | Rehab and prehab logging: dose, pain, how it moved; feel-it stage, one step a week at most, a flare steps back | injury-prone | rehab block after training, tap an item |
 | Rehab or prehab, per exercise | injury-prone | rehab block, an open item |
 | Finish session: joint question per exercise, diary, ratings | everyone | Finish session |
-| Session summary: new bests, compared with last time | everyone | after finishing |
+| Session summary: one sentence (sets, time, new bests), compared with last time | everyone | after finishing |
 | Keep any of these? (after trying new exercises): use instead, take turns, forget | everyone | session summary; a card on Today until answered |
 
 ## Lifts

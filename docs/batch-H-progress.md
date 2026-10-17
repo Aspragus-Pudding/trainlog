@@ -112,3 +112,4 @@ No engine changes: the backtest must stay identical. Part 1 removes the look-ali
 | 1.3 Today | done | v1.88.0 | today's plan first (before the check-in too); block track with patterns (solid / striped / dotted / hollow); countdown and phase bars removed; date only for a test day or fixed end; D63 |
 | 1.4 check-in | done | v1.89.0 | All good in one tap; chips + a little / a lot; better than usual = 4; same stored values (§95: 6,912 combinations, same score, cut, event); post-session rows left for next; D64 ★ |
 | 1.5 Train | done | v1.90.0 | one line + ⋯; Start at the bottom; reorder handles (drag or arrow keys, one-step rule); tap → details, long-press / swipe left → swap, Details → Swap; mobile drags the handle; §96; D65 |
+| 1.6 sentences first | done | v1.91.0 | details lead sentence; one-line finish; the week in words; no tiles, no coloured landmark rows; §97; D66 |

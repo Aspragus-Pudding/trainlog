@@ -1450,3 +1450,19 @@ README and features say so, and Details → Swap is the visible route. A
 first-time tip could teach the long press if testers miss it.
 
 **To undo:** v1.89.0 has the hero and the button pair.
+
+## D66. Sentences first: details, the finish screen, the week (v1.91.0)
+
+**Chosen:**
+- **Exercise details** open with "You're doing 8 hard sets of it a week this block.
+  It counts toward chest, where 10 to 20 are the typical weekly sets." An exercise
+  not in the program says so.
+- **The finish screen**'s three stat tiles are one sentence: "18 sets in 52 minutes,
+  with 2 new bests."
+- **The whole-week view**'s coloured "14 / 10–20" rows are sentences: how many
+  muscles are inside the typical range, then who is under and who is over.
+- **Already sentences:** the Lifts cards and the block lines in Edit program (Part 4
+  of the last batch). Nowhere left shows a tile grid of max, class, style or
+  sticking point.
+
+**To undo:** v1.90.0.

@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.91.0 — 2026-10-17
+- An exercise's details start with a sentence: how many hard sets of it you're doing a week this block, and the muscle it counts toward.
+- The finish screen says it in one line: sets, time and new bests.
+- The whole-week view says which muscles are under or over their typical weekly sets, in words.
+
 ## 1.90.0 — 2026-10-17
 - Train shows the day and its block on one line, the exercise list, and one Start button at the bottom. The whole week and another day are under ⋯.
 - Drag an exercise's handle to reorder. Tap a card for its details, and long-press or swipe it left to swap.
