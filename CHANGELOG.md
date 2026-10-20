@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.94.0 — 2026-10-20
+- The up and down arrows are back on each exercise, beside the drag handle, before you start and during a session.
+- Use whichever you like: the arrows move one place at a time, and the handle is for longer moves.
+- The order rules are the same either way: an exercise you're partway through stays current.
+
 ## 1.93.0 — 2026-10-20
 - A new standard look: graphite with a teal accent. Block types are teal for size, lavender for strength and gold for a taper, each with its own pattern.
 - The light look (code LIGHT) follows it, and the app icon is a teal plate on graphite.

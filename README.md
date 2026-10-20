@@ -29,8 +29,8 @@ screen**, then follow steps 3 to 5.
 - The first time something happens (your first check-in, a suggestion that
   moved, an all-out set, a deload), a short card says what it is and why.
   **Got it** puts it away; **More** opens the guide.
-- Before you start, the **Train** tab is today's workout. Drag a handle to
-  move an exercise, long-press or swipe left to swap one, add or remove
+- Before you start, the **Train** tab is today's workout. Use the arrows (or
+  drag the handle) to move an exercise, long-press or swipe left to swap one, add or remove
   exercises and change sets there. Changes are for today unless you tap
   **Save to program**.
 - The **check-in** asks what's off today. Tap **All good** if nothing is;

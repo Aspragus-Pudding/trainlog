@@ -36,7 +36,7 @@ everyone.
 
 | Feature | For | Where |
 |---|---|---|
-| Today's workout, editable before you start: drag a handle to reorder, tap a card for details, long-press or swipe left to swap, add or remove, sets ±, last time per set, estimated length; "Save to program"; Start at the bottom; ⋯ for the whole week and another day; "Last Upper B: 5 days ago" | everyone | Train tab before you start |
+| Today's workout, editable before you start: arrows or a drag handle to reorder, tap a card for details, long-press or swipe left to swap, add or remove, sets ±, last time per set, estimated length; "Save to program"; Start at the bottom; ⋯ for the whole week and another day; "Last Upper B: 5 days ago" | everyone | Train tab before you start |
 | "Your preference" chips (don't care about) | advanced | on preview cards that moved |
 | Try new exercises: exercises you haven't logged for the same muscles and your equipment, RPE 7 at most; never a stall or a missed suggestion | everyone | Train tab → Train a different day (also offered at a block start and in a deload week) |
 | Take turns between two exercises (from Try new exercises), Stop taking turns | everyone | the exercise's card on the Train tab |
@@ -58,7 +58,7 @@ everyone.
 | Pain rating after a set, with advice | injury-prone | after a set on a relevant exercise |
 | Condition warnings and suggested swaps | injury-prone | on the card |
 | Rest timer | everyone | bottom bar after each set |
-| Add an exercise; drag the handle to move; long-press or swipe left to swap; Details | everyone | card handle, card gestures, the end of the list |
+| Add an exercise; arrows or the drag handle to move; long-press or swipe left to swap; Details | everyone | card handle, card gestures, the end of the list |
 | Leave (end early, with a reason) | everyone | header, top right |
 | Video prompt ("film this set") | advanced | occasionally, on main lifts |
 | Rehab and prep blocks | injury-prone | in the session, if a plan or prep applies |

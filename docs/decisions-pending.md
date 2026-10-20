@@ -1550,3 +1550,13 @@ code; options C and D as codes too.
 - **All 13 themes pass §80.**
 
 **To undo:** v1.92.0's tokens and icons; or keep this and enter CLASSIC.
+
+## D70. The arrows are back beside the drag handle (v1.94.0)
+
+**Your call (20 Oct):** drag can be janky, so keep the up and down arrows as well.
+- Every card has up and down arrows and the handle, before you start and during
+  a session. Both move one place at a time underneath, so the which-exercise
+  rules apply the same way.
+- In a session an exercise with sets logged keeps its place: its arrows and handle
+  are dimmed, as before.
+- The phone test drags once, then taps Move later and Move earlier.

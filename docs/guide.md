@@ -31,7 +31,7 @@ When a main lift goes a few weeks without a new best while you're training it ev
 The app proposes a deload when the signs show: readiness falling, the same weights feeling harder, or a flared joint. You can also add one yourself in Edit program → Blocks with "Deload week at the end".
 
 ### I want to change today's workout
-Before you start, the Train tab is today's workout, with the same cards as the live session. Drag an exercise's handle to move it, tap a card for its details, long-press or swipe left to swap it, add or remove one, or change the number of sets; each set shows what you did last time. Changes are for today only. Tap "Save to program" to keep them for that day from now on, and Start at the bottom begins the session in the order you've set. The ⋯ at the top has the whole week and another day.
+Before you start, the Train tab is today's workout, with the same cards as the live session. Move an exercise with its arrows or by dragging its handle, tap a card for its details, long-press or swipe left to swap it, add or remove one, or change the number of sets; each set shows what you did last time. Changes are for today only. Tap "Save to program" to keep them for that day from now on, and Start at the bottom begins the session in the order you've set. The ⋯ at the top has the whole week and another day.
 
 ### I want my own warm-up
 The warm-up at the top of a workout is built from the day's main lifts, then your conditions, then anything sore, and each item says why it's there. Tap Edit warm-up to stop a suggestion for that day, add one from the library, or create your own warm-up or rehab exercise, for that day or every session. Rehab ones come after training.
@@ -264,7 +264,7 @@ Edit program is where you change your blocks, goals, schedule, conditions and pr
 ## Train {tab:work}
 
 ### Each exercise `#v-work .ex`
-Each exercise is a card, and tapping it opens the set panel. The faint numbers beside sets you haven't done yet are what you did last time. Drag the handle on the right to reorder, long-press a card or swipe it left to swap, and Details opens everything about the exercise, with a Swap button too.
+Each exercise is a card, and tapping it opens the set panel. The faint numbers beside sets you haven't done yet are what you did last time. Use the arrows, or drag the handle on the right, to reorder; long-press a card or swipe it left to swap, and Details opens everything about the exercise, with a Swap button too.
 
 ### Weight and reps `[data-tour="weight"]`
 The weight and reps are suggested in amber. Change either one and the other recomputes to hit the target RPE. For pull-ups, chin-ups, dips and assisted machines you type what is on the machine, and the line underneath shows what you are actually lifting.

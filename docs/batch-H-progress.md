@@ -116,3 +116,4 @@ No engine changes: the backtest must stay identical. Part 1 removes the look-ali
 | 2 brand directions | done; your pick: keep the standard look, the three become codes | docs | Logbook, Chalk, Grove: tokens (all pass themeReport), type (OFL), icons, signature, how each differs; 24 screenshots at 390 px; docs/design/brand-directions/; D67 |
 | 3a the directions as codes | done | v1.92.0 | LOGBOOK, CHALK, GROVE; system fonts; signatures in theme CSS; D68 |
 | 3b the standard look, made distinctive | done | v1.93.0 | your pick B: graphite + teal; LIGHT follows; CLASSIC (old look), IRIS (C), EMBER (D) as codes; barbell-end icon; D69 |
+| arrows back | done | v1.94.0 | up/down beside the drag handle on every card (your call: drag can be janky); D70 |
