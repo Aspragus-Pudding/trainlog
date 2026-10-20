@@ -115,4 +115,4 @@ No engine changes: the backtest must stay identical. Part 1 removes the look-ali
 | 1.6 sentences first | done | v1.91.0 | details lead sentence; one-line finish; the week in words; no tiles, no coloured landmark rows; §97; D66 |
 | 2 brand directions | done; your pick: keep the standard look, the three become codes | docs | Logbook, Chalk, Grove: tokens (all pass themeReport), type (OFL), icons, signature, how each differs; 24 screenshots at 390 px; docs/design/brand-directions/; D67 |
 | 3a the directions as codes | done | v1.92.0 | LOGBOOK, CHALK, GROVE; system fonts; signatures in theme CSS; D68 |
-| 3b the standard look, made distinctive | proposed | | options for you: what changes so it isn't navy + bright blue |
+| 3b the standard look, made distinctive | done | v1.93.0 | your pick B: graphite + teal; LIGHT follows; CLASSIC (old look), IRIS (C), EMBER (D) as codes; barbell-end icon; D69 |

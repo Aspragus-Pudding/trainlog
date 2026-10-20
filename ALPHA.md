@@ -198,6 +198,9 @@ and *Reset to the default look* undoes it. Codes aren't case-sensitive.
 |---|---|
 | `GIRLYPOP` | Soft pink, hot-pink accent, bows on the header and on new-best badges, and its own voice ("Set 2. Obsessed."). |
 | `LIGHT` | The standard look on a light background. |
+| `CLASSIC` | The original look: deep navy with a bright blue accent. |
+| `IRIS` | Graphite with a violet accent. |
+| `EMBER` | Warm charcoal with a coral accent. |
 | `GOBLIN` | Moss, dirt brown, candlelight amber. Heavier type, and its own voice ("Set 2 hoarded"). |
 | `TERMINAL` | Phosphor green on black, monospace, square corners, and a 1983 voice ("> SET 2 OK."). |
 | `SUNSET` | Deep plum shading to burnt orange, coral accent. The soft one for a dim room. |

@@ -1518,3 +1518,35 @@ first-time tip could teach the long press if testers miss it.
   dark). They're ready in tokens.json and would each be one more entry.
 
 **To undo:** remove the three entries from `THEMES` (v1.91.0 has none).
+
+## D69. Graphite and teal is the standard look; CLASSIC, IRIS and EMBER are codes (v1.93.0)
+
+**Your pick (20 Oct):** option B as the standard look; the look before it kept as a
+code; options C and D as codes too.
+
+**Chosen:**
+- **The standard dark tokens** (`:root` and `DEFAULT_TOKENS`) are graphite and teal:
+  ground #0F1112, cards #181B1C, accent #2EC4B6. Buttons are teal with dark text on
+  them.
+  - Block types are teal for size, lavender (#B49BFF) for strength and gold
+    (#F2C14E) for a taper.
+  - Warnings stay amber and red: those are status colours, not the brand.
+- **LIGHT follows the new look:**
+  - teal #0A766C on near-white;
+  - blocks teal, violet (#6A4FD6) and dark gold (#8A6800).
+  - The teal is a shade darker than the first try (#0B7F74 read 4.46:1, just under
+    the 4.5 rule).
+- **CLASSIC** is the look before batch M, unchanged: navy #0B0D12 and blue
+  #4C8DFF, with the old blue / orange / red blocks. That's your call, as a code;
+  it's not the default.
+- **IRIS** is graphite and violet, and **EMBER** is warm charcoal and coral, exactly
+  as shown.
+- **The app icon** is redrawn as a teal loaded barbell end (shaft, collar, plates
+  big to small, clamp) on graphite, replacing the blue dumbbell on navy. My first
+  plate design read as a power button, and a face-on plate read as a target. The
+  Train tab icon is the same bar end. iPhones keep the old home-screen icon until
+  the app is added again.
+- **The manifest's splash and status-bar colour** are the new graphite.
+- **All 13 themes pass §80.**
+
+**To undo:** v1.92.0's tokens and icons; or keep this and enter CLASSIC.

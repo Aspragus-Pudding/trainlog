@@ -40,18 +40,19 @@ code changes.
 
 ### Colour
 
-Seven roles. The CSS name on the left is what components use. The older names
+Seven roles, in graphite and teal since v1.93 (the original navy and blue is the code CLASSIC). The CSS name on the left is what components use. The older names
 (`--card`, `--ink`, `--danger`) still work and are what theme codes set.
 
 | Role | CSS | Dark | Light | Use |
 |---|---|---|---|---|
-| surface | `--bg`, `--surface`, `--surface-2`, `--line` | #0B0D12 / #16191F / #1F232B / #2A2F39 | #F4F5F7 / #FFFFFF / #EEF0F3 / #E3E6EB | page, cards, inputs and chips, dividers |
-| text | `--text`, `--muted`, `--dim` | #F2F4F8 / #8E95A3 / #606876 | #12151A / #5A626F / #878E9B | primary, secondary, tertiary text |
-| accent | `--accent`, `--on-accent`, `--accent-soft`, `--accent-fill` | #4C8DFF (fill #2F6FEB) | #2165EA | links, selection, charts; buttons and selected chips use the fill, which carries the button text. Not for status. |
-| ok | `--ok` | #4ADE80 | #1F9D55 | the "no change" dot |
+| surface | `--bg`, `--surface`, `--surface-2`, `--line` | #0F1112 / #181B1C / #212526 / #2D3233 | #F3F5F4 / #FFFFFF / #EBEFEE / #DDE3E1 | page, cards, inputs and chips, dividers |
+| text | `--text`, `--muted`, `--dim` | #F1F4F3 / #99A2A0 / #6C7573 | #111816 / #56615E / #7B8683 | primary, secondary, tertiary text |
+| accent | `--accent`, `--on-accent`, `--accent-soft`, `--accent-fill` | #2EC4B6 (fill the same, dark text on it) | #0A766C | links, selection, charts; buttons and selected chips use the fill, which carries the button text. Not for status. |
+| ok | `--ok` | #7EDB6A | #3A8F2E | the "no change" dot |
 | caution | `--caution` | #F2D04B | #B39000 | the "careful" dot: longer warm-up, no step-ups |
 | warn | `--warn` | #E8A33D | #A55E00 | the "held" dot, condition warnings, suggested numbers |
 | stop | `--stop` (= `--danger`) | #E8546B | #D62844 | the "lighter" dot, destructive actions, failed reps |
+| block types | `--hyp`, `--str`, `--peak`, `--deload` | #2EC4B6 / #B49BFF / #F2C14E / #86908E | #0A766C / #6A4FD6 / #8A6800 / #68716F | size, strength, taper, deload; each also has a pattern (solid, striped, dotted, hollow), so colour is never the only signal |
 
 **Readability, enforced (v1.74).** Every theme, the default included, passes
 the same rules (`THEME_RULES` in index.html; §80 fails the build otherwise):

@@ -5,27 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0B0D12" data-default="#0B0D12">
+<meta name="theme-color" content="#0F1112" data-default="#0F1112">
 <meta name="apple-mobile-web-app-title" content="Trainlog">
 <title>Trainlog</title>
 <style>
 :root{
-  --bg:#0B0D12; --card:#16191F; --card-2:#1F232B; --line:#2A2F39;
-  --ink:#F2F4F8; --muted:#8E95A3; --dim:#606876;
+  /* graphite and teal (batch M, Oct 20): the navy + bright blue is the code CLASSIC now */
+  --bg:#0F1112; --card:#181B1C; --card-2:#212526; --line:#2D3233;
+  --ink:#F1F4F3; --muted:#99A2A0; --dim:#6C7573;
   /* semantic: block type. these carry meaning, not decoration */
-  --hyp:#4C8DFF; --str:#E8A33D; --peak:#E8546B; --deload:#7A8190; --on-block:#0B0D12;
+  --hyp:#2EC4B6; --str:#B49BFF; --peak:#F2C14E; --deload:#86908E; --on-block:#0F1112;
   /* interface accent (buttons, selection, charts) — separate from the block
      colours so a theme can change one without the other */
-  --accent:#4C8DFF; --on-accent:#fff; --accent-soft:rgba(76,141,255,.16);
+  --accent:#2EC4B6; --on-accent:#06201C; --accent-soft:rgba(46,196,182,.16);
   /* a filled accent (buttons, selected chips) carries on-accent text, so it may be a
      shade deeper than the accent used for text and links (readability rules, v1.74) */
-  --accent-fill:#2F6FEB;
+  --accent-fill:#2EC4B6;
   /* warnings and danger: joint flags, ease-off, backup nags. must always read
      as warnings, whatever the theme */
   --warn:#E8A33D; --warn-soft:rgba(232,163,61,.1); --danger:#E8546B; --sug:var(--warn);
-  --go:#2FA84F; --skip:#FF453A; --ok:#4ADE80; --steel:#6E7787;
-  --pr:#E8A33D; --on-pr:#111;
-  --bar:rgba(11,13,18,.95); --backdrop:rgba(6,8,12,.78); --r:14px;
+  --go:#2FA84F; --skip:#FF453A; --ok:#7EDB6A; --steel:#6F7A78;
+  --pr:#F2C14E; --on-pr:#111;
+  --bar:rgba(15,17,18,.95); --backdrop:rgba(6,7,8,.78); --r:14px;
   --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   /* ── design system (docs/design.md). Colour roles are aliases of the theme
      tokens above, so every theme code keeps working; caution is the one new
@@ -320,7 +321,7 @@ input[type=date]{width:100%;background:var(--card-2);border:none;border-radius:v
     <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h18"/><path d="M6.5 19a5.5 5.5 0 0 1 11 0"/><path d="M12 6.5V9M5.4 10.4l1.6 1.6M18.6 10.4L17 12"/></svg>
     Today</button>
   <button data-tab="work">
-    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2"/><path d="M12 3.5v3.2"/></svg>
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h5M8 10v4M10.5 5v14M13.5 7v10M16.5 9.5v5M16.5 12H21"/></svg>
     Train</button>
   <button data-tab="lifts">
     <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19h14M5 14h10M5 9h6M5 4v15"/></svg>
@@ -8760,7 +8761,7 @@ The name signed on notes you send with the pencil, so the person who set up the 
 The word the app uses for how hard a set was: RPE, the lifting term, or effort. Both mean the same thing: 10 is nothing left and 9 is one rep left. Setup picks effort for newer lifters and RPE for everyone else, and you can change it any time.
 
 ### Theme code
-Have a code? A theme code changes the app's colours. Dark is the standard look; the code LIGHT gives a light one, and a colour code such as #FF66AA gives the standard look in your colour, adjusted if it wouldn't be readable. Every theme is checked for readable text. Reset goes back to the standard look.
+Have a code? A theme code changes the app's colours. Dark graphite and teal is the standard look; the code LIGHT gives a light one, CLASSIC brings back the original navy and blue, and a colour code such as #FF66AA gives the standard look in your colour, adjusted if it wouldn't be readable. Every theme is checked for readable text. Reset goes back to the standard look.
 
 ### Theme voice
 Goblin, Terminal and Girlypop come with their own voice for cheers and greetings: a logged set, a new best, the end of a rest or a session. Untick "Use this theme's voice" to keep the colours and lose the jokes. Anything about pain, safety, errors or your data always stays plain.
@@ -9472,8 +9473,8 @@ Settings → Voice has "Use this theme's voice", on by default.
 - Freshly updated · {v}
 - The latest · {v}
 </script>
-<script type="application/json" id="whats-new">{"version":"1.92.0","lines":["Three new theme codes: LOGBOOK (paper, ink and ruled set rows), CHALK (graphite and acid lime, big condensed numbers) and GROVE (sage and tomato, serif numbers).","Enter one in Settings → Appearance → Have a code?. The standard look doesn't change.","Like every theme, they pass the readability rules, and they need no download."]}</script>
-<script type="application/json" id="whats-new-history">[{"version":"1.92.0","date":"2026-10-17","lines":["Three new theme codes: LOGBOOK (paper, ink and ruled set rows), CHALK (graphite and acid lime, big condensed numbers) and GROVE (sage and tomato, serif numbers).","Enter one in Settings → Appearance → Have a code?. The standard look doesn't change.","Like every theme, they pass the readability rules, and they need no download."]},{"version":"1.91.0","date":"2026-10-17","lines":["An exercise's details start with a sentence: how many hard sets of it you're doing a week this block, and the muscle it counts toward.","The finish screen says it in one line: sets, time and new bests.","The whole-week view says which muscles are under or over their typical weekly sets, in words."]},{"version":"1.90.0","date":"2026-10-17","lines":["Train shows the day and its block on one line, the exercise list, and one Start button at the bottom. The whole week and another day are under ⋯.","Drag an exercise's handle to reorder. Tap a card for its details, and long-press or swipe it left to swap.","During a session, Details on each card opens the exercise, with a Swap button there too."]},{"version":"1.89.0","date":"2026-10-17","lines":["The check-in asks what's off today. Tap All good, or tap what's off (poor sleep, low motivation, stress, feeling sick, a sore area, a joint) and say a little or a lot.","Anything you don't tap counts as normal. \"Better than usual?\" covers a great night or feeling fresh.","The app stores the same answers as before, so suggestions and your history read exactly as they did."]},{"version":"1.88.0","date":"2026-10-17","lines":["Today opens with today's plan: the workout, one sentence on what the app is doing to it, and how many exercises are held back or pushing. It shows before your check-in too.","Your program is one line of blocks with this week marked, and a sentence: where you are and what comes next.","Each block type has a pattern as well as a colour. The countdown chart is gone; a date shows only if you set a test day or a fixed end."]},{"version":"1.87.0","date":"2026-10-17","lines":["The tabs are Today, Train, Lifts, Progress and Settings, with new icons.","Same screens in the same places: Today was the Dashboard, Train was Workout.","The guide and the screen tours use the new names."]},{"version":"1.86.0","date":"2026-10-17","lines":["The app's name now comes from one place, ready for the new name.","Backups, storage and your log don't change with the name. A backup made under any name restores the same way.","Nothing else looks different yet."]},{"version":"1.85.2","date":"2026-10-17","lines":["A typo pass across the app, the guide and the tester notes.","One spelling throughout: warm-up, step-up, specialisation. Two exercise names corrected (Overhead triceps extension machine, Reverse Nordic).","A failed backup sync now says your log is safe on this phone, and calls the sheet by the name Settings uses."]},{"version":"1.85.1","date":"2026-10-17","lines":["The \"Use the generated plan\" button, and the line above it, are gone from the Workout tab.","Days you saved to your program stay as you saved them. Nothing you've logged changes.","To change a saved day, edit it on the Workout tab and tap Save to program again."]},{"version":"1.85.0","date":"2026-10-17","lines":["Try new exercises: under Train a different day on the Workout tab, it swaps today's exercises for ones you haven't logged, with 2–3 options each for the same muscles and your equipment. Main lifts stay as planned.","Work up to RPE 7 at most. You're finding a starting point. It counts as a session and toward your week, and never as a stall or a missed suggestion.","Afterwards the app asks \"Keep any of these?\". You can use one instead of the exercise it stood in for, take turns with it (one each time you train that day), or forget it.","The app also suggests it at the start of a block and in a deload week, once each. It never starts one on its own."]},{"version":"1.84.0","date":"2026-10-13","lines":["Rehab and prehab exercises are tracked. After training, open one in the rehab block and log the dose, the pain during it, and how it moved.","Rehab starts with a feel-it stage: the same easy dose for 10 days and 3 sessions. After that it takes one small step a week at most (reps first, then a slower lowering, then load), and only when the pain stayed within the limit and was back to your usual by the next morning.","A flare-up steps back one level and holds there for a week. Prehab is the maintenance version: a rep a week, with the same pain check.","After three pain-free weeks at the top of the dose, the app asks whether to move the exercise to prehab. It never switches on its own.","Progress has a Rehab and prehab history, kept apart from training volume and bests."]},{"version":"1.83.0","date":"2026-10-12","lines":["The warm-up fits the day: first the main lifts (a squat day warms hips, knees and back), then your conditions, then anything sore. Each item says why (\"for today's back squat\", \"for your shoulder\").","Edit warm-up: add from the library, create your own warm-up or rehab exercises, reorder yours and remove suggestions, for one day or every session.","A suggestion you remove isn't suggested again for that day. Your rehab exercises come after training."]}]</script>
+<script type="application/json" id="whats-new">{"version":"1.93.0","lines":["A new standard look: graphite with a teal accent. Block types are teal for size, lavender for strength and gold for a taper, each with its own pattern.","The light look (code LIGHT) follows it, and the app icon is a teal plate on graphite.","Prefer the original navy and blue? Enter the code CLASSIC. IRIS (violet) and EMBER (coral) are new codes too."]}</script>
+<script type="application/json" id="whats-new-history">[{"version":"1.93.0","date":"2026-10-20","lines":["A new standard look: graphite with a teal accent. Block types are teal for size, lavender for strength and gold for a taper, each with its own pattern.","The light look (code LIGHT) follows it, and the app icon is a teal plate on graphite.","Prefer the original navy and blue? Enter the code CLASSIC. IRIS (violet) and EMBER (coral) are new codes too."]},{"version":"1.92.0","date":"2026-10-17","lines":["Three new theme codes: LOGBOOK (paper, ink and ruled set rows), CHALK (graphite and acid lime, big condensed numbers) and GROVE (sage and tomato, serif numbers).","Enter one in Settings → Appearance → Have a code?. The standard look doesn't change.","Like every theme, they pass the readability rules, and they need no download."]},{"version":"1.91.0","date":"2026-10-17","lines":["An exercise's details start with a sentence: how many hard sets of it you're doing a week this block, and the muscle it counts toward.","The finish screen says it in one line: sets, time and new bests.","The whole-week view says which muscles are under or over their typical weekly sets, in words."]},{"version":"1.90.0","date":"2026-10-17","lines":["Train shows the day and its block on one line, the exercise list, and one Start button at the bottom. The whole week and another day are under ⋯.","Drag an exercise's handle to reorder. Tap a card for its details, and long-press or swipe it left to swap.","During a session, Details on each card opens the exercise, with a Swap button there too."]},{"version":"1.89.0","date":"2026-10-17","lines":["The check-in asks what's off today. Tap All good, or tap what's off (poor sleep, low motivation, stress, feeling sick, a sore area, a joint) and say a little or a lot.","Anything you don't tap counts as normal. \"Better than usual?\" covers a great night or feeling fresh.","The app stores the same answers as before, so suggestions and your history read exactly as they did."]},{"version":"1.88.0","date":"2026-10-17","lines":["Today opens with today's plan: the workout, one sentence on what the app is doing to it, and how many exercises are held back or pushing. It shows before your check-in too.","Your program is one line of blocks with this week marked, and a sentence: where you are and what comes next.","Each block type has a pattern as well as a colour. The countdown chart is gone; a date shows only if you set a test day or a fixed end."]},{"version":"1.87.0","date":"2026-10-17","lines":["The tabs are Today, Train, Lifts, Progress and Settings, with new icons.","Same screens in the same places: Today was the Dashboard, Train was Workout.","The guide and the screen tours use the new names."]},{"version":"1.86.0","date":"2026-10-17","lines":["The app's name now comes from one place, ready for the new name.","Backups, storage and your log don't change with the name. A backup made under any name restores the same way.","Nothing else looks different yet."]},{"version":"1.85.2","date":"2026-10-17","lines":["A typo pass across the app, the guide and the tester notes.","One spelling throughout: warm-up, step-up, specialisation. Two exercise names corrected (Overhead triceps extension machine, Reverse Nordic).","A failed backup sync now says your log is safe on this phone, and calls the sheet by the name Settings uses."]},{"version":"1.85.1","date":"2026-10-17","lines":["The \"Use the generated plan\" button, and the line above it, are gone from the Workout tab.","Days you saved to your program stay as you saved them. Nothing you've logged changes.","To change a saved day, edit it on the Workout tab and tap Save to program again."]},{"version":"1.85.0","date":"2026-10-17","lines":["Try new exercises: under Train a different day on the Workout tab, it swaps today's exercises for ones you haven't logged, with 2–3 options each for the same muscles and your equipment. Main lifts stay as planned.","Work up to RPE 7 at most. You're finding a starting point. It counts as a session and toward your week, and never as a stall or a missed suggestion.","Afterwards the app asks \"Keep any of these?\". You can use one instead of the exercise it stood in for, take turns with it (one each time you train that day), or forget it.","The app also suggests it at the start of a block and in a deload week, once each. It never starts one on its own."]},{"version":"1.84.0","date":"2026-10-13","lines":["Rehab and prehab exercises are tracked. After training, open one in the rehab block and log the dose, the pain during it, and how it moved.","Rehab starts with a feel-it stage: the same easy dose for 10 days and 3 sessions. After that it takes one small step a week at most (reps first, then a slower lowering, then load), and only when the pain stayed within the limit and was back to your usual by the next morning.","A flare-up steps back one level and holds there for a week. Prehab is the maintenance version: a rep a week, with the same pain check.","After three pain-free weeks at the top of the dose, the app asks whether to move the exercise to prehab. It never switches on its own.","Progress has a Rehab and prehab history, kept apart from training volume and bests."]}]</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -10040,7 +10041,7 @@ Settings → Voice has "Use this theme's voice", on by default.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.92.0';
+const APP_VERSION='1.93.0';
 /* The app's name, in one place (batch M). Every on-screen "Trainlog" comes from
    here; docs embedded in the page write {app} and get it at read time (named()).
    tools/set-name.js copies it into <title> and the manifest. Renaming never
@@ -11893,11 +11894,11 @@ const THEME_TOKENS=['bg','card','card-2','line','ink','muted','dim','hyp','str',
 const BOW_MASK="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20'%3E%3Cpath d='M12 8C9 3 2 1 2 6s7 6 10 2zM12 8c3-5 10-7 10-2s-7 6-10 2zM11 9l-4 9 3-1 2 2 1-9zM13 9l4 9-3-1-2 2-1-9z'/%3E%3Ccircle cx='12' cy='8' r='2.2'/%3E%3C/svg%3E\") center/contain no-repeat";
 const THEMES=[
   {code:'LIGHT', name:'Light', blurb:'The standard look on a light background.',
-   tokens:{bg:'#F4F5F7','card':'#FFFFFF','card-2':'#EEF0F3',line:'#E3E6EB',ink:'#12151A',muted:'#5A626F',dim:'#878E9B',
-     hyp:'#2165EA',str:'#A55E00',peak:'#D62844',deload:'#696F79','on-block':'#FFFFFF',
-     accent:'#2165EA','on-accent':'#FFFFFF','accent-soft':'rgba(33,101,234,.10)',
-     warn:'#A55E00','warn-soft':'rgba(165,94,0,.10)',danger:'#D62844',go:'#1F8F4C',skip:'#D62844',ok:'#1F9D55',caution:'#B39000',
-     steel:'#8C94A0',pr:'#A55E00','on-pr':'#FFFFFF',bar:'rgba(244,245,247,.94)',backdrop:'rgba(18,21,26,.42)',r:'14px',
+   tokens:{bg:'#F3F5F4','card':'#FFFFFF','card-2':'#EBEFEE',line:'#DDE3E1',ink:'#111816',muted:'#56615E',dim:'#7B8683',
+     hyp:'#0A766C',str:'#6A4FD6',peak:'#8A6800',deload:'#68716F','on-block':'#FFFFFF',
+     accent:'#0A766C','on-accent':'#FFFFFF','accent-fill':'#0A766C','accent-soft':'rgba(10,118,108,.10)',
+     warn:'#A55E00','warn-soft':'rgba(165,94,0,.10)',danger:'#D62844',go:'#1F8F4C',skip:'#D62844',ok:'#3A8F2E',caution:'#B39000',
+     steel:'#8C9693',pr:'#8A6800','on-pr':'#FFFFFF',bar:'rgba(243,245,244,.94)',backdrop:'rgba(17,24,22,.42)',r:'14px',
      font:'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'},
    // light background under a white status bar: an accent band behind the clock keeps it readable
    css:`:root{--e-1:0 1px 2px rgba(16,24,40,.05),0 0 0 1px rgba(16,24,40,.05);--e-2:0 16px 40px rgba(16,24,40,.18)}
@@ -11958,6 +11959,22 @@ const THEMES=[
      :focus-visible{outline:3px solid var(--accent)!important;outline-offset:2px}`},
   /* Logbook, Chalk and Grove: the three brand directions from batch M (docs/design/brand-directions), kept as
      codes. The type is the nearest system font, so nothing downloads and they work offline. */
+  /* CLASSIC, IRIS and EMBER (Oct 20): the look before batch M, and the two other options from the same choice. */
+  {code:'CLASSIC', name:'Classic', blurb:'The original look: deep navy with a bright blue accent.',
+   tokens:{bg:'#0B0D12',card:'#16191F','card-2':'#1F232B',line:'#2A2F39',ink:'#F2F4F8',muted:'#8E95A3',dim:'#606876',
+     hyp:'#4C8DFF',str:'#E8A33D',peak:'#E8546B',deload:'#7A8190','on-block':'#0B0D12',accent:'#4C8DFF','on-accent':'#FFFFFF','accent-fill':'#2F6FEB','accent-soft':'rgba(76,141,255,.16)',
+     warn:'#E8A33D','warn-soft':'rgba(232,163,61,.1)',danger:'#E8546B',go:'#2FA84F',skip:'#FF453A',ok:'#4ADE80',caution:'#F2D04B',steel:'#6E7787',pr:'#E8A33D','on-pr':'#111111',
+     bar:'rgba(11,13,18,.95)',backdrop:'rgba(6,8,12,.78)',r:'14px',font:'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'}},
+  {code:'IRIS', name:'Iris', blurb:'Graphite with a violet accent.',
+   tokens:{bg:'#101013',card:'#19191E','card-2':'#222228',line:'#2F2F37',ink:'#F3F2F7',muted:'#9D9BA8',dim:'#706E7B',
+     hyp:'#A797FF',str:'#3CC8B4',peak:'#F2C14E',deload:'#8A8896','on-block':'#101013',accent:'#A797FF','on-accent':'#FFFFFF','accent-fill':'#6E56E8','accent-soft':'rgba(167,151,255,.16)',
+     warn:'#E8A33D','warn-soft':'rgba(232,163,61,.1)',danger:'#E8546B',go:'#2FA84F',skip:'#FF453A',ok:'#4ADE80',caution:'#F2D04B',steel:'#77758A',pr:'#F2C14E','on-pr':'#111111',
+     bar:'rgba(16,16,19,.95)',backdrop:'rgba(6,6,9,.78)',r:'14px',font:'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'}},
+  {code:'EMBER', name:'Ember', blurb:'Warm charcoal with a coral accent.',
+   tokens:{bg:'#121010',card:'#1C1918','card-2':'#26221F',line:'#34302C',ink:'#F5F1EC',muted:'#A59D96',dim:'#776F68',
+     hyp:'#FF8A6B',str:'#7FC7B5',peak:'#F2C14E',deload:'#8E8680','on-block':'#121010',accent:'#FF8A6B','on-accent':'#1E0E09','accent-fill':'#FF8A6B','accent-soft':'rgba(255,138,107,.16)',
+     warn:'#E8A33D','warn-soft':'rgba(232,163,61,.1)',danger:'#E8546B',go:'#2FA84F',skip:'#FF453A',ok:'#4ADE80',caution:'#F2D04B',steel:'#7A716B',pr:'#F2C14E','on-pr':'#111111',
+     bar:'rgba(18,16,16,.95)',backdrop:'rgba(8,6,6,.78)',r:'14px',font:'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'}},
   {code:'LOGBOOK', name:'Logbook', blurb:'A training notebook: paper, ink, ruled set rows and one signal orange.',
    tokens:{bg:'#F5F0E6',card:'#FBF8F1','card-2':'#EFE8DA',line:'#D9CFBD',ink:'#1D1B17',muted:'#57524A',dim:'#7A7366',hyp:'#4F6B2A',str:'#5B4636',peak:'#B83A12',deload:'#6F6A60','on-block':'#FFFFFF',accent:'#B83A12','on-accent':'#1D1B17','accent-fill':'#E4572E','accent-soft':'rgba(228,87,46,.12)',warn:'#94570A','warn-soft':'rgba(148,87,10,.10)',danger:'#B3261E',go:'#1D1B17',skip:'#B3261E',ok:'#2F7D4A',caution:'#A87400',steel:'#8C8475',pr:'#E4572E','on-pr':'#1D1B17',bar:'rgba(245,240,230,.94)',backdrop:'rgba(29,27,23,.42)',r:'4px',font:'ui-sans-serif,system-ui,-apple-system,\'Segoe UI\',Roboto,sans-serif'},
    // ruled rows like a log page, mono numbers, a margin rule down each exercise; a band behind the clock on paper
@@ -11991,9 +12008,9 @@ const THEMES=[
    must pass as written (§80 fails the build otherwise). A code you type as a colour
    (#RRGGBB, an accent) is checked on apply and nudged until it passes. The chart
    palette is the theme's checked tokens: accent, ok, warn, steel, block colours. */
-const DEFAULT_TOKENS={bg:'#0B0D12',card:'#16191F','card-2':'#1F232B',line:'#2A2F39',ink:'#F2F4F8',muted:'#8E95A3',dim:'#606876',
-  hyp:'#4C8DFF',str:'#E8A33D',peak:'#E8546B',deload:'#7A8190','on-block':'#0B0D12',accent:'#4C8DFF','on-accent':'#FFFFFF','accent-fill':'#2F6FEB',
-  warn:'#E8A33D',danger:'#E8546B',ok:'#4ADE80',caution:'#F2D04B',steel:'#6E7787',pr:'#E8A33D','on-pr':'#111111'};
+const DEFAULT_TOKENS={bg:'#0F1112',card:'#181B1C','card-2':'#212526',line:'#2D3233',ink:'#F1F4F3',muted:'#99A2A0',dim:'#6C7573',
+  hyp:'#2EC4B6',str:'#B49BFF',peak:'#F2C14E',deload:'#86908E','on-block':'#0F1112',accent:'#2EC4B6','on-accent':'#06201C','accent-fill':'#2EC4B6',
+  warn:'#E8A33D',danger:'#E8546B',ok:'#7EDB6A',caution:'#F2D04B',steel:'#6F7A78',pr:'#F2C14E','on-pr':'#111111'};
 const THEME_RULES=[
   ['ink',['bg','card','card-2'],4.5,'text'],['muted',['bg','card','card-2'],4.5,'secondary text'],['dim',['bg','card'],3,'captions and dates'],
   ['accent',['bg','card'],4.5,'links and quiet buttons'],['on-accent',['accent-fill'],4.5,'button text'],['accent-fill',['card'],3,'button shape'],
@@ -12077,7 +12094,7 @@ function applyTheme(){
     const tk=themeTokens(t);
     st.textContent=t?':root{'+THEME_TOKENS.filter(k=>tk[k]!=null).map(k=>'--'+k+':'+tk[k]).join(';')+'}\n'+(t.css||''):'';
     if(t) document.documentElement.dataset.themed=code; else delete document.documentElement.dataset.themed;
-    document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.setAttribute('content',t?t.tokens.bg:m.getAttribute('data-default')||'#0B0D12'));
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.setAttribute('content',t?t.tokens.bg:m.getAttribute('data-default')||'#0F1112'));
   }catch(err){ console.error('theme failed', err); }
 }
 /* ---- voice packs (v1.74, Appendix A Part 7b) ----
@@ -20873,7 +20890,7 @@ try{ if(DESIGN_DIRECTION!=='calm') document.documentElement.dataset.direction=DE
    tab bar, set card actions and the condition card. At most 24. */
 const ICONS={
   today:'<path d="M3 19h18"/><path d="M6.5 19a5.5 5.5 0 0 1 11 0"/><path d="M12 6.5V9M5.4 10.4l1.6 1.6M18.6 10.4L17 12"/>',
-  train:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2"/><path d="M12 3.5v3.2"/>',
+  train:'<path d="M3 12h5M8 10v4M10.5 5v14M13.5 7v10M16.5 9.5v5M16.5 12H21"/>',
   lifts:'<path d="M5 19h14M5 14h10M5 9h6M5 4v15"/>',
   progress:'<path d="M4 19V5M4 19h16"/><path d="M7 15l4-5 3 3 5-7"/>',
   settings:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',

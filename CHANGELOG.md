@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.93.0 — 2026-10-20
+- A new standard look: graphite with a teal accent. Block types are teal for size, lavender for strength and gold for a taper, each with its own pattern.
+- The light look (code LIGHT) follows it, and the app icon is a teal plate on graphite.
+- Prefer the original navy and blue? Enter the code CLASSIC. IRIS (violet) and EMBER (coral) are new codes too.
+
 ## 1.92.0 — 2026-10-17
 - Three new theme codes: LOGBOOK (paper, ink and ruled set rows), CHALK (graphite and acid lime, big condensed numbers) and GROVE (sage and tomato, serif numbers).
 - Enter one in Settings → Appearance → Have a code?. The standard look doesn't change.

@@ -120,7 +120,7 @@ The name signed on notes you send with the pencil, so the person who set up the 
 The word the app uses for how hard a set was: RPE, the lifting term, or effort. Both mean the same thing: 10 is nothing left and 9 is one rep left. Setup picks effort for newer lifters and RPE for everyone else, and you can change it any time.
 
 ### Theme code
-Have a code? A theme code changes the app's colours. Dark is the standard look; the code LIGHT gives a light one, and a colour code such as #FF66AA gives the standard look in your colour, adjusted if it wouldn't be readable. Every theme is checked for readable text. Reset goes back to the standard look.
+Have a code? A theme code changes the app's colours. Dark graphite and teal is the standard look; the code LIGHT gives a light one, CLASSIC brings back the original navy and blue, and a colour code such as #FF66AA gives the standard look in your colour, adjusted if it wouldn't be readable. Every theme is checked for readable text. Reset goes back to the standard look.
 
 ### Theme voice
 Goblin, Terminal and Girlypop come with their own voice for cheers and greetings: a logged set, a new best, the end of a rest or a session. Untick "Use this theme's voice" to keep the colours and lose the jokes. Anything about pain, safety, errors or your data always stays plain.
