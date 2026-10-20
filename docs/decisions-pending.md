@@ -1560,3 +1560,21 @@ code; options C and D as codes too.
 - In a session an exercise with sets logged keeps its place: its arrows and handle
   are dimmed, as before.
 - The phone test drags once, then taps Move later and Move earlier.
+
+## D71. After a session: words and chips, not numbered boxes (v1.95.0)
+
+**Chosen:**
+- **How hard it was:** one row of word chips (Very easy, Easy, Moderate, Hard, All
+  I had). Moderate is picked to start, as the 3 was, and it's stored as before
+  (2 to 10).
+- **Quick ratings per exercise:** two rows of word chips, "Felt it in the target
+  muscle?" and "Enjoyed it?", using the scale's own words. They start empty, and
+  skipping still writes nothing. The mid-session rating sheet uses the same chips,
+  starting at 3 as the boxes did.
+- **Soreness:** "Anything sore already?", where you tap an area and pick a little
+  or a lot. "Feels fresh" covers the rest. It's stored exactly as the boxes stored
+  it (untapped 3, a little 2, a lot 1, fresh 4) through `postSoreness`, which
+  reuses the check-in's mapping. §98 checks every combination.
+- **`scaleBlock` (the five-box row) is deleted;** nothing uses it.
+- **This version's What's new card** starts with "New look. Same app. Your data
+  hasn't changed.", the line the batch M brief asked testers to see.

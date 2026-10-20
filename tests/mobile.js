@@ -245,6 +245,11 @@ async function previewCheck(page, tag){
   const before=await page.evaluate(()=>planFor(todayDay()).slots.map(s=>s.ex));
   await dragSlot(page,1,0);
   const after=await page.evaluate(()=>planFor(todayDay()).slots.map(s=>s.ex));
+  // the arrows work beside the handle: a real tap on Move later puts the first back
+  await tapSel(page,'#v-work .ex[data-slot="0"] button[aria-label="Move later"]',0);
+  const back=await page.evaluate(()=>planFor(todayDay()).slots.map(s=>s.ex));
+  ok(back[0]===before[0]&&back[1]===before[1], tag+' the arrows work beside the handle: Move later undoes the drag: '+JSON.stringify(back.slice(0,2)));
+  await tapSel(page,'#v-work .ex[data-slot="1"] button[aria-label="Move earlier"]',0);
   const hasPreview=await page.evaluate(()=>[...document.querySelectorAll('#v-work button')].some(b=>/Preview workout/.test(b.textContent)));
   await tapSel(page,'#v-work [data-tour="start"]'); await sleep(300);
   const sess=await page.evaluate(()=>session&&session.slots.map(s=>s.ex));

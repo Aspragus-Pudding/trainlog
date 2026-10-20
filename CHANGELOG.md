@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.95.0 — 2026-10-20
+- New look. Same app. Your data hasn't changed.
+- Finishing a session uses words instead of rows of numbered boxes: how hard it was (Very easy to All I had), and quick ratings for each exercise.
+- For anything sore, tap the area and say a little or a lot, like the check-in. The app stores the same answers as before.
+
 ## 1.94.0 — 2026-10-20
 - The up and down arrows are back on each exercise, beside the drag handle, before you start and during a session.
 - Use whichever you like: the arrows move one place at a time, and the handle is for longer moves.
