@@ -118,3 +118,10 @@ No engine changes: the backtest must stay identical. Part 1 removes the look-ali
 | 3b the standard look, made distinctive | done | v1.93.0 | your pick B: graphite + teal; LIGHT follows; CLASSIC (old look), IRIS (C), EMBER (D) as codes; barbell-end icon; D69 |
 | arrows back | done | v1.94.0 | up/down beside the drag handle on every card (your call: drag can be janky); D70 |
 | post-session chips | done | v1.95.0 | effort and ratings as word chips, soreness as area chips (same stored values, §98); five-box rows gone; What's new: "New look. Same app. Your data hasn't changed."; D71 |
+
+## Batches, 22 Oct (roadmap/batches-oct22)
+
+| Batch | State | Version | Notes |
+|---|---|---|---|
+| 01 Part 1 weights you see | done, waiting for your look at the backtest | v1.96.0 | 1.1–1.7 test-first (§99); kg grid, class warm-ups, stepper, last time, rebalance, top-set rows, loadLabel; swap keeps logged sets; backtest identical (261); D72 |
+| 01 Part 2 usual variant and the rest | not started | | after your OK on Part 1 |

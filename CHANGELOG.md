@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.96.0 — 2026-10-22
+- Fixed: kg weights could get stuck or move by a fraction. A step up in kg is now always a real kg step: a pair of 1.25 kg plates on a barbell, 2.5 kg on dumbbells.
+- Fixed: warm-up sets on weighted pull-ups, chin-ups and dips showed and logged your bodyweight as the added weight.
+- Fixed: the bodyweight + and − on the check-in now add up, and "Last time" on assisted lifts shows your hardest set.
+- Train, today's plan and the briefing write every weight in the unit you use. The top-set row in the preview shows the top-set weight. A swap no longer clears sets you've already logged.
+
 ## 1.95.0 — 2026-10-20
 - New look. Same app. Your data hasn't changed.
 - Finishing a session uses words instead of rows of numbered boxes: how hard it was (Very easy to All I had), and quick ratings for each exercise.

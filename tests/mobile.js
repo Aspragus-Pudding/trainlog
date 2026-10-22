@@ -256,6 +256,39 @@ async function previewCheck(page, tag){
   ok(after[0]===before[1]&&after[1]===before[0]&&!hasPreview&&sess&&sess.join()===after.join(), tag+' the Train tab is the preview: a drag moves an exercise and Start takes that order: '+JSON.stringify({before:before.slice(0,2),after:after.slice(0,2),hasPreview,sess:sess&&sess.slice(0,2)}));
   await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} session=null; saveSession(); stopRest(); TAB='dash'; render(); });
 }
+/* Batch 01 (weights you see): a kg lifter's set card and warm-up read in kg and step a real kg step; the
+   check-in's bodyweight + adds up and is only logged when changed; a swap after logging keeps those sets. */
+async function batch01Check(page, tag){
+  await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
+  await page.evaluate(()=>demoReset({kind:'persona',key:'shoulder',weeks:3})); await page.waitForLoadState('load'); await sleep(2200);
+  await page.evaluate(()=>{ CFG.seenVersion=APP_VERSION; CFG.tour={t1:'off',seen:{}}; CFG.tipsSeen=Object.fromEntries(TIP_KEYS.map(k=>[k,{at:0,done:true}])); saveCfg(); try{ $('#dlg').close(); }catch(e){}
+    for(let i=0;i<6;i++){ const sid='kg'+i; ['a','b'].forEach(()=>append({type:'set',session_id:sid,slot:'deadlift',exercise_id:'deadlift',weight:{value:97.5,unit:'kg'},reps:8,rpe:7,set_kind:'straight',group:null,role:'straight'})); append({type:'session_end',session_id:sid,day_name:'Kg day',joints:{}}); } });
+  // the kg card: the suggestion is a real kg step on the grid, and the warm-up reads in kg
+  await page.evaluate(()=>{ startSession({id:'kgday',name:'Kg day',slots:[{ex:'deadlift',role:'secondary',sets:3,reps:[5,8],rpe:8}]}); $('#ckskip').click(); TAB='work'; render(); });
+  await sleep(300);
+  const kg=await page.evaluate(()=>({unit:draft.unit, w:draft.weight, warm:[...document.querySelectorAll('#v-work button')].map(b=>b.textContent).filter(t=>/ × \d+$/.test(t.trim())&&/Set \d|Bar/.test(t)).join(' | ')}));
+  ok(kg.unit==='kg'&&kg.w>=100&&Math.abs(kg.w/2.5-Math.round(kg.w/2.5))<1e-6&&(!kg.warm||/kg/.test(kg.warm)&&!/ lb/.test(kg.warm)), tag+' a kg lifter: the card suggests a real 2.5 kg step and the warm-up is in kg: '+JSON.stringify(kg));
+  await page.evaluate(()=>{ session=null; saveSession(); stopRest(); TAB='dash'; render(); });
+  // the check-in: Change, three taps on +, and the logged bodyweight carries +1.5; untouched logs none
+  await page.evaluate(()=>{ startSession(todayDay()); }); await sleep(300);
+  await tapSel(page,'#ck .btn.s.ghost',0);
+  const v0=await page.evaluate(()=>parseFloat((document.querySelector('#ck .step input')||{}).value));
+  for(let i=0;i<3;i++) await tapSel(page,'#ck button[aria-label="Increase lb"]',0);
+  const shown=await page.evaluate(()=>parseFloat((document.querySelector('#ck .step input')||{}).value));
+  await tapSel(page,'#ckgo',0); await sleep(300);
+  const logged=await page.evaluate(()=>{ const r=[...LOG].reverse().find(e=>e.type==='readiness'); return r?r.bodyweight:'none'; });
+  ok(Math.abs(shown-(v0+1.5))<1e-6&&Math.abs(logged-(v0+1.5))<1e-6, tag+' check-in bodyweight: three taps on + add 1.5 and that is what is logged: '+JSON.stringify({v0,shown,logged}));
+  await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} session=null; saveSession(); stopRest(); startSession(todayDay()); }); await sleep(300);
+  await tapSel(page,'#ckgo',0); await sleep(300);
+  const untouched=await page.evaluate(()=>{ const r=[...LOG].reverse().find(e=>e.type==='readiness'); return r?r.bodyweight:'none'; });
+  ok(untouched==null, tag+' check-in without touching bodyweight logs no bodyweight reading: '+JSON.stringify(untouched));
+  // a swap after logging keeps the logged sets where they were and adds the new exercise for the rest
+  await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} TAB='work'; render(); const sl=session.slots[0]; seedDraft(sl); logSet(sl,0,'straight'); stopRest(); render(); openSwap(sl,0); });
+  await sleep(300); await tapSel(page,'#exl button',0); await sleep(400);
+  const sw=await page.evaluate(()=>({kept:session.slots[0].sets.length, target:session.slots[0].sets_target, next:session.slots[1]&&session.slots[1].swapped===true, diff:session.slots[1]&&session.slots[1].ex!==session.slots[0].ex}));
+  ok(sw.kept===1&&sw.target===1&&sw.next&&sw.diff, tag+' a swap after logging keeps the logged set on the old exercise and adds the new one for the rest: '+JSON.stringify(sw));
+  await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} session=null; saveSession(); stopRest(); TAB='dash'; render(); });
+}
 /* D10: with "effort" chosen, no screen says RPE (a real browser, the live set card and a sheet). */
 async function effortCheck(page, tag){
   await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
@@ -302,6 +335,7 @@ async function resumeCheck(page, tag){
       await reorderCheck(page,tag);
       await tourCheck(page,d,tag);
       await previewCheck(page,tag);
+      await batch01Check(page,tag);
       await effortCheck(page,tag);
       await jumpCheck(page,tag);
     }catch(e){ ok(false,tag+' crashed: '+e.message); }

@@ -351,6 +351,11 @@ included), `planFor`/`weekPlanFor`, swaps and saving a range. A stored
   explore-only exercises toward the auto-pick until they're kept (`CFG.exploreKept`).
   "Use instead" goes to `slotPicks` or the saved day; "Take turns" goes to
   `CFG.rotation`, applied by `rotateSlots()` in `buildDay`.
+- **Units (batch 01, v1.96).** `slotUnit(slot)` is the unit a slot is shown in (fixed on the exercise,
+  else the last logged unit); `shownLoad` and the grid read it. A kg barbell or dumbbell steps on the
+  kg grid (`kgGrid`); machines keep their own step, but a step always changes the shown number.
+  `loadLabel(slot, lb)` is the one formatter for loads on Train, Today and the briefing. Never write
+  `fmt(lb)+' lb'` in render code (§99 scans for it).
 - **`PENDING`** holds pre-workout plan edits until the session starts.
 - **Readiness** drives load adjustment (discrete tiers) and warmup length
   (continuous score). Adjustments are downward-only by design.

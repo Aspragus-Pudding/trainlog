@@ -1578,3 +1578,59 @@ code; options C and D as codes too.
 - **`scaleBlock` (the five-box row) is deleted;** nothing uses it.
 - **This version's What's new card** starts with "New look. Same app. Your data
   hasn't changed.", the line the batch M brief asked testers to see.
+
+---
+
+# Batches, 22 Oct
+
+## D72. Batch 01 Part 1: the weights you see (v1.96.0)
+
+Each item got a failing test first (§99, plus phone checks in `tests/mobile.js`),
+then the fix.
+
+- **1.1 kg steps:**
+  - `slotUnit(slot)` is the unit a slot is shown in: a fixed unit on the
+    exercise, else the unit you last logged it in. It's memoised per log length,
+    and `shownLoad` uses it too.
+  - For a kg barbell, `kgGrid` steps by a pair of the smallest kg plates: 2 ×
+    `STEP_DEFAULT_KG.barbell` = 2.5 kg, which is what `PLATE_SETS.main_kg` loads.
+    Taken alone, the constant's 1.25 would need 0.625 kg plates.
+  - A kg dumbbell steps by `STEP_DEFAULT_KG.dumbbell` (2.5 kg).
+  - Machines and stacks keep their own (lb) steps, with a guard that a step up or
+    down always changes the number on the card.
+  - 97.5 kg → 100 kg, 22.5 kg → 25 kg, and stepDown from 97.5 → 95.
+- **1.2 class warm-ups:** for weighted pull-ups, chin-ups and dips the ramp is worked
+  out on system load (bodyweight + added) and each rung is written back as added
+  weight. A rung at bodyweight or less isn't offered. At +25 on 180 there's no ramp;
+  at +90 there's one rung (+35). The card shows and logs rungs in the exercise's
+  unit.
+- **1.3 the stepper** keeps its own value and redraws it, so taps add up whether or not
+  the caller redraws. That fixes the check-in, the bodyweight question and the sled
+  editor in one place. The check-in logs a bodyweight only when you change it, so
+  the stale-bodyweight prompt can fire again.
+- **1.4 last time** picks the set with the most system load (`engLb`). For assistance,
+  the smallest number is the hardest set.
+- **1.5 rebalance** answers in the draft's unit:
+  - assistance rounds up and added weight rounds down, to 0.5 kg;
+  - loads go through `gridFloor`.
+- **1.6 top-set rows:** `planTopRx` prices row 0 of a strength-upkeep or top-set slot
+  with `suggestFor`, the same as the set panel. The back-offs come from that top
+  set.
+- **1.7 one load label:** `loadLabel(slot, lb)` = `typedLabel(shownLoad(...))`, used for
+  every load on Train (rows, back-offs, warm-ups), last time's arrow, today's plan and
+  the briefing. The class line under the weight ("lifting …") is in the draft's unit.
+- **Your report: a swap wiping logged sets.**
+  - The long-press and swipe swap no longer attach to a card with a set logged.
+  - A swap reached through details asks first, keeps the logged sets on the
+    exercise they were done on, and adds the new exercise for the sets that are
+    left.
+  - A browser repro (`dragrepro.js` in my scratch notes) showed a sideways drag on
+    a logged card opening the swap; it doesn't now.
+- **Your report: dragging moves the logging panel.** Dragging the exercise you're on
+  moves the panel to whatever is now first. That's rule 2 of which-exercise-is-current
+  (CLAUDE.md), so it's left alone; batch 03 decides whether the drag handle stays.
+- **Backtest:** identical, 261 suggestions. Your 10 kg deadlift sets aren't measured
+  yet because the backtest builds slots without modifiers (the strapped track is where
+  the kg sets are). That's item 2.5 in Part 2.
+
+**To undo:** v1.95.0.
