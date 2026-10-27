@@ -289,6 +289,34 @@ async function batch01Check(page, tag){
   ok(sw.kept===1&&sw.target===1&&sw.next&&sw.diff, tag+' a swap after logging keeps the logged set on the old exercise and adds the new one for the rest: '+JSON.stringify(sw));
   await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} session=null; saveSession(); stopRest(); TAB='dash'; render(); });
 }
+/* The set panel "disappearing" after a Details edit (Oct 24): the edit re-rendered Train under the sheet and
+   jumped to the top; only the browser's history restore on close brought you back, and a home-screen app on
+   iOS doesn't always do that. Here history.go is a no-op, so nothing can restore it: the place must hold.
+   The sheet also keeps the card it was opened from (Swap this exercise) after the edit. */
+async function detailsPlaceCheck(page, tag){
+  await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
+  await page.evaluate(()=>demoReset({kind:'persona',key:'shoulder',weeks:3})); await page.waitForLoadState('load'); await sleep(2200);
+  await page.evaluate(()=>{ CFG.seenVersion=APP_VERSION; CFG.tour={t1:'off',seen:{}}; CFG.tipsSeen=Object.fromEntries(TIP_KEYS.map(k=>[k,{at:0,done:true}])); saveCfg(); try{ $('#dlg').close(); }catch(e){}
+    startSession(todayDay()); $('#ckskip').click(); TAB='work'; render(); });
+  await sleep(300);
+  const n=await page.evaluate(()=>session.slots.length), k=Math.min(2,n-1);
+  await tapSel(page,'#v-work .ex[data-slot="'+k+'"] .exname',0);
+  await tapSel(page,'#v-work [data-tour="logset"]',0); await page.evaluate(()=>stopRest()); await sleep(200);
+  await page.evaluate(()=>{ window.__hgo=history.go; history.go=function(){}; });
+  await tapSel(page,'#v-work .ex[data-slot="'+k+'"] button[aria-label^="Details"]',0);
+  const y0=await page.evaluate(()=>{ const sv=document.querySelector('#iswapany'); return {y:Math.round(scrollY), swap:!!sv}; });
+  const did=await page.evaluate(()=>{ const c=[...document.querySelectorAll('#istep button')].find(x=>x.getAttribute('aria-pressed')==='false'); if(c){ c.click(); return 'step'; }
+    const r=[...document.querySelectorAll('#irest .chip')].find(x=>x.getAttribute('aria-pressed')==='false'); if(r){ r.click(); return 'rest'; } return 'none'; });
+  await sleep(400);
+  const mid=await page.evaluate(()=>({y:Math.round(scrollY), swap:!!document.querySelector('#iswapany')}));
+  await page.evaluate(()=>{ const b=[...document.querySelectorAll('#dlgFoot button')].reverse().find(x=>/^(Close|Done)$/i.test(x.textContent.trim())); if(b) b.click(); else $('#dlg').close(); }); await sleep(400);
+  const after=await page.evaluate(k=>{ const p=document.querySelector('#v-work [data-tour="logset"]'), c=p&&p.closest('.ex'), h=document.querySelector('#v-work .ex[data-slot="'+k+'"] button[aria-label^="Details"]').getBoundingClientRect();
+    return {y:Math.round(scrollY), panelOn:c?c.dataset.slot:null, detailsOnScreen:h.top>=0&&h.bottom<=innerHeight}; },k);
+  await page.evaluate(()=>{ history.go=window.__hgo; });
+  ok(did!=='none'&&y0.y>0&&mid.y===y0.y&&after.y===y0.y&&after.panelOn===String(k)&&after.detailsOnScreen, tag+' a Details edit mid-session keeps your place and the panel on that card: '+JSON.stringify({did,y0,mid,after}));
+  ok(y0.swap&&mid.swap, tag+' the Details sheet keeps Swap this exercise after an edit: '+JSON.stringify({before:y0.swap, after:mid.swap}));
+  await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} session=null; saveSession(); stopRest(); TAB='dash'; render(); });
+}
 /* D10: with "effort" chosen, no screen says RPE (a real browser, the live set card and a sheet). */
 async function effortCheck(page, tag){
   await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
@@ -336,6 +364,7 @@ async function resumeCheck(page, tag){
       await tourCheck(page,d,tag);
       await previewCheck(page,tag);
       await batch01Check(page,tag);
+      await detailsPlaceCheck(page,tag);
       await effortCheck(page,tag);
       await jumpCheck(page,tag);
     }catch(e){ ok(false,tag+' crashed: '+e.message); }

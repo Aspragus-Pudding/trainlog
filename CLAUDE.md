@@ -146,6 +146,14 @@ tests can't see any of this; run `node tests/mobile.js`.
 render error used to blank a screen after `innerHTML=''` had already run, leaving
 nothing tappable. Keep those nets.
 
+**Train keeps its scroll on an in-place render (v1.96.1).** `renderInner()` scrolls to
+the top; `render()` puts you back unless the tab or the session changed. Train used
+to be excluded, so a Details edit (which calls `render()` under the sheet) jumped
+the workout to the top and only the browser's history restore on close brought you
+back. A home-screen app on iOS doesn't always do that, so the set panel "vanished".
+Never rely on history to restore a place; `tests/mobile.js` checks this with
+`history.go` disabled.
+
 **Service worker is network-first for the shell.** This is what makes updates
 appear without bumping a cache name. Don't switch it back to cache-first. New
 versions install and *wait*; the in-app banner activates them, so a session is

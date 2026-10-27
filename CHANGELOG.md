@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.96.1 — 2026-10-27
+- Fixed: changing a setting in Details during a workout (rep range, smallest jump, bar or sled weight) sent the workout screen back to the top, so the set panel looked gone. You now stay on the card you were on.
+- Fixed: after one change in Details, the sheet lost its Swap this exercise button. It stays now.
+- Your logged sets were never affected: it was where the screen scrolled to, not your data.
+
 ## 1.96.0 — 2026-10-22
 - Fixed: kg weights could get stuck or move by a fraction. A step up in kg is now always a real kg step: a pair of 1.25 kg plates on a barbell, 2.5 kg on dumbbells.
 - Fixed: warm-up sets on weighted pull-ups, chin-ups and dips showed and logged your bodyweight as the added weight.
