@@ -1644,3 +1644,16 @@ then the fix.
 - **The finish screen keeps its word chips.** Batch 02 also covers it, but you were only asked about the check-in.
 - **`readinessScore`'s 0.85 cap stays**, as the batch said unless you say otherwise. So +1 and +2 can't reach "short warm-up" in a deficit.
 - No "All good" button: Start with nothing changed is the same thing, as in the mockup you picked.
+
+## D74. Train opens on a summary and Start; Log a set here; arrows only (v1.98.0)
+
+**Your picks** from the mockups (batch 03): the list folds open in place; one Log a set here per exercise, and a tap on a set not done yet does the same; the drag handle, long-press and swipe are gone. This supersedes D65 and D70.
+
+**Taken without asking:**
+- **The ⋯ went**, because everything in it is now on the card. It's in git if you want it back.
+- **A second Start at the end of the open list**, since the list can be long (the batch asked for this).
+- **The screen follows the panel** when it changes card (`showPanel`, only if Log set would be off screen), because the card above shrinking under you was another way for the panel to seem gone.
+- Tapping the open card's name still closes the panel, as it always has (rule 3), but it can no longer strand you: Log a set here is back on that card.
+- Small fixes from the batch: a message no longer covers the rest timer's buttons; the lead-lift label isn't amber, since amber means "suggested".
+
+**Not built**, because they weren't in what you picked: a "Skip the rest" button, and separate info and swap icons on each card. Swap is in Details on every card.

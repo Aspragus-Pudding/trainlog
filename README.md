@@ -29,10 +29,12 @@ screen**, then follow steps 3 to 5.
 - The first time something happens (your first check-in, a suggestion that
   moved, an all-out set, a deload), a short card says what it is and why.
   **Got it** puts it away; **More** opens the guide.
-- Before you start, the **Train** tab is today's workout. Use the arrows (or
-  drag the handle) to move an exercise, long-press or swipe left to swap one, add or remove
-  exercises and change sets there. Changes are for today unless you tap
-  **Save to program**.
+- Before you start, the **Train** tab shows today's workout and **Start**.
+  **Show the exercises** opens the list: use the arrows to move an exercise, tap
+  a card for its details and a swap, add or remove exercises and change sets.
+  Changes are for today unless you tap **Save to program**.
+- During a workout, **Log a set here** (or tapping a set you haven't done) brings
+  the set panel to that exercise.
 - The **check-in** has one numbered row for each question (sleep, motivation,
   rest of life, each sore area, each joint). 0 is your usual, minus is worse,
   plus is better. Leave what's normal and tap **Start**. Only what you change

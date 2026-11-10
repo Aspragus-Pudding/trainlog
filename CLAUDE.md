@@ -173,7 +173,8 @@ it after a session starts. §71 and `tests/mobile.js` test it.
 2. Otherwise the current exercise is the first one in list order with sets
    left, so moving one into the first unfinished place makes it current.
 3. Tapping a card makes it current (`pickSlot`, `session.pick`), whatever 1–2
-   say, until another card is tapped or this one is finished.
+   say, until another card is tapped or this one is finished. "Log a set here"
+   and a tap on a set not done yet do the same (`logHere`), and never close the panel.
 4. Finishing an exercise moves on by rule 2.
 
 **Which rep range applies** (reported Oct 3, Oct 7, Oct 11, Oct 12: a saved
@@ -365,6 +366,7 @@ included), `planFor`/`weekPlanFor`, swaps and saving a range. A stored
   `loadLabel(slot, lb)` is the one formatter for loads on Train, Today and the briefing. Never write
   `fmt(lb)+' lb'` in render code (§99 scans for it).
 - **Check-in rows (v1.97).** `openCheckin` shows one `ratingRow` per question. 0 is your usual, stored through `ratingFromDelta` as the same 1–5 (§95); joints count down to bad and store 1–3, and the ladder does the comparing with your usual. The line above Start is the engine's own `globalReadiness`/`physicalCut`, never a second copy of the rules.
+- **Train (v1.98).** Before Start it's a summary and Start; the list folds open (`CFG.trainListOpen`). Moving is arrows only: no drag handle, long-press or swipe (they failed on phones, and a swipe could open a swap by accident). When the panel changes card, `showPanel()` keeps Log set in view.
 - **`PENDING`** holds pre-workout plan edits until the session starts.
 - **Readiness** drives load adjustment (discrete tiers) and warmup length
   (continuous score). Adjustments are downward-only by design.

@@ -3069,7 +3069,7 @@ section('68. screen pass: the guide covers every setting, search works, sizes ar
   const rawR=[...(css+noThemes).matchAll(/border-radius:\s*([0-9.]+)px/g)].filter(m=>+m[1]>4);
   ok(rawR.length===0,'radii are tokens (hairline 1–4px roundings aside)',rawR.slice(0,3).map(m=>m[0]).join(' '));
   // icons: set card actions come from the icon set; no hand-drawn 24-grid icons outside it and the tab bar
-  ok(/el\('button','iconbtn grip',icon\('grip'\)\)/.test(src)&&/el\('button','iconbtn',icon\('star'\)\)/.test(src)&&/el\('button','iconbtn',icon\('more'\)\)/.test(src),'set card actions use the icon set (the handle, the rating star, ⋯; batch M)','');
+  ok(/el\('button','iconbtn',icon\('star'\)\)/.test(src)&&!/icon\('grip'\)|icon\('more'\)/.test(src),'set card actions use the icon set (the rating star; the handle and ⋯ are gone)','');
   const stray=(src.match(/viewBox=\\?"0 0 24 24\\?"/g)||[]).length;
   ok(stray===1,'no other 24-grid icons are drawn by hand in the script (icon() is the one)',String(stray));
   // Part 7: block cards with sparklines, the week strip, the condition card, rehab and prep order
@@ -3373,7 +3373,7 @@ section('75. the Workout tab is the preview: one editable list, Start takes your
   const C=load([],true); C.demoSeedPersona&&C.demoSeedPersona('shoulder',3); const r3=C.todayDay(), ld=C.lastDayLine(r3);
   ok(!ld||(ld.text.startsWith('Last '+r3.name+': ')&&/: (today|yesterday|\d+ days ago)(, \d+ PRs?)?$/.test(ld.text)),'"Last Upper B: 5 days ago, 2 PRs"',ld&&ld.text);
   ok(!/'Preview workout'/.test(src)&&!/function openWorkoutPreview/.test(src),'no separate Preview workout button or sheet','');
-  ok(/reorderHandle\(box,i,n,/.test(src)&&/onSwapAny:\(\)=>\{ \$\('#dlg'\)\.close\(\); openPlanSwap/.test(src)&&/'Remove '\+ex\.name\+' from today'/.test(src)&&/Sets on this exercise/.test(src),'preview cards carry the live card\'s controls: a handle to move, details and swap, remove, sets','');
+  ok(/'Move earlier'/.test(src)&&/onSwapAny:\(\)=>\{ \$\('#dlg'\)\.close\(\); openPlanSwap/.test(src)&&/'Remove '\+ex\.name\+' from today'/.test(src)&&/Sets on this exercise/.test(src),'preview cards carry the live card\'s controls: arrows to move, details and swap, remove, sets','');
   console.log('  move · sets · add · remove · Start takes the order · Save to program · last-time line · one list, no Preview button');
 }
 
@@ -3910,25 +3910,29 @@ section('95. the check-in as numbered rows: each row stores its own 1–5, the s
   console.log('  untouched = neutral · '+n+' row combinations = their 1–5 · same score, cut and event');
 }
 
-section('96. Train: one line on top, handles, gestures and details instead of an info + swap pair, Start at the bottom');
+section('96. Train: a summary and Start on top, the list folds open, arrows only, Log a set here');
 {
   const fnSrc=name=>{ const i=src.indexOf('function '+name+'('); let j=src.indexOf('\nfunction ',i+10); return i<0?'':src.slice(i,j<0?undefined:j); };
   const prev=fnSrc('renderPreview'), plan=fnSrc('planCard'), work=fnSrc('renderWork');
-  ok(prev.indexOf("dataset.tour='start'")>prev.indexOf("planCard(slot,'p'")&&prev.indexOf("planCard(slot,'p'")>0&&(prev.match(/dataset\.tour='start'/g)||[]).length===1,'one Start, after the exercise list','');
-  ok(!/See the whole week|Train a different day/.test(prev)&&/openTrainMenu\(rawDay,day\)/.test(prev)&&/See the whole week/.test(fnSrc('openTrainMenu'))&&/Train a different day/.test(fnSrc('openTrainMenu')),'the whole week and another day are under ⋯, not a row of buttons','');
-  const pair=/'Exercise details'[\s\S]{0,200}'Swap exercise'/;
-  ok(!pair.test(plan)&&!pair.test(work)&&/reorderHandle\(/.test(plan)&&/reorderHandle\(/.test(work)&&/pressGestures\(head/.test(plan)&&/pressGestures\(head/.test(work),'cards: a handle and gestures, no info + swap button pair','');
-  ok(/onSwapAny/.test(plan)&&/onSwapAny/.test(work)&&/iswapany/.test(fnSrc('openInfo')),'every swap also has a plain tap: Details → Swap this exercise','');
-  // dragging moves by the same one-step rule, so the which-exercise rules still hold
+  ok(prev.indexOf("dataset.tour='start'")>0&&prev.indexOf("dataset.tour='start'")<prev.indexOf("planCard(slot,'p'")&&(prev.match(/dataset\.tour='start'/g)||[]).length===1,'Start is in the summary card, above the list','');
+  ok(/if\(listOpen\)\{[\s\S]*planCard\(slot,'p'[\s\S]*startBtn\(\)/.test(prev)&&/CFG\.trainListOpen=!listOpen; saveCfg\(\)/.test(prev)&&/trainListOpen:false/.test(src),'the list stays folded until you ask, and CFG remembers how you left it; a second Start ends it','');
+  ok(/Train a different day/.test(prev)&&/See the whole week/.test(prev)&&!/openTrainMenu/.test(src),'another day and the whole week are on the card, with no menu duplicating them','');
+  ok(!/reorderHandle|pressGestures|moveSlotTo|data-reorder|dataset\.reorder/.test(src),'no drag handle, no long-press, no swipe','');
+  ok(/'Move earlier'/.test(plan)&&/'Move later'/.test(plan)&&/'Move earlier'/.test(work)&&/'Move later'/.test(work),'every card has up and down arrows','');
+  ok(/onSwapAny/.test(plan)&&/onSwapAny/.test(work)&&/iswapany/.test(fnSrc('openInfo')),'swap stays in Details','');
+  // the panel can always be brought back, and asking for it never closes it
+  ok(/function logHere\(i\)\{ if\(session\.openIdx!==i\) pickSlot\(i\); renderWork\(\); showPanel\(\); \}/.test(src),'logHere only ever brings the panel','');
+  ok(/else if\(slotLeft\(slot\)\)\{ const lh=el\('button','btn wide','Log a set here'\)/.test(work)&&/onclick:s\?\(\)=>openEditSet\(slot,j\):\(\)=>logHere\(i\)/.test(work),'every exercise with sets left and no panel has Log a set here, and a set not done yet does the same','');
+  // moving by arrows keeps the which-exercise rules
   const A=load([]); const mk=ex=>({ex,role:'accessory',sets_target:3,sets:[],reps:[8,12],rpe:8});
   A.setSession({id:'s',dayId:'d',dayName:'D',slots:[mk('bench'),mk('pulldown'),mk('curl')],openIdx:0,ratings:{},soreGroups:[]});
-  A.moveSlotTo(2,0); let S=A.getSession();
-  ok(S.slots.map(x=>x.ex).join()==='curl,bench,pulldown'&&S.openIdx===0,'drag the third to the top with nothing logged: it becomes current (rule 2)',S.slots.map(x=>x.ex).join()+' @'+S.openIdx);
+  A.moveSlot(2,-1); A.moveSlot(1,-1); let S=A.getSession();
+  ok(S.slots.map(x=>x.ex).join()==='curl,bench,pulldown'&&S.openIdx===0,'the third moved to the top with nothing logged: it becomes current (rule 2)',S.slots.map(x=>x.ex).join()+' @'+S.openIdx);
   const B=load([]); B.setSession({id:'s',dayId:'d',dayName:'D',slots:[{...mk('bench'),sets:[{id:'x1'}]},mk('pulldown'),mk('curl')],openIdx:0,ratings:{},soreGroups:[]});
-  B.moveSlotTo(2,0); S=B.getSession();
-  ok(S.slots.map(x=>x.ex).join()==='curl,bench,pulldown'&&S.slots[S.openIdx].ex==='bench','mid-exercise, another dragged above it: the one in progress stays current (rule 1)',S.slots.map(x=>x.ex).join()+' @'+S.openIdx);
-  ok(B.moveSlotTo(1,2)===false||B.getSession().slots[1].ex!=='bench','an exercise with sets logged doesn\'t move','');
-  console.log('  one line + ⋯ · Start after the list · handles and gestures · Details → Swap · drag keeps the which-exercise rules');
+  B.moveSlot(2,-1); B.moveSlot(1,-1); S=B.getSession();
+  ok(S.slots.map(x=>x.ex).join()==='curl,bench,pulldown'&&S.slots[S.openIdx].ex==='bench','mid-exercise, another moved above it: the one in progress stays current (rule 1)',S.slots.map(x=>x.ex).join()+' @'+S.openIdx);
+  ok(B.moveSlot(1,1)===false,'an exercise with sets logged doesn\u2019t move','');
+  console.log('  summary + Start · list folds · arrows only · Log a set here · moving keeps the which-exercise rules');
 }
 
 section('97. sentences first: exercise details, the finish screen, the week; no tile grid, no coloured landmark rows');
@@ -3948,11 +3952,10 @@ section('97. sentences first: exercise details, the finish screen, the week; no 
   console.log('  details lead with a sentence · one-line finish · the week in words · no tiles, no coloured landmark rows');
 }
 
-section('98. arrows beside the handle; after a session, words and chips that store the same numbers');
+section('98. after a session, words and chips that store the same numbers');
 {
   const fnSrc=name=>{ const i=src.indexOf('function '+name+'('); const j=src.indexOf('\nfunction ',i+10); return i<0?'':src.slice(i,j<0?undefined:j); };
   const plan=fnSrc('planCard'), work=fnSrc('renderWork');
-  ok(/'Move earlier'/.test(plan)&&/'Move later'/.test(plan)&&/'Move earlier'/.test(work)&&/'Move later'/.test(work)&&/reorderHandle\(/.test(plan)&&/reorderHandle\(/.test(work),'every card has up and down arrows as well as the drag handle','');
   // the finish screen and the rating sheet: no numbered boxes
   const post=fnSrc('openPost'), rate=fnSrc('openRating');
   ok(!/function scaleBlock/.test(src)&&!/scaleBlock\(/.test(src)&&!/for\(let i=1;i<=5;i\+\+\)/.test(post),'no rows of five numbered boxes anywhere','');

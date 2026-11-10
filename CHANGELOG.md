@@ -6,6 +6,13 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.98.0 — 2026-11-10
+- Train opens on a summary and Start again. Show the exercises opens the list, and it stays how you left it.
+- Every exercise with sets left has Log a set here, and tapping a set you haven't done does the same, so the set panel can always be brought back.
+- Moving exercises is arrows only now. The drag handle, long-press and swipe are gone; Swap is in Details.
+- When the set panel moves to another exercise, the screen goes with it, so Log set stays in view.
+- Messages no longer cover the rest timer's buttons.
+
 ## 1.97.0 — 2026-11-10
 - The check-in shows every question again, one numbered row each: sleep, motivation, rest of life, each sore area and each joint.
 - 0 is your usual, minus is worse, plus is better. Leave what's normal and tap Start, so a normal day is still one tap.

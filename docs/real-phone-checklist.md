@@ -21,9 +21,10 @@ app) and one Android phone (installed from Chrome). Use the demo
    own blocks and days. **Skip and start** is in reach on each.
 
 ## A session
-7. The Train tab, before Start: move an exercise up with its arrow, then drag
-   another by its handle; long-press one to swap it; add one; take a set off
-   one. **Start** (at the bottom) begins in that order.
+7. The Train tab, before Start: **Start** is on screen without scrolling. Tap
+   **Show the exercises**, move an exercise up with its arrow, tap a card and swap it
+   from its details, add one, take a set off one. **Start** begins in that order.
+   Leave the list open, change tabs and come back: it's still open.
 8. A first-time card shows on the check-in. **Got it** removes it, and it
    doesn't come back on the next check-in.
 8a. On the check-in, tap −1 on Sleep: the row turns teal, the words under it change, and the line above Start
@@ -35,6 +36,8 @@ app) and one Android phone (installed from Chrome). Use the demo
 11. Move another exercise above the one you're on mid-exercise. Log set stays on
     yours. Then, with nothing logged on the current one, move another into its
     place: Log set follows the moved one.
+11a. During a workout, tap **Log a set here** on an exercise further down: the set panel moves
+    there and Log set is on screen. Tapping a set you haven't done on another exercise does the same.
 12. Open an exercise's info sheet, scroll to the bottom and back, then swipe back.
     The sheet closes and you're still in the workout.
     Then, mid-exercise on a card halfway down, open **Details**, change the smallest
