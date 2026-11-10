@@ -364,7 +364,8 @@ included), `planFor`/`weekPlanFor`, swaps and saving a range. A stored
   else the last logged unit); `shownLoad` and the grid read it. A kg barbell or dumbbell steps on the
   kg grid (`kgGrid`); machines keep their own step, but a step always changes the shown number.
   `loadLabel(slot, lb)` is the one formatter for loads on Train, Today and the briefing. Never write
-  `fmt(lb)+' lb'` in render code (§99 scans for it).
+  `fmt(lb)+' lb'` in render code (§99 scans for it). A machine fixed to kg (`kgMachine`) steps on `kgStepOf`.
+- **Your usual variant is the lift.** Every reader of a lift's history takes `usualSig(exId)`, never `''` (§100). `previewRx` is the panel's own `suggestFor`, so Train before Start can't disagree with the card.
 - **Check-in rows (v1.97).** `openCheckin` shows one `ratingRow` per question. 0 is your usual, stored through `ratingFromDelta` as the same 1–5 (§95); joints count down to bad and store 1–3, and the ladder does the comparing with your usual. The line above Start is the engine's own `globalReadiness`/`physicalCut`, never a second copy of the rules.
 - **Train (v1.98).** Before Start it's a summary and Start; the list folds open (`CFG.trainListOpen`). Moving is arrows only: no drag handle, long-press or swipe (they failed on phones, and a swipe could open a swap by accident). When the panel changes card, `showPanel()` keeps Log set in view.
 - **`PENDING`** holds pre-workout plan edits until the session starts.

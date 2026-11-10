@@ -36,7 +36,7 @@ function stub(){
     set(){ return true; }, apply(){ return stub(); }, construct(){ return stub(); }
   });
 }
-const EXPORTS=['nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
+const EXPORTS=['rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
   'suggestFor','seedDraft','logSet','moveSlot','adjustSets','fatigueRise','impliedE1','predictedRpe','rtfFromPct',
   'MUSCLE_REP_RANGE','CFG','FATIGUE_MIN_PAIRS','FATIGUE_MIN_SESSIONS','CHART_MAX_RTF',
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
@@ -4030,6 +4030,78 @@ section('99. weights you see: kg steps, class warm-ups, the bodyweight stepper, 
     const bad=['planCard','lastTimeHtml','briefRow'].filter(n=>/fmt\([^)]*\)\+'\s?lb|' lb ×|\+' lb'/.test(fn(n)));
     ok(bad.length===0,'1.7 no hard-coded lb in planCard, lastTimeHtml or briefRow',bad.join(', ')); }
   console.log('  kg steps on the kg grid · class warm-ups in added weight · stepper adds up · last time by system load · rebalance in kg · top-set rows = panel · one load label');
+}
+
+section('100. batch 01 part 2: your usual everywhere, kg machines, the edit sheet, tonnage on the class, one price before and after Start');
+{
+  const LB=1/0.45359237, straps={straps:true}, se=(sid,d)=>({type:'session_end',id:'e'+sid,ts:day(d),session_id:sid,joints:{}});
+  const fnSrc=n=>{ const i=src.indexOf('function '+n+'('); const j=src.indexOf('\nfunction ',i+10); return i<0?'':src.slice(i,j<0?undefined:j); };
+  // 2.1 every reader of a lift's history reads your usual variant
+  const ev=[]; [36,30,24,18,12,6].forEach((d,i)=>{ ev.push(set('deadlift','u'+i,300+5*i,8,9.5,d,{modifiers:straps,target:{reps:[5,8],rpe:8}}),se('u'+i,d)); });
+  { const A=load(ev), P=load(ev); A.CFG.usualMods={deadlift:straps};
+    ok(A.rateExposures('deadlift').length===6,'2.1 six strapped sessions, straps your usual: six exposures for the rate',String(A.rateExposures('deadlift').length));
+    ok(P.rateExposures('deadlift').length===0,'2.1 with no usual set, strapped sets are still a variant, off the plain track','');
+    ok(A.effortOverTarget('deadlift')>=1&&P.effortOverTarget('deadlift')==null,'2.1 effort over target reads the usual track (the stall gate)',String(A.effortOverTarget('deadlift')));
+    ok(A.rpeDrift('deadlift')===A.rpeDrift('deadlift')&&/usualSig\(exId\)/.test(fnSrc('rpeDrift'))&&/usualSig\(exId\)/.test(fnSrc('rpeScatter')),'2.1 the deload and scatter readers take the usual track too',''); }
+  // fast progression runs on the usual track, and never on a slot set to something else today
+  { const onT=[]; [36,30,24,18,12,6].forEach((d,i)=>{ onT.push(set('deadlift','f'+i,300+5*i,8,8,d,{modifiers:straps,target:{reps:[5,8],rpe:8}}),se('f'+i,d)); });
+    const A=load(onT); A.CFG.usualMods={deadlift:straps}; A.CFG.goals=['deadlift']; A.CFG.rateSeed={at:0,dflt:'standard',lifts:{deadlift:'fast'}};
+    const mk=m=>({ex:'deadlift',role:'primary',reps:[5,8],rpe:8,sets_target:3,sets:[],...(m?{modifiers:m}:{plain:true})});
+    const usual=A.fastRx(mk(straps),{lb:325,reps:8,src:'x'},{fresh:true}), plain=A.fastRx(mk(null),{lb:325,reps:8,src:'x'},{fresh:true});
+    ok(usual.fast===true&&usual.lb>325,'2.1 fast progression fires on your usual variant',JSON.stringify(usual));
+    ok(!plain.fast&&plain.lb===325,'2.1 a slot set to plain today keeps the normal path',JSON.stringify(plain)); }
+  // 2.2 a slot made by any route carries the usual
+  { const A=load([]); A.CFG.usualMods={deadlift:straps};
+    const n=A.newSlotFor(A.exById.deadlift);
+    ok(n.modifiers&&n.modifiers.straps===true,'2.2 an added exercise carries your usual',JSON.stringify(n.modifiers));
+    ok(A.newSlotFor(A.exById.bench).modifiers===undefined,'2.2 and nothing when there is no usual','');
+    const sw=fnSrc('openSwap'), ep=fnSrc('entryPanel');
+    ok(!/ns\.modifiers=usualMods/.test(sw),'2.2 the logged-sets swap no longer applies it by hand','');
+    ok(/usualMods\(slot\.ex\)/.test(ep),'2.2 the flag-chip swap applies the new exercise\'s usual',''); }
+  // 2.3 a machine that only shows kg moves on kg steps; old lb steps read as the kg step they stood in for
+  { const k=[]; [30,24,18,12,6].forEach((d,i)=>{ k.push(set('pulldown','k'+i,0,10,8,d,{weight:{value:100,unit:'kg'}}),se('k'+i,d)); });
+    const A=load(k), ex=A.exById.pulldown; ex.unitPref='kg'; ex.inc=5*LB;
+    const sl={ex:'pulldown',role:'secondary',reps:[8,12],rpe:8,sets_target:3,sets:[]};
+    ok(A.kgGrid(sl)===5,'2.3 a 5 kg stack steps on 5 kg',String(A.kgGrid(sl)));
+    ok(A.shownLoad(sl,A.stepUp(sl,100*LB)).value===105&&A.shownLoad(sl,A.stepDown(sl,100*LB)).value===95,'2.3 one step from 100 kg is 105 and 95, never 104.5',JSON.stringify(A.shownLoad(sl,A.stepUp(sl,100*LB))));
+    ok(A.kgStepOf({inc:10})===5&&A.kgStepOf({inc:5})===2.5&&A.kgStepOf({inc:2.5})===1.25,'2.3 an old lb step reads as the kg step it stood in for','');
+    const de=fnSrc('drawStepEditor'); ok(/STEP_CHOICES_KG/.test(de)&&/kgMachine\(ex\)/.test(de),'2.3 the step editor offers kg steps on a kg machine','');
+    ok(A.kgMachine({unitPref:'kg',load:'stack'})&&!A.kgMachine({unitPref:'kg',load:'barbell'})&&!A.kgMachine({unitPref:'both',load:'stack'}),'2.3 only a machine fixed to kg uses them; barbells keep their plates','');
+    const p=A.solvePlates(100,A.barKg(45),'main_kg'); ok(A.barKg(45)===20&&p.exact&&p.plates.join()==='25,15','2.3 a kg bar is 20 kg and plate-solves in kg',JSON.stringify(p)); }
+  // 2.4 the edit sheet: a kg set steps in kg, and the class estimates on what was lifted
+  { const bw={type:'bodyweight',id:'bw9',ts:day(10),bodyweight:180};
+    const A=load([bw]);
+    ok(A.editStep(A.exById.deadlift,'kg')===2.5&&A.editStep(A.exById.deadlift,'lb')===A.exById.deadlift.inc,'2.4 the edit sheet steps a kg set in kg, a lb set by the exercise\'s step','');
+    const orig={exercise_id:'assisted_pullup',ts:day(1),weight:{value:40,unit:'lb'},reps:8};
+    const e=A.editedEstimate(orig,{weight:40,unit:'lb',reps:8}), direct=A.editedEstimate({exercise_id:'bench',ts:day(1)},{weight:185,unit:'lb',reps:5});
+    ok(e>150&&e<200,'2.4 40 lb of assistance estimates on the 140 lb lifted, not on 40',String(e));
+    ok(direct>190&&direct<230,'2.4 and an ordinary set as before',String(direct));
+    const k=A.estimateFromSet('pulldown',{w:50,reps:5,unit:'kg'},null), l=A.estimateFromSet('pulldown',{w:50*LB,reps:5},null);
+    ok(k&&l&&Math.abs(k.total-l.total)<0.5,'2.4 an estimate typed in kg is priced in kg',JSON.stringify({k,l})); }
+  // 2.5 the smaller ones
+  { const bw={type:'bodyweight',id:'bw8',ts:day(10),bodyweight:180};
+    const A=load([bw,set('assisted_pullup','tn',40,8,8,1)]);
+    ok(A.sessionTonnage('tn')===(180-40)*8,'2.5 tonnage on an assisted lift counts what was lifted',String(A.sessionTonnage('tn')));
+    const ex=A.exById.pulldown;
+    ok(A.dropLoad(ex,'kg',50,0.8)===40&&A.dropLoad(ex,'lb',100,0.8)===Math.round(80/ex.inc)*ex.inc,'2.5 a drop set in kg rounds to a kg step',String(A.dropLoad(ex,'kg',50,0.8)));
+    ok(/ctx\.onSwapAny\?modSig\(ctx\.mods\)/.test(fnSrc('openInfo')),'2.5 details opened from a card read that card\'s version',''); }
+  // 2.5 the preview is the panel: same pipeline, so the two can't disagree
+  { const ev2=[]; [36,30,24,18,12,6].forEach((d,i)=>{ ev2.push(set('bench','p'+i,185+5*i,8,8,d,{target:{reps:[6,10],rpe:8}}),se('p'+i,d)); });
+    const A=load(ev2); A.CFG.goals=['bench']; A.CFG.rateSeed={at:0,dflt:'standard',lifts:{bench:'fast'}};
+    [{ex:'bench',role:'primary',reps:[6,10],rpe:8,sets:4},{ex:'bench',role:'secondary',reps:[6,10],rpe:8,sets:3},{ex:'curl',role:'accessory',reps:[8,12],rpe:8,sets:3}].forEach(pl=>{
+      const pv=A.previewRx(pl), card=A.suggestFor({...pl,sets_target:pl.sets,sets:[]});
+      ok(pv.lb===card.lb&&pv.reps===card.pr.reps,'2.5 preview = the panel for '+pl.ex+' ('+pl.role+')',JSON.stringify({pv:pv.lb,card:card.lb})); });
+    const mt={ex:'bench',role:'primary',reps:[6,10],rpe:8,sets:4,structure:'maint'};
+    ok(A.planTopRx(mt).lb===A.suggestFor({...mt,sets_target:4,sets:[]}).lb,'2.5 maintenance: row 0 is the panel\'s top set','');
+    ok(A.previewRx(mt).lb<=A.planTopRx(mt).lb,'2.5 maintenance: the other rows are the working sets, no heavier than the top set',JSON.stringify([A.previewRx(mt).lb,A.planTopRx(mt).lb])); }
+  // the batch's walkthrough: strapped deadlift as the usual, in kg, six sessions on target
+  { const kgS=[]; [36,30,24,18,12,6].forEach((d,i)=>{ kgS.push(set('deadlift','w'+i,0,8,8,d,{weight:{value:120+2.5*i,unit:'kg'},modifiers:straps,target:{reps:[5,8],rpe:8}}),se('w'+i,d)); });
+    const A=load(kgS); A.CFG.usualMods={deadlift:straps}; A.CFG.goals=['deadlift']; A.CFG.rateSeed={at:0,dflt:'standard',lifts:{deadlift:'fast'}};
+    const pl={ex:'deadlift',role:'primary',reps:[5,8],rpe:8,sets:3,modifiers:straps}, live={...pl,sets_target:3,sets:[]}, card=A.suggestFor(live), pv=A.previewRx(pl), sh=A.shownLoad(live,card.lb);
+    ok(A.rateState('deadlift').exs.length===6&&card.pr.fast===true,'walkthrough: the rate and fast progression both fire on the strapped kg history',JSON.stringify({n:A.rateState('deadlift').exs.length,src:card.pr.src}));
+    ok(sh.unit==='kg'&&sh.value===135&&Math.abs(sh.value/2.5-Math.round(sh.value/2.5))<1e-6,'walkthrough: one real kg step up from the last set, in kg',JSON.stringify(sh));
+    ok(pv.lb===card.lb&&A.loadLabel(live,pv.lb)===A.loadLabel(live,card.lb)&&/kg/.test(A.loadLabel(live,pv.lb)),'walkthrough: the preview and the card show the same kg number',A.loadLabel(live,pv.lb)); }
+  console.log('  usual variant in every reader · slots carry it · kg machines step in kg · edit sheet · class tonnage · preview = panel');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

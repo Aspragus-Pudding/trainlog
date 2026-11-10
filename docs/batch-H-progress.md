@@ -123,5 +123,9 @@ No engine changes: the backtest must stay identical. Part 1 removes the look-ali
 
 | Batch | State | Version | Notes |
 |---|---|---|---|
-| 01 Part 1 weights you see | done, waiting for your look at the backtest | v1.96.0 | 1.1–1.7 test-first (§99); kg grid, class warm-ups, stepper, last time, rebalance, top-set rows, loadLabel; swap keeps logged sets; backtest identical (261); D72 |
+| 01 Part 1 weights you see | done | v1.96.0 | 1.1–1.7 test-first (§99); kg grid, class warm-ups, stepper, last time, rebalance, top-set rows, loadLabel; swap keeps logged sets; backtest identical (261); D72 |
+| set panel after a Details edit | done | v1.96.1 | Train keeps its scroll on an in-place render; the sheet keeps its card; checked with `history.go` disabled; CLAUDE.md gotcha |
+| 02 the check-in | done: your pick −2 to +2 around your usual | v1.97.0 | numbered rows, same stored 1–5; joints 0 to −3 (see D73); §95. Finish screen not picked, still chips |
+| 03 Train and the set card | done: your picks | v1.98.0 | summary and Start, list folds open, Log a set here, arrows only; §96; D74. Not built, not picked: Skip the rest, separate info and swap icons |
+| 01 Part 2 usual, kg machines, preview | done | v1.99.0 | §100; engine moved 0 of 302 on your history; preview = the panel; D75. **New backtest baseline (harness now prices the variant done and the class on what was lifted): n=301, load mean abs error 3.7 lb, reps 1.7, exact 188.** Not comparable with earlier numbers |
 | 01 Part 2 usual variant and the rest | not started | | after your OK on Part 1 |

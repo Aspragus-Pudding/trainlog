@@ -58,7 +58,7 @@ function stub(){
     set(){ return true; }, apply(){ return stub(); }, construct(){ return stub(); }
   });
 }
-const EXPORTS=['nextPrescription','suggestFor','schemeFor','EX','exById','LOG','sets','toLb','setE1RM','bestE1RM',
+const EXPORTS=['nextPrescription','suggestFor','suggestForSys','engLb','bwClass','schemeFor','EX','exById','LOG','sets','toLb','setE1RM','bestE1RM',
   'currentPhase','readinessScoreFromEvent','physicalCut','jointLevel','jointTrend','JOINT_PATTERNS','JOINTS',
   'lastEarlyPain','impliedE1','predictedRpe','rtfFromPct','repProfile','CFG','pct1RM','isCoarseMachine','isChartFree','jointNoteFor'];
 function loadApp(){
@@ -160,15 +160,18 @@ for(const w of workingSets){
     if(e.type==='session_end') break;
   }
 
-  const slot={ex:w.exercise_id, reps:w.target.reps, rpe:w.target.rpe, joint, sets:new Array(fresh?0:1)};
+  // the slot as the app builds it: the variant that was done, so a strapped set is priced on its own track
+  const slot={ex:w.exercise_id, reps:w.target.reps, rpe:w.target.rpe, joint, sets:new Array(fresh?0:1), ...(w.modifiers?{modifiers:w.modifiers}:{})};
+  const isClass=!!(A.bwClass&&A.bwClass(w.exercise_id));   // bodyweight class: compare what was lifted (system load), not the typed added/assist number
   A.setSession({id:w.session_id, score, adj, adjReason:null, slots:[slot], ratings:{}});
 
   let pred;
-  try{ pred=A.suggestFor(slot); }catch(err){ skipped.no_prediction++; continue; }
+  try{ pred=isClass?A.suggestForSys(slot):A.suggestFor(slot); }catch(err){ skipped.no_prediction++; continue; }
   seenFirst.add(key);
   if(pred.lb==null){ skipped.no_prediction++; continue; }   // e.g. first-ever set, no estimate to go on
 
-  const actualLb=A.toLb(w.weight);
+  const actualLb=isClass?A.engLb(w):A.toLb(w.weight);
+  if(actualLb==null){ skipped.no_prediction++; continue; }
   const predE1=A.impliedE1(pred.lb, pred.pr.reps, w.target.rpe);
   const actualE1=w.rpe!=null?A.impliedE1(actualLb, w.reps, w.rpe):null;
   rows.push({

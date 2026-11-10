@@ -1657,3 +1657,14 @@ then the fix.
 - Small fixes from the batch: a message no longer covers the rest timer's buttons; the lead-lift label isn't amber, since amber means "suggested".
 
 **Not built**, because they weren't in what you picked: a "Skip the rest" button, and separate info and swap icons on each card. Swap is in Details on every card.
+
+## D75. Batch 01 Part 2: your usual variant, kg machines, the preview (v1.99.0)
+
+Autonomous under the batch rules. On your real history the engine moved **0 of 302** suggestions, since you have no usual variant set and nothing fixed to kg.
+
+- **The preview now runs the panel's own pipeline** (the batch asked for this or an "estimate" label on every row). Train before Start shows what the card will suggest, including the dial, the floor, the ceiling, one step and fast progression. It can't include today's check-in, because that hasn't happened yet.
+- **A machine fixed to kg steps in kg.** `ex.inc` is still stored in lb; the step is read on a kg list, so an old "10 lb" counts as the 5 kg it stood in for. Machines shown in both units keep their own step, as v1.96 decided.
+- **Saved days don't store your usual.** An exercise added to a saved day picks up your usual when the day is read, so changing your usual later reaches it. Exercises added during a workout carry it straight away.
+- **A slot set to plain for today keeps the normal path**, and fast progression stays off for it.
+
+**The backtest harness changed, so its numbers aren't comparable with earlier ones.** It now prices a set on the variant that was done, and the bodyweight class on what was lifted. New baseline: n=301, load mean |error| 3.7 lb, reps 1.7. The old harness gave 5.1 lb on the same data; six strapped deadlift sessions priced on the plain track were the whole difference, and one row can't be priced.

@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.99.0 — 2026-11-10
+- Your usual variant now counts everywhere: how fast a main lift progresses, stall checks, and exercises you add during a workout all use the version you normally do.
+- The numbers on Train before you start are now the ones the set card will show.
+- A machine set to kg picks its smallest jump in kg and steps in kg. Editing a kg set steps in kg too.
+- Drop sets in kg land on a real step, and assisted lifts count what you actually lifted in session totals and estimates.
+
 ## 1.98.0 — 2026-11-10
 - Train opens on a summary and Start again. Show the exercises opens the list, and it stays how you left it.
 - Every exercise with sets left has Log a set here, and tapping a set you haven't done does the same, so the set panel can always be brought back.
