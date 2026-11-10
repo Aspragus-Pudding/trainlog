@@ -13,7 +13,7 @@ Tap A joint in the check-in and pick it, and after an exercise when the app asks
 In the check-in, tap Sore and pick the area. Only the exercises that train that muscle start lighter, with a set fewer on the first two of them, and the rest of the session is unchanged. If soreness already cut that work last session without a missed rep since, it doesn't cut again.
 
 ### I slept badly or I'm feeling rough
-A 2 for sleep, motivation or rest of life means nothing steps up today, and a 1 means a sick day: everything one step lighter, today only. Your warm-up gets longer too. None of it carries over to your next session.
+A −1 on sleep, motivation or rest of life means nothing steps up today, and a −2 means a sick day: everything one step lighter, today only. Your warm-up gets longer too. None of it carries over to your next session.
 
 ### I want to push harder
 Set Edit program → How hard suggestions push to "push a bit" or "push me", for everything, or on one exercise's info sheet. Each notch moves suggestions by one step. If you keep lifting heavier than suggested, the app moves the setting a notch on its own and says so on the Progress tab.
@@ -209,7 +209,7 @@ Change a custom exercise's name, equipment or muscles. Its history stays with it
 Your first session is ready to go whenever you are at the gym. The app keeps your place in the program by sessions rather than by days, so a missed day never skips a workout.
 
 ### The check-in `[data-tour="checkin"]`
-Before each workout the check-in asks what's off today. Tap All good if nothing is; otherwise tap what's off, such as poor sleep, low motivation, stress, feeling sick, a sore area or a joint, and say whether it's a little or a lot. Anything you don't tap counts as normal, and only what's off changes the workout.
+Before each workout the check-in has one numbered row for each question: sleep, motivation, rest of life, each sore area and each joint. 0 is your usual, minus is worse and plus is better, and the words under a row say what its number means. Leave whatever is normal and tap Start, so a normal day is one tap. Joints count down from 0 to −1 mild, −2 moderate and −3 bad, with your usual shown beside the joint. The line above Start says what your answers will do to today's workout.
 
 ### An exercise `#v-work .ex` {when:session}
 Each exercise is a card. Open it to see the suggested weight and reps for your first set, worked out from your history and today's check-in.

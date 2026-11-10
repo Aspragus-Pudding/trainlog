@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.97.0 — 2026-11-10
+- The check-in shows every question again, one numbered row each: sleep, motivation, rest of life, each sore area and each joint.
+- 0 is your usual, minus is worse, plus is better. Leave what's normal and tap Start, so a normal day is still one tap.
+- Joints count down from 0: −1 mild, −2 moderate, −3 bad, with your usual shown beside the joint.
+- The line above Start says what your answers will do to today's workout before you begin.
+
 ## 1.96.1 — 2026-10-27
 - Fixed: changing a setting in Details during a workout (rep range, smallest jump, bar or sled weight) sent the workout screen back to the top, so the set panel looked gone. You now stay on the card you were on.
 - Fixed: after one change in Details, the sheet lost its Swap this exercise button. It stays now.

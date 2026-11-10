@@ -114,6 +114,15 @@ section{display:none;padding-top:var(--sp-4)} section.on{display:block}
 .anchor{font-size:var(--fs-1);color:var(--muted);margin-top:var(--sp-2);min-height:17px}
 .qblock{background:var(--surface);border-radius:var(--r);padding:var(--sp-4);margin-bottom:var(--sp-3);box-shadow:var(--e-1)}
 .qlab{font-size:var(--fs-3);font-weight:650;margin-bottom:var(--sp-3);line-height:1.35}
+.rgroup{font-size:var(--fs-3);font-weight:650;margin:var(--sp-4) 0 var(--sp-1)}
+.rrow{padding:var(--sp-2);margin:0 calc(var(--sp-2) * -1);border-radius:var(--r-s)}
+.rrow.off{background:var(--accent-soft)}
+.rhead{display:flex;justify-content:space-between;align-items:baseline;gap:var(--sp-2);font-size:var(--fs-2);font-weight:600}
+.rcells{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:var(--sp-1);margin-top:var(--sp-1)}
+.rcell{min-height:var(--tap);border-radius:var(--r-s);background:var(--surface-2);color:var(--muted);font-size:var(--fs-2);font-variant-numeric:tabular-nums}
+.rcell[aria-pressed="true"]{background:var(--line);color:var(--ink);font-weight:650}
+.rrow.off .rcell[aria-pressed="true"]{background:var(--accent-fill);color:var(--on-accent)}
+.rword{font-size:var(--fs-1);color:var(--dim);margin-top:var(--sp-1);min-height:1.4em}
 
 .legend{display:flex;gap:var(--sp-3);font-size:var(--fs-1);margin-top:var(--sp-2);flex-wrap:wrap}
 .legend span{display:flex;align-items:center;gap:var(--sp-1);color:var(--muted)}
@@ -8654,7 +8663,7 @@ Tap A joint in the check-in and pick it, and after an exercise when the app asks
 In the check-in, tap Sore and pick the area. Only the exercises that train that muscle start lighter, with a set fewer on the first two of them, and the rest of the session is unchanged. If soreness already cut that work last session without a missed rep since, it doesn't cut again.
 
 ### I slept badly or I'm feeling rough
-A 2 for sleep, motivation or rest of life means nothing steps up today, and a 1 means a sick day: everything one step lighter, today only. Your warm-up gets longer too. None of it carries over to your next session.
+A −1 on sleep, motivation or rest of life means nothing steps up today, and a −2 means a sick day: everything one step lighter, today only. Your warm-up gets longer too. None of it carries over to your next session.
 
 ### I want to push harder
 Set Edit program → How hard suggestions push to "push a bit" or "push me", for everything, or on one exercise's info sheet. Each notch moves suggestions by one step. If you keep lifting heavier than suggested, the app moves the setting a notch on its own and says so on the Progress tab.
@@ -8850,7 +8859,7 @@ Change a custom exercise's name, equipment or muscles. Its history stays with it
 Your first session is ready to go whenever you are at the gym. The app keeps your place in the program by sessions rather than by days, so a missed day never skips a workout.
 
 ### The check-in `[data-tour="checkin"]`
-Before each workout the check-in asks what's off today. Tap All good if nothing is; otherwise tap what's off, such as poor sleep, low motivation, stress, feeling sick, a sore area or a joint, and say whether it's a little or a lot. Anything you don't tap counts as normal, and only what's off changes the workout.
+Before each workout the check-in has one numbered row for each question: sleep, motivation, rest of life, each sore area and each joint. 0 is your usual, minus is worse and plus is better, and the words under a row say what its number means. Leave whatever is normal and tap Start, so a normal day is one tap. Joints count down from 0 to −1 mild, −2 moderate and −3 bad, with your usual shown beside the joint. The line above Start says what your answers will do to today's workout.
 
 ### An exercise `#v-work .ex` {when:session}
 Each exercise is a card. Open it to see the suggested weight and reps for your first set, worked out from your history and today's check-in.
@@ -9090,7 +9099,7 @@ the guide.
 ## Readiness
 - In the app: readiness
 - Also called: readiness score
-- Means: How ready you are to train today, from your check-in. Sleep, motivation and rest of life decide whether anything steps up today: "a little" off on any of them (a 2) means no step-ups, "a lot" (a 1) means a sick day. Soreness only touches the exercises that use the sore muscle. The overall score, out of 100, only sets how long your warm-up is.
+- Means: How ready you are to train today, from your check-in. Sleep, motivation and rest of life decide whether anything steps up today: a −1 on any of them means no step-ups, and a −2 means a sick day. Soreness only touches the exercises that use the sore muscle. The overall score, out of 100, only sets how long your warm-up is.
 
 ## Your usual
 - In the app: your usual
@@ -9473,8 +9482,8 @@ Settings → Voice has "Use this theme's voice", on by default.
 - Freshly updated · {v}
 - The latest · {v}
 </script>
-<script type="application/json" id="whats-new">{"version":"1.96.1","lines":["Fixed: changing a setting in Details during a workout (rep range, smallest jump, bar or sled weight) sent the workout screen back to the top, so the set panel looked gone. You now stay on the card you were on.","Fixed: after one change in Details, the sheet lost its Swap this exercise button. It stays now.","Your logged sets were never affected: it was where the screen scrolled to, not your data."]}</script>
-<script type="application/json" id="whats-new-history">[{"version":"1.96.1","date":"2026-10-27","lines":["Fixed: changing a setting in Details during a workout (rep range, smallest jump, bar or sled weight) sent the workout screen back to the top, so the set panel looked gone. You now stay on the card you were on.","Fixed: after one change in Details, the sheet lost its Swap this exercise button. It stays now.","Your logged sets were never affected: it was where the screen scrolled to, not your data."]},{"version":"1.96.0","date":"2026-10-22","lines":["Fixed: kg weights could get stuck or move by a fraction. A step up in kg is now always a real kg step: a pair of 1.25 kg plates on a barbell, 2.5 kg on dumbbells.","Fixed: warm-up sets on weighted pull-ups, chin-ups and dips showed and logged your bodyweight as the added weight.","Fixed: the bodyweight + and − on the check-in now add up, and \"Last time\" on assisted lifts shows your hardest set.","Train, today's plan and the briefing write every weight in the unit you use. The top-set row in the preview shows the top-set weight. A swap no longer clears sets you've already logged."]},{"version":"1.95.0","date":"2026-10-20","lines":["New look. Same app. Your data hasn't changed.","Finishing a session uses words instead of rows of numbered boxes: how hard it was (Very easy to All I had), and quick ratings for each exercise.","For anything sore, tap the area and say a little or a lot, like the check-in. The app stores the same answers as before."]},{"version":"1.94.0","date":"2026-10-20","lines":["The up and down arrows are back on each exercise, beside the drag handle, before you start and during a session.","Use whichever you like: the arrows move one place at a time, and the handle is for longer moves.","The order rules are the same either way: an exercise you're partway through stays current."]},{"version":"1.93.0","date":"2026-10-20","lines":["A new standard look: graphite with a teal accent. Block types are teal for size, lavender for strength and gold for a taper, each with its own pattern.","The light look (code LIGHT) follows it, and the app icon is a teal plate on graphite.","Prefer the original navy and blue? Enter the code CLASSIC. IRIS (violet) and EMBER (coral) are new codes too."]},{"version":"1.92.0","date":"2026-10-17","lines":["Three new theme codes: LOGBOOK (paper, ink and ruled set rows), CHALK (graphite and acid lime, big condensed numbers) and GROVE (sage and tomato, serif numbers).","Enter one in Settings → Appearance → Have a code?. The standard look doesn't change.","Like every theme, they pass the readability rules, and they need no download."]},{"version":"1.91.0","date":"2026-10-17","lines":["An exercise's details start with a sentence: how many hard sets of it you're doing a week this block, and the muscle it counts toward.","The finish screen says it in one line: sets, time and new bests.","The whole-week view says which muscles are under or over their typical weekly sets, in words."]},{"version":"1.90.0","date":"2026-10-17","lines":["Train shows the day and its block on one line, the exercise list, and one Start button at the bottom. The whole week and another day are under ⋯.","Drag an exercise's handle to reorder. Tap a card for its details, and long-press or swipe it left to swap.","During a session, Details on each card opens the exercise, with a Swap button there too."]},{"version":"1.89.0","date":"2026-10-17","lines":["The check-in asks what's off today. Tap All good, or tap what's off (poor sleep, low motivation, stress, feeling sick, a sore area, a joint) and say a little or a lot.","Anything you don't tap counts as normal. \"Better than usual?\" covers a great night or feeling fresh.","The app stores the same answers as before, so suggestions and your history read exactly as they did."]},{"version":"1.88.0","date":"2026-10-17","lines":["Today opens with today's plan: the workout, one sentence on what the app is doing to it, and how many exercises are held back or pushing. It shows before your check-in too.","Your program is one line of blocks with this week marked, and a sentence: where you are and what comes next.","Each block type has a pattern as well as a colour. The countdown chart is gone; a date shows only if you set a test day or a fixed end."]},{"version":"1.87.0","date":"2026-10-17","lines":["The tabs are Today, Train, Lifts, Progress and Settings, with new icons.","Same screens in the same places: Today was the Dashboard, Train was Workout.","The guide and the screen tours use the new names."]},{"version":"1.86.0","date":"2026-10-17","lines":["The app's name now comes from one place, ready for the new name.","Backups, storage and your log don't change with the name. A backup made under any name restores the same way.","Nothing else looks different yet."]}]</script>
+<script type="application/json" id="whats-new">{"version":"1.97.0","lines":["The check-in shows every question again, one numbered row each: sleep, motivation, rest of life, each sore area and each joint.","0 is your usual, minus is worse, plus is better. Leave what's normal and tap Start, so a normal day is still one tap.","Joints count down from 0: −1 mild, −2 moderate, −3 bad, with your usual shown beside the joint.","The line above Start says what your answers will do to today's workout before you begin."]}</script>
+<script type="application/json" id="whats-new-history">[{"version":"1.97.0","date":"2026-11-10","lines":["The check-in shows every question again, one numbered row each: sleep, motivation, rest of life, each sore area and each joint.","0 is your usual, minus is worse, plus is better. Leave what's normal and tap Start, so a normal day is still one tap.","Joints count down from 0: −1 mild, −2 moderate, −3 bad, with your usual shown beside the joint.","The line above Start says what your answers will do to today's workout before you begin."]},{"version":"1.96.1","date":"2026-10-27","lines":["Fixed: changing a setting in Details during a workout (rep range, smallest jump, bar or sled weight) sent the workout screen back to the top, so the set panel looked gone. You now stay on the card you were on.","Fixed: after one change in Details, the sheet lost its Swap this exercise button. It stays now.","Your logged sets were never affected: it was where the screen scrolled to, not your data."]},{"version":"1.96.0","date":"2026-10-22","lines":["Fixed: kg weights could get stuck or move by a fraction. A step up in kg is now always a real kg step: a pair of 1.25 kg plates on a barbell, 2.5 kg on dumbbells.","Fixed: warm-up sets on weighted pull-ups, chin-ups and dips showed and logged your bodyweight as the added weight.","Fixed: the bodyweight + and − on the check-in now add up, and \"Last time\" on assisted lifts shows your hardest set.","Train, today's plan and the briefing write every weight in the unit you use. The top-set row in the preview shows the top-set weight. A swap no longer clears sets you've already logged."]},{"version":"1.95.0","date":"2026-10-20","lines":["New look. Same app. Your data hasn't changed.","Finishing a session uses words instead of rows of numbered boxes: how hard it was (Very easy to All I had), and quick ratings for each exercise.","For anything sore, tap the area and say a little or a lot, like the check-in. The app stores the same answers as before."]},{"version":"1.94.0","date":"2026-10-20","lines":["The up and down arrows are back on each exercise, beside the drag handle, before you start and during a session.","Use whichever you like: the arrows move one place at a time, and the handle is for longer moves.","The order rules are the same either way: an exercise you're partway through stays current."]},{"version":"1.93.0","date":"2026-10-20","lines":["A new standard look: graphite with a teal accent. Block types are teal for size, lavender for strength and gold for a taper, each with its own pattern.","The light look (code LIGHT) follows it, and the app icon is a teal plate on graphite.","Prefer the original navy and blue? Enter the code CLASSIC. IRIS (violet) and EMBER (coral) are new codes too."]},{"version":"1.92.0","date":"2026-10-17","lines":["Three new theme codes: LOGBOOK (paper, ink and ruled set rows), CHALK (graphite and acid lime, big condensed numbers) and GROVE (sage and tomato, serif numbers).","Enter one in Settings → Appearance → Have a code?. The standard look doesn't change.","Like every theme, they pass the readability rules, and they need no download."]},{"version":"1.91.0","date":"2026-10-17","lines":["An exercise's details start with a sentence: how many hard sets of it you're doing a week this block, and the muscle it counts toward.","The finish screen says it in one line: sets, time and new bests.","The whole-week view says which muscles are under or over their typical weekly sets, in words."]},{"version":"1.90.0","date":"2026-10-17","lines":["Train shows the day and its block on one line, the exercise list, and one Start button at the bottom. The whole week and another day are under ⋯.","Drag an exercise's handle to reorder. Tap a card for its details, and long-press or swipe it left to swap.","During a session, Details on each card opens the exercise, with a Swap button there too."]},{"version":"1.89.0","date":"2026-10-17","lines":["The check-in asks what's off today. Tap All good, or tap what's off (poor sleep, low motivation, stress, feeling sick, a sore area, a joint) and say a little or a lot.","Anything you don't tap counts as normal. \"Better than usual?\" covers a great night or feeling fresh.","The app stores the same answers as before, so suggestions and your history read exactly as they did."]},{"version":"1.88.0","date":"2026-10-17","lines":["Today opens with today's plan: the workout, one sentence on what the app is doing to it, and how many exercises are held back or pushing. It shows before your check-in too.","Your program is one line of blocks with this week marked, and a sentence: where you are and what comes next.","Each block type has a pattern as well as a colour. The countdown chart is gone; a date shows only if you set a test day or a fixed end."]},{"version":"1.87.0","date":"2026-10-17","lines":["The tabs are Today, Train, Lifts, Progress and Settings, with new icons.","Same screens in the same places: Today was the Dashboard, Train was Workout.","The guide and the screen tours use the new names."]}]</script>
 <script type="application/json" id="coaching-cues">[
   {
     "id": "bench",
@@ -10041,7 +10050,7 @@ Settings → Voice has "Use this theme's voice", on by default.
    · anchored 1–5 scales — a descriptor per value kills rating drift
    Event-sourced log unchanged. Derived state computed on read.
    ══════════════════════════════════════════════════════════ */
-const APP_VERSION='1.96.1';
+const APP_VERSION='1.97.0';
 /* The app's name, in one place (batch M). Every on-screen "Trainlog" comes from
    here; docs embedded in the page write {app} and get it at read time (named()).
    tools/set-name.js copies it into <title> and the manifest. Renaming never
@@ -13479,6 +13488,11 @@ function fromNeutral(v, spec, neutral, opt){
   if(opt&&opt.raw) return x-n;
   return x<n?(x-n)/((n-spec.min)||1):(x-n)/((spec.max-n)||1);
 }
+/* The check-in's numbers (v1.97): a step from your usual as the stored rating, and back for display.
+   The other half of fromNeutral, so the neutral point is still only written in SCALE_SPEC. */
+const ratingFromDelta=(key,d)=>{ const s=SCALE_SPEC[key]; return Math.max(s.min,Math.min(s.max,s.neutral+(d||0))); };
+const signedNum=n=>n>0?'+'+n:n<0?'−'+(-n):'0';
+const signedRating=(key,v)=>signedNum(v-SCALE_SPEC[key].neutral);
 const meanAdj=(key,vals)=>{ const a=vals.filter(v=>v!=null); return a.length?a.reduce((t,v)=>t+fromNeutral(v,key),0)/a.length:0; };
 
 /* Re-centered so a rating of 3 — "about average" on every anchored scale —
@@ -13552,6 +13566,7 @@ function physicalCut(st, groups){
   const base=t===2?{load:0.90, sets:-2, label:'Reduced'}:{load:0.95, sets:-1, label:'Slightly reduced'};
   return {...base, signal:sig.join(' and '), groups:soreAt, global:tr===t};
 }
+const soreCutWords=cut=>cut.load<=0.9?'10% lighter, two sets fewer':'5% lighter, one set fewer';
 /* Does today's readiness cut reach this exercise? Session-wide for "rest of
    life"; otherwise only exercises whose main muscles are in a sore group. */
 function adjHits(adj, exId){
@@ -13781,14 +13796,14 @@ function readinessRows(ev, today, exIds){
       if(n>0&&shorter&&sc!=='recovery') eff.push('shorter warm-up');
       if(v<=1) eff.push('sick day: everything one step lighter '+when);
       else if(v<=2) eff.push('no step-ups '+when);
-      out.inputs.push({what:what+' '+v, label:(SCALE[sc]||[])[v-1]||'', does:eff.length?eff.join(', '):'no change', band:v<=1?'Red':v<=2?'Yellow':'Green'});
+      out.inputs.push({what:what+' '+signedRating(sc,v), label:(SCALE[sc]||[])[v-1]||'', does:eff.length?eff.join(', '):'no change', band:v<=1?'Red':v<=2?'Yellow':'Green'});
     });
     if(ev.bodyweight!=null) out.inputs.push({what:'Bodyweight '+fmt(ev.bodyweight,1)+' '+(CFG.units==='kg'?'kg':'lb'), label:'', does:'used for exercises priced on total load', band:'Green'});
     const groups=Object.keys(ev.soreness||{}), cut=physicalCut({sore:ev.soreness||{}, recovery:ev.recovery}, groups);
     groups.forEach(g=>{ const v=ev.soreness[g]; if(v==null||fromNeutral(v,'soreness')>-0.5) return;
       const hit=cut&&cut.groups.includes(g), exs=(exIds||[]).filter(x=>adjHits({groups:[g]},x)).map(x=>exById[x].name);
       out.sore.push({what:GROUP_LABEL[g]||g, label:(SCALE.soreness||[])[v-1]||'', band:hit?'Red':'Yellow', exs,
-        does:hit?(cut.load<=0.9?'10% lighter, two sets fewer':'5% lighter, one set fewer')+' on what trains it '+when+' (the set cut on the first two exercises)':'noted; only the sorest group is cut'}); });
+        does:hit?soreCutWords(cut)+' on what trains it '+when+' (the set cut on the first two exercises)':'noted; only the sorest group is cut'}); });
   }
   const cap=t=>t.charAt(0).toUpperCase()+t.slice(1), js=JOINTS.map(jointBand).filter(Boolean), quiet=js.filter(b=>b.level<2&&b.over<=0);
   js.filter(b=>!quiet.includes(b)).forEach(b=>{
@@ -18987,8 +19002,9 @@ function wordChips(label, words, initial, onPick, o){
     c.appendChild(x); });
   b.appendChild(c); if(initial!=null) onPick(initial); return b;
 }
-/* soreness after a session, the check-in's way: untapped 3, a little 2, a lot 1, fresh 4 */
-const postSoreness=(a,groups)=>checkinValues({sore:a||{}},groups).sore;
+/* soreness after a session: untapped 3, a little 2, a lot 1, fresh 4 */
+const CHIP_VAL={little:2, lot:1, great:4};
+const postSoreness=(a,groups)=>{ const out={}; (groups||[]).forEach(g=>{ out[g]=CHIP_VAL[(a||{})[g]]||3; }); return out; };
 /* Tap a joint to flag it (moderate by default), then say how bad if it isn't
    moderate. Stored as 1 mild / 2 moderate / 3 bad — events carrying these get
    joint_scale:3 so older tap-only events stay distinguishable. */
@@ -19021,78 +19037,72 @@ function jointChips(hostSel,store){
   drawSev();
 }
 
-/* The check-in as "what's off today" (batch M). One tap for All good; chips for
-   anything off, each asking a little or a lot; a row for better than usual. It
-   stores exactly what the five-box rows did (§95): untapped is 3 (neutral), a
-   little 2, a lot 1, better than usual 4, on the same 1–5 scales. Stress and
-   feeling sick are both "rest of life" (the lower one counts). Joints keep their
-   1–3 scale, read against your usual. */
-const CHIP_VAL={little:2, lot:1, great:4};
-const CHECKIN_OFF=[['sleep','Slept badly'],['motivation','Low motivation'],['stress','Stressed or run-down'],['sick','Feeling sick']];
+/* The check-in as numbered rows (v1.97, picked from mockups). Every question is on screen, one row each.
+   0 is your usual, minus worse, plus better; what's kept is the same 1–5 as ever, so history and the engine
+   don't change (§95). Joints count down instead: 0 nothing to report, then −1 mild, −2 moderate, −3 bad, the
+   stored 1–3. No plus, because nothing below "none" exists to store, and a joint must always be able to say
+   bad (the ladder counts a bad rating whatever your usual). The ladder still does the comparing with your usual. */
 function checkinValues(a, groups){
-  a=a||{}; const v=k=>CHIP_VAL[a[k]]||3, sore={};
-  (groups||[]).forEach(g=>{ sore[g]=CHIP_VAL[(a.sore||{})[g]]||3; });
-  return {sleep:v('sleep'), motivation:v('motivation'), recovery:Math.min(v('stress'),v('sick')), sore, joints:{...(a.joints||{})}};
+  a=a||{}; const sore={};
+  (groups||[]).forEach(g=>{ sore[g]=ratingFromDelta('soreness',(a.sore||{})[g]); });
+  return {sleep:ratingFromDelta('sleep',a.sleep), motivation:ratingFromDelta('motivation',a.motivation), recovery:ratingFromDelta('recovery',a.recovery), sore, joints:{...(a.joints||{})}};
 }
 const checkinEvent=st=>({type:'readiness',bodyweight:st.bodyweight,sleep_quality:st.sleep,motivation:st.motivation,recovery:st.recovery,soreness:st.sore,joints:st.joints,joint_scale:3});
+const JOINT_ROW_WORD=['Nothing to report','Mild','Moderate','Bad'];
+/* one row: its label, its numbers, what the current number means. Tap the chosen number again to go back to 0. */
+function ratingRow(o){
+  const r=el('div','rrow'), head=el('div','rhead'), cells=el('div','rcells'), word=el('div','rword');
+  head.appendChild(el('span','',esc(o.label)));
+  if(o.note) head.appendChild(el('span','dim tiny',esc(o.note)));
+  const paint=()=>{ const cur=o.get(); r.classList.toggle('off',cur!==0);
+    [...cells.children].forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===cur?'true':'false'));
+    word.textContent=o.word(cur); };
+  o.values.forEach(v=>{ const b=el('button','rcell',signedNum(v)); b.dataset.v=String(v); b.setAttribute('aria-label',o.label+' '+signedNum(v));
+    b.onclick=()=>{ o.set(o.get()===v?0:v); paint(); o.after(); }; cells.appendChild(b); });
+  r.append(head,cells,word); paint(); return r;
+}
 function openCheckin(){
-  const groups=SORE_GROUPS.filter(g=>!session||session.soreGroups.includes(g.id));
-  const ans={sore:{},joints:{}};
+  const groups=SORE_GROUPS.filter(g=>!session||session.soreGroups.includes(g.id)), gids=groups.map(g=>g.id);
+  const ans={sleep:0,motivation:0,recovery:0,sore:{},joints:{}};
   // nothing is logged until you set it: the stepper's starting point is not a reading
-  let bw=latestBodyweight(), bwChanged=false;
+  let bw=latestBodyweight(), bwChanged=false, bwOpen=false;
   const greet=voice('checkin',''), tipCk=tipCard('checkin');
   sheet('<h2 data-tour="checkin" style="font-size:var(--fs-5);margin-bottom:var(--sp-1)">Check-in</h2>'
     +(greet?'<div class="muted sm" style="margin-bottom:var(--sp-2)">'+esc(greet)+'</div>':'')
-    +'<div class="muted sm" style="margin-bottom:var(--sp-3)">Anything off today? Tap only what is; everything else counts as normal.</div><div id="ck"></div>'
+    +'<div class="muted sm">0 is your usual. Minus is worse, plus is better. Leave whatever is normal.</div><div id="ck"></div>'
+    +'<div id="ckdoes" data-foot class="sm muted" style="min-height:3em"></div>'
     +'<div class="row" style="gap:var(--sp-2)"><button class="btn ghost grow" id="ckskip">Skip</button><button class="btn go grow" id="ckgo">Start</button></div>');
   const host=$('#ck');
   if(tipCk) host.parentNode.insertBefore(tipCk,host);
-  const isOff=x=>x==='little'||x==='lot';
-  const anything=()=>CHECKIN_OFF.some(([k])=>ans[k])||Object.keys(ans.sore).length||Object.keys(ans.joints).length||ans.soreOpen||ans.jointOpen;
-  const chip=(lab,on,fn)=>{ const x=el('button','chip',esc(lab)); x.setAttribute('aria-pressed',on?'true':'false'); x.onclick=fn; return x; };
-  const howMuch=(lab,cur,set)=>{ const r=el('div','row'); r.style.cssText='gap:var(--sp-2);align-items:center;margin-top:var(--sp-2);flex-wrap:wrap';
-    r.appendChild(el('span','sm grow',esc(lab)));
-    [['little','A little'],['lot','A lot']].forEach(([k,l])=>{ const x=el('button','chip',l); x.style.cssText='font-size:var(--fs-1);padding:var(--sp-1) var(--sp-2)';
-      x.setAttribute('aria-pressed',cur===k?'true':'false'); x.onclick=()=>{ set(k); draw(); }; r.appendChild(x); });
-    return r; };
-  const draw=()=>{
-    host.innerHTML='';
-    // one tap when nothing's off
-    if(!anything()){ const ag=el('button','btn pri wide','All good'); ag.id='ckok'; ag.style.marginBottom='var(--sp-3)'; ag.onclick=()=>submit(true); host.appendChild(ag); }
-    const off=el('div','qblock'); off.innerHTML='<div class="qlab">Anything off?</div>';
-    const cs=el('div','chips');
-    CHECKIN_OFF.forEach(([k,lab])=>cs.appendChild(chip(lab,isOff(ans[k]),()=>{ ans[k]=isOff(ans[k])?null:'little'; draw(); })));
-    cs.appendChild(chip('Sore',ans.soreOpen||groups.some(g=>isOff(ans.sore[g.id])),()=>{ ans.soreOpen=!ans.soreOpen; if(!ans.soreOpen) groups.forEach(g=>{ if(isOff(ans.sore[g.id])) delete ans.sore[g.id]; }); draw(); }));
-    cs.appendChild(chip('A joint',ans.jointOpen||Object.keys(ans.joints).length>0,()=>{ ans.jointOpen=!ans.jointOpen; if(!ans.jointOpen) Object.keys(ans.joints).forEach(j=>delete ans.joints[j]); draw(); }));
-    off.appendChild(cs);
-    CHECKIN_OFF.forEach(([k,lab])=>{ if(isOff(ans[k])) off.appendChild(howMuch(lab,ans[k],x=>ans[k]=x)); });
-    if(ans.soreOpen){ const sb=el('div',''); sb.style.marginTop='var(--sp-3)'; sb.appendChild(el('div','dim tiny','Where?'));
-      const ac=el('div','chips'); ac.style.marginTop='var(--sp-1)';
-      groups.forEach(g=>{ const on=isOff(ans.sore[g.id]); ac.appendChild(chip(g.label,on,()=>{ if(on) delete ans.sore[g.id]; else ans.sore[g.id]='little'; draw(); })); });
-      sb.appendChild(ac); groups.forEach(g=>{ if(isOff(ans.sore[g.id])) sb.appendChild(howMuch(g.label,ans.sore[g.id],x=>ans.sore[g.id]=x)); });
-      off.appendChild(sb); }
-    if(ans.jointOpen){ const jb=el('div',''); jb.style.marginTop='var(--sp-3)';
-      jb.innerHTML='<div class="dim tiny">Which one, and how it compares with your usual?</div><div class="chips" id="ckj" style="margin-top:var(--sp-1)"></div>'; off.appendChild(jb); }
-    host.appendChild(off);
-    if(ans.jointOpen) jointChips('#ckj',ans.joints);
-    // better than usual: the 4 on the old scales
-    const gd=el('div','qblock'); gd.innerHTML='<div class="qlab">Better than usual?</div>';
-    const gc=el('div','chips');
-    [['sleep','Slept well'],['motivation','Keen to train']].forEach(([k,lab])=>gc.appendChild(chip(lab,ans[k]==='great',()=>{ ans[k]=ans[k]==='great'?null:'great'; draw(); })));
-    const fresh=groups.length>0&&groups.every(g=>ans.sore[g.id]==='great'||isOff(ans.sore[g.id]))&&groups.some(g=>ans.sore[g.id]==='great');
-    gc.appendChild(chip('Fresh',fresh,()=>{ groups.forEach(g=>{ if(fresh){ if(ans.sore[g.id]==='great') delete ans.sore[g.id]; } else if(!ans.sore[g.id]) ans.sore[g.id]='great'; }); draw(); }));
-    gd.appendChild(gc); host.appendChild(gd);
-    // bodyweight, folded until you change it
-    const bwb=el('div','qblock');
-    if(!ans.bwOpen){ const r=el('div','row between','<span class="sm">Bodyweight <b>'+(bw!=null?esc(fmt(bw,1))+' lb':'not set')+'</b></span>'); r.style.alignItems='center';
-      const c=el('button','btn s ghost','Change'); c.onclick=()=>{ ans.bwOpen=true; draw(); }; r.appendChild(c); bwb.appendChild(r);
+  // what today's answers do, in the engine's own words, so this line can't disagree with it
+  const does=()=>{ const st=checkinValues(ans,gids), cut=physicalCut(st,gids), t=READY_DOES[globalReadiness(st).band];
+    $('#ckdoes').textContent=t.charAt(0).toUpperCase()+t.slice(1)+'.'+(cut?' Sore '+cut.groups.map(x=>(GROUP_LABEL[x]||x).toLowerCase()).join(' and ')+': '+soreCutWords(cut)+' on what trains them.':''); };
+  const FIVE=[-2,-1,0,1,2];
+  const scaleRow=(label,key,get,set)=>ratingRow({label, values:FIVE, get, set, after:does, word:d=>SCALE[key][ratingFromDelta(key,d)-1]});
+  host.appendChild(el('div','rgroup','You'));
+  host.appendChild(scaleRow('Sleep','sleep',()=>ans.sleep,d=>{ ans.sleep=d; }));
+  host.appendChild(scaleRow('Motivation','motivation',()=>ans.motivation,d=>{ ans.motivation=d; }));
+  host.appendChild(scaleRow('Rest of life','recovery',()=>ans.recovery,d=>{ ans.recovery=d; }));
+  if(groups.length){ host.appendChild(el('div','rgroup','Body'));
+    groups.forEach(g=>host.appendChild(scaleRow(g.label,'soreness',()=>ans.sore[g.id]||0,d=>{ if(d) ans.sore[g.id]=d; else delete ans.sore[g.id]; }))); }
+  host.appendChild(el('div','rgroup','Joints'));
+  host.appendChild(el('div','dim tiny','Only if one hurts today. 0 is nothing to report.'));
+  JOINTS.forEach(j=>{ const b=jointBaseline(j);
+    host.appendChild(ratingRow({label:j.charAt(0).toUpperCase()+j.slice(1), note:b.w>0?'your usual: '+jointSevLabel(b.w):'', values:[0,-1,-2,-3], after:does,
+      get:()=>-(ans.joints[j]||0), set:d=>{ if(d) ans.joints[j]=-d; else delete ans.joints[j]; }, word:d=>JOINT_ROW_WORD[-d]})); });
+  // bodyweight, folded until you change it
+  const bwb=el('div','qblock'); bwb.style.marginTop='var(--sp-4)'; host.appendChild(bwb);
+  const drawBw=()=>{ bwb.innerHTML='';
+    if(!bwOpen){ const r=el('div','row between','<span class="sm">Bodyweight <b>'+(bw!=null?esc(fmt(bw,1))+' lb':'not set')+'</b></span>'); r.style.alignItems='center';
+      const c=el('button','btn s ghost','Change'); c.onclick=()=>{ bwOpen=true; drawBw(); }; r.appendChild(c); bwb.appendChild(r);
       if(bw==null) bwb.appendChild(el('div','dim tiny','Until you set it, bodyweight lifts are estimated from added weight alone.')); }
     else { bwb.innerHTML='<div class="qlab">Bodyweight</div>'; bwb.appendChild(stepper('lb',bw!=null?bw:180,.5,v=>{ bw=v; bwChanged=true; },null,{typeable:true})); }
-    host.appendChild(bwb);
   };
-  const submit=quick=>{
+  drawBw();
+  does();
+  const submit=()=>{
     // a bodyweight is a reading only when you set it; re-stamping the old one hid a stale bodyweight (1.3)
-    const st={...checkinValues(quick?{}:ans, groups.map(g=>g.id)), bodyweight:bwChanged?bw:null};
+    const st={...checkinValues(ans,gids), bodyweight:bwChanged?bw:null};
     append(checkinEvent(st));
     session.readiness={sleep:st.sleep,motivation:st.motivation,recovery:st.recovery,sore:st.sore,joints:st.joints};
     const score=readinessScore(st, session.soreGroups);
@@ -19117,8 +19127,7 @@ function openCheckin(){
     render(); openBriefing(session.briefing,{start:true});
   };
   $('#ckskip').onclick=()=>{$('#dlg').close();render();};
-  $('#ckgo').onclick=()=>submit(false);
-  draw();
+  $('#ckgo').onclick=submit;
 }
 /* ---------- Today's plan (batch H1, v1.61) ----------
    After the check-in, before the first exercise: what the app is doing to the

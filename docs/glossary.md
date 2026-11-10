@@ -72,7 +72,7 @@ the guide.
 ## Readiness
 - In the app: readiness
 - Also called: readiness score
-- Means: How ready you are to train today, from your check-in. Sleep, motivation and rest of life decide whether anything steps up today: "a little" off on any of them (a 2) means no step-ups, "a lot" (a 1) means a sick day. Soreness only touches the exercises that use the sore muscle. The overall score, out of 100, only sets how long your warm-up is.
+- Means: How ready you are to train today, from your check-in. Sleep, motivation and rest of life decide whether anything steps up today: a −1 on any of them means no step-ups, and a −2 means a sick day. Soreness only touches the exercises that use the sore muscle. The overall score, out of 100, only sets how long your warm-up is.
 
 ## Your usual
 - In the app: your usual

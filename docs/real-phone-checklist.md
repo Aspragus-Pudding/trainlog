@@ -26,6 +26,8 @@ app) and one Android phone (installed from Chrome). Use the demo
    one. **Start** (at the bottom) begins in that order.
 8. A first-time card shows on the check-in. **Got it** removes it, and it
    doesn't come back on the next check-in.
+8a. On the check-in, tap −1 on Sleep: the row turns teal, the words under it change, and the line above Start
+   changes. Nothing else on the screen moves. Tap −1 again and it goes back to 0.
 9. On the set card, tap the weight and type a number with the keyboard open.
    **Log set** stays visible.
 10. Log a set. The rest bar shows and doesn't cover Log set. Tap +30s, then

@@ -317,6 +317,31 @@ async function detailsPlaceCheck(page, tag){
   ok(y0.swap&&mid.swap, tag+' the Details sheet keeps Swap this exercise after an edit: '+JSON.stringify({before:y0.swap, after:mid.swap}));
   await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} session=null; saveSession(); stopRest(); TAB='dash'; render(); });
 }
+/* The check-in's rows (v1.97), by real touch: numbers big enough to hit, a tap changes only its own row and what the
+   footer says (nothing shifts under the thumb), tapping it again goes back to 0, and what's logged is what was tapped. */
+async function checkinRowsCheck(page, tag){
+  await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
+  await page.evaluate(()=>demoReset({kind:'persona',key:'shoulder',weeks:3})); await page.waitForLoadState('load'); await sleep(2200);
+  await page.evaluate(()=>{ CFG.seenVersion=APP_VERSION; CFG.tour={t1:'off',seen:{}}; CFG.tipsSeen=Object.fromEntries(TIP_KEYS.map(k=>[k,{at:0,done:true}])); saveCfg(); try{ $('#dlg').close(); }catch(e){} startSession(todayDay()); });
+  await sleep(400);
+  const shape=await page.evaluate(()=>{ const cells=[...document.querySelectorAll('#ck .rcell')].map(b=>b.getBoundingClientRect()); return {rows:document.querySelectorAll('#ck .rrow').length, want:3+session.soreGroups.length+JOINTS.length, minH:Math.min(...cells.map(q=>q.height)), minW:Math.min(...cells.map(q=>q.width)), overflow:document.getElementById('dlgBody').scrollWidth-document.getElementById('dlgBody').clientWidth}; });
+  ok(shape.rows===shape.want&&shape.minH>=44&&shape.minW>=44&&shape.overflow<=0, tag+' check-in: every question has a row, every number is big enough to hit, nothing runs off the side: '+JSON.stringify(shape));
+  const SL='#ck button[aria-label="Sleep −1"]';
+  await tapSel(page,SL,0);
+  const pos=()=>page.evaluate(()=>({motivation:Math.round([...document.querySelectorAll('#ck .rrow')].find(r=>/^Motivation/.test(r.textContent)).getBoundingClientRect().top), foot:Math.round(document.getElementById('dlgFoot').getBoundingClientRect().top), does:$('#ckdoes').textContent, off:[...document.querySelectorAll('#ck .rrow.off')].map(r=>r.querySelector('.rhead span').textContent).join(), word:document.querySelector('#ck .rrow .rword').textContent}));
+  const p1=await pos();
+  await page.evaluate(sel=>document.querySelector(sel).click(),SL); await sleep(120);
+  const p0=await pos();
+  ok(p1.off==='Sleep'&&/No step-ups/.test(p1.does)&&/4–6 hours/.test(p1.word), tag+' tapping −1 marks that row, says what it means and what it does: '+JSON.stringify(p1));
+  ok(p0.off===''&&/Nothing held back/.test(p0.does)&&p0.motivation===p1.motivation&&p0.foot===p1.foot, tag+' tapping it again goes back to 0, and nothing moved: '+JSON.stringify({p0,p1}));
+  await tapSel(page,SL,0);
+  await tapSel(page,'#ck button[aria-label="Rest of life +1"]',0);
+  await tapSel(page,'#ck button[aria-label="Shoulder −3"]',0);
+  await tapSel(page,'#ckgo',0); await sleep(300);
+  const ev=await page.evaluate(()=>{ const r=[...LOG].reverse().find(e=>e.type==='readiness'); return {sleep:r.sleep_quality, motivation:r.motivation, recovery:r.recovery, joints:r.joints, scale:r.joint_scale, soreAll3:Object.values(r.soreness).every(v=>v===3)}; });
+  ok(ev.sleep===2&&ev.motivation===3&&ev.recovery===4&&ev.joints.shoulder===3&&Object.keys(ev.joints).length===1&&ev.scale===3&&ev.soreAll3, tag+' what is logged is what was tapped (−1 → 2, +1 → 4, joint −3 → bad), and the rest stays at your usual: '+JSON.stringify(ev));
+  await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} session=null; saveSession(); stopRest(); TAB='dash'; render(); });
+}
 /* D10: with "effort" chosen, no screen says RPE (a real browser, the live set card and a sheet). */
 async function effortCheck(page, tag){
   await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
@@ -365,6 +390,7 @@ async function resumeCheck(page, tag){
       await previewCheck(page,tag);
       await batch01Check(page,tag);
       await detailsPlaceCheck(page,tag);
+      await checkinRowsCheck(page,tag);
       await effortCheck(page,tag);
       await jumpCheck(page,tag);
     }catch(e){ ok(false,tag+' crashed: '+e.message); }

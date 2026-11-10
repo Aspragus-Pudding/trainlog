@@ -1634,3 +1634,13 @@ then the fix.
   the kg sets are). That's item 2.5 in Part 2.
 
 **To undo:** v1.95.0.
+
+## D73. The check-in is numbered rows again, −2 to +2 around your usual (v1.97.0)
+
+**Your pick** from the mockups (batch 02), so not a decision taken without asking, except for the parts below. Every question has a row; 0 is your usual, minus worse, plus better; stored as the same 1–5.
+
+**Taken without asking:**
+- **Joints count down, 0 to −3, instead of −2 to +2.** The mockup showed joints on −2 to +2, and I told you they saved like the old 1–5. That was wrong: joints have always been stored as nothing / mild / moderate / bad. A plus has nothing to store, and with no usual set, two steps down couldn't reach bad, which the joint ladder must always be able to hear. So the row is the same four choices the chips offered, numbered. To reverse: change `values:[0,-1,-2,-3]` in `openCheckin`, and decide what a plus would store.
+- **The finish screen keeps its word chips.** Batch 02 also covers it, but you were only asked about the check-in.
+- **`readinessScore`'s 0.85 cap stays**, as the batch said unless you say otherwise. So +1 and +2 can't reach "short warm-up" in a deficit.
+- No "All good" button: Start with nothing changed is the same thing, as in the mockup you picked.
