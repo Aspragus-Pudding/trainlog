@@ -186,7 +186,8 @@ included), `planFor`/`weekPlanFor`, swaps and saving a range. A stored
 2. A main lift (a goal lift in a primary slot) follows its block, whatever
    range is set on the exercise; the card says "main lift: follows the block".
 3. Otherwise a range set on the exercise (`CFG.repRanges`, a custom
-   exercise's `repRange`).
+   exercise's `repRange`), then, in non-primary slots, the library's default
+   for a researched exercise (`ex.libRange`, batch L).
 4. Otherwise the muscle default for non-primary work (`MUSCLE_REP_RANGE`).
 5. Otherwise the block's range for the slot's role.
 
@@ -235,6 +236,10 @@ included), `planFor`/`weekPlanFor`, swaps and saving a range. A stored
   `applyDepFloor` undoes any swap that would leave a muscle under the bottom
   of its typical range. Primary slots and saved days never move; it never
   touches a prescription, a flag or the dial. Slots carry `dep` for the chip.
+- **The researched library (batch L, v1.106). Read `docs/library-rules.md` before touching the library.** Decisions live in `tools/import-library.js`;
+  it writes `docs/library.json`, embedded as `library-data` (§105: byte-for-byte). Research codes are stored on exercises (`ex.codes`,
+  `LIB_CODES`); existing exercises only get empty fields (`ex.libInfo`); new ones are built from their parent (`expandLibData`, `lib:true`).
+  RISK rows are never picked unless logged or a goal (`libRisk`); How to do it shows the library (`libHtml`, `drawEasierHarder`).
 - **`exPicker()`** is the one shared exercise picker (search + category chips +
   create-new). Swapping, adding, and goal-lift selection all route through it.
   Don't write a second bespoke picker — that's how mid-session swap ended up

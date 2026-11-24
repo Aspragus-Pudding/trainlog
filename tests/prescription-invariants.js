@@ -36,7 +36,7 @@ function stub(){
     set(){ return true; }, apply(){ return stub(); }, construct(){ return stub(); }
   });
 }
-const EXPORTS=['boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','holdState','holdWindows','holdTargets','holdDays','programDays','holdOffer','holdReview','holdBackAsk','HOLD_COPY','startHold','endHold','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
+const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','holdState','holdWindows','holdTargets','holdDays','programDays','holdOffer','holdReview','holdBackAsk','HOLD_COPY','startHold','endHold','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
   'suggestFor','seedDraft','logSet','moveSlot','adjustSets','fatigueRise','impliedE1','predictedRpe','rtfFromPct',
   'MUSCLE_REP_RANGE','CFG','FATIGUE_MIN_PAIRS','FATIGUE_MIN_SESSIONS','CHART_MAX_RTF',
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
@@ -50,7 +50,7 @@ const EXPORTS=['boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlace
 /* A stub document that serves the embedded injury library and movement tags, so the
    engine's flags run on the real data (everything else stays a stub). */
 const EMBED=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:''; };
-const EMBEDS={'whats-new-history':EMBED('whats-new-history'),injuries:EMBED('injuries'),'movement-tags':EMBED('movement-tags'),'coaching-cues':EMBED('coaching-cues'),'glossary-md':(html.match(/<script type="text\/markdown" id="glossary-md">([\s\S]*?)<\/script>/)||[])[1]||'',
+const EMBEDS={'whats-new-history':EMBED('whats-new-history'),injuries:EMBED('injuries'),'movement-tags':EMBED('movement-tags'),'coaching-cues':EMBED('coaching-cues'),'library-data':EMBED('library-data'),'glossary-md':(html.match(/<script type="text\/markdown" id="glossary-md">([\s\S]*?)<\/script>/)||[])[1]||'',
   'guide-md':(html.match(/<script type="text\/markdown" id="guide-md">([\s\S]*?)<\/script>/)||[])[1]||'',
   'voices-md':(html.match(/<script type="text\/markdown" id="voices-md">([\s\S]*?)<\/script>/)||[])[1]||''};
 function docWithData(){ const d=stub(); return new Proxy(d,{get(t,k){ if(k==='getElementById') return id=>id in EMBEDS?{textContent:EMBEDS[id]}:stub(); return d[k]; }}); }
@@ -2466,7 +2466,7 @@ section('58. library: implements, inheritance, generator ranking, search, straps
   // inherited flags: a generated entry is never red where its parent isn't
   { const conds=[...A.INJ.map(e=>e.id),'shoulder_instability','shoulder_impingement','knee_pain','low_back','hip_pain','ankle_pain','wrist_pain','elbow_pain'];
     const C=A.getCFG(); let bad=[];
-    conds.forEach(c=>{ C.conditions=[c]; gen.forEach(e=>{ const f=A.flagFor(e.id), fp=A.flagFor(e.parent); if(f&&f.level==='red'&&!(fp&&fp.level==='red')) bad.push(e.id+'@'+c); }); });
+    conds.forEach(c=>{ C.conditions=[c]; gen.filter(e=>!e.lib).forEach(e=>{ const f=A.flagFor(e.id), fp=A.flagFor(e.parent); if(f&&f.level==='red'&&!(fp&&fp.level==='red')) bad.push(e.id+'@'+c); }); });
     C.conditions=[];
     ok(bad.length===0,'no generated entry is red unless its parent is, under any condition',bad.slice(0,8).join(' '));
     C.conditions=['shoulder_instability'];
@@ -4286,6 +4286,97 @@ section('104. batch N 2.3–2.5: places, pairing, time-boxed sessions (data only
     ok(b45.slots[0].ex==='squat'&&!b45.slots[0].pairWith&&C.boxMinutes(b45.slots)<=45,'45 minutes: the heaviest lift first on its own, and it fits',JSON.stringify(b45.slots.map(x=>x.ex+(x.pairWith?'*':''))));
     ok(!b20.leftOut.includes('curl')||b20.leftOut.includes('calf'),'trimmed from the bottom of the order: a finisher goes before isolation work',JSON.stringify(b20.leftOut)); }
   console.log('  can do at a place · stand-ins from the research table · day at a place · pairs never share a muscle or a joint · alternate and rest after · time boxes');
+}
+
+
+section('105. batch L: the researched exercise library');
+{
+  const raw=EMBED('library-data'), file=fs.readFileSync(path.join(__dirname,'..','docs','library.json'),'utf8'), L=JSON.parse(file);
+  ok(raw==='\n'+file,'the embedded library matches docs/library.json byte for byte (edit the decisions in tools/import-library.js, then run it)','');
+  // every research row accounted for, exactly once
+  const md=fs.readFileSync(path.join(__dirname,'..','docs','research','exercise-library.md'),'utf8');
+  const codes=[...md.matchAll(/^([CVR]\d{2,3})\|/gm)].map(m=>m[1]), seen={}, put=(c,w)=>(seen[c]=seen[c]||[]).push(w);
+  Object.entries(L.exercises).forEach(([id,e])=>e.codes.forEach(c=>put(c,id))); L.added.forEach(a=>(a.codes||[]).forEach(c=>put(c,a.id)));
+  ['modifiers','uncertain','protocols'].forEach(k=>Object.keys(L[k]||{}).forEach(c=>put(c,k)));
+  ok(codes.length===370&&codes.every(c=>seen[c]&&seen[c].length===1),'all 370 research rows are accounted for, each once: an exercise, a modifier, uncertain or a protocol',JSON.stringify(codes.filter(c=>!seen[c]||seen[c].length!==1).slice(0,6)));
+  const A=load([],true), C=A.getCFG();
+  ok(new Set(A.EX.map(e=>e.id)).size===A.EX.length,'every id is unique','');
+  ok(L.added.every(a=>A.exById[a.id]&&A.exById[a.id].lib&&(!a.parent||A.exById[a.parent])),'every new entry is in the library, and every parent exists',JSON.stringify(L.added.filter(a=>!A.exById[a.id]||(a.parent&&!A.exById[a.parent])).map(a=>a.id)));
+  ok(Object.keys(L.exercises).every(id=>A.exById[id]&&(!A.exById[id].lib||L.added.some(a=>a.id===id))),'codes land on existing ids (or on one this import added, matched again by a later row); none re-created','');
+  ok((A.exById.copenhagen.codes||[]).includes('C071')&&(A.exById.copenhagen.codes||[]).includes('R31'),'an added exercise matched by a later row keeps both codes (Copenhagen: C071 and R31)','');
+  ok((A.exById.squat.codes||[]).includes('C001')&&A.LIB_CODES.C001.ex==='squat'&&A.LIB_CODES.C002.ex==='squat'&&A.LIB_CODES.C002.modifiers.barpos==='low'&&(A.exById.copenhagen.codes||[]).includes('C071'),'the code is stored on the exercise (and on a modifier row: low-bar squat is the squat with the bar low)','');
+  // tags: in the vocabulary, carried, never gentler than the parent
+  const used=new Set(); A.EX.filter(e=>e.lib).forEach(e=>A.exTags(e.id).forEach(t=>used.add(t)));
+  ok([...used].every(t=>A.MOVE.tags[t]),'every tag a new exercise carries is in the vocabulary',[...used].filter(t=>!A.MOVE.tags[t]).join(' '));
+  ok(Object.keys(L.newTags).every(t=>A.MOVE.tags[t]&&A.EX.some(e=>A.exTags(e.id).includes(t))),'every new tag is in docs/movement_tags.json and carried by at least one exercise',Object.keys(L.newTags).filter(t=>!A.EX.some(e=>A.exTags(e.id).includes(t))).join(' '));
+  { const conds=[...A.INJ.map(e=>e.id),'shoulder_instability','knee_pain','low_back','elbow_pain','wrist_pain']; let bad=[];
+    // an isometric hold under the outer-elbow pain cap is the app's own exception (ISOMETRIC_OK), and a tag override says why
+    conds.forEach(c=>{ C.conditions=[c]; A.EX.filter(e=>e.lib&&e.parent&&!e.rehab&&!(e.isometric&&c==='el_lateral_tendinopathy')&&!(x=>x.tagsOverride||x.tagsRemove)(A.LIB.added.find(a=>a.id===e.id)||{})).forEach(e=>{ const f=A.flagFor(e.id), fp=A.flagFor(e.parent); if(fp&&fp.level==='red'&&!(f&&f.level==='red')) bad.push(e.id+'@'+c); }); });
+    C.conditions=[]; ok(!bad.length,'a new exercise is never gentler than its parent, under any condition',bad.slice(0,6).join(' ')); }
+  { C.conditions=['shoulder_instability']; ok(A.rehabUnsafe('er_90')&&A.exTags('er_90').includes('shoulder_abd_er_loaded'),'external rotation at 90° is never offered as rehab for an unstable shoulder (the rehab table has no flags; it carries the tag)','');
+    ok(['bn_press','fly','incline_fly','bench_dip','ring_dip'].every(id=>{ const f=A.flagFor(id); return f&&['red','yellow'].includes(f.level); })&&['red','yellow'].includes((A.flagFor('bench',{grip:'wide'})||{}).level),'shoulder instability: the research\'s list (behind-the-neck press, wide-grip bench, bench and ring dips, deep flyes) all carry a warning','');
+    C.conditions=[]; }
+  // RISK rows are never picked for you: 1000 picks across equipment answers, patterns and roles, nothing logged
+  { const B=load([],true), BC=B.getCFG(), pats=[...new Set(B.EX.filter(e=>!e.rehab&&!e.manualOnly).map(e=>e.pattern))], eqs=['mixed','home','barbell','machine','dumbbell'];
+    let n=0; const risky=[];
+    for(let k=0;n<1000&&k<5000;k++){ BC.equipment=eqs[k%5]; BC.equipmentHave=null; const used=new Set(), pat=pats[k%pats.length], role=['primary','secondary','accessory'][Math.floor(k/pats.length)%3];
+      for(let t=0;t<6;t++){ const e=B.resolveEx(pat,role,used); if(!e) break; if(B.libRisk(e)) risky.push(e.id); used.add(e.id); n++; } }
+    ok(n>=1000&&!risky.length,'no RISK row is picked for you ('+n+' picks across equipment answers, patterns and roles)',[...new Set(risky)].join(' '));
+    // whole generated weeks, every equipment answer, week shape and block type
+    const shapes=[['full','full'],['full','full','full'],['upper','lower','upper','lower'],['push','pull','legs'],['full','upper','lower','full','upper'],['push','pull','legs','push','pull','legs']];
+    let progs=0; const inWeek=[];
+    eqs.forEach(eq=>shapes.forEach(w=>['hyp','str'].forEach(type=>{ const P=load([],true), PC=P.getCFG(); PC.equipment=eq; PC.week=w;
+      P.setRoadmap([P.applyShape({type,label:type,weeks:6,deload:false,hyp:[]})]); PC.start=new Date(Date.now()-3*864e5).toISOString().slice(0,10);
+      P.generatedDays().forEach(d=>d.slots.forEach(sl=>{ if(P.libRisk(P.exById[sl.ex])) inWeek.push(sl.ex); })); progs++; })));
+    ok(!inWeek.length,'no RISK row in '+progs+' generated weeks (every equipment answer, six week shapes, size and strength blocks)',inWeek.join(' '));
+    const L2=load([set('dip','d1',0,10,8,4),set('dip','d2',0,10,8,7)],true);
+    ok((L2.resolveEx('elbow_extension','accessory',new Set(['pushdown','oh_ext','rope_pushdown','m_oh_tri','pin_tri_dip','skullcrusher','cg_bench']))||{}).id==='dip','…unless you\'ve logged it: a dip you do is still picked',''); }
+  // the tie-break: the grade-B choice where two candidates tie
+  { const B=load([],true); B.getCFG().equipment='mixed';
+    const a=B.resolveEx('elbow_extension','accessory',new Set()), b=B.resolveEx('elbow_extension','accessory',new Set([a&&a.id]));
+    ok(a&&a.id==='oh_ext'&&b&&b.id!=='oh_ext','one triceps slot gets the overhead extension; the next gets something else',JSON.stringify([a&&a.id,b&&b.id]));
+    ok((B.resolveEx('knee_flexion','accessory',new Set())||{}).id==='leg_curl','the seated leg curl over the lying one',''); }
+  // the research's range is a library default for new entries; yours wins; main lifts follow the block
+  { const ex=A.exById.box_squat, r=A.repRangeOverride(ex,'accessory','hyp');
+    ok(r&&r.src==='library'&&r.reps.join()==='2,5','a new entry\'s research range is its default (Box squat 2–5)',JSON.stringify(r));
+    C.repRanges={box_squat:[5,8]}; const r2=A.repRangeOverride(ex,'accessory','hyp'); C.repRanges={};
+    ok(r2&&r2.src==='exercise'&&r2.reps.join()==='5,8','a range you set still wins','');
+    ok(!/library/.test(JSON.stringify(A.repRangeOverride(ex,'primary','hyp')))&&!/library/.test(JSON.stringify(A.repRangeOverride(A.exById.squat,'accessory','hyp'))),'primary slots follow the block, and exercises the app had keep their defaults',''); }
+  // modifiers: new ones, existing signatures unchanged
+  ok(A.modSig({rom:{kind:'lengthened'}})==='rom:lengthened'&&A.modSig({quarter:true})==='quarter:on'&&A.modSig({accom:'chains'})==='accom:chains'&&A.modSig({grip:'cross'})==='grip:cross'
+    &&A.modSig({pause:{seconds:2,at:'bottom'},barpos:'low',straps:true})==='pause:2@bottom,barpos:low,straps:on'&&A.modSig({rom:{kind:'pin',amount:3,unit:'in'}})==='rom:pin3in','new modifiers have their own tracks; existing signatures are unchanged','');
+  ok(A.exTags('hack',{rom:{kind:'lengthened'}}).includes('knee_flex_deep_loaded')&&!A.exTags('hack',{rom:{kind:'partial'}}).includes('knee_flex_deep_loaded'),'lengthened partials keep the deep position (a partial drops it)','');
+  ok(A.returnHeldOut({ex:'leg_ext',modifiers:{rom:{kind:'lengthened'}}}),'lengthened partials sit out the first week back, like other partials','');
+  // How to do it: evidence in words, partials never "better", no study numbers or people
+  { const h=A.libHtml(A.exById.leg_ext,null,{rom:{kind:'lengthened'}});
+    ok(/An alternative with similar results to full range/.test(h)&&!/better|superior/i.test(h),'lengthened partials: an alternative with similar results, never better','');
+    ok(A.exById.reclined_leg_ext.libInfo.grade==='C'&&A.EVIDENCE_WORDS.C==='Some research support.','the reclined leg extension (a preprint) gets the C wording','');
+    ok(/Popular, but research shows little advantage over the plain deadlift/.test(A.libHtml(A.exById.deadlift,null,{rom:{kind:'pin'}})),'a POP-LOW row (rack pulls) says so on How to do it','');
+    const PEOPLE=/Nippard|Israetel|Menno|Henselmans|Mentzer|Kroczaleski|Louie|Simmons|Westside|Contreras|Calgary|Juggernaut|EliteFTS|Barbell Medicine|Stronger By Science|\bSBS\b|\bRP\b|Kneesovertoes|Mountain Dog|Carter|\bTeo\b|Blakley|McGill|Maeo|Pedrosa|Kassiano|Wolf\b|Stasinaki|Harøy|van Dyk|Askling|Kongsgaard|Silbernagel|Rathleff|Tyler|Littlewood|Hölmich|Swinton|Kikuchi|PeerJ|JOSPT|Cochrane|Hayden|Prehab Guys|T-Nation|Spoto/;
+    const NUM=/\d+(\.\d+)?\s*%|\b(19|20)\d{2}\b|\+\d|Bayes|RCT|meta-analys/i;
+    const strs=[]; A.EX.filter(e=>e.libInfo).forEach(e=>{ const li=e.libInfo; [li.why,li.caution,...(li.setup||[]),...(li.cues||[]),...(li.mistakes||[]),li.easier&&li.easier.text,li.harder&&li.harder.text].forEach(t=>{ if(t) strs.push([e.id,t]); }); });
+    Object.values(A.LIB.modifiers).forEach(m=>{ if(m.why) strs.push([m.ex,m.why]); });
+    const bad=strs.filter(([,t])=>PEOPLE.test(t)||NUM.test(t));
+    ok(strs.length>500&&!bad.length,'no study number or person\'s name in anything the library shows ('+strs.length+' strings)',JSON.stringify(bad.slice(0,4)));
+    const lines=strs.filter(([id,t])=>{ const e=A.exById[id], li=(e&&e.libInfo)||{}; return [...(li.setup||[]),...(li.cues||[]),...(li.mistakes||[])].includes(t); });
+    const bad2=lines.filter(([,t])=>t.length>72||/!/.test(t)||A.CLINICAL_WORDS.test(t));
+    ok(!bad2.length,'every setup, cue and mistake line fits the card at 375 px (72 characters), with no clinical words and no exclamation marks',JSON.stringify(bad2.slice(0,4))); }
+  // easier and harder: a button that swaps, from a card
+  { const li=A.libFor(A.exById.leg_curl); ok(li.easier&&li.easier.ex==='lying_curl','easier and harder name real exercises where the research does (seated leg curl: easier is the lying curl)',JSON.stringify(li.easier)); }
+  // the Jefferson curl: never picked, hidden with a back condition, a caution when added
+  { const j=A.exById.jefferson_curl; ok(j&&j.manualOnly&&/disc trouble/.test(j.libInfo.caution),'the Jefferson curl is never generated and carries its caution','');
+    C.conditions=['lb_pain']; const hid=A.libHidden(j); C.conditions=['sh_rcrsp']; const shown=!A.libHidden(j); C.conditions=[];
+    ok(hid&&shown,'hidden from the picker with a lower-back condition, shown otherwise',''); }
+  // what you've already logged generates the same week, library or not
+  { const saved=EMBEDS['library-data']; EMBEDS['library-data']=''; let Z; try{ Z=load([],true); }finally{ EMBEDS['library-data']=saved; }
+    ok(!Z.EX.some(e=>e.lib)&&Z.EX.length<A.EX.length,'without the embedded library the app is the library it was','');
+    const prog=X=>{ X.setRoadmap([X.applyShape({type:'hyp',label:'H',weeks:8,deload:false,hyp:[]})]); const XC=X.getCFG(); XC.week=['full','full','full']; XC.equipment='mixed'; XC.start=new Date(Date.now()-40*864e5).toISOString().slice(0,10); return X; };
+    const ids=[...new Set(prog(Z).generatedDays().flatMap(d=>d.slots.map(sl=>sl.ex)))], ev=[];
+    ids.forEach((id,k)=>{ ev.push(set(id,'h'+k+'a',100,8,8,9),set(id,'h'+k+'b',100,8,8,5)); });
+    const before=prog((()=>{ const s0=EMBEDS['library-data']; EMBEDS['library-data']=''; try{ return load(ev,true); }finally{ EMBEDS['library-data']=s0; } })()).generatedDays(), after=prog(load(ev,true)).generatedDays();
+    const sig=ds=>JSON.stringify(ds.map(d=>d.slots.map(sl=>sl.ex+':'+sl.sets+':'+(sl.reps||[]).join('-'))));
+    ok(sig(before)===sig(after),'with a history, the generated week is the same with the library as without it',sig(before).slice(0,200)+' | '+sig(after).slice(0,200)); }
+  console.log('  370 rows once · ids and parents · codes stored · tags in the vocabulary, never gentler · no RISK picks · tie-break · library ranges · modifiers · evidence words · no names or numbers · Jefferson curl · your week unchanged');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

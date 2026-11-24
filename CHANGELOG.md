@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.106.0 — 2026-11-24
+- The exercise library has about 120 more exercises, from a research review: variations, home versions, and rehab and prehab exercises.
+- How to do it shows how to set up, cues, common mistakes, easier and harder versions you can swap to, and why lifters use it, with how much evidence there is.
+- Modify has lengthened partials, 1¼ reps, and bands or chains.
+- Your program and your suggestions haven't changed: the new exercises are there to pick, and the higher-risk ones are never added for you.
+
 ## 1.105.0 — 2026-11-24
 - Every exercise has two buttons: Swap, and How to do it. Details is gone.
 - How to do it holds the setup, cues, mistakes to avoid, your history, and the settings for that exercise.

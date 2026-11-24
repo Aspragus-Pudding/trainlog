@@ -33,7 +33,13 @@
     "run_speed_cutting": "Sprinting and changing direction (running — not carried by any gym exercise).",
     "run_hills_sprints": "Hill running and sprints (running).",
     "run_volume_spike": "A sudden jump in running volume (running).",
-    "run_impact": "Running impact in general (running)."
+    "run_impact": "Running impact in general (running).",
+    "shoulder_ir_elevated": "The arm raised and turned in under load: upright rows to a high finish, bench dips.",
+    "elbow_flex_deep_loaded": "The elbow deeply bent under load, as at the bottom of a skull crusher or overhead extension.",
+    "spine_rotation_loaded": "Twisting the trunk under load: woodchops, landmine rotations, heavy one-arm rows with a twist.",
+    "adductor_lengthened_loaded": "The inner thigh loaded at long length: wide stances, the adductor machine opened wide, Copenhagens.",
+    "neck_loaded": "Load taken by the neck: neck curls and extensions, harness work, wall handstand push-ups.",
+    "knee_forward_loaded": "Knees travelling far past the toes under load: sissy squats, step-ups and squats with the heels raised (a high load on the kneecap tendon)."
   },
   "running_tags": [
     "run_speed_cutting",
@@ -491,6 +497,17 @@
     "straps:on": {
       "remove": [
         "max_grip_wrist_ext"
+      ]
+    },
+    "rom:lengthened": {
+      "remove": [
+        "elbow_ext_endrange_loaded",
+        "knee_ext_endrange_loaded"
+      ]
+    },
+    "grip:cross": {
+      "remove": [
+        "wrist_ext_loaded"
       ]
     }
   }

@@ -56,7 +56,7 @@ everyone.
 | Warm-up ramp | everyone | set panel |
 | Warm-up (prep) from today's main lifts, your conditions and anything sore, each with why; Edit warm-up: add, remove, reorder, create your own (warm-up or rehab), per day or every session | everyone | Train, Prep card |
 | Set types (straight, myo-reps, rest-pause, drop, all-out) | advanced | set panel |
-| Modify (pause, tempo, range, grip, straps, bar position) | advanced | set panel |
+| Modify (pause, tempo, range incl. lengthened partials, 1¼ reps, bands or chains, grip, straps, bar position) | advanced | set panel |
 | Change range for today | advanced | set panel |
 | Pain rating after a set, with advice | injury-prone | after a set on a relevant exercise |
 | Condition warnings and suggested swaps | injury-prone | on the card |
@@ -142,6 +142,9 @@ everyone.
 | Feature | For | Where |
 |---|---|---|
 | Coaching cues, and a shoulder note if you have that condition | everyone | Coaching cues |
+| How to set up, cues and common mistakes from the library (where you have no coaching cues of your own) | everyone | How to set up, easier and harder, why people like it |
+| Easier and harder: Swap to it from a card, or open its How to do it | everyone | How to set up, easier and harder, why people like it |
+| Why people like it, with the evidence in words (backed by research, some research support, coach and lifter favourite); a note on popular-but-unproven versions and a caution on higher-risk ones | everyone | How to set up, easier and harder, why people like it |
 | Your setup notes and cues | everyone | Your setup and cues |
 | I usually do this (your usual variant: straps, bar position, grip…) | everyone | I usually do this |
 | Rest between sets (per exercise, and "Always" on the rest bar) | everyone | Rest between sets |

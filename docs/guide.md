@@ -149,6 +149,9 @@ Removes your conditions and stops every past pain and joint rating from counting
 ### Coaching cues
 On an exercise's info sheet: short cues for good form, plus a note for your shoulder if you've picked shoulder instability.
 
+### How to set up, easier and harder, why people like it
+For exercises from the library that have no coaching cues of your own: how to set up, the cues, and the common mistakes. A version of an exercise shows its parent's. Easier and harder name other versions: from a card, Swap to it changes today's exercise; elsewhere, How to do it opens that one. Why people like it says what lifters use it for, and how much evidence there is, in words: backed by research, some research support, or a coach and lifter favourite. Lengthened partials are an alternative with similar results to full range, not a better one. Higher-risk exercises carry a caution, and are never put in your program unless you've done them yourself.
+
 ### Your setup notes and cues
 Your own notes for an exercise, such as seat height, grip or a cue that works for you. They show on the exercise card every time.
 
@@ -288,7 +291,7 @@ Log set saves the set and starts the rest timer. During the session you can tap 
 Set types change how a set is done and logged: straight sets, myo-reps, rest-pause, drop sets and all-out sets. Tap a type to read what it means before you use it.
 
 ### Modify `[data-tour="modify"]`
-Modify records how you did the exercise, such as a pause, a tempo, a shorter range, a grip, straps or the bar position. A modified version keeps its own history, so it never distorts the normal one.
+Modify records how you did the exercise, such as a pause, a tempo, a shorter range or lengthened partials, 1¼ reps, bands or chains, a grip, straps or the bar position. A modified version keeps its own history, so it never distorts the normal one.
 
 ### The rest timer `#rest`
 The rest timer runs after each set, for as long as that exercise's rest, and lets you know when it is time to go again. Add 30 seconds and "Always" keeps that time for the exercise. It sits at the bottom of the screen, and the page leaves room so it never covers the Log set button.
