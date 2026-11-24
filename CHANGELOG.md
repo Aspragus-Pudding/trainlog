@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.117.0 — 2026-11-24
+- The app file is smaller and starts a little faster: parts only needed later (the guide, the glossary) are read when you first open them.
+- The injury library inside the app drops the fields it never used.
+- Nothing you see changes.
+
 ## 1.116.0 — 2026-11-24
 - The per-exercise unit button now reads "lb ▸ kg", so it's clear what it does.
 - The guide, README and tester notes now match the app: where the version number is, which setup path is recommended, and what each setting is called.

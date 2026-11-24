@@ -42,6 +42,9 @@ const put=(id,text)=>{
   if(!re.test(html)) throw new Error('index.html has no <script id="'+id+'"> block');
   html=html.replace(re,(m,a,b,c)=>a+text+c);
 };
-put('injuries',out); put('movement-tags',tags);
+// the app's copy: minified, without the fields no code reads (sources, running, interactions stay in the docs files)
+const APP_DROP=['sources','running','interactions'];
+const forApp=JSON.stringify(derived.map(e=>{ const o={...e}; APP_DROP.forEach(k=>delete o[k]); return o; }));
+put('injuries',forApp); put('movement-tags',tags);
 fs.writeFileSync(path.join(R,'index.html'),html);
 console.log('derived '+derived.length+' entries ('+derived.filter(e=>e.category==='UMBRELLA').length+' umbrellas); embedded injuries + movement-tags in index.html');

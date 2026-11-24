@@ -98,7 +98,7 @@ der.forEach(e=>{
 });
 // embedded copies
 const emb=id=>{ const m=html.match(new RegExp('<script type="application/json" id="'+id+'">([\\s\\S]*?)</script>')); return m?m[1]:null; };
-if(emb('injuries')!==fs.readFileSync(path.join(R,'docs','injuries.derived.json'),'utf8')) fail('index.html injuries block differs from docs/injuries.derived.json — run node tools/derive-injuries.js');
+if(emb('injuries')!==JSON.stringify(JSON.parse(fs.readFileSync(path.join(R,'docs','injuries.derived.json'),'utf8')).map(e=>{ const o={...e}; ['sources','running','interactions'].forEach(k=>delete o[k]); return o; }))) fail('index.html injuries block differs from docs/injuries.derived.json — run node tools/derive-injuries.js');
 if(emb('movement-tags')!==fs.readFileSync(path.join(R,'docs','movement_tags.json'),'utf8')) fail('index.html movement-tags block differs from docs/movement_tags.json — run node tools/derive-injuries.js');
 // every built-in exercise has a tag entry
 famOf && Object.keys(famOf).forEach(id=>{ if(!exIds.has(id)&&!/^(er_|ir_|iso_|serratus|scap_|prone_t|rhythmic|quadruped|bear_|low_trap|scaption|belly_|jps_|thoracic|tib_|slant_|atg_|wrist_ext_iso|ecc_wrist|bird_dog|side_plank|board_press|neutral_pulldown)/.test(id)) warn('exercise '+id+' has no movement tags'); });
