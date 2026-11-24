@@ -36,7 +36,7 @@ function stub(){
     set(){ return true; }, apply(){ return stub(); }, construct(){ return stub(); }
   });
 }
-const EXPORTS=['rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
+const EXPORTS=['watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
   'suggestFor','seedDraft','logSet','moveSlot','adjustSets','fatigueRise','impliedE1','predictedRpe','rtfFromPct',
   'MUSCLE_REP_RANGE','CFG','FATIGUE_MIN_PAIRS','FATIGUE_MIN_SESSIONS','CHART_MAX_RTF',
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
@@ -3960,7 +3960,7 @@ section('98. after a session, words and chips that store the same numbers');
   const post=fnSrc('openPost'), rate=fnSrc('openRating');
   ok(!/function scaleBlock/.test(src)&&!/scaleBlock\(/.test(src)&&!/for\(let i=1;i<=5;i\+\+\)/.test(post),'no rows of five numbered boxes anywhere','');
   ok(/wordChips\('How hard was that session\?',SCALE\.effort,3,v=>st\.rpe=v\*2\)/.test(post)&&/post_soreness:save\?st\.post_soreness:\{\}/.test(src),'session effort: the same words, stored as before (2 to 10), default Moderate','');
-  ok(/wordChips\('Felt it in the target muscle\?',SCALE\.stimulus,null,/.test(post)&&/wordChips\('Enjoyed it\?',SCALE\.enjoy,null,/.test(post),'quick ratings start empty; skipping still writes nothing','');
+  ok(/\{stimulus:null,enjoyment:null\}/.test(post)&&/wordChips\('Felt it in the target muscle\?',SCALE\.stimulus,q\.stimulus,/.test(post)&&/wordChips\('Enjoyed it\?',SCALE\.enjoy,q\.enjoyment,/.test(post)&&/if\(r\.stimulus&&r\.enjoyment\) append\(\{type:'exercise_rating'/.test(post),'quick ratings start empty; skipping still writes nothing','');
   ok(/wordChips\('Feel it in the target muscle\?',SCALE\.stimulus,3,/.test(rate)&&/wordChips\('Enjoy it\?',SCALE\.enjoy,3,/.test(rate),'a mid-session rating starts at 3, as the boxes did','');
   // soreness after a session: every combination stores what the five-box rows stored
   const A=load([]), G=['push','quads'], OLD={undefined:3,little:2,lot:1,great:4}, S=[undefined,'little','lot','great'];
@@ -4102,6 +4102,33 @@ section('100. batch 01 part 2: your usual everywhere, kg machines, the edit shee
     ok(sh.unit==='kg'&&sh.value===135&&Math.abs(sh.value/2.5-Math.round(sh.value/2.5))<1e-6,'walkthrough: one real kg step up from the last set, in kg',JSON.stringify(sh));
     ok(pv.lb===card.lb&&A.loadLabel(live,pv.lb)===A.loadLabel(live,card.lb)&&/kg/.test(A.loadLabel(live,pv.lb)),'walkthrough: the preview and the card show the same kg number',A.loadLabel(live,pv.lb)); }
   console.log('  usual variant in every reader · slots carry it · kg machines step in kg · edit sheet · class tonnage · preview = panel');
+}
+
+section('101. batch N 1.1: nothing asked between sets by default; a watched joint still is; the finish screen asks once');
+{
+  const fnSrc=n=>{ const i=src.indexOf('function '+n+'('); const j=src.indexOf('\nfunction ',i+10); return i<0?'':src.slice(i,j<0?undefined:j); };
+  const se=(sid,d,j)=>({type:'session_end',id:'e'+sid,ts:day(d),session_id:sid,joints:j||{},joint_scale:3});
+  // the default is off, so existing users move to it on update
+  ok(/askEachSet:false/.test(src),'Ask after each set: Off is the default','');
+  const work=fnSrc('renderWork'), panel=fnSrc('entryPanel'), tech=fnSrc('techniqueBlock'), pain=fnSrc('painReportEl'), post=fnSrc('openPost');
+  ok(/CFG\.askEachSet && slot\.sets\.length>0/.test(work)&&/slot\.sets\.length&&CFG\.askEachSet/.test(panel)&&/CFG\.askEachSet\?stickingPending\(slot\):null/.test(tech),'the rating star, Rate this exercise and Where did it slow down only show when asked for','');
+  // which joints are watched: a condition or flag, a focused deload, a joint above your usual
+  { const A=load([],true); A.CFG.conditions=['sh_ant_instability'];
+    ok((A.watchedJoint('bench')||{}).joint==='shoulder','a shoulder condition watches the shoulder on a press',JSON.stringify(A.watchedJoint('bench')));
+    ok(A.watchedJoint('leg_ext')==null,'and not on a leg extension',JSON.stringify(A.watchedJoint('leg_ext'))); }
+  { const A=load([]); ok(A.watchedJoint('bench')==null,'with nothing going on, nothing is watched',''); }
+  { const ev=[]; [9,6,3].forEach((d,i)=>{ ev.push({type:'readiness',id:'r'+i,ts:day(d),sleep_quality:3,motivation:3,recovery:3,soreness:{},joints:{knee:3},joint_scale:3},se('jk'+i,d,{knee:3})); });
+    const A=load(ev); ok((A.watchedJoint('leg_ext')||{}).joint==='knee','a knee above its usual lately is watched on knee exercises',JSON.stringify(A.watchedJoint('leg_ext'))); }
+  { const A=load([{type:'focused_deload_start',id:'fd1',ts:day(2),fd_id:'f1',level:'cut10',weeks:2,exercises:['curl']}]);
+    ok(!!A.watchedJoint('curl'),'an exercise in a focused deload is watched',JSON.stringify(A.watchedJoint('curl'))); }
+  // the pain card: a quiet button everywhere else, the same rating and the same event either way
+  ok(/'Something hurt\?'/.test(pain)&&/if\(!got&&!w&&!ask\)/.test(pain)&&/Asking because your '\+esc\(w\.joint\)\+' is being watched\./.test(pain),'unwatched: Something hurt?; watched: asked, with the reason','');
+  ok(/append\(\{type:'set_pain',set_id:last\.id,exercise_id:slot\.ex,session_id:session\.id,joint,nprs,/.test(pain),'pain is written as the same set_pain event','');
+  ok(!/\.type==='set_pain'|type==="set_pain"/.test(src),'nothing in the engine reads set_pain back (the ladder reads the check-in and the finish screen), so moving the question loses no input','');
+  // the finish screen: one list; the same three events
+  ok(/How each exercise went/.test(post)&&/id='pallfine'/.test(post)&&/watchedJoint\(sl\.ex\)/.test(post)&&/stickingPending\(sl\)/.test(post),'one list per exercise, with All fine, watched joints and hard-set questions','');
+  ok(/append\(\{type:'exercise_joint',exercise_id:exId,session_id:session\.id,joint:r\.joint,severity:r\.severity\}\)/.test(post)&&/append\(\{type:'sticking_report',exercise_id:exId,session_id:session\.id,set_id:r\.set\.id,region:r\.region/.test(post),'exercise_joint and sticking_report are written in the shape the engine reads','');
+  console.log('  off by default · watched joints still asked · Something hurt? · one finish list, same events');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

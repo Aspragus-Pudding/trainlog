@@ -42,7 +42,9 @@ everyone.
 | Take turns between two exercises (from Try new exercises), Stop taking turns | everyone | the exercise's card on the Train tab |
 | Check-in: numbered rows, all on screen (sleep, motivation, rest of life, each sore area, each joint), 0 = your usual, minus worse, plus better; a line above Start says what your answers do; bodyweight | everyone | before the first exercise |
 | "For your shoulder" chip on a flagged exercise: the reason, the cues and the swap on its info sheet | injury-prone | set card → info sheet |
-| Pain check after a set, naming the set ("Set 2 · 80 × 10"), in plain words | injury-prone | set card, after a set on a flagged joint |
+| Pain check after a set, naming the set ("Set 2 · 80 × 10"), in plain words, with why it's asking | injury-prone | set card, after a set on a watched joint (a condition, a focused deload, a joint above your usual) |
+| Something hurt? (where, then how much; the same pain check and advice) | everyone | set card, once a set is logged |
+| Ask after each set: Off (default) or On (the rating button and "Where did it slow down?" between sets) | everyone | Settings → Training |
 | Exercise cards: last time (also faintly beside each planned set), setup notes, cues, warnings | everyone | each card |
 | Set panel: weight, reps, effort, the suggestion and its why | everyone | the open card |
 | Weight that recomputes when you change reps (and the reverse) | everyone | set panel |
@@ -64,7 +66,7 @@ everyone.
 | Rehab and prep blocks | injury-prone | in the session, if a plan or prep applies |
 | Rehab and prehab logging: dose, pain, how it moved; feel-it stage, one step a week at most, a flare steps back | injury-prone | rehab block after training, tap an item |
 | Rehab or prehab, per exercise | injury-prone | rehab block, an open item |
-| Finish session: how hard it was and quick ratings in words, anything sore as chips (a little / a lot), joint question per exercise, diary | everyone | Finish session |
+| Finish session: how hard it was; one list of how each exercise went (felt it, enjoyed it, a watched joint, where a hard set slowed down) with All fine; anything sore as chips (a little / a lot); diary | everyone | Finish session |
 | Session summary: one sentence (sets, time, new bests), compared with last time | everyone | after finishing |
 | Keep any of these? (after trying new exercises): use instead, take turns, forget | everyone | session summary; a card on Today until answered |
 

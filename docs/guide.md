@@ -7,7 +7,7 @@ This guide starts with what to do when something comes up, then every setting, t
 ## When something comes up {guide:tasks}
 
 ### My shoulder, knee or another joint hurts
-Tap A joint in the check-in and pick it, and after an exercise when the app asks. A rating above your usual holds or lightens only the movements that load that joint, and everything else carries on as planned. If it keeps flaring, Today offers a focused deload for those exercises, and Edit program → What you're working around shows how the joint is doing against your usual. After a set on a joint you've flagged, the set card asks how it felt on that set, out of 10 (or whether it felt unstable), and says whether to carry on. A flagged exercise shows a "For your shoulder" chip (or knee, elbow and so on); tap it for the reason, the cues and a suggested swap. The app warns and suggests swaps but never stops you, and anything on a condition's "see a professional" list is worth getting checked.
+Give the joint a number in the check-in, from −1 for mild to −3 for bad. A rating above your usual holds or lightens only the movements that load that joint, and everything else carries on as planned. If something hurts during a set, tap Something hurt? on the card and say where and how much; the app tells you whether to carry on, swap or stop. A joint that is being watched, because of a condition you've picked, a focused deload or recent ratings above your usual, is asked about after each set without the tap. The finish screen asks how it felt on each exercise. If it keeps flaring, Today offers a focused deload for those exercises, and Edit program → What you're working around shows how the joint is doing against your usual.
 
 ### I'm sore today
 In the check-in, tap Sore and pick the area. Only the exercises that train that muscle start lighter, with a set fewer on the first two of them, and the rest of the session is unchanged. If soreness already cut that work last session without a missed rep since, it doesn't cut again.
@@ -163,6 +163,9 @@ Keep one exercise out of generated sessions from its info sheet. It stays in the
 
 ### I usually do this
 If you always do an exercise one way, such as deadlifts with straps, set it here. Suggestions, best sets, goal tracking, Today's plan and the stall check then use that version, and its numbers say so ("120 kg · with straps"). Doing it another way is still logged as its own history. After three sessions in a row done the same way, the app offers to make it your usual.
+
+### Ask after each set
+Off by default: between sets the card is weight, reps, effort and Log set, and the finish screen asks how each exercise went, with All fine for a normal day. On brings back the rating button and "Where did it slow down?" after a hard set. A joint that is being watched is asked about after each set either way, and Something hurt? is always on the card. It's in Settings → Training.
 
 ### Rest between sets
 How long the rest timer runs after a set of this exercise. The defaults are 4 minutes for squats and deadlifts as main lifts, 3 for other main lifts, 2:30 for other compounds and 1:45 for isolation work. Add 30 seconds on the rest bar and an "Always" button keeps that time for the exercise. If you keep resting longer or shorter for three sessions, the app offers to match it.

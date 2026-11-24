@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.100.0 — 2026-11-24
+- Nothing is asked between sets now: the card is weight, reps, effort and Log set.
+- The finish screen asks how each exercise went, in one list, with All fine for a normal day.
+- If something hurts during a set, tap Something hurt? on the card. A joint that's being watched is still asked about after each set, and the card says why.
+- To have the questions after each set again: Settings → Training → Ask after each set.
+
 ## 1.99.0 — 2026-11-10
 - Your usual variant now counts everywhere: how fast a main lift progresses, stall checks, and exercises you add during a workout all use the version you normally do.
 - The numbers on Train before you start are now the ones the set card will show.

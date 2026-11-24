@@ -1668,3 +1668,21 @@ Autonomous under the batch rules. On your real history the engine moved **0 of 3
 - **A slot set to plain for today keeps the normal path**, and fast progression stays off for it.
 
 **The backtest harness changed, so its numbers aren't comparable with earlier ones.** It now prices a set on the variant that was done, and the bodyweight class on what was lifted. New baseline: n=301, load mean |error| 3.7 lb, reps 1.7. The old harness gave 5.1 lb on the same data; six strapped deadlift sessions priced on the plain track were the whole difference, and one row can't be priced.
+
+## D76. Nothing asked between sets by default (v1.100.0, batch N 1.1)
+
+**Your call** (decided in the brief). Built after this check of every engine input that came from a question between sets. **No safety behaviour loses its input.**
+
+| Asked between sets before | Event | What reads it | Where it comes from now |
+|---|---|---|---|
+| Pain after a set, on exercises loading a joint your conditions or a flag point at | `set_pain` | only this card's advice (carry on, swap, stop, end). **Nothing in the engine reads it back**: the joint ladder reads the check-in and the finish screen | still asked after each set on those exercises, now also on a focused deload's and on a joint above its usual, with "Asking because your shoulder is being watched." Everywhere else: Something hurt? |
+| Rate this exercise (felt it, enjoyed it), and the star once it's done | `exercise_rating` | which exercise the generator picks (3+ ratings), the info sheet | the finish screen's list (it was already asked there for anything not rated mid-session) |
+| Where did it slow down? after a missed or RPE 9.5+ main-lift set | `sticking_report` | the stall engine's sticking diagnosis | the finish screen's list, for the same set |
+| The joint on each flagged exercise (finish screen) | `exercise_joint` | your own verdict, the focused-deload offer | unchanged (finish screen), now in the same list |
+| Readiness, soreness, joints (check-in) | `readiness` | the joint ladder, soreness cut, readiness | unchanged |
+
+**Taken without asking:**
+- **On means what you had before**: the rating button, the star and "Where did it slow down?" between sets. It doesn't add a pain question to exercises nobody is watching; Something hurt? covers those.
+- **Something hurt? asks where first**, the exercise's own joints listed first, because an unwatched exercise has no joint to ask about.
+- **All fine** answers every row with Solid and Fine (3 and 3) and every watched joint with Fine. It leaves "Where did it slow down?" blank, since a hard set doesn't have a fine answer.
+- The video reminder and the setup checklist aren't ratings, so they stay; they're in the Part 1.2 list of things that could move behind a tap.

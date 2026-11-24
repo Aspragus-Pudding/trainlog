@@ -369,6 +369,39 @@ async function logHereCheck(page, tag){
   const w6=await where(); ok(w6.slot==='0'&&w6.on, tag+' finishing an exercise out of order: the panel goes to the next one and Log set is on screen: '+JSON.stringify(w6));
   await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} session=null; saveSession(); stopRest(); TAB='dash'; render(); });
 }
+/* Batch N 1.1, by real touch: no question after a set on an exercise nobody is watching, but Something hurt? is there
+   and writes the same pain event; a watched joint is still asked about, with the reason; the finish screen's All fine
+   answers every exercise in one tap. Shoulder persona (a shoulder condition). */
+async function askLessCheck(page, tag){
+  await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
+  await page.evaluate(()=>demoReset({kind:'persona',key:'shoulder',weeks:3})); await page.waitForLoadState('load'); await sleep(2200);
+  await page.evaluate(()=>{ CFG.seenVersion=APP_VERSION; CFG.tour={t1:'off',seen:{}}; CFG.tipsSeen=Object.fromEntries(TIP_KEYS.map(k=>[k,{at:0,done:true}])); saveCfg(); try{ $('#dlg').close(); }catch(e){}
+    startSession(todayDay()); $('#ckskip').click(); TAB='work'; render(); });
+  await sleep(300);
+  const idx=await page.evaluate(()=>({calm:session.slots.findIndex(sl=>!watchedJoint(sl.ex)), watched:session.slots.findIndex(sl=>!!watchedJoint(sl.ex))}));
+  ok(idx.calm>-1&&idx.watched>-1, tag+' the demo day has an unwatched and a watched exercise: '+JSON.stringify(idx));
+  const card=()=>page.evaluate(()=>{ const p=document.querySelector('#v-work [data-tour="logset"]'), c=p&&p.closest('.ex'); const t=c?c.textContent:'';
+    return {noPainChip:[...(c?c.querySelectorAll('.chip'):[])].some(b=>/No pain/.test(b.textContent)), hurt:[...(c?c.querySelectorAll('button'):[])].some(b=>b.textContent.trim()==='Something hurt?'), rate:/Rate this exercise/.test(t), why:/is being watched/.test(t)}; });
+  await tapSel(page,'#v-work .ex[data-slot="'+idx.calm+'"] .btn[aria-label^="Log a set on"], #v-work .ex[data-slot="'+idx.calm+'"] [data-tour="logset"]',0);
+  await tapSel(page,'#v-work [data-tour="logset"]',0); await page.evaluate(()=>stopRest()); await sleep(200);
+  const c1=await card();
+  ok(!c1.noPainChip&&c1.hurt&&!c1.rate, tag+' after a set on an unwatched exercise: no question, Something hurt? is there: '+JSON.stringify(c1));
+  await tapSel(page,'#v-work button[aria-label^="Something hurt"]',0);
+  await page.evaluate(()=>{ const c=[...document.querySelectorAll('#v-work .chip')].find(b=>b.textContent.trim()==='Knee'); if(c) c.click(); }); await sleep(200);
+  await page.evaluate(()=>{ const c=[...document.querySelectorAll('#v-work .chip')].find(b=>/^1–3$/.test(b.textContent.trim())); if(c) c.click(); }); await sleep(200);
+  const ev=await page.evaluate(()=>{ const e=[...LOG].reverse().find(x=>x.type==='set_pain'); return e?{joint:e.joint,nprs:e.nprs,set:!!e.set_id,ex:e.exercise_id}:null; });
+  ok(ev&&ev.joint==='knee'&&ev.nprs===2&&ev.set, tag+' Something hurt? → Knee → 1–3 writes the same set_pain event: '+JSON.stringify(ev));
+  await tapSel(page,'#v-work .ex[data-slot="'+idx.watched+'"] .btn[aria-label^="Log a set on"]',0);
+  await tapSel(page,'#v-work [data-tour="logset"]',0); await page.evaluate(()=>stopRest()); await sleep(200);
+  const c2=await card();
+  ok(c2.noPainChip&&c2.why&&!c2.rate, tag+' after a set on a watched exercise: asked, with the reason: '+JSON.stringify(c2));
+  await page.evaluate(()=>openPost()); await sleep(300);
+  await tapSel(page,'#pallfine',0); await tapSel(page,'#pend',0); await sleep(400);
+  const fin=await page.evaluate(()=>{ const sid=[...LOG].reverse().find(e=>e.type==='session_end').session_id; const t=Date.now()-60e3;
+    return {ratings:LOG.filter(e=>e.type==='exercise_rating'&&new Date(e.ts).getTime()>t).map(e=>e.stimulus+'/'+e.enjoyment), joints:LOG.filter(e=>e.type==='exercise_joint'&&e.session_id===sid).map(e=>e.joint+':'+e.severity)}; });
+  ok(fin.ratings.length>=2&&fin.ratings.every(x=>x==='3/3')&&fin.joints.length>=1&&fin.joints.every(x=>/:0$/.test(x)), tag+' All fine rates every exercise and every watched joint in one tap: '+JSON.stringify(fin));
+  await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} session=null; saveSession(); stopRest(); TAB='dash'; render(); });
+}
 /* D10: with "effort" chosen, no screen says RPE (a real browser, the live set card and a sheet). */
 async function effortCheck(page, tag){
   await page.evaluate(()=>{ STORE.clear(); }); await page.reload(); await page.waitForLoadState('load'); await sleep(900);
@@ -419,6 +452,7 @@ async function resumeCheck(page, tag){
       await detailsPlaceCheck(page,tag);
       await checkinRowsCheck(page,tag);
       await logHereCheck(page,tag);
+      await askLessCheck(page,tag);
       await effortCheck(page,tag);
       await jumpCheck(page,tag);
     }catch(e){ ok(false,tag+' crashed: '+e.message); }
