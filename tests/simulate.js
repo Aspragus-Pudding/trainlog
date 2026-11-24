@@ -48,7 +48,7 @@ function boot(clock){
     'logSet','soreGroupsFor','readinessScore','physicalCut','jointNoteFor','ensureInitialTM','slotTrack','activeProposals','builderDefaults',
     'builderPlan','applyBuilder','rateOf','tmFor','toLb','loadable','rtfFromPct','pct1RM','bwOffset','isBW','JOINTS','jointLevel','jointTrend',
     'familyOf','splitFor','blockLen','stepUp','deloadSignals','mainEligible','dismissProposal','rateState','stallPlan','stallState','interventions',
-    'stallVideoWanted','FAMILY_STICKING','fatigueSignals','applyReadinessSets'];
+    'stallVideoWanted','FAMILY_STICKING','fatigueSignals','applyReadinessSets','startHold','endHold','holdState'];
   const pick=names.map(n=>n+':(()=>{try{return '+n+'}catch(e){}})()').join(',');
   const body=src+'\n;return {'+pick+',getDraft:()=>draft,setSession:x=>{session=x},getSession:()=>session,getROADMAP:()=>ROADMAP,'+
     'setROADMAP:r=>{ROADMAP=r},getCFG:()=>CFG};';
@@ -75,6 +75,9 @@ const PERSONAS={
     conditions:['shoulder_instability'], jointUsual:{shoulder:'mild'}, flare:{joint:'shoulder', from:6, to:8}},
   advanced:{label:'Advanced, flat, shoulder', profile:'even_mix', experience:'advanced', gain:()=>0.0, noise:0.02, rpeNoise:0.5, attend:1,
     conditions:['shoulder_instability']},
+  // batch N 2.2: a hold of 4 weeks at one session a week (detraining a little), then back to the program
+  hold_return:{label:'Holds 4 weeks, then back', profile:'even_mix', experience:'intermediate', gain:w=>w>=10&&w<14?-0.002:0.004, noise:0.02, rpeNoise:0.5, attend:1,
+    hold:{from:10, weeks:4, days:1}},
   sporadic:{label:'Trains less than weekly', profile:'even_mix', experience:'intermediate', gain:()=>0.004, noise:0.02, rpeNoise:0.5, attend:0.18}
 };
 
@@ -102,7 +105,10 @@ function simulate(key){
   let fatigue=0, bw=P.bwStart||180, deloads=0;
   for(let w=0;w<WEEKS;w++){
     const weekStart=start+w*7*DAY;
-    const dpw=(A.splitFor(A.getROADMAP()[A.programPosition().idx])||{days:5}).days;
+    if(P.hold&&w===P.hold.from){ clock.set(weekStart); A.startHold(P.hold.days); }
+    if(P.hold&&w===P.hold.from+P.hold.weeks){ clock.set(weekStart); A.endHold(); }
+    const hs=A.holdState&&A.holdState();
+    const dpw=hs?hs.days:(A.splitFor(A.getROADMAP()[A.programPosition().idx])||{days:5}).days;
     // proposals at the start of the week
     const props=A.activeProposals();
     // accept a deload only if this persona would; stall cards are accepted (a
@@ -211,6 +217,18 @@ function checks(run){
     const last=tops.slice(-6), ratio=last.map(t=>t.L/t.E);
     ok(ratio.every(r=>r>0.35&&r<1.0),id+': recent loads stay between 35% and 100% of true capacity (no runaway, no collapse)',ratio.map(r=>r.toFixed(2)).join(','));
   });
+  // batch N 2.2: after a hold, nothing in the first week back is suggested above what was lifted before the hold
+  if(P.hold){
+    const pre={}; trace.filter(t=>t.w>=P.hold.from-2&&t.w<P.hold.from).forEach(t=>{ pre[t.ex]=Math.max(pre[t.ex]||0,t.L); });
+    // what was prescribed and lifted (the lifter follows the suggestion); t.sug is the draft after the set, so it can be stale
+    const over=trace.filter(t=>t.w===P.hold.from+P.hold.weeks&&pre[t.ex]!=null&&t.L>pre[t.ex]+1e-6).map(t=>t.ex+' '+t.L+'>'+pre[t.ex]);
+    const holdSets=trace.filter(t=>t.w>=P.hold.from&&t.w<P.hold.from+P.hold.weeks), back=trace.filter(t=>t.w===P.hold.from+P.hold.weeks);
+    ok(holdSets.length>0&&back.length>0,'hold: it trained during the hold and in the first week back',holdSets.length+' / '+back.length);
+    // a goal lift is practised every week of the hold
+    const miss=[]; for(let w=P.hold.from;w<P.hold.from+P.hold.weeks;w++) ['squat','deadlift','bench'].forEach(id=>{ if(!holdSets.some(t=>t.w===w&&t.ex===id)) miss.push('wk'+(w+1)+' '+id); });
+    ok(miss.length===0,'hold: every goal lift practised every week of the hold',miss.join(', '));
+    ok(over.length===0,'hold: first week back, no suggestion above the pre-hold load',over.slice(0,4).join(', '));
+  }
   const failRate=trace.filter(t=>t.failed).length/Math.max(1,trace.length);
   ok(failRate<0.2,'missed-rep sets under 20% of all sets',(failRate*100).toFixed(1)+'%');
   // blocks advance with sessions

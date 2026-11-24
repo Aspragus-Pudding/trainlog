@@ -11543,7 +11543,7 @@ const isMainSlot=sl=>!!sl&&sl.role==='primary'&&isMainLift(sl.ex);
 function slotRepRange(sl, phase){
   phase=phase||currentPhase();
   if(sl.repSrc==='session'&&Array.isArray(sl.reps)) return {reps:sl.reps.slice(), repSrc:'session', repMuscle:sl.repMuscle||null, repCapped:!!sl.repCapped};
-  if((sl.structure==='practice'||sl.iv)&&Array.isArray(sl.reps)) return {reps:sl.reps.slice(), repSrc:sl.repSrc||'block', repMuscle:sl.repMuscle||null, repCapped:!!sl.repCapped};
+  if((sl.structure==='practice'||sl.iv||sl.holdPractice)&&Array.isArray(sl.reps)) return {reps:sl.reps.slice(), repSrc:sl.repSrc||'block', repMuscle:sl.repMuscle||null, repCapped:!!sl.repCapped};
   const ex=exById[sl.ex]; if(!ex||!phase) return {reps:(sl.reps||[8,12]).slice(), repSrc:sl.repSrc||'block', repMuscle:null, repCapped:false};
   const main=isMainSlot(sl);
   const sc=schemeFor(sl.role||'accessory', phase.type, phase.week, phase.weeks, main?{...ex,id:null,repRange:undefined}:ex, phase.taper);
@@ -11801,7 +11801,8 @@ function applyDepFloor(days){
   }
   return days;
 }
-function generatedDays(){
+function generatedDays(){ return holdState()?holdDays():programDays(); }
+function programDays(){
   const phase=currentPhase();
   const days=weekVolumeCap(applyInterventions(addPracticeDays(addMaintenance(applyDepFloor(activeSplit().template.map(t=>buildDay(t,phase))), phase), phase), phase));
   if(phase&&phase.refined&&phase.type==='hyp'&&!phase.onDeload) days.forEach(capSessionVolume);
@@ -11822,7 +11823,7 @@ const DAYS=[
 
 /* ─── storage ─── */
 let LOG=[], CFG={start:null,target:null,roadmap:null,split:'full5',syncUrl:'',customEx:[],energy:'maintenance',conditions:[],
-  goals:[],units:'lb',onboarded:false,trainListOpen:false,askEachSet:false,over60:false,week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
+  goals:[],units:'lb',onboarded:false,trainListOpen:false,askEachSet:false,over60:false,holdDeclinedAt:null,places:[],week:null,barOverrides:{},backoff:{drop:0.08,mode:'fixed'},autoIntervene:false,checklistOff:{},sessionLen:null,
   profile:null,profileParams:{},profileSlider:null,effortWord:null,themeVoice:true,usualMods:{},restSec:{},tipsSeen:{},prepItems:[],prepPlan:{},rehabMode:{},exploreKept:{},rotation:{},experience:null,equipment:null,testDate:null,proposalsDismissed:{},dayOverrides:{},nameOverrides:{},targetFixed:false,repRanges:{},
   feedbackUrl:'',testerName:'',introSeen:false,theme:null,jointUsual:{},excludedEx:null,injuryConsent:null,condRedFlags:{},seenVersion:null,stepOverride:{},assistRatio:{},sledWeight:{},deprioritised:{muscles:[],patterns:[]},tour:{t1:'off',seen:{}},backupReminderDismissed:null,todayBriefing:null,onbDraft:null};
 /* A setup link like  ...?sync=<url>&feedback=<url>  configures a tester's
@@ -12147,6 +12148,7 @@ function themeToast(m){
 }
 /* Weeks in a row (ending this week or last) with at least one finished session. */
 function weeksInARow(){
+  if(holdState()) return 0;   // no streak in a hold
   const wk=ts=>Math.floor((weekStart(new Date(ts)).getTime())/(7*864e5));
   const have=new Set(LOG.filter(e=>e.type==='session_end'&&!e.cancelled&&(e.sets_done==null||e.sets_done>0)).map(e=>wk(e.ts)));
   let w=wk(Date.now()); if(!have.has(w)) w--; let n=0; while(have.has(w)){ n++; w--; } return n;
@@ -12759,8 +12761,111 @@ const lastSetFor=(id,sig,cls)=>{ if(cls){ const c=sets().filter(s=>s.set_kind!==
    The calendar only enters through the projection below. */
 const sessionsPerWeek=()=>(activeSplit()&&activeSplit().days)||5;
 function programSessions(){
-  const from=CFG.start?new Date(CFG.start+'T00:00').getTime():0;
-  return LOG.filter(e=>countsAsTrained(e)&&new Date(e.ts).getTime()>=from).length;
+  const from=CFG.start?new Date(CFG.start+'T00:00').getTime():0, hw=holdWindows();
+  // sessions in a hold don't move the block clock (batch N 2.2): the program resumes where it stopped
+  return LOG.filter(e=>{ if(!countsAsTrained(e)) return false; const t=new Date(e.ts).getTime(); return t>=from&&!hw.some(h=>t>=h.start&&(h.end==null||t<h.end)); }).length;
+}
+/* ---- hold mode (batch N 2.2) ----
+   A state on the program, not a new program: hold_start {days} / hold_end events, derived on read. While it
+   runs, the week is 1–3 full-body sessions that hold each muscle at about a third of the program's weekly
+   sets (never under 3), goal lifts are practised once a week, and the block clock, stall checks, deload
+   offers, progression-rate notes and the streak stop. Leaving hands back to the program where it stopped;
+   the return ramp (2.1) handles the first sessions. Nothing earlier in the log is touched. */
+let HOLD_MEMO={n:-1,log:null,w:null};
+function holdWindows(){
+  if(HOLD_MEMO.n===LOG.length&&HOLD_MEMO.log===LOG) return HOLD_MEMO.w;
+  const out=[]; let cur=null;
+  LOG.forEach(e=>{ if(e.type==='hold_start'&&!cur) cur={start:new Date(e.ts).getTime(), days:Math.max(1,Math.min(3,+e.days||1)), id:e.id, end:null};
+    else if(e.type==='hold_end'&&cur){ cur.end=new Date(e.ts).getTime(); out.push(cur); cur=null; } });
+  if(cur) out.push(cur);
+  HOLD_MEMO={n:LOG.length,log:LOG,w:out}; return out;
+}
+function holdState(){ const w=holdWindows(), h=w[w.length-1]; return h&&h.end==null?{...h, weeks:(Date.now()-h.start)/(7*864e5)}:null; }
+const holdSessionsSince=h=>LOG.filter(e=>countsAsTrained(e)&&new Date(e.ts).getTime()>=h.start).length;
+const startHold=days=>append({type:'hold_start', days:Math.max(1,Math.min(3,+days||1))});
+const endHold=()=>holdState()?append({type:'hold_end'}):null;
+/* each muscle's weekly hard sets in hold: a third of the program's week, never under 3 */
+function holdTargets(){
+  const tot={}; programDays().forEach(d=>d.slots.forEach(sl=>{ const ex=exById[sl.ex]; if(!ex) return; Object.entries(ex.vol||{}).forEach(([m,w])=>tot[m]=(tot[m]||0)+w*(+sl.sets||0)); }));
+  const out={}; Object.entries(tot).forEach(([m,v])=>{ if(v>=1) out[m]=Math.max(ENGINE.HOLD_MIN_SETS, Math.round(v*ENGINE.HOLD_SHARE)); });
+  return out;
+}
+/* this calendar week inside the hold: sessions and working sets per muscle */
+function holdWeekDone(h){
+  const from=Math.max(weekStart(new Date()).getTime(), h.start), m={}; let sessions=0;
+  LOG.forEach(e=>{ if(countsAsTrained(e)&&new Date(e.ts).getTime()>=from) sessions++; });
+  sets().forEach(st=>{ if(st.set_kind==='warmup'||LIGHT_ROLES.includes(st.role)||new Date(st.ts).getTime()<from) return; const ex=exById[st.exercise_id]; if(!ex) return;
+    Object.entries(ex.vol||{}).forEach(([k,w])=>m[k]=(m[k]||0)+w); });
+  return {sets:m, sessions};
+}
+const lc1=t=>t.charAt(0).toLowerCase()+t.slice(1);
+const HOLD_COPY={
+  offer:'Looks like a lighter stretch. Want to hold what you\'ve built until things settle?',
+  practice:n=>'Keeping your '+n+' practised.',
+  rusty:n=>'Your '+n+' will feel rusty at first. That comes back fast.',
+  review:'It\'s been 32 weeks on hold. Worth checking your main lifts before going on.',
+  back:'You trained every planned day this week. Back to your program?'
+};
+/* a goal lift in hold: 1–3 sets of 1–5 at about RPE 8, once a week */
+function holdPracticeSlot(sl, g){
+  const ex=exById[sl.ex||g], last=lastSetFor(trackRoot(sl.ex||g)), gap=last?(Date.now()-new Date(last.ts).getTime())/864e5:null;
+  const P=ENGINE.HOLD_PRACTICE, n={...sl, ex:sl.ex||g, role:'primary', sets:P.sets, reps:[...P.reps], rpe:P.rpe, holdPractice:true,
+    holdNote:HOLD_COPY.practice(lc1(ex.name))+(gap!=null&&gap>=ENGINE.HOLD_RUSTY_DAYS?' '+HOLD_COPY.rusty(lc1(ex.name)):'')};
+  delete n.structure; return n;
+}
+/* fit a day's slots to what each muscle still needs, main lifts first; never more sets than the program's slot */
+function holdFit(slots, share, pool){
+  const need={...share}, order=sl=>sl.holdPractice?0:sl.role==='primary'?1:sl.role==='secondary'?2:3, keep=new Map();
+  [...slots].sort((a,b)=>order(a)-order(b)).forEach(sl=>{
+    const ex=exById[sl.ex]; if(!ex) return;
+    let n=+sl.sets||0;
+    if(!sl.holdPractice){ const pm=primaryMuscle(ex), want=pm?need[pm]||0:0; if(want<0.5) return; n=Math.max(1,Math.min(n,Math.round(want))); }
+    Object.entries(ex.vol||{}).forEach(([m,w])=>{ if(m in need) need[m]-=w*n; });
+    keep.set(sl,n);
+  });
+  const out=slots.filter(sl=>keep.has(sl)).map(sl=>({...sl, sets:keep.get(sl), ...(sl.holdPractice?{}:{rpe:Math.max(sl.rpe||8,8)})}));
+  // a muscle the day doesn't reach: the program's own exercise for it, up to 8 exercises a day
+  (pool||[]).forEach(sl=>{ if(out.length>=8) return; const ex=exById[sl.ex]; if(!ex||out.some(x=>trackRoot(x.ex)===trackRoot(sl.ex))) return;
+    const pm=primaryMuscle(ex), want=pm?need[pm]||0:0; if(want<1) return;
+    const n=Math.max(1,Math.min(+sl.sets||3,Math.round(want))); Object.entries(ex.vol||{}).forEach(([m,w])=>{ if(m in need) need[m]-=w*n; });
+    out.push({...sl, sets:n, rpe:Math.max(sl.rpe||8,8)}); });
+  return out;
+}
+function holdDays(){
+  const h=holdState(), N=h.days, phase=currentPhase(), T=holdTargets();
+  // the templates directly: splitOf() treats a one-day week as invalid and falls back to five days
+  const tpls=weekTemplate(Array(N).fill('full')).map((t,i)=>({...t, name:'Hold '+String.fromCharCode(65+i)}));
+  const days=tpls.map(t=>buildDay(t,phase));
+  days.forEach(d=>{ d.hold=true; d.slots=d.slots.map(sl=>withReps(sl,phase)); });
+  // goal lifts: once a week each, wherever they first come up, or on the shortest day
+  [...new Set(CFG.goals||[])].filter(g=>exById[g]).forEach(g=>{
+    let placed=false;
+    days.forEach(d=>{ d.slots=d.slots.filter(sl=>{ if(trackRoot(sl.ex)!==trackRoot(g)) return true; if(placed) return false; placed=true; Object.assign(sl,holdPracticeSlot(sl,g)); return true; }); });
+    if(!placed){ const d=[...days].sort((a,b)=>a.slots.length-b.slots.length)[0]; d.slots.unshift(holdPracticeSlot({ex:g},g)); }
+  });
+  // the next session takes what's left of this week over the sessions left; the others show an even share
+  const next=holdSessionsSince(h)%N, wk=holdWeekDone(h), left=Math.max(1,N-wk.sessions);
+  const goalSet=new Set((CFG.goals||[]).map(trackRoot)), seenP=new Set();
+  const pool=programDays().flatMap(d=>d.slots).filter(sl=>exById[sl.ex]&&!goalSet.has(trackRoot(sl.ex))&&!seenP.has(sl.ex)&&seenP.add(sl.ex));
+  days.forEach((d,i)=>{ const share={}; Object.keys(T).forEach(m=>{ share[m]=i===next?Math.max(0,T[m]-(wk.sets[m]||0))/left:T[m]/N; }); d.slots=holdFit(d.slots,share,pool); });
+  days.forEach(d=>{ d.slots=applyReturnRamp(d.slots); });
+  return days;
+}
+/* Proposals for when the screens are picked (Part 4): not on Today yet. */
+function holdOffer(){
+  if(holdState()||!ROADMAP.length||!CFG.start) return null;
+  const now=Date.now(), D=864e5, since=now-ENGINE.HOLD_OFFER_DAYS*D;
+  if(new Date(CFG.start+'T00:00').getTime()>since) return null;
+  if(CFG.holdDeclinedAt&&now-new Date(CFG.holdDeclinedAt).getTime()<ENGINE.HOLD_DECLINE_DAYS*D) return null;
+  const planned=sessionsPerWeek()*ENGINE.HOLD_OFFER_DAYS/7, done=LOG.filter(e=>countsAsTrained(e)&&new Date(e.ts).getTime()>=since).length;
+  if(done>=planned/2) return null;
+  return {id:'holdoffer:'+new Date(now).toISOString().slice(0,10), title:HOLD_COPY.offer, done, planned:Math.round(planned)};
+}
+function holdReview(){ const h=holdState(); return h&&h.weeks>=ENGINE.HOLD_REVIEW_WEEKS?{id:'holdreview:'+h.id, title:HOLD_COPY.review}:null; }
+function holdBackAsk(){
+  const h=holdState(); if(!h) return null;
+  const dpw=splitFor(ROADMAP.length?ROADMAP[programPosition().idx]:null).days, wk=LOG.filter(e=>countsAsTrained(e)&&new Date(e.ts).getTime()>=Math.max(h.start,Date.now()-7*864e5)).length;
+  return wk>=dpw?{id:'holdback:'+h.id+':'+wk, title:HOLD_COPY.back}:null;
 }
 /* Recent pace in sessions per calendar week, used only to project when the
    program will finish. JUDGEMENT DEFAULTS, GRADE D: a 28-day window; the
@@ -12885,7 +12990,7 @@ const completedCount=()=>LOG.filter(countsAsTrained).length;
 /* Next day in the rotation: counted within the current block, so a block
    with a different split starts at its own day 1 rather than inheriting the
    last block's position. */
-function todayDay(){ const d=generatedDays(); return d[programPosition().sessionsIn%d.length]; }
+function todayDay(){ const d=generatedDays(), h=holdState(); return d[(h?holdSessionsSince(h):programPosition().sessionsIn)%d.length]; }
 
 /* ─── prescription ─── */
 /* Judgement defaults, not derived from any study — kept as plain constants
@@ -13695,7 +13800,7 @@ function mainLiftRateCard(){
   c.appendChild(el('div','',`<span style="font-weight:650">Main lifts</span>`));
   ids.forEach(id=>{
     const r=rateOf(id); let extra='';
-    if(r==='standard'){
+    if(r==='standard'&&!holdState()){   // no progression-rate notes in a hold
       // the date of the most recent new high (oldest first), and only while the
       // lift is still being trained — a lift you've stopped doing isn't stalled
       const bests=sessionBests(id,usualSig(id)).filter(b=>b.e1!=null).reverse();
@@ -14076,6 +14181,10 @@ function ruleCurrent(before){
   const sl=session.slots;
   sl.forEach(slotUid);
   if(session.pick==='-') return -1;
+  // 5. inside a pair, the one with fewer sets logged is current (ties: list order), so the two alternate
+  { const pv=before&&pairPartner(before); if(pv&&(slotLeft(before)||slotLeft(pv))){ const a=sl.indexOf(before), b=sl.indexOf(pv);
+      const pick=!slotLeft(before)?b:!slotLeft(pv)?a:pv.sets.length<before.sets.length?b:before.sets.length<pv.sets.length?a:Math.min(a,b);
+      if(pick>-1&&(!session.pick||session.pick===slotUid(sl[pick])||session.pick===slotUid(before)||session.pick===slotUid(pv))){ if(session.pick) session.pick=slotUid(sl[pick]); return pick; } } }
   if(session.pick){ const i=sl.findIndex(s=>s.uid===session.pick); if(i>-1) return i; session.pick=null; }
   if(before&&before.sets.length&&slotLeft(before)){ const i=sl.indexOf(before); if(i>-1) return i; }
   return sl.findIndex(slotLeft);
@@ -14101,6 +14210,53 @@ function pickSlot(i){
   if(session.openIdx===i){ session.pick='-'; session.openIdx=-1; }
   else{ session.pick=slotUid(s); session.openIdx=i; seedDraft(s,true); }
   saveSession();
+}
+/* ---- pairing (batch N 2.4, data only) ----
+   Research rule 5: opposing or unrelated muscles cost nothing when paired; two exercises sharing a main muscle
+   cut the work done. So a pair never shares a main muscle or a watched or flagged joint, and the session's
+   heaviest lift is never paired. Rest runs after the pair; volume and progression count as for any set. */
+const pairPartner=sl=>session&&sl&&sl.pairWith?session.slots.find(x=>x!==sl&&slotUid(x)===sl.pairWith)||null:null;
+function pairOK(a, b){
+  const A=exById[a.ex], B=exById[b.ex]; if(!A||!B||a.ex===b.ex) return false;
+  const mainOf=e=>Object.entries(e.vol||{}).filter(([,w])=>w>=1).map(([m])=>m);
+  if(mainOf(A).some(m=>mainOf(B).includes(m))) return false;
+  const jointOf=sl=>{ const w=watchedJoint(sl.ex); if(w) return w.joint; const f=flagFor(sl.ex,sl.modifiers); return f&&isWarning(f)&&INJ_BY[f.cond]?REGION_JOINT[INJ_BY[f.cond].region]||null:null; };
+  const ja=jointOf(a), jb=jointOf(b); if(ja&&jb&&ja===jb) return false;
+  return true;
+}
+/* suggested pairs over a day's slots: neighbours first, never the heaviest lift (the first main lift, else the first slot) */
+function suggestPairs(slots, o){
+  // o.pairHeavy: a 20- or 30-minute box pairs the main lift too, as the research's own short templates do (squat + hinge)
+  const heavy=o&&o.pairHeavy?-1:Math.max(0,slots.findIndex(sl=>sl.role==='primary'&&isMainLift(sl.ex))), used=new Set(), out=slots.map(sl=>({...sl}));
+  out.forEach(sl=>{ delete sl.pairWith; sl.uid=sl.uid||ulid(); });
+  for(let i=0;i<out.length;i++){ if(i===heavy||used.has(i)) continue;
+    for(let j=i+1;j<out.length;j++){ if(j===heavy||used.has(j)) continue; if(pairOK(out[i],out[j])){ out[i].pairWith=out[j].uid; out[j].pairWith=out[i].uid; used.add(i); used.add(j); break; } } }
+  return out;
+}
+/* rest after a set in a pair: none until both have done this round */
+const pairRestsNow=sl=>{ const p=pairPartner(sl); return !p||!slotLeft(p)||p.sets.length>=sl.sets.length; };
+/* ---- time-boxed sessions (batch N 2.5, data only) ----
+   Research rule 6: the heaviest or most skilled lift first with full rest (45 minutes only), then paired
+   compound work, then isolation, then a finisher. Trimmed from the bottom of that order until it fits; what
+   was left out is kept for the screen to say. Judgement defaults (grade C). */
+/* minutes for a list of slots where a pair rests once per round, after its second exercise */
+function boxMinutes(slots){
+  let secs=0; const done=new Set(), wu=sl=>warmupRamp(sl,previewRx(sl).lb||0).length*WARMUP_RUNG_S;
+  slots.forEach(sl=>{ if(done.has(sl)) return; done.add(sl);
+    const p=sl.pairWith?slots.find(x=>x!==sl&&x.uid===sl.pairWith):null;
+    if(p){ done.add(p); secs+=wu(sl)+wu(p)+Math.max(+sl.sets||0,+p.sets||0)*(2*SET_TIME_S+Math.max(restFor(sl),restFor(p))); }
+    else secs+=wu(sl)+(+sl.sets||0)*(SET_TIME_S+restFor(sl)); });
+  return Math.round(secs/60);
+}
+function timeBox(day, minutes){
+  const prio=sl=>sl.role==='primary'&&isMainLift(sl.ex)?0:sl.role==='primary'?1:sl.role==='secondary'?2:familyOf(exById[sl.ex])==='isolation'&&['calf_raise','trunk','grip','wrist'].includes(exById[sl.ex].pattern)?4:3;
+  const ordered=[...day.slots].sort((a,b)=>prio(a)-prio(b));
+  const head=minutes>=45&&ordered.length&&prio(ordered[0])===0?[ordered.shift()]:[];
+  const build=list=>head.concat(suggestPairs(list,{pairHeavy:!head.length}));
+  const left=[]; let out=build(ordered);
+  while(ordered.length&&boxMinutes(out)>minutes){ left.unshift(ordered.pop().ex); out=build(ordered); }
+  if(boxMinutes(out)>minutes&&head.length){ left.unshift(head.pop().ex); out=build(ordered); }
+  return {...day, slots:out, timeBox:minutes, leftOut:left};
 }
 /* Rule 3 by hand (v1.98): "Log a set here" and a tap on a set you haven't done bring the panel to this exercise. They never close it. */
 function logHere(i){ if(session.openIdx!==i) pickSlot(i); renderWork(); showPanel(); }
@@ -16488,6 +16644,7 @@ function startSession(day){
     prep:buildPrep(day,null).map(m=>({...m,done:false})),readiness:null,
     openIdx:0,ratings:{},adj:null,score:null,
     slots:day.slots.map(s=>({...s,sets_target:s.sets,sets:[]}))};
+  if(day.place) session.place=day.place;   // batch N 2.3
   session.startedAt=Date.now(); saveSession(); seedDraft(session.slots[0]); openCheckin();
   { const vs=voice('start',''); if(vs) setTimeout(()=>toast(vs),350); }
 }
@@ -17055,6 +17212,49 @@ function equipMissing(exId, have, gym){
   if(im==='bodyweight') return null;
   return have.some(h=>(HAVE_IMPLEMENTS[h]||[]).includes(im))?null:String(IMPLEMENT_LABEL[im]||im).toLowerCase();
 }
+/* ---- places (batch N 2.3, data only) ----
+   A place is a named list of equipment from the same model as setup's "It has" (ONB_HAVE keys). The gym is
+   whatever setup and Settings say; the two built-ins are the research's home cases; CFG.places holds your own.
+   A slot that can't be done at today's place gets a stand-in for the same pattern and main muscle, on its own
+   track, marked so the plan keeps the planned exercise for next time. */
+const PLACE_BUILTIN=[{id:'gym', name:'Gym', have:null}, {id:'home_db', name:'At home, dumbbells', have:['dumbbell','band']}, {id:'none', name:'No equipment', have:[]}];
+const allPlaces=()=>PLACE_BUILTIN.concat((CFG.places||[]).filter(p=>p&&p.id&&Array.isArray(p.have)));
+const placeById=id=>allPlaces().find(p=>p.id===id)||PLACE_BUILTIN[0];
+const placeHave=p=>p.have!=null?p.have:(Array.isArray(CFG.equipmentHave)&&CFG.equipmentHave.length?CFG.equipmentHave:(ONB_HAVE_DEFAULT[CFG.equipment||'mixed']||[]));
+// bodyweight exercises that need a bar, a station or a gadget; and dumbbell work done lying or seated on a bench
+const NEEDS_STATION=['dip','chinup','pullup','hang','hang_raise','captains_leg','ghr','back_ext','ab_wheel','wrist_roller','decline_situp'];
+const NEEDS_BENCH=['db_bench','incline_db','sa_db_bench','db_decline','seated_db_press','db_press','arnold','preacher','spider','cs_db_row','seated_rd_fly'];
+function canDoAt(exId, p){
+  const ex=exById[exId]; if(!ex) return false;
+  const have=placeHave(p), im=implementOf(ex), bench=p.id==='gym'||have.includes('bench');
+  if(!bench&&NEEDS_BENCH.includes(ex.id)) return false;
+  if(im==='bodyweight') return !NEEDS_STATION.includes(ex.id)||(p.id==='gym')||(ex.pattern==='vertical_pull'&&have.includes('pullup'));
+  return have.some(h=>(HAVE_IMPLEMENTS[h]||[]).includes(im));
+}
+/* the research's substitution table (rule 7), in this library's exercises, first that can be done there wins */
+const STAND_IN={squat:['goblet','bulgarian','db_split','kb_goblet','bw_lunge','bw_squat'], hinge:['db_rdl','kb_rdl','sl_rdl','glute_bridge'],
+  horizontal_press:['db_bench','kb_floor_press','weighted_pushup','band_press'], vertical_press:['db_press','seated_db_press','kb_press','band_ohp'],
+  vertical_pull:['pullup','chinup','band_pulldown','db_row','inverted_row'], horizontal_pull:['db_row','kb_row','band_row','inverted_row']};
+function standInFor(slot, p){
+  const ex=exById[slot.ex]; if(!ex) return null;
+  const pm=primaryMuscle(ex), ok=id=>{ const e=exById[id]; return e&&id!==ex.id&&!e.folded&&!e.rehab&&!e.manualOnly&&!isExcluded(id)&&canDoAt(id,p)&&(flagFor(id)||{}).level!=='red'; };
+  const listed=(STAND_IN[ex.pattern]||[]).filter(ok);
+  if(listed.length) return listed[0];
+  const same=EX.filter(e=>e.pattern===ex.pattern&&ok(e.id)&&(!pm||(e.vol||{})[pm]>=1));
+  return same.sort((a,b)=>pickExposure(b.id)-pickExposure(a.id))[0]?.id||null;
+}
+/* a day at a place: stand-ins where needed, and what changed, for the screen to say */
+function dayAt(day, placeId){
+  const p=placeById(placeId||'gym'); let swapped=0; const none=[];
+  const slots=day.slots.map(sl=>{
+    if(canDoAt(sl.ex,p)) return sl;
+    const alt=standInFor(sl,p);
+    if(!alt){ none.push(sl.ex); return {...sl, standIn:{for:sl.ex, place:p.id, none:true}}; }
+    swapped++; const n={...sl, ex:alt, standIn:{for:sl.ex, place:p.id}}; delete n.modifiers; delete n.plain;
+    return withReps(withUsual(n), currentPhase());
+  });
+  return {...day, slots, place:p.id, placeSwapped:swapped, placeNone:none};
+}
 function haveScore(ex){ return equipMissing(ex.id, CFG.equipmentHave, CFG.equipment)?-500:0; }
 function equipmentScore(ex){
   const q=CFG.equipment, im=implementOf(ex), hs=haveScore(ex);
@@ -17218,7 +17418,7 @@ function deloadSignals(){
   return out;
 }
 PROPOSAL_SOURCES.push(()=>{
-  const ph=currentPhase(); if(!ph||ph.onDeload||!ROADMAP.length) return null;
+  const ph=currentPhase(); if(!ph||ph.onDeload||!ROADMAP.length||holdState()) return null;   // no deload offers in a hold
   const sig=deloadSignals(); if(!sig.length) return null;
   const strong=sig.some(x=>x.strong);
   const dpw=sessionsPerWeek()||5;
@@ -17611,6 +17811,7 @@ function ivDescribe(s){
 
 /* The card for one lift. */
 function stallCard(exId){
+  if(holdState()) return null;   // no stall checks in a hold (batch N 2.2)
   const plan=stallPlan(exId); if(!plan||plan.active||plan.waiting||plan.step==null) return null;
   const ex=exById[exId], nm=ex.name, st=plan.st, base='stall:'+exId+':';
   const since='no new best in '+st.weeks+' weeks (your window is '+st.W+')';
@@ -17664,7 +17865,7 @@ function stallCard(exId){
    the card becomes a notice with an undo. Deloads, diagnosis and
    specialization always ask. */
 function autoApplyInterventions(){
-  if(!CFG.autoIntervene) return;
+  if(!CFG.autoIntervene||holdState()) return;
   [...new Set(CFG.goals||[])].forEach(id=>{
     const plan=stallPlan(id);
     if(plan&&!plan.active&&(plan.step===1||plan.step===3)) startIntervention(id,plan,true);
@@ -18274,6 +18475,10 @@ const ENGINE={
     {from:42, load:[0.75,0.85], sets:[1/2,1/2], weeks:[4,4], soft:true},
     {from:84, load:[0.65,0.75], sets:[1/2,1/2], weeks:[6,4], soft:true, settling:true}],
   RETURN_SOFT_RPE:6.5,                          // the first session after 21+ days stops 3–4 reps short
+  /* Hold mode (batch N 2.2), research rule 1 (grade B for 1 hard session a week holding muscle under 60; the
+     third and the floor of 3 are judgement defaults). Goal lifts keep 1–3 sets of 1–5 at RPE 8 (rule 2, grade C). */
+  HOLD_SHARE:1/3, HOLD_MIN_SETS:3, HOLD_REVIEW_WEEKS:32, HOLD_PRACTICE:{sets:2, reps:[3,5], rpe:8},
+  HOLD_OFFER_DAYS:14, HOLD_DECLINE_DAYS:14, HOLD_RUSTY_DAYS:21,
   BAND:[[75,'Green'],[50,'Yellow'],[25,'Orange'],[0,'Red']],
   /* Weekly sets per muscle: the typical range the phase ramp stays inside.
      LANDMARKS' MEV–MRV numbers, Grade D — engine defaults, never shown as
@@ -18494,6 +18699,16 @@ function returnRampOf(slot,tr,ex){
   return {days:Math.round(gap), eff:Math.round(eff), band:b.from, first, firstWeek, factor, ref, sinceBest, cap:ref!=null?Math.max(ref*factor,sinceBest||0):null, sibling:!!sibT,
     setsMult:firstWeek?b.sets[o]:1, soft:!!b.soft&&first, holdOut:!!b.soft&&firstWeek, settling:!!b.settling&&first, reason};
 }
+/* The first week after a hold ends: no heavier than the best working load on this track in the two weeks before
+   the hold (what you were lifting then; batch N 2.2). Every set, not just the first: an easy set mustn't climb past
+   it that week. Nothing in those two weeks: no cap (the return ramp has it). */
+function holdReturnCap(slot){
+  const w=holdWindows(), h=w[w.length-1]; if(!h||h.end==null||Date.now()-h.end>=7*864e5) return null;
+  const tr=slotTrack(slot); let best=null;
+  for(const st of sets()){ const tt=new Date(st.ts).getTime(); if(st.set_kind==='warmup'||LIGHT_ROLES.includes(st.role)||tt>=h.start||tt<h.start-14*864e5) continue;
+    const t=setTrack(st); if(t.ex!==tr.ex||t.sig!==tr.sig) continue; const v=engLb(st); if(v!=null&&(best==null||v>best)) best=v; }
+  return best;
+}
 /* Held out for the first week back after 21+ days (rule 3, soreness): Nordics, partials (the app can't tell a
    lengthened partial from a short one, so every partial) and slow negatives (4+ seconds down). */
 const returnHeldOut=sl=>/nordic/.test(sl.ex)||!!(sl.modifiers&&((sl.modifiers.rom&&sl.modifiers.rom.kind==='partial')||(sl.modifiers.tempo&&+String(sl.modifiers.tempo).split('-')[0]>=4)));
@@ -18649,6 +18864,8 @@ function runModifiers(slot, base, o){
       else rec(c.id,false,c.reason,pr);
     });
   }
+  // the first week back from a hold: never above the pre-hold load (a cap, every set)
+  { const hc=holdReturnCap(slot); if(hc!=null&&pr.lb>hc+1e-6){ pr={...pr,lb:loadable(slot,hc)}; rec('return_ramp',true,'First week back from holding: no heavier than before the hold',pr); } }
   // focused deload: never above the pin
   if(pinned){
     const ref=fdReference(fd,slot.ex), lv=fd.level, cap=ref!=null?loadable(slot,ref*FD_MUL[lv]):null;
@@ -19057,7 +19274,7 @@ function logSet(slot,idx,kind,extend,over){
   else toast(kind==='warmup'?'Warm-up logged':allOut?'All-out set logged':group?`${group.pos===0?'Top set':TECHNIQUES[draft.tech].extend} logged`:`Set ${slot.sets.length} logged`);
   if(kind!=='warmup'){
     const rest=draft.group?45:restFor(slot);
-    startRest(rest, draft.group?'Cluster rest':`Rest · ${exById[slot.ex].name}`, draft.group?null:slot.ex);
+    if(pairRestsNow(slot)) startRest(rest, draft.group?'Cluster rest':`Rest · ${exById[slot.ex].name}`, draft.group?null:slot.ex);
   }
   if(allOut){ draft.tech='straight'; draft.rpe=slot.rpe; }   // one all-out set, then back to normal
   advanceIfDone(slot,idx);
@@ -19497,7 +19714,7 @@ function openPost(){
     if(save) Object.entries(st.stick||{}).forEach(([exId,r])=>append({type:'sticking_report',exercise_id:exId,session_id:session.id,set_id:r.set.id,region:r.region,signature:modSig(r.set.modifiers)||undefined}));
     const endEv=append({type:'session_end',session_id:session.id,day_name:session.dayName,
             ...(session.explore?{explore:true, explore_slots:session.slots.filter(sl=>sl.explore&&sl.sets.length).map(sl=>({ex:sl.ex, from:sl.explore.from, base:sl.explore.base||sl.explore.from, tsi:sl.explore.tsi, day_id:session.dayId}))}:{}),
-            session_rpe:save?st.rpe:null,joints:save?st.joints:{},joint_scale:3,
+            session_rpe:save?st.rpe:null,joints:save?st.joints:{},joint_scale:3,...(session.place?{place:session.place}:{}),
             post_soreness:save?st.post_soreness:{},
             duration_s:session.startedAt?Math.round((Date.now()-session.startedAt)/1000):null});
     const score=session.score;

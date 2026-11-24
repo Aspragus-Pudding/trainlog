@@ -36,7 +36,7 @@ function stub(){
     set(){ return true; }, apply(){ return stub(); }, construct(){ return stub(); }
   });
 }
-const EXPORTS=['returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
+const EXPORTS=['boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','holdState','holdWindows','holdTargets','holdDays','programDays','holdOffer','holdReview','holdBackAsk','HOLD_COPY','startHold','endHold','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
   'suggestFor','seedDraft','logSet','moveSlot','adjustSets','fatigueRise','impliedE1','predictedRpe','rtfFromPct',
   'MUSCLE_REP_RANGE','CFG','FATIGUE_MIN_PAIRS','FATIGUE_MIN_SESSIONS','CHART_MAX_RTF',
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
@@ -4178,6 +4178,102 @@ section('102. batch N 2.1: the return ramp, per exercise, one cut in the pipelin
     const sg=A.suggestFor(slot('squat')), ch=(sg.trace||[]).filter(t=>t.changed&&['return_ramp','sick_day'].includes(t.id));
     ok(ch.length===1&&(sg.trace||[]).some(t=>t.superseded),'a sick day and a return: the larger cut applies, the other is traced as superseded',JSON.stringify(ch.map(t=>t.id))); }
   console.log('  four bands + over 60 · one cut, traced · ramping back · usual and sibling · kg · class · first-week plan · no stacking');
+}
+
+section('103. batch N 2.2: hold mode, engine only');
+{
+  const se=(sid,d)=>({type:'session_end',id:'e'+sid,ts:day(d),session_id:sid,joints:{}});
+  const prog=(ev)=>{ const A=load(ev||[]); A.setRoadmap([A.applyShape({type:'hyp',label:'H',weeks:8,deload:false,hyp:[]})]); const C=A.getCFG(); C.start=new Date(Date.now()-120*864e5).toISOString().slice(0,10); C.goals=['squat','deadlift','bench']; return A; };
+  const vol=days=>{ const t={}; days.forEach(d=>d.slots.forEach(sl=>{ const ex=null; })); return t; };
+  // no hold in the log: the week is the program's, exactly as before
+  { const A=prog(); ok(!A.holdState()&&JSON.stringify(A.generatedDays())===JSON.stringify(A.programDays()),'with no hold, the week is the program\'s, unchanged',''); }
+  // targets: a third of the program's weekly sets per muscle, never under 3
+  { const A=prog(), T=A.holdTargets(), tot={};
+    A.programDays().forEach(d=>d.slots.forEach(sl=>{ const ex=A.exById[sl.ex]; Object.entries(ex.vol||{}).forEach(([m,w])=>tot[m]=(tot[m]||0)+w*sl.sets); }));
+    const bad=Object.entries(T).filter(([m,v])=>v!==Math.max(3,Math.round(tot[m]/3)));
+    ok(Object.keys(T).length>4&&bad.length===0&&Object.values(T).every(v=>v>=3),'hold targets: a third of the program\'s weekly sets per muscle, never under 3',JSON.stringify(bad.slice(0,3))); }
+  // in a hold: N full-body days, goal lifts practised once a week, sets fitted to the targets
+  { const A=prog([{type:'hold_start',id:'h1',ts:day(1),days:2}]), h=A.holdState(), d=A.generatedDays();
+    ok(h&&h.days===2&&d.length===2&&d.every(x=>x.hold&&/^Hold [AB]$/.test(x.name)),'a 2-day hold: two full-body days named Hold A and B',JSON.stringify(d.map(x=>x.name)));
+    const goalSlots=g=>d.flatMap(x=>x.slots).filter(sl=>A.trackRoot?true:true).filter(sl=>sl.ex===g||sl.ex===g);
+    ['squat','deadlift','bench'].forEach(g=>{ const sl=d.flatMap(x=>x.slots).filter(x=>x.ex===g);
+      ok(sl.length===1&&sl[0].holdPractice&&sl[0].sets===2&&sl[0].reps.join()==='3,5'&&sl[0].rpe===8&&/Keeping your .* practised\./.test(sl[0].holdNote),'goal lift '+g+': once a week, 2 × 3–5 at RPE 8, with the note',JSON.stringify(sl.map(x=>({sets:x.sets,reps:x.reps,note:x.holdNote})))); });
+    const T=A.holdTargets(), got={}; d.forEach(x=>x.slots.forEach(sl=>{ const ex=A.exById[sl.ex]; Object.entries(ex.vol||{}).forEach(([m,w])=>got[m]=(got[m]||0)+w*sl.sets); }));
+    const tot=Object.values(T).reduce((a,b)=>a+b,0), have=Object.keys(T).reduce((a,m)=>a+Math.min(T[m],got[m]||0),0);
+    ok(have>=tot*0.6,'the hold week covers most of the muscle targets',JSON.stringify({targets:tot,covered:Math.round(have)})); }
+  // re-spread: one session done this week with nothing much logged, the next one carries the rest
+  { const ev=[{type:'hold_start',id:'h2',ts:day(20),days:2}], A0=prog(ev), d0=A0.generatedDays();
+    const total=x=>x.slots.reduce((a,sl)=>a+sl.sets,0);
+    const now=new Date(); const wk=new Date(now); wk.setHours(0,0,0,0); wk.setDate(wk.getDate()-((wk.getDay()+6)%7)); const tIn=new Date(Math.max(wk.getTime()+3600e3, Date.now()-3600e3)).toISOString();
+    const A1=prog(ev.concat([{type:'session_end',id:'eh',ts:tIn,session_id:'sh',joints:{}}]));
+    const d1=A1.generatedDays(), next=d1[1];
+    ok(total(next)>=total(d0[1]),'a session this week with nothing logged in it: the next one carries the rest of the week\'s targets',JSON.stringify({before:total(d0[1]),after:total(next)})); }
+  // the block clock: frozen in a hold, resumed after
+  { const ev=[]; [40,37,34].forEach((d,i)=>ev.push(se('p'+i,d)));
+    const before=prog(ev).programPosition().sessionsIn;
+    const ev2=ev.concat([{type:'hold_start',id:'h3',ts:day(30),days:1}]); [28,21,14].forEach((d,i)=>ev2.push(se('q'+i,d)));
+    const during=prog(ev2).programPosition().sessionsIn;
+    const ev3=ev2.concat([{type:'hold_end',id:'he',ts:day(10)}, se('r0',8)]);
+    const after=prog(ev3).programPosition().sessionsIn;
+    ok(during===before&&after===before+1,'the block clock stops in a hold and resumes after',JSON.stringify({before,during,after})); }
+  // what stops: stall cards, the streak; and the proposals exist for when the screens are picked
+  { const A=prog([{type:'hold_start',id:'h4',ts:day(2),days:1}]);
+    ok(A.weeksInARow()===0&&A.stallCard('squat')==null,'no streak and no stall card in a hold','');
+    const fnSrc=n=>{ const i=src.indexOf('function '+n+'('); const j=src.indexOf('\nfunction ',i+10); return src.slice(i,j); };
+    ok(/if\(!CFG\.autoIntervene\|\|holdState\(\)\) return;/.test(src)&&/!ROADMAP\.length\|\|holdState\(\)\) return null;   \/\/ no deload offers in a hold/.test(src),'no automatic interventions or deload offers in a hold',''); }
+  { const ev=[]; for(let k=0;k<2;k++) ev.push(se('o'+k,13-k*5)); const A=prog(ev); const o=A.holdOffer();
+    ok(o&&o.title===A.HOLD_COPY.offer,'two sessions in 14 days of a 5-day program: the hold offer (not shown yet)',JSON.stringify(o));
+    A.getCFG().holdDeclinedAt=new Date().toISOString(); ok(A.holdOffer()==null,'declining is remembered for 14 days',''); }
+  { const A=prog([{type:'hold_start',id:'h5',ts:day(33*7),days:1}]); ok(!!A.holdReview(),'after 32 weeks in a hold, a check of the main lifts is suggested',''); }
+  // the first week after a hold: never above the pre-hold load, even after an easy practice set in the hold
+  { const ev=[]; [40,37,34].forEach((d,i)=>ev.push(set('squat','pre'+i,250,5,8,d,{target:{reps:[3,5],rpe:8}}),se('pre'+i,d)));
+    ev.push({type:'hold_start',id:'hs',ts:day(30),days:1}); [28,21,14,7].forEach((d,i)=>ev.push(set('squat','in'+i,265,5,6,d,{target:{reps:[3,5],rpe:8}}),se('in'+i,d)));
+    ev.push({type:'hold_end',id:'he2',ts:day(2)});
+    const A=prog(ev), sg=A.suggestFor({ex:'squat',role:'primary',reps:[3,5],rpe:8,sets_target:3,sets:[]});
+    ok(sg.lb<=250+1e-6&&(sg.trace||[]).some(x=>x.id==='return_ramp'&&x.changed),'first week back from a hold: squat capped at the 250 lifted before it, not the 265 practised in it',JSON.stringify({lb:sg.lb})); }
+  { const A=prog([{type:'hold_start',id:'h6',ts:day(3),days:1}]), d=A.generatedDays();
+    ok(d.length===1&&d[0].name==='Hold A'&&d[0].slots.length>=6&&d[0].slots.length<=8,'a one-day hold is one day, filled from the program for the muscles it would miss (up to 8)',JSON.stringify(d.map(x=>x.name+':'+x.slots.map(s=>s.ex).join(',')))); }
+  // no blame in any of it
+  { const C=prog().HOLD_COPY, lines=[C.offer,C.practice('squat'),C.rusty('squat'),C.review,C.back].join(' ');
+    ok(!/\b(missed|miss|failed|fell behind|behind|lazy|slack|should have|excuse|only managed)\b/i.test(lines),'hold copy carries no blame',lines); }
+  console.log('  program untouched without a hold · targets · Hold A/B · goal lifts weekly · re-spread · clock frozen and resumed · stops · offer, review · no blame');
+}
+
+section('104. batch N 2.3–2.5: places, pairing, time-boxed sessions (data only)');
+{
+  const A=load([]), gym=A.placeById('gym'), db=A.placeById('home_db'), none=A.placeById('none');
+  ok(A.canDoAt('squat',gym)&&!A.canDoAt('squat',db)&&A.canDoAt('goblet',db)&&!A.canDoAt('goblet',none)&&A.canDoAt('bw_squat',none),'places: a barbell squat at the gym only; goblet with dumbbells; a bodyweight squat anywhere','');
+  ok(!A.canDoAt('db_bench',db)&&!A.canDoAt('pullup',none)&&A.canDoAt('pullup',gym),'no bench at home for dumbbell benching; no bar for pull-ups with no equipment','');
+  const sub=(ex,p)=>A.standInFor({ex,role:'primary',reps:[6,10],rpe:8,sets:3},p);
+  const table={squat:['goblet','bw_lunge'], deadlift:['db_rdl','glute_bridge'], bench:['weighted_pushup','weighted_pushup'], pulldown:['band_pulldown','inverted_row'], db_row:[null,'inverted_row']};
+  Object.entries(table).forEach(([ex,[a,b]])=>{ const ga=a==null?null:sub(ex,db), gb=sub(ex,none);
+    ok((a==null||ga===a)&&gb===b,'stand-in for '+ex+': '+(a?'dumbbells → '+a+', ':'')+'no equipment → '+b,JSON.stringify({ga,gb})); });
+  ok(sub('ohp',db)==='band_ohp','overhead press at home with dumbbells and no bench: the band press',sub('ohp',db));
+  const day={id:'d',name:'Full body A',slots:[{ex:'squat',role:'primary',reps:[6,10],rpe:8,sets:3},{ex:'curl',role:'accessory',reps:[8,12],rpe:8,sets:3}]};
+  const at=A.dayAt(day,'home_db');
+  ok(at.placeSwapped===1&&at.slots[0].ex==='goblet'&&at.slots[0].standIn&&at.slots[0].standIn.for==='squat'&&at.slots[1].ex==='curl'&&at.place==='home_db','a day at home: one stand-in, marked with what it stands in for; the rest as planned',JSON.stringify(at.slots.map(x=>x.ex)));
+  ok(/\.\.\.\(session\.place\?\{place:session\.place\}:\{\}\)/.test(src),'a session records its place','');
+  // pairing
+  const sl=(ex,role)=>({ex,role:role||'accessory',reps:[8,12],rpe:8,sets:3});
+  ok(A.pairOK(sl('bench'),sl('db_row'))&&!A.pairOK(sl('bench'),sl('incline_db'))&&A.pairOK(sl('leg_ext'),sl('curl')),'pairs: opposing or unrelated muscles yes, the same main muscle no','');
+  { const S=load([],true); S.CFG.conditions=['sh_ant_instability']; ok(!S.pairOK(sl('bench'),sl('lat_raise')),'never two exercises on the same watched joint (shoulder)',''); }
+  const ps=A.suggestPairs([sl('squat','primary'),sl('bench','secondary'),sl('db_row','secondary'),sl('curl'),sl('leg_ext')]);
+  ok(!ps[0].pairWith&&ps[1].pairWith===ps[2].uid&&ps[3].pairWith===ps[4].uid,'the heaviest lift is never paired; neighbours pair where the rule allows',JSON.stringify(ps.map(x=>x.ex+(x.pairWith?'*':''))));
+  // inside a pair the two alternate, and rest waits for the second
+  { const B=load([]); const a={...sl('bench'),uid:'ua',pairWith:'ub',sets_target:3,sets:[]}, b={...sl('db_row'),uid:'ub',pairWith:'ua',sets_target:3,sets:[]}, c={...sl('curl'),uid:'uc',sets_target:3,sets:[]};
+    B.setSession({id:'sp',slots:[a,b,c],openIdx:0,ratings:{}});
+    a.sets.push({id:'x1'}); B.syncCurrent(a); const s1=B.getSession().openIdx, r1=B.pairRestsNow(a);
+    b.sets.push({id:'x2'}); B.syncCurrent(b); const s2=B.getSession().openIdx, r2=B.pairRestsNow(b);
+    ok(s1===1&&s2===0&&!r1&&r2,'a set on one of a pair moves to the other with no rest; after the second, rest and back',JSON.stringify({s1,s2,r1,r2})); }
+  // time boxes
+  { const C=load([]), d={id:'t',name:'Full body A',slots:[sl('squat','primary'),sl('bench','secondary'),sl('db_row','secondary'),sl('curl'),sl('leg_ext'),sl('calf'),sl('lat_raise')]};
+    C.getCFG().goals=['squat'];
+    const full=C.estSessionLength(d), b20=C.timeBox(d,20), b30=C.timeBox(d,30), b45=C.timeBox(d,45);
+    ok(C.boxMinutes(b20.slots)<=20&&b20.leftOut.length>0&&b20.slots.length+b20.leftOut.length===7,'20 minutes: fits, and says what was left out',JSON.stringify({full,kept:b20.slots.map(x=>x.ex),left:b20.leftOut}));
+    ok(C.boxMinutes(b30.slots)<=30&&b30.slots.length>=b20.slots.length&&b30.slots.some(x=>x.pairWith),'30 minutes: fits, keeps at least as much, and pairs compound work',JSON.stringify(b30.slots.map(x=>x.ex+(x.pairWith?'*':''))));
+    ok(b45.slots[0].ex==='squat'&&!b45.slots[0].pairWith&&C.boxMinutes(b45.slots)<=45,'45 minutes: the heaviest lift first on its own, and it fits',JSON.stringify(b45.slots.map(x=>x.ex+(x.pairWith?'*':''))));
+    ok(!b20.leftOut.includes('curl')||b20.leftOut.includes('calf'),'trimmed from the bottom of the order: a finisher goes before isolation work',JSON.stringify(b20.leftOut)); }
+  console.log('  can do at a place · stand-ins from the research table · day at a place · pairs never share a muscle or a joint · alternate and rest after · time boxes');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
