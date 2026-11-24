@@ -61,7 +61,7 @@ everyone.
 | Pain rating after a set, with advice | injury-prone | after a set on a relevant exercise |
 | Condition warnings and suggested swaps | injury-prone | on the card |
 | Rest timer | everyone | bottom bar after each set |
-| Where are you training today (place chips, last one first; stand-ins, said before Start) and How long do you have (Full, 45, 30, 20: what each leaves out); paired exercises as two linked cards | everyone | Train, before Start; the cards |
+| Where are you training today (place chips, last one first; stand-ins, said before Start) and How long do you have (Full, 45, 30, 20: 3 rounds each at 20 and 30, the heaviest lift always stays, what each leaves out); paired exercises as two linked cards | everyone | Train, before Start; the cards |
 | Warm-up suggestions from the check-in: one or two moves from the warm-up library for anything that felt stiffer than usual | everyone | Train, the warm-up |
 | Weight unit for one exercise: the "lb ▸ kg" button on the set panel switches this exercise's numbers, without changing the rest | everyone | set panel |
 | Add an exercise; arrows to move; Swap and How to do it on every exercise (Swap moves into How to do it once a set is logged); Log a set here, or tap a set you haven't done, to bring the set panel to that exercise | everyone | the card, the end of the list |

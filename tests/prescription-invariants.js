@@ -4565,6 +4565,37 @@ section('114. batch 04 Part 6: the checks the audit found missing');
   console.log('  summary buttons · setup link end to end · the unit button · npm scripts');
 }
 
+section('115. short sessions follow rule 6, and no day is ever empty (v1.119)');
+{
+  const sl=(ex,role,sets)=>({ex,role:role||'accessory',reps:[8,12],rpe:8,sets:sets||3});
+  const C=load([],true); C.getCFG().goals=['squat'];
+  const d={id:'t',name:'Full body A',slots:[sl('squat','primary',6),sl('bench','secondary',5),sl('db_row','secondary',4),sl('curl','accessory',4),sl('calf','accessory',4)]};
+  const was=JSON.stringify(d), b20=C.timeBox(d,20), b30=C.timeBox(d,30), b45=C.timeBox(d,45);
+  ok([b20,b30].every(b=>b.slots.length&&b.slots.every(x=>x.sets<=3)),'20 and 30 minutes: 3 rounds per exercise',JSON.stringify([b20,b30].map(b=>b.slots.map(x=>x.ex+' '+x.sets))));
+  ok(b45.slots[0].ex==='squat'&&b45.slots[0].sets===5&&b45.slots.slice(1).every(x=>x.sets===d.slots.find(y=>y.ex===x.ex).sets),'45 minutes: the heavy lift first, at most 5 sets; the rest at their planned sets',JSON.stringify(b45.slots.map(x=>x.ex+' '+x.sets)));
+  ok(JSON.stringify(d)===was,'the planned day itself is never changed','');
+  ok(b30.slots.some(x=>x.ex==='squat')&&b20.slots.some(x=>x.ex==='squat'),'the heaviest lift stays at 20 and 30 minutes',JSON.stringify({b20:b20.slots.map(x=>x.ex),b30:b30.slots.map(x=>x.ex)}));
+  // the floor: a heaviest lift that alone runs over the box still stays
+  { const long={id:'l',name:'Long',slots:[sl('deadlift','primary',8),sl('bench','secondary',6),sl('curl','accessory',4)]};
+    const r=[20,30,45].map(m=>{ const b=C.timeBox(long,m); return {m,kept:b.slots.map(x=>x.ex),min:C.boxMinutes(b.slots)}; });
+    ok(r.every(x=>x.kept.includes('deadlift')),'the heaviest lift is never left out, even when it alone runs over the time',JSON.stringify(r)); }
+  { const none=C.timeBox({id:'e',name:'Empty',slots:[]},20); ok(Array.isArray(none.slots)&&!none.slots.length&&!none.leftOut.length,'an empty day stays empty, without an error',''); }
+  // generated weeks: every day keeps its heaviest lift at every length, and is never empty
+  const bad=[]; let days=0;
+  [['full','full','full','full','full'],['upper','lower','upper','lower'],['push','pull','legs','push','pull','legs'],['full','full'],['upper','lower','full']].forEach(w=>{
+    [['squat','deadlift','bench'],['incline_machine','deadlift','transformer_high_bar'],[]].forEach(goals=>{ ['hyp','str'].forEach(type=>{
+      const A=load([],true); A.setRoadmap([A.applyShape({type,label:'B',weeks:8,deload:false,hyp:[]})]); const AC=A.getCFG(); AC.week=w; AC.goals=goals; AC.start=new Date(Date.now()-10*864e5).toISOString().slice(0,10);
+      A.generatedDays().forEach(day=>{ const p=A.planFor(day); if(!p.slots.length) return; days++;
+        const floor=A.timeBox(p,1).slots.map(x=>x.ex), main=p.slots.find(x=>x.role==='primary'&&A.isMainLift(x.ex));
+        if(floor.length!==1||(main&&floor[0]!==main.ex)) bad.push(w.join('/')+' '+type+' '+day.name+': floor '+floor.join(','));
+        [20,30,45].forEach(m=>{ const b=A.timeBox(p,m);
+          if(!b.slots.length||!b.slots.some(x=>x.ex===floor[0])) bad.push(w.join('/')+' '+type+' '+day.name+' at '+m+': '+b.slots.map(x=>x.ex).join(','));
+          if(m<45&&b.slots.some(x=>x.sets>3)) bad.push(day.name+' at '+m+': more than 3 rounds');
+          if(b.slots.length+b.leftOut.length!==p.slots.length) bad.push(day.name+' at '+m+': an exercise went missing'); }); }); }); }); });
+  ok(days>100&&!bad.length,'generated weeks ('+days+' days, 5 weeks × 3 goal sets × 2 block types): never empty, the heaviest lift always kept, nothing goes missing',bad.slice(0,5).join(' | '));
+  console.log('  3 rounds at 20 and 30 · the heavy lift at most 5 at 45 · the heaviest lift never left out · '+days+' generated days at three lengths');
+}
+
 Promise.all(PENDING_ASYNC).then(()=>{
 console.log('\n'+checks+' checks, '+failures+' failed');
 if(failures){ console.log('\n'+Object.entries(shown).map(([k,n])=>n+' x '+k).join('\n')); process.exit(1); }

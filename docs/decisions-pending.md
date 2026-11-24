@@ -1835,3 +1835,11 @@ After posting, the app reads back: `?action=ping` (new in AppsScript.gs: the sto
 
 - **Part 4:** the injury library is embedded minified, without the fields no code reads (`sources`, `running`, `interactions`; the docs files keep them). The guide, the glossary and the voices are parsed the first time something reads them (`lazyParsed`), not at boot. Still one file, no network loads. Boot time on a Pixel-shaped Chromium at 4× CPU is in the report.
 - **Part 6:** `package.json` (`npm test`: the three node suites; `npm run test:mobile`; Playwright as a dev dependency, node_modules ignored). New checks: the first-session summary's buttons, the setup link end to end, the unit button, and the feedback queue and the sync confirmation (v1.113, v1.114). README says WebKit is the iPhone path.
+
+## D94. Short sessions follow research rule 6 (v1.119.0, the maintainer's pick A)
+
+- Found while taking the report's screenshots: the time box took rule 6's order but kept each exercise's planned sets, so a 6-set squat alone overflowed 30 minutes. On the maintainer's week, 20 minutes left nothing on three of five days.
+- Now (`timeBox`): at 20 and 30 minutes every exercise is capped at 3 sets (3 rounds) and paired where the pairing rule allows. At 45 the heaviest lift goes first on its own, capped at 5 sets; the rest keep their planned sets and are paired. Still trimmed from the bottom of the order, but the heaviest lift is never left out, even when it alone runs over. The plan for now's session length goes through the same function.
+- Rule 6's 45-minute session is "a heavy lift (3–5 sets), then 3 supersets"; it gives no round count for those supersets, so at 45 they keep their planned sets (the maintainer's wording: "at most 5 sets for the heavy lift at 45"). Rest isn't shortened: a pair rests for the longer of its two rests.
+- Tests: §115 (generated weeks: five weeks × three goal sets × two block types, every day at three lengths) and `tests/short-sessions.js <export>`, which runs on the maintainer's export with every backtest.
+- To reverse: `BOX_ROUNDS` and `BOX_HEAVY_MAX` (set them to Infinity for planned sets); the floor is the `ordered.length>(head.length?0:1)` condition.

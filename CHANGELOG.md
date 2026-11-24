@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.119.0 — 2026-11-24
+- How long do you have? now follows the research's rule for short sessions: at 20 and 30 minutes every exercise is paired, 3 rounds each.
+- At 45 minutes your heaviest lift goes first, at most 5 sets, and the rest are paired.
+- Your heaviest lift is never left out. Before, a 20- or 30-minute session could leave out everything.
+
 ## 1.118.0 — 2026-11-24
 - No change you'd see: more of the app is checked by tests, and the tests have one way to run.
 - The checks cover the setup link, the first-session summary and the unit button.
