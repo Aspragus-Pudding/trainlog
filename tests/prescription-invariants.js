@@ -38,7 +38,7 @@ function stub(){
     set(){ return true; }, apply(){ return stub(); }, construct(){ return stub(); }
   });
 }
-const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','warmupLibrary','warmupSuggest','stiffAreas','wuEvidence','dayForToday','placeToday','ladderPos','ladderNext','ladderPrev','ladderCurrent','ladderMoveUpDue','ladderMoveUp','ladderNotYet','templateDay','harderThan','BW_CLASS','STAND_IN','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','fornowState','fornowWindows','fornowDays','fornowTargets','programDays','fornowOffer','fornowBack','fornowAsk','FORNOW_COPY','startForNow','endForNow','answerForNow','changeForNow','boxMinutes','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
+const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','noteStatus','fbQueue','flushFeedback','sendFeedback','askSheet','warmupLibrary','warmupSuggest','stiffAreas','wuEvidence','dayForToday','placeToday','ladderPos','ladderNext','ladderPrev','ladderCurrent','ladderMoveUpDue','ladderMoveUp','ladderNotYet','templateDay','harderThan','BW_CLASS','STAND_IN','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','fornowState','fornowWindows','fornowDays','fornowTargets','programDays','fornowOffer','fornowBack','fornowAsk','FORNOW_COPY','startForNow','endForNow','answerForNow','changeForNow','boxMinutes','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
   'suggestFor','seedDraft','logSet','moveSlot','adjustSets','fatigueRise','impliedE1','predictedRpe','rtfFromPct',
   'MUSCLE_REP_RANGE','CFG','FATIGUE_MIN_PAIRS','FATIGUE_MIN_SESSIONS','CHART_MAX_RTF',
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
@@ -4503,6 +4503,24 @@ section('110. the warm-up library and the check-in rule');
     const st=d.filter(m=>m.cat==='stiff'); ok(st.length>=1&&st.length<=2&&st.every(m=>m.suggest),'the day\'s warm-up carries the suggestion, marked as one',JSON.stringify(st.map(m=>m.id))); }
   ok(!/type:'set'/.test(fnSrc('warmupSuggest')+fnSrc('buildPrep')),'warm-ups are never logged as sets, so never rated or counted in weekly sets','');
   console.log('  six body parts · grade or consensus · nothing stiff, nothing suggested · one or two, with why · safe for your conditions · in the day\'s warm-up · never a set');
+}
+
+
+section('111. batch 04 Part 1: tester plumbing');
+{
+  ok(/\$\('#sumsh'\)\.onclick=\(\)=>\{ \$\('#dlg'\)\.close\(\); TAB='set';/.test(src),'1.1: Use a sheet opens Settings (where the sheet address is), not Edit program','');
+  // 1.2: a note before the link waits; the link sends it once
+  { const A=load([],true), C=A.getCFG(); const n=A.append({type:'note',tag:'bug',text:'before the link',app_version:'x',resolved:false}); A.sendFeedback(n);
+    ok(A.fbQueue().includes(n.id)&&A.noteStatus(n)==='waiting','a note with no notes address yet waits in the queue ("Waiting to send")','');
+    C.testerName='Tess'; A.applySetupLink('?feedback=https://script.google.com/macros/s/abc/exec');
+    ok(!A.fbQueue().includes(n.id),'applying the setup link sends it (out of the queue, once)',JSON.stringify(A.fbQueue())); }
+  ok(/'Failed: tap to retry'/.test(src)&&/'Waiting to send'/.test(src)&&/ns==='sent'\?'Sent'/.test(src),'the badge says what happened: Sent, Waiting to send, Failed: tap to retry','');
+  ok(/icon\('note'\)\); nb\.setAttribute\('aria-label','Leave a note'\)/.test(src),'1.4: the note pencil is on the setup screen','');
+  ok(/This link has no backup sheet\. Restore from a file instead, or ask for a full link\./.test(fnSrc('restoreFromSheet')),'1.5: a link with no backup sheet says so','');
+  ok(/if\(CFG\.maintainer&&!isTester\(\)\)/.test(src),'1.6: maintainer tools on the maintainer flag, not on the absence of a link','');
+  ok(['startRehabPlan','onbExitAsk','swapSlotTo'].every(f=>!/confirm\(/.test(fnSrc(f))&&/askSheet\(/.test(fnSrc(f)))&&!/confirm\('Erase all logged data/.test(src)&&!/confirm\('Wipe everything/.test(src),'1.7: clearance, start over, exit setup and swap-with-sets are on the sheet, not native confirms','');
+  ok(/cache: 'no-cache'/.test(fs.readFileSync(path.join(__dirname,'..','sw.js'),'utf8'))&&/visibilitychange',\(\)=>\{ if\(!document\.hidden\) check\(\)/.test(src),'1.8: the shell is fetched past the HTTP cache, and the update check runs on foreground','');
+  console.log('  Use a sheet → Settings · notes wait, then go · honest badge · setup pencil · no-sheet message · maintainer flag · four confirms on the sheet · update path');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

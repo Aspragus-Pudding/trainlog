@@ -1797,3 +1797,13 @@ The maintainer's spec, built as engine; the setup flow and the place editor are 
 - **The program waits:** its block clock skips the plan's sessions, and its days, saved edits and blocks are untouched. Going back, each lift is priced by its own gap (the return ramp); the v1.102 cap on the first week back is gone, since a plan progresses.
 - **Offers** (engine only until the cards are picked): fewer than half the planned sessions in 14 days (any session counts, wherever it was, so a place picked for one day never triggers it; declining is remembered 14 days); back on the end date, or after a week with as many gym sessions as the program has days; and at six weeks, once, keep going, change it, or make it your main program (which ends the offers to go back; the old program stays paused).
 - **Simulator:** the two personas the maintainer asked for, one gym day plus three home days for eight weeks, and bodyweight only for four weeks. Both check that exercises progress during the plan and that the return ramp prices a lift on the way back.
+
+## D89. Batch 04 Part 1: tester plumbing (v1.113.0)
+
+- **1.1** The first-session summary's "Use a sheet" opens Settings at You and your sheet. The other `openSettings()` callers mean Edit program and stay.
+- **1.2** Every note queues until there's a notes address; applying a setup link sends the queue. "Sent" now means the note left the phone without an error (`note_sent`); an error appends `note_send_failed` and re-queues it. The badge reads that: Sent, Waiting to send, or Failed: tap to retry. no-cors still can't see the sheet's answer; 1.3 adds a read-back for backups, and notes could get the same later.
+- **1.4** The note pencil is on the setup screen's header.
+- **1.5** Restoring from a sheet with a notes-only link says "This link has no backup sheet. Restore from a file instead, or ask for a full link."
+- **1.6** Maintainer tools need `CFG.maintainer`. It's set once, for an install whose first set is from before 12 October 2026 (before testers) and that wasn't set up by a link. A new user without a link no longer sees them.
+- **1.7** The four riskiest native confirms are now a sheet with two labelled buttons (`askSheet`): clinician clearance, both "start over" buttons, Exit setup, and swapping an exercise with sets logged. The back gesture during setup still uses the native confirm: it runs inside a history pop, and turning it into a sheet needs its own care. The remaining 25 or so confirms and 12 alerts are lower risk and left for later.
+- **1.8** The service worker fetches index.html with `cache:'no-cache'`. The foreground update check was already there.

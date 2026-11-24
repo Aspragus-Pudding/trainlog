@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.113.0 — 2026-11-24
+- Notes written before your setup link now wait and are sent when you apply it. Each note says Sent, Waiting to send, or Failed: tap to retry.
+- You can leave a note during setup.
+- Starting over, erasing data, leaving setup and swapping an exercise you've started ask on a sheet with clear buttons.
+- A new version shows up on your next launch, not up to ten minutes later.
+
 ## 1.112.0 — 2026-11-24
 - Nothing changes on screen yet. Underneath, a "plan for now" replaces the earlier hold mode.
 - It spreads a week across your places (a gym day, home days), with your main lifts on gym days and everything progressing as normal.

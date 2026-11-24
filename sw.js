@@ -38,7 +38,7 @@ self.addEventListener('fetch', e => {
   if (isShell) {
     // network-first: always try for a newer build, fall back to cache offline
     e.respondWith(
-      fetch(e.request)
+      fetch(e.request, { cache: 'no-cache' })   // past the HTTP cache: a new build shows on the next launch, not 10 minutes later
         .then(r => {
           if (r && r.ok) {
             const copy = r.clone();
