@@ -283,8 +283,11 @@ async function batch01Check(page, tag){
   // a swap after logging keeps the logged sets where they were and adds the new exercise for the rest
   await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} TAB='work'; render(); const sl=session.slots[0]; seedDraft(sl); logSet(sl,0,'straight'); stopRest(); render(); openSwap(sl,0); });
   await sleep(300); await tapSel(page,'#exl button',0); await sleep(400);
+  // since 1.113 the question is on the sheet (askSheet), not a browser confirm
+  const asked=await page.evaluate(()=>!!document.querySelector('#askyes')&&/for the rest/.test($('#dlgBody').textContent));
+  if(asked){ await tapSel(page,'#askyes',0); await sleep(400); }
   const sw=await page.evaluate(()=>({kept:session.slots[0].sets.length, target:session.slots[0].sets_target, next:session.slots[1]&&session.slots[1].swapped===true, diff:session.slots[1]&&session.slots[1].ex!==session.slots[0].ex}));
-  ok(sw.kept===1&&sw.target===1&&sw.next&&sw.diff, tag+' a swap after logging keeps the logged set on the old exercise and adds the new one for the rest: '+JSON.stringify(sw));
+  ok(asked&&sw.kept===1&&sw.target===1&&sw.next&&sw.diff, tag+' a swap after logging asks on the sheet, keeps the logged set on the old exercise and adds the new one for the rest: '+JSON.stringify(sw));
   await page.evaluate(()=>{ try{ $('#dlg').close(); }catch(e){} session=null; saveSession(); stopRest(); TAB='dash'; render(); });
 }
 /* The set panel "disappearing" after a Details edit (Oct 24): the edit re-rendered Train under the sheet and
