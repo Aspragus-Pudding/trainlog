@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.108.0 — 2026-11-24
+- About 90 home exercises join the library: push-up and row progressions, dumbbell versions, and slant-board work.
+- How to do it shows the home setup, what to use instead of equipment you don't have, and how noisy each one is.
+- Training at home, every main gym lift now has a stand-in, with dumbbells or with nothing at all.
+- Past 30 reps a set, the next step is a harder version, not more reps.
+
 ## 1.107.0 — 2026-11-24
 - Rehab follows the research's rules: up to 5/10 pain for a tendon, 3/10 for anything else, or your condition's limit if that's lower.
 - One session over the limit, or a worse morning, means a third fewer sets for two sessions; two in a row means one step back for a week.

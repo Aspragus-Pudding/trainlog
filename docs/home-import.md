@@ -1,5 +1,7 @@
 # Home training library: import status and the ladder design (batch N Part 3)
 
+**Update, 24 Nov 2026: imported in v1.108.0.** The codes came from `docs/research/exercise-library.md` (batch L, v1.106.0). Every parent but four resolves through them, and those four are handled in D84. Section 1 below is kept as the record of why it stopped. Ladders follow the design in section 2, with one change: the return ramp starts at 21 days now, so the "10–20 days" line no longer applies.
+
 Two things are here: why the import stopped before importing anything, and the ladder design the batch asked
 for before ladders are built.
 

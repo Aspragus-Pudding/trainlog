@@ -138,6 +138,14 @@ New exercises carry the research's flags mapped this way **plus** their parent's
 | cable_kickback | V206 | tags | the research flags would add shoulder_ext_endrange_loaded; the app's tags are kept |
 | woodchop | V229 | tags | the research flags would add spine_rotation_loaded; the app's tags are kept |
 
+## Home training (batch N Part 3)
+
+| New rows | Updated exercises | Collisions (treated as updates) | Ladders | Templates | Quiet cardio (data only) |
+|---|---|---|---|---|---|
+| 88 | 60 | 2 | 10 | 3 | 10 |
+
+Collisions: H061 DB front raise = db_front_raise; H067 DB kickback = kickback.
+
 ## Matched to an app exercise (the code is stored on it)
 
 | Code | Research name | App exercise |
@@ -509,3 +517,91 @@ New exercises carry the research's flags mapped this way **plus** their parent's
 | R47 | Single-leg balance progression | balance_sl under - |
 | R48 | Band eversion + tib raise | band_eversion under - |
 | R24 | McGill curl-up | mcgill_curlup (from the bundle) |
+| H001 | Decline push-up | decline_pushup under weighted_pushup |
+| H002 | Archer push-up | archer_pushup under weighted_pushup |
+| H003 | Incline one-arm push-up | incline_one_arm_pushup under weighted_pushup |
+| H004 | One-arm push-up | one_arm_pushup under weighted_pushup |
+| H005 | Pseudo-planche push-up | pseudo_planche_pushup under weighted_pushup |
+| H006 | Towel fly push-up | towel_fly_pushup under fly |
+| H007 | Hindu push-up | hindu_pushup under pike_pushup |
+| H008 | Elevated pike push-up | elevated_pike_pushup under pike_pushup |
+| H009 | Chest-to-wall handstand hold | chest_to_wall_handstand_hold under wall_hspu |
+| H010 | Wall HSPU negative | wall_hspu_negative under wall_hspu |
+| H011 | Chair dip | chair_dip under dip |
+| H012 | Sphinx push-up | sphinx_pushup under bw_tri_ext |
+| H013 | Doorframe row | doorframe_row under inverted_row |
+| H014 | Towel door-handle row | towel_door_handle_row under inverted_row |
+| H015 | Bedsheet door row | bedsheet_door_row under inverted_row |
+| H016 | Single-arm sheet row | single_arm_sheet_row under db_row |
+| H017 | Single-arm table row | single_arm_table_row under inverted_row |
+| H018 | Floor sliding pull | floor_sliding_pull under pulldown |
+| H019 | Prone swimmer | prone_swimmer under prone_t |
+| H020 | Prone W raise | prone_w_raise under prone_t |
+| H021 | Towel isometric row | towel_isometric_row under db_row |
+| H022 | Towel isometric curl | towel_isometric_curl under db_curl |
+| H023 | Doorframe biceps curl | doorframe_biceps_curl under db_curl |
+| H024 | Table bodyweight curl | table_bodyweight_curl under db_curl |
+| H025 | Sheet face pull | sheet_face_pull under face_pull |
+| H026 | Floor back extension | floor_back_extension under back_ext |
+| H027 | Lateral step-up | lateral_step_up under db_stepup |
+| H028 | Skater squat | skater_squat under pistol |
+| H029 | Doorframe-assisted pistol | doorframe_assisted_pistol under pistol |
+| H030 | Single-leg wall sit | single_leg_wall_sit under wall_sit |
+| H031 | Single-leg slider curl | single_leg_slider_curl under slider_curl |
+| H032 | Hamstring walkout | hamstring_walkout under glute_bridge |
+| H033 | Feet-elevated hamstring bridge | feet_elevated_hamstring_bridge under glute_bridge |
+| H034 | Frog pump | frog_pump under glute_bridge |
+| H035 | Curtsy lunge | curtsy_lunge under db_rev_lunge |
+| H036 | Lateral lunge | lateral_lunge under cossack |
+| H037 | Star side plank | star_side_plank under side_plank |
+| H038 | Side-lying adductor raise | side_lying_adductor_raise under copenhagen_short |
+| H039 | Hip airplane | hip_airplane under balance_sl |
+| H040 | Eccentric heel drop | eccentric_heel_drop under calf |
+| H041 | Hollow body hold | hollow_body_hold under dead_bug |
+| H042 | Lying leg raise | lying_leg_raise under hang_raise |
+| H043 | Reverse crunch | reverse_crunch under hang_raise |
+| H044 | Towel body saw | towel_body_saw under ab_wheel |
+| H045 | Kneeling towel rollout | kneeling_towel_rollout under ab_wheel |
+| H046 | Slider pike | slider_pike under ab_wheel |
+| H047 | Bear plank | bear_plank under plank |
+| H048 | Backpack bear-hug carry | backpack_bear_hug_carry under farmer |
+| H049 | Backpack overhead carry | backpack_overhead_carry under farmer |
+| H050 | Towel wring | towel_wring under rice_bucket |
+| H051 | DB floor fly | db_floor_fly under fly |
+| H052 | Single-arm DB floor press | single_arm_db_floor_press under db_floor_press |
+| H053 | Bridge DB floor press | bridge_db_floor_press under db_floor_press |
+| H054 | DB squeeze press | db_squeeze_press under db_floor_press |
+| H055 | Two-DB bent-over row | two_db_bent_over_row under bb_row |
+| H056 | Head-supported DB row | head_supported_db_row under cs_db_row |
+| H057 | Renegade row | renegade_row under db_row |
+| H058 | DB rear-delt row | db_rear_delt_row under cs_rd_row |
+| H059 | Standing DB overhead press | standing_db_overhead_press under ohp |
+| H060 | Floor side-lying lateral raise | floor_side_lying_lateral_raise under lying_incline_raise |
+| H062 | Wide DB upright row | wide_db_upright_row under cable_upright |
+| H063 | Bent-over DB Y-raise | bent_over_db_y_raise under cable_y_raise |
+| H064 | DB Cuban press | db_cuban_press under er_sidelying |
+| H065 | Bed-edge lying DB curl | bed_edge_lying_db_curl under curl |
+| H066 | DB reverse curl | db_reverse_curl under rev_curl |
+| H068 | Two-hand DB overhead extension | two_hand_db_overhead_extension under oh_ext |
+| H069 | Floor rolling DB extension | floor_rolling_db_extension under db_skull |
+| H070 | DB front-rack squat | db_front_rack_squat under front_squat |
+| H071 | DB suitcase squat | db_suitcase_squat under squat |
+| H072 | DB sumo squat | db_sumo_squat under goblet |
+| H073 | DB skater squat | db_skater_squat under skater_squat |
+| H074 | DB lateral lunge | db_lateral_lunge under lateral_lunge |
+| H075 | DB deficit RDL | db_deficit_rdl under db_rdl |
+| H076 | DB suitcase deadlift | db_suitcase_deadlift under deadlift |
+| H077 | DB good morning | db_good_morning under good_morning |
+| H078 | DB side bend | db_side_bend under suitcase_carry |
+| H079 | DB Turkish get-up | db_turkish_get_up under (own pattern) |
+| H080 | DB suitcase march | db_suitcase_march under suitcase_carry |
+| H081 | Heels-elevated BW squat | heels_elevated_bw_squat under bw_squat |
+| H082 | Heels-elevated split squat | heels_elevated_split_squat under db_split |
+| H083 | Double-leg decline squat | double_leg_decline_squat under decline_squat |
+| H084 | Single-leg decline isometric | single_leg_decline_isometric under decline_squat |
+| H085 | Single-leg decline squat | single_leg_decline_squat under decline_squat |
+| H086 | Slant straight-knee calf stretch | slant_straight_knee_calf_stretch under (own pattern) |
+| H087 | Slant bent-knee calf stretch | slant_bent_knee_calf_stretch under (own pattern) |
+| H088 | Toes-up slant calf raise | toes_up_slant_calf_raise under calf |
+| H089 | Slant side-tilt balance | slant_side_tilt_balance under balance_sl |
+| H090 | Toes-elevated SL RDL | toes_elevated_sl_rdl under sl_rdl |

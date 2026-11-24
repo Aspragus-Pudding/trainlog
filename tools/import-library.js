@@ -268,7 +268,10 @@ const EXTRA_TAGS={er_90:['shoulder_abd_er_loaded'], wrist_wb:['wrist_ext_loaded'
 /* Tags a new entry inherits that its own position doesn't have (removed, each with its reason). */
 const TAG_REMOVE={heel_goblet:{remove:['ankle_df_deep_loaded'],why:'heels raised: the board takes the deep ankle bend out'},cyclist_squat:{remove:['ankle_df_deep_loaded'],why:'heels raised: the board takes the deep ankle bend out'},
   spanish_squat:{remove:['ankle_df_deep_loaded'],why:'the strap keeps the shins vertical'},wall_sit:{remove:['ankle_df_deep_loaded'],why:'shins vertical against the wall'},
-  box_squat:{remove:['ankle_df_deep_loaded'],why:'sitting back to a box keeps the shins near vertical'},db_rev_lunge:{remove:['ankle_df_deep_loaded'],why:'stepping back keeps the front shin upright'}};
+  box_squat:{remove:['ankle_df_deep_loaded'],why:'sitting back to a box keeps the shins near vertical'},db_rev_lunge:{remove:['ankle_df_deep_loaded'],why:'stepping back keeps the front shin upright'},
+  heels_elevated_bw_squat:{remove:['ankle_df_deep_loaded'],why:'heels raised: the board takes the deep ankle bend out'},heels_elevated_split_squat:{remove:['ankle_df_deep_loaded'],why:'heels raised: the board takes the deep ankle bend out'},
+  db_sumo_squat:{remove:['ankle_df_deep_loaded'],why:'a wide stance keeps the shins near vertical'},bridge_db_floor_press:{remove:['shoulder_horiz_abd_endrange'],why:'the floor stops the elbows: no deep chest stretch'},
+  db_floor_fly:{remove:['shoulder_horiz_abd_endrange'],why:'the floor stops the elbows (the research: the floor limits shoulder over-stretch)'}};
 const TAG_OVERRIDE={copenhagen:{tags:['adductor_lengthened_loaded'], why:'a side plank: the research flags only the adductors at long length (HIP-ADD); the machine parent\'s hip-across-the-midline tag is the pad pressing the hip, not this'}};
 // text the app can't show as written (a number reads as a study figure)
 const TEXT_FIX={'going to 100% effort':'pushing as hard as you can'};
@@ -423,12 +426,124 @@ Object.entries(out.exercises).forEach(([id,e])=>refAll(e,id)); out.added.forEach
 Object.values(out.rehab).forEach(r=>{ ['easier','harder'].forEach(k=>{ if(r[k]&&r[k]!=='-') r[k]=refOf(r[k],null); else delete r[k]; }); });
 
 /* ── 7. write ── */
-const json=JSON.stringify(out,null,1)+'\n';
+const json=()=>JSON.stringify(out,null,1)+'\n';
 const counts={core:CORE.length, variants:VAR.length, rehab:REHAB.length, matched:report.match.length, modifiers:report.mod.length, added:out.added.length,
   uncertain:report.uncertain.length, protocols:report.protocol.length, conflicts:conflicts.length};
+/* ── 8. the home-training library (batch N Part 3, docs/research/home-training.md) ──
+   Imported with the same rules (docs/library-rules.md): rows attach to their parent through the research codes stored
+   above, existing exercises are updated, never re-created, and a name or alias that's already in the library is
+   reported as a collision and treated as an update. Joint flags: the parent's (taken from exercise-library.md through
+   its code), plus the home row's own SH/KF/SF/WE/EL. */
+const HMD=fs.readFileSync(path.join(ROOT,'docs/research/home-training.md'),'utf8');
+const HB=[...HMD.matchAll(/```\n([\s\S]*?)```/g)].map(m=>m[1].trim().split('\n').map(l=>l.split('|')));
+const H_BW=table(HB[0]), H_DB=table(HB[1]), H_SL=table(HB[2]), H_Q=table(HB[3]), H_UP=table(HB[4]);
+const HROW=Object.fromEntries([...H_BW,...H_DB,...H_SL,...H_Q].map(r=>[r.id,r]));
+const hSlug=n=>n.toLowerCase().replace(/\(.*?\)/g,'').replace(/push-up/g,'pushup').replace(/pull-up/g,'pullup').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+// exceptions to "a new exercise under its parent, id from its name"
+const HDEC={H061:'=db_front_raise', H067:'=kickback',            // already in the library by name: collisions, updated
+  H040:'parent:calf',                                              // its parent R45 is a protocol logged on the calf raise
+  H079:'orphan', H086:'orphan', H087:'orphan'};
+const H_ORPHAN={db_turkish_get_up:{pattern:'trunk',vol:{abs:1,front_delts:.5,glutes:.5}},
+  slant_straight_knee_calf_stretch:{pattern:'rehab_ankle',vol:{},rehab:true}, slant_bent_knee_calf_stretch:{pattern:'rehab_ankle',vol:{},rehab:true}};
+const H_NAME={pseudo_planche_pushup:'Pseudo-planche push-up', wall_hspu_negative:'Wall handstand push-up negative', heels_elevated_bw_squat:'Heels-elevated bodyweight squat',
+  toes_elevated_sl_rdl:'Toes-elevated single-leg RDL', db_floor_fly:'Dumbbell floor fly', single_arm_db_floor_press:'One-arm dumbbell floor press', bridge_db_floor_press:'Bridge dumbbell floor press',
+  db_squeeze_press:'Dumbbell squeeze press', two_db_bent_over_row:'Two-dumbbell bent-over row', head_supported_db_row:'Head-supported dumbbell row', db_rear_delt_row:'Dumbbell rear-delt row',
+  standing_db_overhead_press:'Standing dumbbell overhead press', wide_db_upright_row:'Wide-grip dumbbell upright row', bent_over_db_y_raise:'Bent-over dumbbell Y-raise', db_cuban_press:'Dumbbell Cuban press',
+  bed_edge_lying_db_curl:'Bed-edge lying dumbbell curl', db_reverse_curl:'Dumbbell reverse curl', two_hand_db_overhead_extension:'Two-hand dumbbell overhead extension', floor_rolling_db_extension:'Floor rolling dumbbell extension',
+  db_front_rack_squat:'Dumbbell front-rack squat', db_suitcase_squat:'Dumbbell suitcase squat', db_sumo_squat:'Dumbbell sumo squat', db_skater_squat:'Dumbbell skater squat', db_lateral_lunge:'Dumbbell lateral lunge',
+  db_deficit_rdl:'Dumbbell deficit RDL', db_suitcase_deadlift:'Dumbbell suitcase deadlift', db_good_morning:'Dumbbell good morning', db_side_bend:'Dumbbell side bend', db_turkish_get_up:'Dumbbell Turkish get-up', db_suitcase_march:'Dumbbell suitcase march'};
+const H_IMPL=i=>/^DB/.test(i)?'dumbbell':i==='backpack'?'bodyweight':'bodyweight';
+const H_TAG=(code,pattern)=>{ switch(code){
+  case 'SH': return ['horizontal_press','fly'].includes(pattern)?'shoulder_horiz_abd_endrange':pattern==='vertical_press'?'shoulder_overhead_loaded':pattern==='elbow_extension'?'shoulder_ext_endrange_loaded'
+    :pattern==='abduction'?'shoulder_elevation_abd':pattern==='vertical_pull'?'shoulder_hang_traction':pattern==='elbow_flexion'?'shoulder_ext_endrange_loaded'
+    :['trunk','grip','prehab_lowback'].includes(pattern)?'shoulder_overhead_endrange':pattern==='rehab_shoulder'?'shoulder_abd_er_loaded':'shoulder_overhead_loaded';
+  case 'KF': return 'knee_flex_deep_loaded'; case 'SF': return 'spine_flex_loaded'; case 'WE': return 'wrist_ext_loaded';
+  case 'EL': return pattern==='elbow_flexion'?'elbow_flex_loaded_heavy':'elbow_ext_endrange_loaded'; } return null; };
+const hCode=c=>{ if(!c||c==='-') return null; if(HROW[c]) return {h:c}; const p=parentOf[c]; if(p) return {ex:p, mod:out.modifiers[c]?out.modifiers[c].modifiers:null}; return {missing:c}; };
+const hShare=eq=>{ const m=String(eq||'').match(/~?(\d+)(?:-\d+)?%\s*BW/); return m?+m[1]/100:null; };
+const HOME_FIELDS=r=>({noise:{S:'silent',Q:'quiet',L:'loud'}[r.noise]||null, space:{SR:'standing room',BL:'body length',DF:'a doorway or furniture'}[r.space]||null,
+  householdSub:r.sub&&r.sub!=='-'?r.sub:null, homeEquip:r.equip&&r.equip!=='none'?r.equip:null, progLever:r.prog_lever&&r.prog_lever!=='-'?r.prog_lever:null,
+  moveUp:r.move_up&&r.move_up!=='-'?r.move_up:null, needsBench:/bench/i.test(r.equip||'')||null});
+out.home={updates:{}, collisions:[], ladders:{}, templates:{}, cardio:[], rules:{lowLoadReps:30}};
+const hId={};
+for(const r of [...H_BW,...H_DB,...H_SL]){
+  const dec=HDEC[r.id]||'';
+  if(dec.startsWith('=')){ const id=dec.slice(1); out.home.collisions.push([r.id,r.name,id]); out.home.updates[id]={...(out.home.updates[id]||{}), codes:[...((out.home.updates[id]||{}).codes||[]),r.id], ...HOME_FIELDS(r)}; hId[r.id]=id; continue; }
+  const id=hSlug(r.name); if(byId[id]||out.added.some(a=>a.id===id)) throw new Error(r.id+': id clash '+id);
+  hId[r.id]=id;
+}
+for(const r of [...H_BW,...H_DB,...H_SL]){
+  const dec=HDEC[r.id]||''; if(dec.startsWith('=')) continue;
+  const id=hId[r.id]; let parent=null, pmod=null;
+  if(dec==='orphan'){ parent=null; } else if(dec.startsWith('parent:')){ parent=dec.slice(7); }
+  else { const p=hCode(r.parent); if(!p||p.missing) throw new Error(r.id+': unresolved parent '+r.parent); parent=p.h?hId[p.h]:p.ex; pmod=p.mod||null; }
+  const e={id, name:H_NAME[id]||r.name, parent, implement:H_IMPL(r.impl), codes:[r.id], named:true, home:true, ...HOME_FIELDS(r)};
+  if(!parent){ const O=H_ORPHAN[id]; if(!O) throw new Error('no pattern for '+id); e.pattern=O.pattern; e.vol=O.vol; if(O.rehab) e.rehab=true; }
+  if(r.rehab_or_training==='rehab') e.rehab=true;
+  { const pe=parent?(byId[parent]||out.added.find(a=>a.id===parent)):null; if(pe&&pe.rehab) e.rehab=true; }
+  if(/\bs\b|hold|isometric/i.test(r.reps)||/hold|isometric/i.test(r.name)) e.isometric=true;
+  const setup=list(r.setup), cues=list(r.cues), mis=list(r.mistakes); if(setup.length) e.setup=setup; if(cues.length) e.cues=cues; if(mis.length) e.mistakes=mis;
+  if(r.easier&&r.easier!=='-') e.easierCode=r.easier; if(r.harder&&r.harder!=='-') e.harderCode=r.harder;
+  const g=gradeOf(r.grade); if(g) e.grade=g; const w=String(r.why||'').replace(/"/g,''); if(w&&!PEOPLE.test(w)&&!NUMBERS.test(w)) e.why=w.charAt(0).toUpperCase()+w.slice(1);
+  const rp=repsOf(r.reps); if(rp&&!e.rehab) e.reps=rp;
+  const sh=hShare(r.equiv); if(sh) e.bwShare=sh;
+  const lad=String(r.ladder||'').match(/^([A-Z-]+)\s+(\d+)\/(\d+)$/); if(lad){ e.ladder=lad[1].toLowerCase(); e.ladderStep=+lad[2]; }
+  e.homeJoint=String(r.joint||'').split(',').filter(x=>x&&x!=='-');
+  if(r.knee_load_note) e.homeNote=r.knee_load_note;
+  if(TAG_REMOVE[id]){ e.tagsRemove=TAG_REMOVE[id].remove; e.tagsWhy=TAG_REMOVE[id].why; }
+  out.added.push(e); report.add.push([r.id,r.name,id+' under '+(parent||'(own pattern)')]);
+}
+// the 60 update rows: home fields on the exercise the code maps to
+for(const r of H_UP){ const p=parentOf[r.id]; if(!p){ out.home.updates['?'+r.id]={name:r.name, why:'no app exercise for this code'}; continue; }
+  const lp=String(r.ladder_pos||'').match(/^([A-Z-]+)\s+([\d-]+)\/(\d+)$/);
+  const u=out.home.updates[p]=out.home.updates[p]||{codes:[]}; u.codes.push(r.id);
+  Object.assign(u,{homeSetup:r.home_setup&&r.home_setup!=='-'?r.home_setup:u.homeSetup||null, householdSub:r.household_sub&&r.household_sub!=='-'?r.household_sub:u.householdSub||null,
+    noise:{S:'silent',Q:'quiet',L:'loud'}[r.noise]||u.noise||null, space:{SR:'standing room',BL:'body length',DF:'a doorway or furniture'}[r.space]||u.space||null,
+    homeNote:r.home_notes&&r.home_notes!=='-'&&!PEOPLE.test(r.home_notes)?r.home_notes.replace(/\s*\((E11|K18|Ki17|C15|RR)[^)]*\)/g,''):u.homeNote||null});
+  const sh=hShare(r.home_notes); if(sh&&!u.bwShare) u.bwShare=sh;
+  if(lp){ u.ladder=lp[1].toLowerCase(); u.ladderPos=lp[2]; }
+  if(out.modifiers[r.id]) u.modifier=out.modifiers[r.id].modifiers;
+}
+// quiet cardio: activities (minutes and an optional heart rate), never sets, no calorie figures
+for(const r of H_Q){ out.home.cardio.push({id:'q_'+hSlug(r.name), code:r.id, name:r.name.replace(/\s*\(.*?\)/g,''), dose:r.dose, noise:{S:'silent',Q:'quiet',L:'loud'}[r.noise]||null,
+  setup:list(r.setup), cues:list(r.cues), mistakes:list(r.mistakes), grade:gradeOf(r.grade), hrNote:r.HR_note,
+  shoulderNote:/shadow box/i.test(r.name)?'With a shoulder that dislocates or feels unstable: keep punches short and below shoulder height, no full extension, and stop if it feels loose.':null}); }
+// ladders (section 6): rungs as [exercise, modifiers]; a step with two options lists both
+const R_=(c,mods)=>{ const p=hCode(c); if(!p||p.missing) throw new Error('ladder: '+c); return p.h?[hId[p.h],mods||null]:[p.ex,mods||p.mod||null]; };
+out.home.ladders={
+  push:{name:'Push-ups', moveUp:{sets:3,reps:15}, strengthMoveUp:{sets:3,reps:8}, rungs:[[R_('V115',{height:'wall'})],[R_('V115',{height:'counter'})],[R_('V115',{height:'chair'})],[R_('V116')],[R_('C032')],[R_('H001')],[R_('V204')],[R_('H002')],[R_('H005')],[R_('H003')],[R_('H004')]]},
+  vpush:{name:'Overhead pushing', moveUp:{sets:3,reps:10}, rungs:[[R_('C073')],[R_('H008')],[R_('H009')],[R_('H010')],[R_('V129')]]},
+  dip:{name:'Dips', moveUp:{sets:3,reps:8}, rungs:[[R_('V119')],[R_('V204')],[R_('H011')]]},
+  row:{name:'Rows without a bar', moveUp:{sets:3,reps:15}, strengthMoveUp:{sets:3,reps:8}, rungs:[[R_('H013')],[R_('H014')],[R_('H015')],[R_('C072',{knees:'bent'})],[R_('C072')],[R_('H016')],[R_('H017')]]},
+  curl:{name:'Curls without weights', moveUp:{sets:3,reps:15}, rungs:[[R_('H022')],[R_('H023')],[R_('H024')]]},
+  squat:{name:'Squats', moveUp:{sets:3,reps:15,perLeg:true}, rungs:[[R_('V025')],[R_('V024')],[R_('H081'),R_('V007')],[R_('V073'),R_('H027')],[R_('V078')],[R_('C014')],[R_('H028')],[R_('H029'),R_('V027')],[R_('V028')],[R_('V026')]]},
+  knee:{name:'Knee holds', moveUp:{sets:3,reps:12,secs:45}, rungs:[[R_('V035')],[R_('H030')],[R_('V034')],[R_('C067')],[R_('C068')]]},
+  hinge:{name:'Hinges without a bar', moveUp:{sets:3,reps:12}, rungs:[[R_('R29')],[R_('V043')],[R_('H033'),R_('C024')],[R_('H032'),R_('V065')],[R_('V057')],[R_('H031')],[R_('C023')]]},
+  core:{name:'Core', moveUp:{sets:3,reps:12,secs:40}, rungs:[[R_('V218'),R_('V220')],[R_('H041')],[R_('H044')],[R_('H045')],[R_('V230')]]},
+  calf:{name:'Calf raises', moveUp:{sets:3,reps:20}, rungs:[[R_('C026')],[R_('V093')],[R_('H088')],[R_('H040'),R_('V093',{loaded:'backpack'})]]}};
+// templates (section 8): ready-made sessions; pairs alternate (A1/A2)
+const T_=(c,sets,reps,pair,mods)=>{ const [ex,m]=R_(c,mods); return {ex, sets, reps, pair:pair||null, ...(m?{modifiers:m}:{})}; };
+out.home.templates={
+  silent:{name:'30 minutes, silent, no equipment', place:'none', minutes:30, rest:60, slots:[T_('C032',3,[6,15],'A'),T_('H015',3,[8,15],'A'),T_('C014',3,[8,15],'B'),T_('H031',3,[8,12],'B'),T_('V065',2,[10,20],'C'),T_('H041',2,[20,40],'C'),T_('V093',2,[10,20])]},
+  dbsuper:{name:'30 minutes, dumbbell supersets', place:'home_db', minutes:30, rest:70, slots:[T_('V111',3,[6,10],'A'),T_('H055',3,[8,12],'A'),T_('C014',3,[8,12],'B'),T_('V042',3,[8,12],'B'),T_('H059',2,[8,12],'C'),T_('V183',2,[10,15],'C'),T_('V200',2,[10,15],'D'),T_('H060',2,[15,20],'D')]},
+  gym1home2:{name:'One gym day and two home days', place:'mixed', days:{gym:[T_('C001',3,[3,6]),T_('C007',3,[3,6]),T_('C004',2,[3,5]),T_('C010',3,[6,10]),T_('C013',2,[8,12]),T_('C022',2,[10,12])],
+    homeA:[T_('H070',3,[10,15]),T_('H053',3,[8,12]),T_('H056',3,[10,15]),T_('H075',3,[10,10]),T_('C035',2,[15,15]),T_('H067',2,[15,15])],
+    homeB:[T_('H001',3,[6,25]),T_('H015',3,[6,25]),T_('H028',3,[8,12])]}}};
+for(const r of [...H_BW,...H_DB,...H_SL]){ const e=out.added.find(a=>a.id===hId[r.id]); if(!e) continue;
+  ['easierCode','harderCode'].forEach(k=>{ if(!e[k]) return; const p=hCode(e[k]); const key=k==='easierCode'?'easier':'harder';
+    e[key]=p&&!p.missing?(p.h?{text:HROW[p.h].name, ex:hId[p.h]}:{text:e[k], ex:p.ex, ...(p.mod?{modifiers:p.mod}:{})}):{text:e[k]}; delete e[k]; }); }
+
+// research codes left in easier/harder words become names (a code never shows in the app)
+const nameOfCode=c=>{ if(HROW[c]) return HROW[c].name; const p=parentOf[c]; const a=p&&(byId[p]||out.added.find(x=>x.id===p)); return a?a.name:c; };
+out.added.forEach(e=>['easier','harder'].forEach(k=>{ if(e[k]&&e[k].text) e[k].text=e[k].text.replace(/\b[CVRHQ]\d{2,3}\b/g,nameOfCode); }));
+Object.values(out.exercises).forEach(e=>['easier','harder'].forEach(k=>{ if(e[k]&&e[k].text) e[k].text=e[k].text.replace(/\b[CVRHQ]\d{2,3}\b/g,nameOfCode); }));
+// home rows' joint flags: their own, through the app pattern; the parent's come through the chain at runtime
+out.added.filter(e=>e.homeJoint).forEach(e=>{ const pat=chainPattern(e); e.researchTags=[...new Set(e.homeJoint.map(c=>H_TAG(c,pat)).filter(Boolean))]; delete e.homeJoint; });
+counts.home={added:out.added.filter(e=>(e.codes||[]).some(c=>c[0]==='H')).length, collisions:out.home.collisions.length, updated:Object.keys(out.home.updates).filter(k=>k[0]!=='?').length, cardio:out.home.cardio.length, ladders:Object.keys(out.home.ladders).length, templates:Object.keys(out.home.templates).length};
+
 console.log(JSON.stringify(counts));
 if(CHECK){ console.log('check only: nothing written'); process.exit(0); }
-fs.writeFileSync(path.join(ROOT,'docs/library.json'),json);
+fs.writeFileSync(path.join(ROOT,'docs/library.json'),json());
 const tbl=(h,rows)=>'| '+h.join(' | ')+' |\n|'+h.map(()=>'---').join('|')+'|\n'+rows.map(r=>'| '+r.map(x=>String(x).replace(/\|/g,'/')).join(' | ')+' |').join('\n')+'\n';
 const mdOut=`# Library import (batch L)
 
@@ -454,6 +569,11 @@ ${tbl(['Code','Research name','What happens to it'],report.protocol)}
 ## Conflicts: listed, not changed
 
 ${tbl(['App exercise','Code','Field','Note'],conflicts.concat(tagConflicts()))}
+## Home training (batch N Part 3)
+
+${tbl(['New rows','Updated exercises','Collisions (treated as updates)','Ladders','Templates','Quiet cardio (data only)'],[[counts.home.added,counts.home.updated,counts.home.collisions,counts.home.ladders,counts.home.templates,counts.home.cardio]])}
+Collisions: ${out.home.collisions.map(c=>c[0]+' '+c[1]+' = '+c[2]).join('; ')}.
+
 ## Matched to an app exercise (the code is stored on it)
 
 ${tbl(['Code','Research name','App exercise'],report.match)}
@@ -470,5 +590,5 @@ fs.writeFileSync(path.join(ROOT,'docs/library-import.md'),mdOut);
 const ip=path.join(ROOT,'index.html'); let html=fs.readFileSync(ip,'utf8');
 const re=/(<script type="application\/json" id="library-data">)([\s\S]*?)(<\/script>)/;
 if(!re.test(html)) throw new Error('no <script id="library-data"> block in index.html');
-html=html.replace(re,(m,a,b,c)=>a+'\n'+json+c); fs.writeFileSync(ip,html);
+html=html.replace(re,(m,a,b,c)=>a+'\n'+json()+c); fs.writeFileSync(ip,html);
 console.log('wrote docs/library.json, docs/library-import.md, embedded in index.html');

@@ -240,6 +240,9 @@ included), `planFor`/`weekPlanFor`, swaps and saving a range. A stored
   it writes `docs/library.json`, embedded as `library-data` (§105: byte-for-byte). Research codes are stored on exercises (`ex.codes`,
   `LIB_CODES`); existing exercises only get empty fields (`ex.libInfo`); new ones are built from their parent (`expandLibData`, `lib:true`).
   RISK rows are never picked unless logged or a goal (`libRisk`); How to do it shows the library (`libHtml`, `drawEasierHarder`).
+- **Home training (batch N Part 3, v1.108).** Section 8 of `tools/import-library.js`: home rows (`home:true`, named), update rows on
+  existing exercises (`libInfo.noise/space/homeSetup…`), ladders, templates (`templateDay`) and quiet cardio (data only) in `LIB.home`.
+  `STAND_IN` leads with the research's substitution table; a `quiet` place leaves out loud rows; `low_load` caps reps at 30 a set.
 - **`exPicker()`** is the one shared exercise picker (search + category chips +
   create-new). Swapping, adding, and goal-lift selection all route through it.
   Don't write a second bespoke picker — that's how mid-session swap ended up

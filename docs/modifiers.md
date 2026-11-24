@@ -35,6 +35,7 @@ suggestion log and shown as "Why these numbers" on the Progress tab.
 | `one_step` | exercise | load moves ≤ one increment per session (exempt: range_fit first fit, focused_deload, joint ladder cut, deload weeks, top sets/AMRAP/back-offs) | guard |
 | `floor` | exercise | load ≥ 85% of the best completed load in the last 6 sessions (exempt: focused_deload, ladder ≥ 4, range_fit first fit, deload weeks) | guard |
 | `both_up` | exercise | load and reps never both rise | guard |
+| `low_load` | exercise | past 30 reps a set, reps don't rise: the next step is a harder version, a ladder's next rung (research rule 4, batch N Part 3) | guard |
 | `bodyweight` | exercise | none on system load: converts it to the number you type (assistance rounds up, added weight down), and says when your bodyweight changed, was assumed or is stale | each suggestion |
 
 By design:

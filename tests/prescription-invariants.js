@@ -38,7 +38,7 @@ function stub(){
     set(){ return true; }, apply(){ return stub(); }, construct(){ return stub(); }
   });
 }
-const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','holdState','holdWindows','holdTargets','holdDays','programDays','holdOffer','holdReview','holdBackAsk','HOLD_COPY','startHold','endHold','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
+const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','templateDay','harderThan','BW_CLASS','STAND_IN','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','holdState','holdWindows','holdTargets','holdDays','programDays','holdOffer','holdReview','holdBackAsk','HOLD_COPY','startHold','endHold','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
   'suggestFor','seedDraft','logSet','moveSlot','adjustSets','fatigueRise','impliedE1','predictedRpe','rtfFromPct',
   'MUSCLE_REP_RANGE','CFG','FATIGUE_MIN_PAIRS','FATIGUE_MIN_SESSIONS','CHART_MAX_RTF',
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
@@ -4262,17 +4262,19 @@ section('103. batch N 2.2: hold mode, engine only');
 
 section('104. batch N 2.3–2.5: places, pairing, time-boxed sessions (data only)');
 {
-  const A=load([]), gym=A.placeById('gym'), db=A.placeById('home_db'), none=A.placeById('none');
+  const A=load([],true), gym=A.placeById('gym'), db=A.placeById('home_db'), none=A.placeById('none');
   ok(A.canDoAt('squat',gym)&&!A.canDoAt('squat',db)&&A.canDoAt('goblet',db)&&!A.canDoAt('goblet',none)&&A.canDoAt('bw_squat',none),'places: a barbell squat at the gym only; goblet with dumbbells; a bodyweight squat anywhere','');
   ok(!A.canDoAt('db_bench',db)&&!A.canDoAt('pullup',none)&&A.canDoAt('pullup',gym),'no bench at home for dumbbell benching; no bar for pull-ups with no equipment','');
   const sub=(ex,p)=>A.standInFor({ex,role:'primary',reps:[6,10],rpe:8,sets:3},p);
-  const table={squat:['goblet','bw_lunge'], deadlift:['db_rdl','glute_bridge'], bench:['weighted_pushup','weighted_pushup'], pulldown:['band_pulldown','inverted_row'], db_row:[null,'inverted_row']};
+  // the research's substitution table (rule 7), as imported in v1.108: dumbbell sub, then no-equipment sub
+  const table={squat:['db_front_rack_squat','skater_squat'], deadlift:['db_rdl','nordic'], bench:['db_floor_press','decline_pushup'], pulldown:['db_row','bedsheet_door_row'], db_row:[null,'bedsheet_door_row']};
   Object.entries(table).forEach(([ex,[a,b]])=>{ const ga=a==null?null:sub(ex,db), gb=sub(ex,none);
     ok((a==null||ga===a)&&gb===b,'stand-in for '+ex+': '+(a?'dumbbells → '+a+', ':'')+'no equipment → '+b,JSON.stringify({ga,gb})); });
-  ok(sub('ohp',db)==='band_ohp','overhead press at home with dumbbells and no bench: the band press',sub('ohp',db));
+  ok(sub('ohp',db)==='standing_db_overhead_press','overhead press at home with dumbbells and no bench: a standing dumbbell press',sub('ohp',db));
+  ok(sub('pulldown',db)!=='db_pullover','a stand-in is never a higher-risk row you haven\'t logged (the dumbbell pullover)','');
   const day={id:'d',name:'Full body A',slots:[{ex:'squat',role:'primary',reps:[6,10],rpe:8,sets:3},{ex:'curl',role:'accessory',reps:[8,12],rpe:8,sets:3}]};
   const at=A.dayAt(day,'home_db');
-  ok(at.placeSwapped===1&&at.slots[0].ex==='goblet'&&at.slots[0].standIn&&at.slots[0].standIn.for==='squat'&&at.slots[1].ex==='curl'&&at.place==='home_db','a day at home: one stand-in, marked with what it stands in for; the rest as planned',JSON.stringify(at.slots.map(x=>x.ex)));
+  ok(at.placeSwapped===1&&at.slots[0].ex==='db_front_rack_squat'&&at.slots[0].standIn&&at.slots[0].standIn.for==='squat'&&at.slots[1].ex==='curl'&&at.place==='home_db','a day at home: one stand-in, marked with what it stands in for; the rest as planned',JSON.stringify(at.slots.map(x=>x.ex)));
   ok(/\.\.\.\(session\.place\?\{place:session\.place\}:\{\}\)/.test(src),'a session records its place','');
   // pairing
   const sl=(ex,role)=>({ex,role:role||'accessory',reps:[8,12],rpe:8,sets:3});
@@ -4320,7 +4322,7 @@ section('105. batch L: the researched exercise library');
   ok(Object.keys(L.newTags).every(t=>A.MOVE.tags[t]&&A.EX.some(e=>A.exTags(e.id).includes(t))),'every new tag is in docs/movement_tags.json and carried by at least one exercise',Object.keys(L.newTags).filter(t=>!A.EX.some(e=>A.exTags(e.id).includes(t))).join(' '));
   { const conds=[...A.INJ.map(e=>e.id),'shoulder_instability','knee_pain','low_back','elbow_pain','wrist_pain']; let bad=[];
     // an isometric hold under the outer-elbow pain cap is the app's own exception (ISOMETRIC_OK), and a tag override says why
-    conds.forEach(c=>{ C.conditions=[c]; A.EX.filter(e=>e.lib&&e.parent&&!e.rehab&&!(e.isometric&&c==='el_lateral_tendinopathy')&&!(x=>x.tagsOverride||x.tagsRemove)(A.LIB.added.find(a=>a.id===e.id)||{})).forEach(e=>{ const f=A.flagFor(e.id), fp=A.flagFor(e.parent); if(fp&&fp.level==='red'&&!(f&&f.level==='red')) bad.push(e.id+'@'+c); }); });
+    conds.forEach(c=>{ C.conditions=[c]; A.EX.filter(e=>e.lib&&e.parent&&!e.rehab&&!(e.isometric&&c==='el_lateral_tendinopathy')&&!(x=>x.tagsOverride||x.tagsRemove)(A.LIB.added.find(a=>a.id===e.id)||{})&&!['band','bodyweight'].includes(e.implement)).forEach(e=>{ const f=A.flagFor(e.id), fp=A.flagFor(e.parent); if(fp&&fp.level==='red'&&!(f&&f.level==='red')) bad.push(e.id+'@'+c); }); });
     C.conditions=[]; ok(!bad.length,'a new exercise is never gentler than its parent, under any condition',bad.slice(0,6).join(' ')); }
   { C.conditions=['shoulder_instability']; ok(A.rehabUnsafe('er_90')&&A.exTags('er_90').includes('shoulder_abd_er_loaded'),'external rotation at 90° is never offered as rehab for an unstable shoulder (the rehab table has no flags; it carries the tag)','');
     ok(['bn_press','fly','incline_fly','bench_dip','ring_dip'].every(id=>{ const f=A.flagFor(id); return f&&['red','yellow'].includes(f.level); })&&['red','yellow'].includes((A.flagFor('bench',{grip:'wide'})||{}).level),'shoulder instability: the research\'s list (behind-the-neck press, wide-grip bench, bench and ring dips, deep flyes) all carry a warning','');
@@ -4416,6 +4418,42 @@ section('106. batch L Part 3: the rehab rows in the rehab engine');
     const B=load([],true); B.getCFG().conditions=['shoulder_instability','sh_rcrsp']; ok(B.rehabUnsafe('er_90'),'external rotation at 90° stays out for an unstable shoulder even when linked','');
     ok(!/pain relief|relieve pain|relieves pain/i.test(src+fnSrc('rehabRx')+fnSrc('openInfo')),'isometrics are never described as pain relief',''); }
   console.log('  pain rules per row · stricter wins · timeline · red flags stop progression · feel it, gates and windows on researched rows · links behind the safety check');
+}
+
+
+section('107. batch N Part 3: the home-training library');
+{
+  const L=JSON.parse(fs.readFileSync(path.join(__dirname,'..','docs','library.json'),'utf8')), A=load([],true), H=L.added.filter(e=>(e.codes||[]).some(c=>c[0]==='H'));
+  ok(H.length>=85&&H.every(e=>A.exById[e.id]&&(!e.parent||A.exById[e.parent])),'the home rows are in the library, each parent resolves ('+H.length+' rows)',JSON.stringify(H.filter(e=>!A.exById[e.id]).map(e=>e.id)));
+  const nm=x=>x.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim(), seen={}, dup=[];
+  A.EX.forEach(e=>{ const k=nm(e.name); if(seen[k]&&(e.home||A.exById[seen[k]].home)) dup.push(e.id+'='+seen[k]); seen[k]=seen[k]||e.id; });
+  ok(!dup.length,'no home row repeats a name already in the library (collisions were reported and became updates)',dup.join(' '));
+  ok(L.home.collisions.length===2&&L.home.collisions.every(c=>A.exById[c[2]]),'the two collisions (dumbbell front raise, kickback) updated the existing exercises','');
+  // ladders: every rung resolves
+  const bad=[]; Object.entries(L.home.ladders).forEach(([k,ld])=>ld.rungs.forEach((r,i)=>r.forEach(([ex])=>{ if(!A.exById[ex]) bad.push(k+'#'+(i+1)+':'+ex); })));
+  ok(Object.keys(L.home.ladders).length===10&&!bad.length,'ten ladders, every rung an exercise in the library',bad.join(' '));
+  // the words: plain, short, no exclamation marks
+  const lines=[]; H.forEach(e=>[...(e.setup||[]),...(e.cues||[]),...(e.mistakes||[])].forEach(t=>lines.push([e.id,t])));
+  const badL=lines.filter(([,t])=>t.length>72||/!/.test(t)||A.CLINICAL_WORDS.test(t));
+  ok(lines.length>200&&!badL.length,'every new cue, setup and mistake line is plain and fits the card ('+lines.length+' lines)',JSON.stringify(badL.slice(0,4)));
+  // a stand-in for every main gym lift, at both built-in places
+  { const lifts=['squat','front_squat','bench','deadlift','ohp','pullup','pulldown','bb_row','cable_row','hip_thrust','leg_curl'], miss=[];
+    ['home_db','none'].forEach(pl=>lifts.forEach(id=>{ const d=A.dayAt({name:'t',slots:[{ex:id,role:'primary',sets:3,reps:[6,10],rpe:8}]},pl); if(d.placeNone.length) miss.push(id+'@'+pl); }));
+    ok(!miss.length,'a stand-in exists for every main gym lift, with dumbbells and with no equipment',miss.join(' ')); }
+  // a quiet place leaves out anything loud
+  { const C=A.getCFG(); C.places=[{id:'flat',name:'Flat',have:['dumbbell'],quiet:true}]; const loud=A.EX.find(e=>e.libInfo&&e.libInfo.noise==='loud');
+    ok(!loud||!A.canDoAt(loud.id,A.placeById('flat')),'a quiet place leaves out anything the research marks loud',''); C.places=[]; }
+  // measured bodyweight shares: shown, on the rung's own track
+  ok((A.exById.decline_pushup.libInfo||{}).bwShare===0.7&&A.BW_CLASS.decline_pushup&&A.BW_CLASS.decline_pushup.root==='decline_pushup','a push-up rung with a measured share joins the bodyweight class on its own track','');
+  // the low-load rule
+  { const B=load([set('archer_pushup','a1',0,32,7,6),set('archer_pushup','a2',0,32,7,6)],true), sl={ex:'archer_pushup',role:'accessory',reps:[5,40],rpe:8,sets:3,sets_target:3};
+    const g=B.suggestFor(sl), t=(g.trace||[]).find(x=>x.id==='low_load');
+    ok(g.pr.reps<=32&&t&&t.changed&&/Past 30 reps a set/.test(t.reason),'past 30 reps a set: no more reps; the next step is a harder version',JSON.stringify({reps:g.pr.reps,t})); }
+  // the templates
+  { const t=A.templateDay('silent'), d=A.templateDay('gym1home2','gym');
+    ok(t&&t.slots.length===7&&t.slots.filter(s=>s.pairWith).length===6&&d&&d.slots.length===6,'the three research templates build as sessions, pairs alternating','');
+    ok(L.home.cardio.length===10&&L.home.cardio.every(c=>!/kcal|calorie/i.test(JSON.stringify(c)))&&L.home.cardio.find(c=>/shadow/i.test(c.name)).shoulderNote,'quiet cardio is data (minutes, an optional heart rate), no calorie figures; shadow boxing carries the shoulder note',''); }
+  console.log('  home rows and parents · no repeated names · ladders resolve · plain cues · stand-ins at both places · quiet · shares · low-load rule · templates · cardio data');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
