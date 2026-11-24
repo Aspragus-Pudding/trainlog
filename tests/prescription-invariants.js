@@ -38,7 +38,7 @@ function stub(){
     set(){ return true; }, apply(){ return stub(); }, construct(){ return stub(); }
   });
 }
-const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','warmupLibrary','warmupSuggest','stiffAreas','wuEvidence','dayForToday','placeToday','ladderPos','ladderNext','ladderPrev','ladderCurrent','ladderMoveUpDue','ladderMoveUp','ladderNotYet','templateDay','harderThan','BW_CLASS','STAND_IN','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','holdState','holdWindows','holdTargets','holdDays','programDays','holdOffer','holdReview','holdBackAsk','HOLD_COPY','startHold','endHold','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
+const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','warmupLibrary','warmupSuggest','stiffAreas','wuEvidence','dayForToday','placeToday','ladderPos','ladderNext','ladderPrev','ladderCurrent','ladderMoveUpDue','ladderMoveUp','ladderNotYet','templateDay','harderThan','BW_CLASS','STAND_IN','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','fornowState','fornowWindows','fornowDays','fornowTargets','programDays','fornowOffer','fornowBack','fornowAsk','FORNOW_COPY','startForNow','endForNow','answerForNow','changeForNow','boxMinutes','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
   'suggestFor','seedDraft','logSet','moveSlot','adjustSets','fatigueRise','impliedE1','predictedRpe','rtfFromPct',
   'MUSCLE_REP_RANGE','CFG','FATIGUE_MIN_PAIRS','FATIGUE_MIN_SESSIONS','CHART_MAX_RTF',
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
@@ -4201,63 +4201,54 @@ section('102. batch N 2.1: the return ramp, per exercise, one cut in the pipelin
   console.log('  four bands + over 60 · one cut, traced · ramping back · usual and sibling · kg · class · first-week plan · no stacking');
 }
 
-section('103. batch N 2.2: hold mode, engine only');
+section('103. the plan for now (hold mode reworked): places, full progression, its own deloads, the offers');
 {
-  const se=(sid,d)=>({type:'session_end',id:'e'+sid,ts:day(d),session_id:sid,joints:{}});
-  const prog=(ev)=>{ const A=load(ev||[]); A.setRoadmap([A.applyShape({type:'hyp',label:'H',weeks:8,deload:false,hyp:[]})]); const C=A.getCFG(); C.start=new Date(Date.now()-120*864e5).toISOString().slice(0,10); C.goals=['squat','deadlift','bench']; return A; };
-  const vol=days=>{ const t={}; days.forEach(d=>d.slots.forEach(sl=>{ const ex=null; })); return t; };
-  // no hold in the log: the week is the program's, exactly as before
-  { const A=prog(); ok(!A.holdState()&&JSON.stringify(A.generatedDays())===JSON.stringify(A.programDays()),'with no hold, the week is the program\'s, unchanged',''); }
-  // targets: a third of the program's weekly sets per muscle, never under 3
-  { const A=prog(), T=A.holdTargets(), tot={};
-    A.programDays().forEach(d=>d.slots.forEach(sl=>{ const ex=A.exById[sl.ex]; Object.entries(ex.vol||{}).forEach(([m,w])=>tot[m]=(tot[m]||0)+w*sl.sets); }));
-    const bad=Object.entries(T).filter(([m,v])=>v!==Math.max(3,Math.round(tot[m]/3)));
-    ok(Object.keys(T).length>4&&bad.length===0&&Object.values(T).every(v=>v>=3),'hold targets: a third of the program\'s weekly sets per muscle, never under 3',JSON.stringify(bad.slice(0,3))); }
-  // in a hold: N full-body days, goal lifts practised once a week, sets fitted to the targets
-  { const A=prog([{type:'hold_start',id:'h1',ts:day(1),days:2}]), h=A.holdState(), d=A.generatedDays();
-    ok(h&&h.days===2&&d.length===2&&d.every(x=>x.hold&&/^Hold [AB]$/.test(x.name)),'a 2-day hold: two full-body days named Hold A and B',JSON.stringify(d.map(x=>x.name)));
-    const goalSlots=g=>d.flatMap(x=>x.slots).filter(sl=>A.trackRoot?true:true).filter(sl=>sl.ex===g||sl.ex===g);
-    ['squat','deadlift','bench'].forEach(g=>{ const sl=d.flatMap(x=>x.slots).filter(x=>x.ex===g);
-      ok(sl.length===1&&sl[0].holdPractice&&sl[0].sets===2&&sl[0].reps.join()==='3,5'&&sl[0].rpe===8&&/Keeping your .* practised\./.test(sl[0].holdNote),'goal lift '+g+': once a week, 2 × 3–5 at RPE 8, with the note',JSON.stringify(sl.map(x=>({sets:x.sets,reps:x.reps,note:x.holdNote})))); });
-    const T=A.holdTargets(), got={}; d.forEach(x=>x.slots.forEach(sl=>{ const ex=A.exById[sl.ex]; Object.entries(ex.vol||{}).forEach(([m,w])=>got[m]=(got[m]||0)+w*sl.sets); }));
-    const tot=Object.values(T).reduce((a,b)=>a+b,0), have=Object.keys(T).reduce((a,m)=>a+Math.min(T[m],got[m]||0),0);
-    ok(have>=tot*0.6,'the hold week covers most of the muscle targets',JSON.stringify({targets:tot,covered:Math.round(have)})); }
-  // re-spread: one session done this week with nothing much logged, the next one carries the rest
-  { const ev=[{type:'hold_start',id:'h2',ts:day(20),days:2}], A0=prog(ev), d0=A0.generatedDays();
-    const total=x=>x.slots.reduce((a,sl)=>a+sl.sets,0);
-    const now=new Date(); const wk=new Date(now); wk.setHours(0,0,0,0); wk.setDate(wk.getDate()-((wk.getDay()+6)%7)); const tIn=new Date(Math.max(wk.getTime()+3600e3, Date.now()-3600e3)).toISOString();
-    const A1=prog(ev.concat([{type:'session_end',id:'eh',ts:tIn,session_id:'sh',joints:{}}]));
-    const d1=A1.generatedDays(), next=d1[1];
-    ok(total(next)>=total(d0[1]),'a session this week with nothing logged in it: the next one carries the rest of the week\'s targets',JSON.stringify({before:total(d0[1]),after:total(next)})); }
-  // the block clock: frozen in a hold, resumed after
+  const se=(sid,d,o)=>({type:'session_end',id:'e'+sid,ts:day(d),session_id:sid,joints:{},...(o||{})});
+  const prog=(ev)=>{ const A=load(ev||[],true); A.setRoadmap([A.applyShape({type:'hyp',label:'H',weeks:8,deload:false,hyp:[]})]); const C=A.getCFG(); C.start=new Date(Date.now()-120*864e5).toISOString().slice(0,10); C.goals=['squat','deadlift','bench']; C.week=['full','full','full','full','full']; return A; };
+  const fs0=(o)=>({type:'fornow_start',id:'f'+Math.random().toString(36).slice(2,7),ts:day(o.d||1),places:o.places,minutes:o.minutes||null,until:o.until||null});
+  { const A=prog(); ok(!A.fornowState()&&JSON.stringify(A.generatedDays())===JSON.stringify(A.programDays()),'with no plan for now, the week is the program\'s, unchanged',''); }
+  // 1 gym day + 3 home days
+  { const A=prog([fs0({places:[{place:'gym',days:1},{place:'home_db',days:3}]})]), d=A.generatedDays();
+    ok(d.length===4&&d[0].place==='gym'&&d.slice(1).every(x=>x.place==='home_db'),'four days: the gym day first, then three at home',JSON.stringify(d.map(x=>x.name+'@'+x.place)));
+    ok(['squat','deadlift','bench'].every(g=>d[0].slots.some(sl=>sl.ex===g&&sl.role==='primary'))&&d.slice(1).every(x=>!x.slots.some(sl=>['squat','deadlift','bench'].includes(sl.ex))),'the goal lifts are on the gym day',JSON.stringify(d[0].slots.map(x=>x.ex)));
+    const home=A.placeById('home_db'); ok(d.slice(1).every(x=>x.slots.length>=3&&x.slots.every(sl=>A.canDoAt(sl.ex,home))),'the home days carry the rest, everything doable with dumbbells',JSON.stringify(d.slice(1).map(x=>x.slots.map(s=>s.ex))));
+    ok(d.every(x=>!x.low)&&d.every(x=>x.slots.every(sl=>!sl.holdPractice)),'normal training: no low-dose fallback, no practice-only slots (full progression)',''); }
+  // bodyweight only, one day: the research's minimum, and it says so
+  { const A=prog([fs0({places:[{place:'none',days:1}]})]), d=A.generatedDays();
+    ok(d.length===1&&d[0].low&&/the minimum the research gives for keeping size/.test(d[0].lowNote),'one day a week is very little: the minimum per muscle, and it says so',JSON.stringify(d[0].lowNote));
+    ok(d[0].slots.every(sl=>A.canDoAt(sl.ex,A.placeById('none'))),'…all of it doable with no equipment',JSON.stringify(d[0].slots.map(x=>x.ex))); }
+  { const A=prog([fs0({places:[{place:'home_db',days:3}],minutes:20})]); ok(A.generatedDays()[0].low,'three 20-minute days (60 a week) is very little too',''); }
+  // session length
+  { const A=prog([fs0({places:[{place:'gym',days:2}],minutes:30})]), d=A.generatedDays(); ok(d.every(x=>A.boxMinutes(x.slots)<=30),'a 30-minute plan fits 30 minutes',''); }
+  // full progression, stall checks on: a plan day's slot is priced like any other
+  { const ev=[fs0({places:[{place:'gym',days:2}],d:20})]; for(let k=0;k<3;k++) ev.push(set('squat','s'+k,200,8,7,15-k*4,{target:{reps:[6,10],rpe:8}}),se('s'+k,15-k*4));
+    const A=prog(ev), sl=A.generatedDays()[0].slots.find(x=>x.ex==='squat'), g=A.suggestFor({...sl,sets_target:sl.sets,sets:[]});
+    ok(sl&&!sl.holdPractice&&g.lb>=200,'a goal lift on the gym day progresses as normal (an easy 200 × 8 suggests at least 200)',JSON.stringify({lb:g.lb}));
+    ok(!/holdState\(\)\) return null;   \/\/ no stall checks/.test(src),'stall checks stay on in a plan for now',''); }
+  // its own deloads: every fifth week at two or more sessions a week
+  { const ev=[fs0({places:[{place:'gym',days:2}],d:40})]; for(let k=0;k<8;k++) ev.push(se('w'+k,38-k*4));
+    const A=prog(ev), d=A.generatedDays(); ok(d.every(x=>x.deload&&x.week===5),'after four weeks at two a week, the fifth week is a deload',JSON.stringify(d.map(x=>[x.week,x.deload])));
+    const B=prog([fs0({places:[{place:'gym',days:1}],d:60})].concat([0,1,2,3,4,5,6,7].map(k=>se('o'+k,58-k*7)))); ok(!B.generatedDays()[0].deload,'…not at one session a week',''); }
+  // the program waits: the block clock stops and resumes
   { const ev=[]; [40,37,34].forEach((d,i)=>ev.push(se('p'+i,d)));
-    const before=prog(ev).programPosition().sessionsIn;
-    const ev2=ev.concat([{type:'hold_start',id:'h3',ts:day(30),days:1}]); [28,21,14].forEach((d,i)=>ev2.push(se('q'+i,d)));
-    const during=prog(ev2).programPosition().sessionsIn;
-    const ev3=ev2.concat([{type:'hold_end',id:'he',ts:day(10)}, se('r0',8)]);
-    const after=prog(ev3).programPosition().sessionsIn;
-    ok(during===before&&after===before+1,'the block clock stops in a hold and resumes after',JSON.stringify({before,during,after})); }
-  // what stops: stall cards, the streak; and the proposals exist for when the screens are picked
-  { const A=prog([{type:'hold_start',id:'h4',ts:day(2),days:1}]);
-    ok(A.weeksInARow()===0&&A.stallCard('squat')==null,'no streak and no stall card in a hold','');
-    const fnSrc=n=>{ const i=src.indexOf('function '+n+'('); const j=src.indexOf('\nfunction ',i+10); return src.slice(i,j); };
-    ok(/if\(!CFG\.autoIntervene\|\|holdState\(\)\) return;/.test(src)&&/!ROADMAP\.length\|\|holdState\(\)\) return null;   \/\/ no deload offers in a hold/.test(src),'no automatic interventions or deload offers in a hold',''); }
-  { const ev=[]; for(let k=0;k<2;k++) ev.push(se('o'+k,13-k*5)); const A=prog(ev); const o=A.holdOffer();
-    ok(o&&o.title===A.HOLD_COPY.offer,'two sessions in 14 days of a 5-day program: the hold offer (not shown yet)',JSON.stringify(o));
-    A.getCFG().holdDeclinedAt=new Date().toISOString(); ok(A.holdOffer()==null,'declining is remembered for 14 days',''); }
-  { const A=prog([{type:'hold_start',id:'h5',ts:day(33*7),days:1}]); ok(!!A.holdReview(),'after 32 weeks in a hold, a check of the main lifts is suggested',''); }
-  // the first week after a hold: never above the pre-hold load, even after an easy practice set in the hold
-  { const ev=[]; [40,37,34].forEach((d,i)=>ev.push(set('squat','pre'+i,250,5,8,d,{target:{reps:[3,5],rpe:8}}),se('pre'+i,d)));
-    ev.push({type:'hold_start',id:'hs',ts:day(30),days:1}); [28,21,14,7].forEach((d,i)=>ev.push(set('squat','in'+i,265,5,6,d,{target:{reps:[3,5],rpe:8}}),se('in'+i,d)));
-    ev.push({type:'hold_end',id:'he2',ts:day(2)});
-    const A=prog(ev), sg=A.suggestFor({ex:'squat',role:'primary',reps:[3,5],rpe:8,sets_target:3,sets:[]});
-    ok(sg.lb<=250+1e-6&&(sg.trace||[]).some(x=>x.id==='return_ramp'&&x.changed),'first week back from a hold: squat capped at the 250 lifted before it, not the 265 practised in it',JSON.stringify({lb:sg.lb})); }
-  { const A=prog([{type:'hold_start',id:'h6',ts:day(3),days:1}]), d=A.generatedDays();
-    ok(d.length===1&&d[0].name==='Hold A'&&d[0].slots.length>=6&&d[0].slots.length<=8,'a one-day hold is one day, filled from the program for the muscles it would miss (up to 8)',JSON.stringify(d.map(x=>x.name+':'+x.slots.map(s=>s.ex).join(',')))); }
-  // no blame in any of it
-  { const C=prog().HOLD_COPY, lines=[C.offer,C.practice('squat'),C.rusty('squat'),C.review,C.back].join(' ');
-    ok(!/\b(missed|miss|failed|fell behind|behind|lazy|slack|should have|excuse|only managed)\b/i.test(lines),'hold copy carries no blame',lines); }
-  console.log('  program untouched without a hold · targets · Hold A/B · goal lifts weekly · re-spread · clock frozen and resumed · stops · offer, review · no blame');
+    const before=prog(ev).programPosition().sessionsIn, ev2=ev.concat([fs0({places:[{place:'none',days:2}],d:30})]); [28,21,14].forEach((d,i)=>ev2.push(se('q'+i,d)));
+    const during=prog(ev2).programPosition().sessionsIn, ev3=ev2.concat([{type:'fornow_end',id:'fe',ts:day(10)}, se('r0',8)]), after=prog(ev3).programPosition().sessionsIn;
+    ok(during===before&&after===before+1,'the program is paused, untouched, and resumes where it stopped',JSON.stringify({before,during,after})); }
+  // the offers
+  { const ev=[]; for(let k=0;k<2;k++) ev.push(se('o'+k,13-k*5)); const A=prog(ev), o=A.fornowOffer();
+    ok(o&&/2 of your 10 planned sessions in the last two weeks/.test(o.title),'under half the planned sessions in 14 days: the offer',JSON.stringify(o));
+    A.getCFG().fornowDeclinedAt=new Date().toISOString(); ok(A.fornowOffer()==null,'declining is remembered for 14 days',''); }
+  { const ev=[]; for(let k=0;k<6;k++) ev.push(se('h'+k,13-k*2,{place:'home_db'})); ok(prog(ev).fornowOffer()==null,'sessions at another place count: picking a place for a day never triggers the offer',''); }
+  { const A=prog([fs0({places:[{place:'home_db',days:3}],until:new Date(Date.now()-864e5).toISOString().slice(0,10),d:20})]); ok((A.fornowBack()||{}).why==='date','on the end date: back to your program?',''); }
+  { const ev=[fs0({places:[{place:'home_db',days:3}],d:20})]; for(let k=0;k<5;k++) ev.push(se('g'+k,6-k,{place:'gym'})); ok((prog(ev).fornowBack()||{}).why==='gym','a full week of sessions at the gym: back to your program?',''); }
+  { const A=prog([fs0({places:[{place:'gym',days:2}],d:45})]); ok(!!A.fornowAsk(),'at six weeks: keep going, change it, or make it your program (once)','');
+    A.answerForNow('keep'); ok(!A.fornowAsk(),'answered: not asked again','');
+    const B=prog([fs0({places:[{place:'gym',days:2}],d:45,until:new Date(Date.now()-864e5).toISOString().slice(0,10)})]); B.answerForNow('main'); ok(!B.fornowBack()&&!B.fornowAsk()&&B.fornowState().main,'made the main program: no more offers to go back',''); }
+  // never "hold" on screen, and no blame
+  { const lines=Object.values(A0copy()).map(v=>typeof v==='function'?v(2,10):v).join(' ');
+    function A0copy(){ return prog().FORNOW_COPY; }
+    ok(!/\bhold(ing)?\b/i.test(lines)&&!/\b(missed|failed|fell behind|lazy|slack|should have|excuse|only managed)\b/i.test(lines),'the copy never says hold, and carries no blame',lines); }
+  console.log('  program untouched without a plan · gym day with the goal lifts · home days doable · the minimum, said · length · full progression · its own deloads · clock paused · offers, back, six weeks · no "hold"');
 }
 
 section('104. batch N 2.3–2.5: places, pairing, time-boxed sessions (data only)');

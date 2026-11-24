@@ -48,7 +48,7 @@ function boot(clock){
     'logSet','soreGroupsFor','readinessScore','physicalCut','jointNoteFor','ensureInitialTM','slotTrack','activeProposals','builderDefaults',
     'builderPlan','applyBuilder','rateOf','tmFor','toLb','loadable','rtfFromPct','pct1RM','bwOffset','isBW','JOINTS','jointLevel','jointTrend',
     'familyOf','splitFor','blockLen','stepUp','deloadSignals','mainEligible','dismissProposal','rateState','stallPlan','stallState','interventions',
-    'stallVideoWanted','FAMILY_STICKING','fatigueSignals','applyReadinessSets','startHold','endHold','holdState'];
+    'stallVideoWanted','FAMILY_STICKING','fatigueSignals','applyReadinessSets','startForNow','endForNow','fornowState'];
   const pick=names.map(n=>n+':(()=>{try{return '+n+'}catch(e){}})()').join(',');
   const body=src+'\n;return {'+pick+',getDraft:()=>draft,setSession:x=>{session=x},getSession:()=>session,getROADMAP:()=>ROADMAP,'+
     'setROADMAP:r=>{ROADMAP=r},getCFG:()=>CFG};';
@@ -75,9 +75,11 @@ const PERSONAS={
     conditions:['shoulder_instability'], jointUsual:{shoulder:'mild'}, flare:{joint:'shoulder', from:6, to:8}},
   advanced:{label:'Advanced, flat, shoulder', profile:'even_mix', experience:'advanced', gain:()=>0.0, noise:0.02, rpeNoise:0.5, attend:1,
     conditions:['shoulder_instability']},
-  // batch N 2.2: a hold of 4 weeks at one session a week (detraining a little), then back to the program
-  hold_return:{label:'Holds 4 weeks, then back', profile:'even_mix', experience:'intermediate', gain:w=>w>=10&&w<14?-0.002:0.004, noise:0.02, rpeNoise:0.5, attend:1,
-    hold:{from:10, weeks:4, days:1}},
+  // the plan for now (Nov 2026, the maintainer's two cases): one gym day and three home days for eight weeks; bodyweight only for four
+  gym_home:{label:'1 gym + 3 home days for 8 weeks, then back', profile:'even_mix', experience:'intermediate', gain:()=>0.004, noise:0.02, rpeNoise:0.5, attend:1,
+    fornow:{from:8, weeks:8, places:[{place:'gym',days:1},{place:'home_db',days:3}]}},
+  bw_only:{label:'Bodyweight only for 4 weeks, then back', profile:'even_mix', experience:'intermediate', gain:w=>w>=10&&w<14?0.001:0.004, noise:0.02, rpeNoise:0.5, attend:1,
+    fornow:{from:10, weeks:4, places:[{place:'none',days:3}]}},
   sporadic:{label:'Trains less than weekly', profile:'even_mix', experience:'intermediate', gain:()=>0.004, noise:0.02, rpeNoise:0.5, attend:0.18}
 };
 
@@ -101,13 +103,13 @@ function simulate(key){
   B.est={}; B.goals.forEach(id=>{ B.est[id]=Math.round(trueOf(id)*0.95/5)*5; });
   const plan=A.builderPlan(B); A.applyBuilder(B,plan);
   if(P.jointUsual) C.jointUsual={...P.jointUsual};
-  const trace=[], issues=[], weekly=[], ivLog=[], ivSlots=[];
+  const trace=[], issues=[], weekly=[], ivLog=[], ivSlots=[], ramps=[];
   let fatigue=0, bw=P.bwStart||180, deloads=0;
   for(let w=0;w<WEEKS;w++){
     const weekStart=start+w*7*DAY;
-    if(P.hold&&w===P.hold.from){ clock.set(weekStart); A.startHold(P.hold.days); }
-    if(P.hold&&w===P.hold.from+P.hold.weeks){ clock.set(weekStart); A.endHold(); }
-    const hs=A.holdState&&A.holdState();
+    if(P.fornow&&w===P.fornow.from){ clock.set(weekStart); A.startForNow({places:P.fornow.places}); }
+    if(P.fornow&&w===P.fornow.from+P.fornow.weeks){ clock.set(weekStart); A.endForNow(); }
+    const hs=A.fornowState&&A.fornowState();
     const dpw=hs?hs.days:(A.splitFor(A.getROADMAP()[A.programPosition().idx])||{days:5}).days;
     // proposals at the start of the week
     const props=A.activeProposals();
@@ -149,6 +151,7 @@ function simulate(key){
       const dayNoise=1+(R()*2-1)*P.noise;
       sess.slots.forEach((slot,i)=>{
         sess.openIdx=i; A.seedDraft(slot);
+        if(P.fornow&&w===P.fornow.from+P.fornow.weeks&&!slot.sets.length){ const sg=A.suggestFor(slot); if((sg.trace||[]).some(t=>t.id==='return_ramp'&&t.changed)) ramps.push(slot.ex); }
         const ex=A.exById[slot.ex], E=trueOf(slot.ex)*(1-fatigue)*dayNoise, off=A.bwOffset(ex)||0;
         let withinFatigue=0;
         for(let k=0;k<slot.sets_target&&k<12;k++){
@@ -182,7 +185,7 @@ function simulate(key){
         // the body adapts: a gain per exposure (persona-specific)
         truth[slot.ex]=added(slot.ex)*(1+P.gain(w));
       });
-      A.append({type:'session_end',session_id:sess.id,day_name:sess.dayName,session_rpe:7,joints:{},joint_scale:3,duration_s:3600});
+      A.append({type:'session_end',session_id:sess.id,day_name:sess.dayName,session_rpe:7,joints:{},joint_scale:3,duration_s:3600,...(day.place?{place:day.place}:{})});
       A.setSession(null);
     }
     fatigue=Math.max(0,fatigue+(P.fatiguePerWeek||0)-(ph0.onDeload?0.06:0));
@@ -217,17 +220,14 @@ function checks(run){
     const last=tops.slice(-6), ratio=last.map(t=>t.L/t.E);
     ok(ratio.every(r=>r>0.35&&r<1.0),id+': recent loads stay between 35% and 100% of true capacity (no runaway, no collapse)',ratio.map(r=>r.toFixed(2)).join(','));
   });
-  // batch N 2.2: after a hold, nothing in the first week back is suggested above what was lifted before the hold
-  if(P.hold){
-    const pre={}; trace.filter(t=>t.w>=P.hold.from-2&&t.w<P.hold.from).forEach(t=>{ pre[t.ex]=Math.max(pre[t.ex]||0,t.L); });
-    // what was prescribed and lifted (the lifter follows the suggestion); t.sug is the draft after the set, so it can be stale
-    const over=trace.filter(t=>t.w===P.hold.from+P.hold.weeks&&pre[t.ex]!=null&&t.L>pre[t.ex]+1e-6).map(t=>t.ex+' '+t.L+'>'+pre[t.ex]);
-    const holdSets=trace.filter(t=>t.w>=P.hold.from&&t.w<P.hold.from+P.hold.weeks), back=trace.filter(t=>t.w===P.hold.from+P.hold.weeks);
-    ok(holdSets.length>0&&back.length>0,'hold: it trained during the hold and in the first week back',holdSets.length+' / '+back.length);
-    // a goal lift is practised every week of the hold
-    const miss=[]; for(let w=P.hold.from;w<P.hold.from+P.hold.weeks;w++) ['squat','deadlift','bench'].forEach(id=>{ if(!holdSets.some(t=>t.w===w&&t.ex===id)) miss.push('wk'+(w+1)+' '+id); });
-    ok(miss.length===0,'hold: every goal lift practised every week of the hold',miss.join(', '));
-    ok(over.length===0,'hold: first week back, no suggestion above the pre-hold load',over.slice(0,4).join(', '));
+  // the plan for now: it trained during the plan and after; something progressed during it; the return ramp on the way back
+  if(P.fornow){
+    const F=P.fornow, inPlan=trace.filter(t=>t.w>=F.from&&t.w<F.from+F.weeks), back=trace.filter(t=>t.w===F.from+F.weeks);
+    ok(inPlan.length>0&&back.length>0,'for now: it trained during the plan and in the first week back',inPlan.length+' / '+back.length);
+    const score=t=>t.L*(1+t.reps/30), byEx={}; inPlan.filter(t=>!t.failed).forEach(t=>{ (byEx[t.ex]=byEx[t.ex]||[]).push(t); });
+    const up=Object.entries(byEx).filter(([,ts])=>{ const ws=[...new Set(ts.map(t=>t.w))]; if(ws.length<3) return false; const best=w=>Math.max(...ts.filter(t=>t.w===w).map(score)); return best(ws[ws.length-1])>best(ws[0]); }).map(([ex])=>ex);
+    ok(up.length>=2,'for now: exercises progress during the plan ('+up.length+': '+up.slice(0,5).join(', ')+')',JSON.stringify(Object.keys(byEx)));
+    ok(ramps.length>0,'for now: coming back, the return ramp prices a lift by its own gap ('+[...new Set(ramps)].slice(0,4).join(', ')+')','');
   }
   const failRate=trace.filter(t=>t.failed).length/Math.max(1,trace.length);
   ok(failRate<0.2,'missed-rep sets under 20% of all sets',(failRate*100).toFixed(1)+'%');

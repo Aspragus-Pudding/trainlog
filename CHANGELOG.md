@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.112.0 — 2026-11-24
+- Nothing changes on screen yet. Underneath, a "plan for now" replaces the earlier hold mode.
+- It spreads a week across your places (a gym day, home days), with your main lifts on gym days and everything progressing as normal.
+- Its screens come next, once the designs are picked.
+
 ## 1.111.0 — 2026-11-24
 - A warm-up library: research-backed and coach-favourite moves for shoulders, hips, knees, ankles, back and wrists.
 - If a joint or an area feels worse than usual at the check-in, today's warm-up suggests one or two moves for it, saying why. Skip them if you like.
