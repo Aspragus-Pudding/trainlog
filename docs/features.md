@@ -66,6 +66,7 @@ everyone.
 | Rehab and prep blocks | injury-prone | in the session, if a plan or prep applies |
 | Rehab and prehab logging: dose, pain, how it moved; feel-it stage, one step a week at most, a flare steps back | injury-prone | rehab block after training, tap an item |
 | Rehab or prehab, per exercise | injury-prone | rehab block, an open item |
+| Coming back after 10+ days away from an exercise: a lighter first session, building back to full over 2–6 weeks; a few reps short and no Nordics, partials or slow negatives the first week after 3+ weeks | everyone | the set card, Today's plan |
 | Finish session: how hard it was; one list of how each exercise went (felt it, enjoyed it, a watched joint, where a hard set slowed down) with All fine; anything sore as chips (a little / a lot); diary | everyone | Finish session |
 | Session summary: one sentence (sets, time, new bests), compared with last time | everyone | after finishing |
 | Keep any of these? (after trying new exercises): use instead, take turns, forget | everyone | session summary; a card on Today until answered |

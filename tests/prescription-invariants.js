@@ -36,7 +36,7 @@ function stub(){
     set(){ return true; }, apply(){ return stub(); }, construct(){ return stub(); }
   });
 }
-const EXPORTS=['watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
+const EXPORTS=['returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
   'suggestFor','seedDraft','logSet','moveSlot','adjustSets','fatigueRise','impliedE1','predictedRpe','rtfFromPct',
   'MUSCLE_REP_RANGE','CFG','FATIGUE_MIN_PAIRS','FATIGUE_MIN_SESSIONS','CHART_MAX_RTF',
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
@@ -2122,11 +2122,11 @@ section('52. modifiers: bounded, scoped, traced, never sticky');
     const h=A.trackHistory(slot), last=h[h.length-1]; if(!last) continue;
     const L0=A.toLb(last.weight), R0=last.reps, tr=r.trace||[], has=(id,ch)=>tr.some(x=>x.id===id&&(!ch||x.changed));
     const tag=ex+' '+L0+'x'+R0+'@'+last.rpe+' '+lo+'-'+hi+'@'+T+' → '+r.lb+'x'+r.pr.reps+' ['+tr.filter(x=>x.changed).map(x=>x.id).join(',')+']';
-    const exempt=has('range_fit')||has('focused_deload',true)||has('joint_ladder',true)||has('ceiling',true);
+    const exempt=has('range_fit')||has('focused_deload',true)||has('joint_ladder',true)||has('ceiling',true)||has('return_ramp',true);   // the return ramp is a bounded cut, exempt like a focused deload (batch N 2.1)
     if(!exempt&&(r.lb>A.stepUp(slot,L0)+1e-6||(r.lb<A.stepDown(slot,L0)-1e-6&&A.stepDown(slot,L0)>0))) bad('oneStep',tag);
     if(r.lb>L0+1e-6&&r.pr.reps>R0) bad('bothUp',tag);
     const fl0=A.floorFor(slot), fl=fl0==null?null:Math.min(fl0,L0);   // the floor never sits above where you are
-    if(fl!=null&&r.lb<fl-1e-6&&!has('focused_deload',true)&&!(lvl>=4)&&!has('range_fit')&&!has('ceiling',true)) bad('floor',tag+' floor '+fl.toFixed(1));
+    if(fl!=null&&r.lb<fl-1e-6&&!has('focused_deload',true)&&!has('return_ramp',true)&&!(lvl>=4)&&!has('range_fit')&&!has('ceiling',true)) bad('floor',tag+' floor '+fl.toFixed(1));
     const ce=A.ceilingFor(slot,r.pr.reps,Math.min(10,T+1));
     if(ce!=null&&r.lb>Math.max(ce,0)+1e-6&&r.lb>A.loadable(slot,0)+1e-6) bad('ceiling',tag+' ceiling '+ce.toFixed(1));
     if(calib&&r.lb>L0+1e-6) bad('calib',tag);
@@ -4129,6 +4129,55 @@ section('101. batch N 1.1: nothing asked between sets by default; a watched join
   ok(/How each exercise went/.test(post)&&/id='pallfine'/.test(post)&&/watchedJoint\(sl\.ex\)/.test(post)&&/stickingPending\(sl\)/.test(post),'one list per exercise, with All fine, watched joints and hard-set questions','');
   ok(/append\(\{type:'exercise_joint',exercise_id:exId,session_id:session\.id,joint:r\.joint,severity:r\.severity\}\)/.test(post)&&/append\(\{type:'sticking_report',exercise_id:exId,session_id:session\.id,set_id:r\.set\.id,region:r\.region/.test(post),'exercise_joint and sticking_report are written in the shape the engine reads','');
   console.log('  off by default · watched joints still asked · Something hurt? · one finish list, same events');
+}
+
+section('102. batch N 2.1: the return ramp, per exercise, one cut in the pipeline');
+{
+  const LB=1/0.45359237, se=(sid,d)=>({type:'session_end',id:'e'+sid,ts:day(d),session_id:sid,joints:{}});
+  // a steady history, then a gap of g days: sessions every 3 days up to g days ago
+  const hist=(id,w,g,extra)=>{ const ev=[]; for(let k=0;k<6;k++){ const d=g+3*(5-k); ev.push(set(id,'g'+id+k,w,8,8,d,{target:{reps:[6,10],rpe:8},...(extra||{})}),se('g'+id+k,d)); } return ev; };
+  const slot=(id,m)=>({ex:id,role:'secondary',reps:[6,10],rpe:8,sets:4,sets_target:4,sets:[],...(m?{modifiers:m}:{})});
+  // each band: the first session back is the last load × the band's factor (under 60 the top of the band)
+  [[5,null],[15,0.95],[30,0.90],[60,0.85],[100,0.75]].forEach(([g,f])=>{
+    const A=load(hist('squat',200,g)), r=A.returnRamp(slot('squat'));
+    ok(f==null?r==null:(r&&r.first&&Math.abs(r.factor-f)<1e-9&&Math.abs(r.cap-200*f)<1e-6),'band: '+g+' days away → '+(f==null?'no ramp':'first session at '+Math.round(f*100)+'%'),JSON.stringify(r&&{f:r.factor,cap:r.cap})); });
+  { const A=load(hist('squat',200,30)); A.CFG.over60=true; const r=A.returnRamp(slot('squat'));
+    ok(r&&Math.abs(r.factor-0.85)<1e-9&&r.setsMult===0.5,'over 60: the lower end of the band, and half the sets',JSON.stringify(r&&{f:r.factor,sets:r.setsMult})); }
+  // the suggestion: one cut, exempt from one step and the floor, and the trace says why
+  { const A=load(hist('squat',200,30)), sg=A.suggestFor(slot('squat')), t=(sg.trace||[]).find(x=>x.id==='return_ramp');
+    ok(sg.lb<=180+1e-6&&t&&t.changed&&/It's been 4 weeks since your last Back squat, so today starts a little lighter/.test(t.reason),'30 days off squat: the first suggestion is at most 90% of 200, with the reason',JSON.stringify({lb:sg.lb,t:t&&t.reason})); }
+  // ramping back: a week after the first session back, partway to full; at the band's week, gone
+  { const ev=hist('squat',200,40); ev.push(set('squat','back1',180,8,6.5,5,{target:{reps:[6,10],rpe:8}}),se('back1',5));
+    const A=load(ev), r=A.returnRamp(slot('squat'));
+    ok(r&&!r.first&&r.factor>0.90&&r.factor<1,'five days after coming back from a 35-day gap: partway back to full',JSON.stringify(r&&{f:r.factor,first:r.first}));
+    const ev2=hist('squat',200,60); [25,22,19,16,13,10,7,4,1].forEach((d,i)=>ev2.push(set('squat','back'+i,180,8,6.5,d,{target:{reps:[6,10],rpe:8}}),se('back'+i,d)));
+    ok(load(ev2).returnRamp(slot('squat'))==null,'past the band\'s week, the ramp is over',''); }
+  // your usual variant: the track is the one you do; another version inside the gap counts half
+  { const straps={straps:true}, ev=hist('deadlift',300,40); ev.push(set('deadlift','sb',300,8,8,5,{modifiers:straps,target:{reps:[6,10],rpe:8}}),se('sb',5));
+    const A=load(ev); A.CFG.usualMods={deadlift:straps};
+    ok(A.returnRamp(slot('deadlift',straps))==null,'strapped deadlift 5 days ago, straps your usual: no ramp on the strapped track','');
+    const r=A.returnRamp(slot('deadlift'));
+    ok(r&&r.sibling&&r.eff===Math.round((40+5)/2)&&r.band===21,'the plain track: 40 days, but the strapped version 5 days ago halves it to the 21-day band',JSON.stringify(r&&{eff:r.eff,band:r.band})); }
+  // kg: the cap is the kg load × the factor, shown in kg on the kg grid
+  { const ev=[]; for(let k=0;k<6;k++){ const d=30+3*(5-k); ev.push(set('deadlift','kg'+k,0,8,8,d,{weight:{value:140,unit:'kg'},target:{reps:[6,10],rpe:8}}),se('kg'+k,d)); }
+    const A=load(ev), sl=slot('deadlift'), sg=A.suggestFor(sl), sh=A.shownLoad(sl,sg.lb);
+    ok(sh.unit==='kg'&&sh.value<=126+1e-6&&Math.abs(sh.value/2.5-Math.round(sh.value/2.5))<1e-6,'kg: 140 kg, 30 days off → at most 126 kg, on the kg grid',JSON.stringify(sh)); }
+  // the bodyweight class ramps in system load: an assisted pull-up gets more assistance
+  { const bw={type:'bodyweight',id:'bwr',ts:day(60),bodyweight:180}, ev=[bw]; for(let k=0;k<6;k++){ const d=30+3*(5-k); ev.push(set('assisted_pullup','ap'+k,40,8,8,d,{target:{reps:[6,10],rpe:8}}),se('ap'+k,d)); }
+    const A=load(ev), r=A.returnRamp(slot('assisted_pullup')), sg=A.suggestFor(slot('assisted_pullup'));
+    ok(r&&Math.abs(r.ref-140)<1e-6&&sg.lb>40,'assisted pull-up: the ramp is on 140 lb lifted, so the assistance goes up',JSON.stringify({ref:r&&r.ref,typed:sg.lb})); }
+  // the plan: fewer sets the first week; RPE 6.5 and no Nordic the first session after 21+ days
+  { const ev=hist('squat',200,30).concat(hist('nordic',0,30)); const A=load(ev);
+    const out=A.applyReturnRamp([{ex:'squat',role:'secondary',reps:[6,10],rpe:8,sets:4},{ex:'nordic',role:'accessory',reps:[4,8],rpe:8,sets:3},{ex:'curl',role:'accessory',reps:[8,12],rpe:8,sets:3}]);
+    const sq=out.find(x=>x.ex==='squat');
+    ok(sq&&sq.sets===3&&sq.rpe===6.5&&!out.some(x=>x.ex==='nordic')&&out.some(x=>x.ex==='curl'&&x.sets===3),'first session after 30 days: squat 4 → 3 sets at RPE 6.5, the Nordic held out, untouched exercises as planned',JSON.stringify(out.map(x=>x.ex+':'+x.sets+'@'+x.rpe)));
+    ok(A.returnHeldOut({ex:'rdl',modifiers:{tempo:'5-0-1'}})&&A.returnHeldOut({ex:'squat',modifiers:{rom:{kind:'partial'}}})&&!A.returnHeldOut({ex:'squat',modifiers:{tempo:'2-0-1'}}),'slow negatives and partials are held out too','');
+  }
+  // never stacks: a sick day on top of a return is one cut, the larger
+  { const A=load(hist('squat',200,30)); A.setSession({id:'s1',slots:[],readiness:{sleep:1,motivation:3,recovery:3},adj:null});
+    const sg=A.suggestFor(slot('squat')), ch=(sg.trace||[]).filter(t=>t.changed&&['return_ramp','sick_day'].includes(t.id));
+    ok(ch.length===1&&(sg.trace||[]).some(t=>t.superseded),'a sick day and a return: the larger cut applies, the other is traced as superseded',JSON.stringify(ch.map(t=>t.id))); }
+  console.log('  four bands + over 60 · one cut, traced · ramping back · usual and sibling · kg · class · first-week plan · no stacking');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

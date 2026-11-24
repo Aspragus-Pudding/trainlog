@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.101.0 — 2026-11-24
+- Coming back to an exercise after 10 days or more, the first session starts a little lighter and builds back to full over 2–6 weeks, depending on how long you were away.
+- After 3 weeks or more, the first session back also stops a few reps short, and Nordics, partials and slow negatives sit out that week.
+- Today's plan and "Why these numbers" say when this is happening and how long it's been.
+
 ## 1.100.0 — 2026-11-24
 - Nothing is asked between sets now: the card is weight, reps, effort and Log set.
 - The finish screen asks how each exercise went, in one list, with All fine for a normal day.

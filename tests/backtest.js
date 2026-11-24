@@ -61,6 +61,10 @@ function stub(){
 const EXPORTS=['nextPrescription','suggestFor','suggestForSys','engLb','bwClass','schemeFor','EX','exById','LOG','sets','toLb','setE1RM','bestE1RM',
   'currentPhase','readinessScoreFromEvent','physicalCut','jointLevel','jointTrend','JOINT_PATTERNS','JOINTS',
   'lastEarlyPain','impliedE1','predictedRpe','rtfFromPct','repProfile','CFG','pct1RM','isCoarseMachine','isChartFree','jointNoteFor'];
+/* The replay clock (batch N 2.1): the engine sees the time just before each set, not today, so anything that
+   reads dates (a return after a break, how old a bodyweight is) is judged as it would have been then. */
+let REPLAY_NOW=Date.now(); const RealDate=Date;
+class ReplayDate extends RealDate{ constructor(...a){ if(a.length) super(...a); else super(REPLAY_NOW); } static now(){ return REPLAY_NOW; } }
 function loadApp(){
   const store={};
   if(cfgSnapshot) store['trainlog.cfg.v1']=JSON.stringify(cfgSnapshot);
@@ -76,9 +80,9 @@ function loadApp(){
     '_jointCache={};_jointLen=-1;_bwCache=null;_bwLen=-1;_fatCache={};_fatLen=-1;'+
     '},setSession:function(x){session=x}};';
   const fn=new Function('document','window','navigator','localStorage','location','history','setTimeout','setInterval',
-    'alert','confirm','fetch','Notification','matchMedia','requestAnimationFrame','console',body);
+    'alert','confirm','fetch','Notification','matchMedia','requestAnimationFrame','console','Date',body);
   return fn(stub(),stub(),stub(),ls,stub(),stub(),()=>0,()=>0,()=>{},()=>true,()=>Promise.resolve({}),stub(),()=>stub(),()=>0,
-    {log(){},warn(){},error(){}});
+    {log(){},warn(){},error(){}},ReplayDate);
 }
 const A=loadApp();
 
@@ -124,6 +128,7 @@ const seenFirst=new Set();   // session_id:exercise_id already has a logged work
 
 for(const w of workingSets){
   const t=new Date(w.ts).getTime();
+  REPLAY_NOW=t-60e3;
   const truncated=events.filter(e=>{ const et=new Date(e.ts).getTime(); return !isNaN(et)&&et<t; });
   A.setLog(truncated); A.resetCaches();
 

@@ -1686,3 +1686,18 @@ Autonomous under the batch rules. On your real history the engine moved **0 of 3
 - **Something hurt? asks where first**, the exercise's own joints listed first, because an unwatched exercise has no joint to ask about.
 - **All fine** answers every row with Solid and Fine (3 and 3) and every watched joint with Fine. It leaves "Where did it slow down?" blank, since a hard set doesn't have a fine answer.
 - The video reminder and the setup checklist aren't ratings, so they stay; they're in the Part 1.2 list of things that could move behind a tap.
+
+## D77. Coming back after a break: the return ramp (v1.101.0, batch N 2.1)
+
+Autonomous, the batch's recommended options. One modifier (`return_ramp`) in the pipeline, with the cuts: it never adds up with a sick day, soreness or the ladder (the largest applies), and it sits out a deload week and a focused deload, which already hold the load back.
+
+- **The gap** is the latest one of 10+ days between working sets on the exercise's own track (your usual respected), still open or closed within the band's weeks.
+- **The cap** is your best working load in the session before the gap × the band's first-session load, climbing in a straight line to full by the band's week. Under 60 it uses the top of each band (95/90/85/75%); over 60 (`CFG.over60`) it uses the bottom (90/85/75/65%), fewer first-week sets and the later week. **There's no age question anywhere yet**, so everyone gets the under-60 numbers until there is one; adding it to setup or Edit program is a small screen change, so it waits for your call.
+- **A sibling variant** (the same movement with other modifiers, such as strapped deadlifts) done inside the gap counts half: the gap becomes the mean of the whole gap and the time since the sibling. Recorded as the batch asked.
+- **First week back:** sets ×⅔ (10–20 days), ×⅔ or ½ (21–41), ×½ (42+), in the plan itself.
+- **First session after 21+ days:** RPE 6.5 (3–4 reps short), and **Nordics, any partial range and slow negatives (4+ seconds down) are left out for that week.** The app can't tell a lengthened partial from a short one, so every partial sits out.
+- Exempt from the one-step and the floor guards, like a focused deload, or it couldn't cut more than one step.
+- "Thresholds live in engine-constants": that document isn't in this repo (CLAUDE.md says so), so they live in `ENGINE.RETURN_BANDS` in `index.html`, with their grades.
+- **Rounded to the nearest step, never above the suggestion**, so a coarse machine doesn't turn a 5% cut into a whole plate. **And never below what you've lifted since coming back**: without that, the weeks after a return were priced from the load before the gap (on your history it pulled pushdowns from 110 to 50 lb).
+- **The backtest:** 7 of 318 suggestions moved, all inside a return (five first sessions after 10–27 days away, two in the fortnight after); every other row is identical. Mean load error 3.6 → 3.8 lb, because on those days you came back stronger than the bands allow (e.g. seated lateral raise after 27 days: 50 suggested, 65 lifted). The research itself says strength losses are trivial until about 3 weeks, so the 10–20 day band may be too cautious for you. Kept as the brief's table. Starting the ramp at 21 days is a one-line change to `RETURN_BANDS`.
+- **The backtest harness got a replay clock**: the engine now sees the time just before each set, not today. Before, anything reading dates was judged as of today. On its own it moves 0 rows; without it the ramp looked like it fired on 75 rows.

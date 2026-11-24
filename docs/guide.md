@@ -22,7 +22,7 @@ Set Edit program → How hard suggestions push to "push a bit" or "push me", for
 The same setting works the other way: "ease off" or "hold me back" holds suggestions where they would have stepped up. For a few exercises only, start a focused deload from the exercise's info sheet, and everything else carries on.
 
 ### I missed a week
-Nothing is lost. The program counts sessions, not dates, so it picks up at the day you missed. The target date on Today moves out to match your pace. Your first sessions back are worked out from your last sets, so log the effort honestly and the next suggestion adjusts if a lift feels heavy.
+Nothing is lost. The program counts sessions, not dates, so it picks up at the day you missed. The target date on Today moves out to match your pace. Your first sessions back are worked out from your last sets. After 10 days or more away from an exercise, its first session back starts a little lighter and builds back to full over 2–6 weeks, depending on how long you were away; after 3 weeks or more it also stops a few reps short, and Nordics, partials and slow negatives sit out that first week. Log the effort honestly and the next suggestion adjusts.
 
 ### A lift has stalled
 When a main lift goes a few weeks without a new best while you're training it every week, Today says so and proposes a stall fix. It checks the simple causes first, then suggests more practice of the lift itself. Nothing starts until you accept, and each fix has an undo.

@@ -6,7 +6,7 @@ Every adjustment to a base prescription is one of these, in `ENGINE.modifiers`
 in `index.html`. **This table and that block list the same ids** —
 `tests/prescription-invariants.js` §52 fails if they drift. Precedence, high to
 low: `condition_flag` → `focused_deload` → `joint_ladder` → `local_soreness` →
-`global_readiness` / `sick_day` → `dial` → `phase_ramp` → `progression`.
+`return_ramp` (with the cuts) → `global_readiness` / `sick_day` → `dial` → `phase_ramp` → `progression`.
 Applied low to high: after the dial, a step can only make the number more
 conservative. **Cuts never add up (v1.49):** `sick_day`, `local_soreness` and
 the `joint_ladder` −10% are each priced from the same starting load; the
@@ -27,6 +27,7 @@ suggestion log and shown as "Why these numbers" on the Progress tab.
 | `sick_day` | global | one load step down everywhere when any global item is 1 | this session |
 | `local_soreness` | muscle | load ×0.95/0.90, −1/−2 sets on the sore muscles' main work; never two sessions running without a miss | this session |
 | `joint_ladder` | joint | L3 hold · L4 −10% and −1 set · L5 no progression | 6-session trend |
+| `return_ramp` | exercise | a cut (with sick_day, local_soreness and the ladder: the largest applies): the last load before a 10+ day gap × 0.95/0.90/0.85/0.75 (over 60: 0.90/0.85/0.75/0.65) on the first session back, climbing to full; first-week sets ⅔–½; RPE 6.5 and no Nordics, partials or slow negatives the first week after 21+ days; a sibling variant inside the gap counts half; exempt from one_step and floor (batch N 2.1, grade D loads) | 2–6 weeks after the first session back |
 | `focused_deload` | exercise | pinned at hold / −10% / −20% of the starting load; exempt from one_step and floor | 1–3 weeks + 3-session ramp-back |
 | `condition_flag` | exercise | display only | while the condition is picked |
 | `calibrating` | global | no load step-up | first session after a program, phase or profile change |
