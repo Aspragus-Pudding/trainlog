@@ -353,7 +353,7 @@ included), `planFor`/`weekPlanFor`, swaps and saving a range. A stored
   plus revealed overrides; it replaced override damping. Program changes
   append `program_edit` (the next session is "calibrating": no step up).
   §52 runs 1200 randomised stacks — if it fails, fix the interaction, not the test.
-- **Rehab and prehab are tracked (v1.84).** They're logged as `rehab_set` events, never `set`, so no
+- **Rehab and prehab are tracked (v1.84; batch L rules v1.107).** A researched row carries `ex.rehabLib` (stage, pain rule PR-T 5/10 or PR-G 3/10, timeline, links); with conditions the stricter limit wins. One flare cuts sets a third for two sessions, two in a row step back; two passing sessions before a step; a red flag for the area stops progression. They're logged as `rehab_set` events, never `set`, so no
   volume, best or engine reader can see them. `rehabRx()` derives the dose from
   them: a feel-it stage first, then at most one step per window. The pain gate is
   `painRule` plus the next check-in against `jointBaseline`. A flare steps back and

@@ -1733,3 +1733,16 @@ Run as the maintainer asked ("match each code by name and aliases, store the cod
 - **Neck work** counts toward traps, the nearest muscle the app has. It's never generated.
 - **Your week and your suggestions:** checked against your own log and settings with the last version and this one: the same generated week, and the same suggestion for every exercise you've logged.
 - How to reverse: empty the `library-data` block (the app runs without it, exactly as before), or remove a row's decision in the tool and re-run it.
+
+## D83. The rehab rows in the rehab engine (v1.107.0, batch L Part 3)
+
+The engine from v1.84 already had most of section 3 (feel-it stage, one step per window, reps then tempo then load, the next-morning check through the check-in, graduation as a proposal). What changed:
+
+- **Pain gate per row:** PR-T (tendons) 5/10, PR-G 3/10. With conditions picked, the injury library's rule for them applies too and the stricter wins, so no condition's limit gets looser. Without conditions, PR-G is stricter than the app's old general 5/10 on those rows.
+- **Flares:** a session over the limit, or a next check-in worse than your usual (was: two steps worse), cuts the sets by a third for the next two sessions at the same dose. Two in a row step back one level and hold a week (was: any flare stepped back).
+- **Two passing sessions in a row** at a dose come before a step (was: a week at the dose, however many sessions).
+- **Timeline:** "Week 5 of about 12" on each rehab item (8 for outer-hip pain), from the first session logged.
+- **Red flags:** rule 13's five join every checklist. Any ticked for an area stops that area's rehab from stepping up, and says to see a professional.
+- **The post-session block:** a researched rehab row joins a joint's rotation only when it's linked to a condition you've picked (the links are in the tool), after the app's own items, and behind the same safety check. No row is linked to an instability entry, and external rotation at 90° is unsafe for one, so your shoulder rotation is unchanged.
+- **Not built:** the return-to-lifting ladders (R10 bench, R27 deadlift) are kept as data; they need the ladder engine (batch N Part 3) and a way to start one. The "range first" step of the progression order isn't modelled (the app can't measure range); reps, then tempo, then load, as before. The research's start doses are shown in the data, not applied: the app's feel-it dose stays.
+- Isometrics are never described as pain relief anywhere in the app (§106 checks the rehab code paths).

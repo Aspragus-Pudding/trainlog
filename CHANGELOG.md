@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.107.0 — 2026-11-24
+- Rehab follows the research's rules: up to 5/10 pain for a tendon, 3/10 for anything else, or your condition's limit if that's lower.
+- One session over the limit, or a worse morning, means a third fewer sets for two sessions; two in a row means one step back for a week.
+- A step up needs two good sessions in a row, and each rehab item shows the week you're on out of about 12.
+- The red-flag checklist has five more general signs to see someone about; any ticked stops that area's rehab from stepping up.
+
 ## 1.106.0 — 2026-11-24
 - The exercise library has about 120 more exercises, from a research review: variations, home versions, and rehab and prehab exercises.
 - How to do it shows how to set up, cues, common mistakes, easier and harder versions you can swap to, and why lifters use it, with how much evidence there is.

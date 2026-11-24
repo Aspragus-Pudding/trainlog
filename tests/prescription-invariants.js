@@ -28,6 +28,8 @@
 const fs=require('fs'), path=require('path');
 const html=fs.readFileSync(process.env.TRAINLOG_HTML||path.join(__dirname,'..','index.html'),'utf8');   // TRAINLOG_HTML: test another build
 const src=html.match(/<script>([\s\S]*)<\/script>/)[1];
+// a function's source, for the checks that read the code (sections may shadow it)
+function fnSrc(name){ const i=src.indexOf('function '+name+'('); const j=src.indexOf('\nfunction ',i+10); return i<0?'':src.slice(i,j<0?undefined:j); }
 
 function stub(){
   const f=function(){};
@@ -36,7 +38,7 @@ function stub(){
     set(){ return true; }, apply(){ return stub(); }, construct(){ return stub(); }
   });
 }
-const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','holdState','holdWindows','holdTargets','holdDays','programDays','holdOffer','holdReview','holdBackAsk','HOLD_COPY','startHold','endHold','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
+const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','holdState','holdWindows','holdTargets','holdDays','programDays','holdOffer','holdReview','holdBackAsk','HOLD_COPY','startHold','endHold','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
   'suggestFor','seedDraft','logSet','moveSlot','adjustSets','fatigueRise','impliedE1','predictedRpe','rtfFromPct',
   'MUSCLE_REP_RANGE','CFG','FATIGUE_MIN_PAIRS','FATIGUE_MIN_SESSIONS','CHART_MAX_RTF',
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
@@ -3735,8 +3737,14 @@ section('91. rehab and prehab, tracked: slow, pain-led, never in training stats'
   { const A=load([rs(20),rs(16),rs(12)]); const r=A.rehabRx('er_side');
     ok(r.stage==='build'&&r.step&&r.dose.reps===14,'after feel it, a clean week at one dose: one step, reps first (12 → 14)',JSON.stringify(r.dose)); }
   // never steps after a pain report above the limit
-  { const A=load([rs(20),rs(16),rs(12,{pain:7})]); const r=A.rehabRx('er_side');
-    ok(!r.step&&r.flare&&r.dose.reps<12,'pain over the limit: no step, one step back, and hold',JSON.stringify(r)); }
+  { const A=load([rs(20),rs(16),rs(12,{pain:7,sets:3})]); const r=A.rehabRx('er_side');
+    ok(!r.step&&r.flare&&r.cut&&r.dose.reps===12&&r.dose.sets===2,'pain over the limit once: no step, a third fewer sets, same dose (batch L)',JSON.stringify(r)); }
+  { const A=load([rs(20),rs(16,{pain:7,sets:3}),rs(12,{sets:2})]); const r=A.rehabRx('er_side');
+    ok(!r.step&&r.cut&&r.dose.sets===2,'…for two sessions',JSON.stringify(r)); }
+  { const A=load([rs(30),rs(26),rs(16,{pain:7,sets:3}),rs(12,{sets:2}),rs(8,{sets:2})]); const r=A.rehabRx('er_side');
+    ok(!r.cut&&r.dose.sets===3,'then the sets come back',JSON.stringify(r)); }
+  { const A=load([rs(20),rs(16,{pain:7}),rs(12,{pain:7})]); const r=A.rehabRx('er_side');
+    ok(!r.step&&r.flare&&r.stepBack&&r.dose.reps<12,'two in a row over the limit: one step back, and hold',JSON.stringify(r)); }
   { const A=load([rs(20),rs(16),rs(9,{pain:7}),rs(4)]); const r=A.rehabRx('er_side');
     ok(!r.step,'and it holds for a window after the flare','' ); }
   { const A=load([rs(30),rs(26),rs(22,{pain:0,kind:'apprehension'})]); A.getCFG().conditions=['sh_ant_instability']; const r=A.rehabRx('er_side');
@@ -3745,7 +3753,8 @@ section('91. rehab and prehab, tracked: slow, pain-led, never in training stats'
   { const A=load([rs(30),rs(26),rs(20,{pain:5})]); A.getCFG().conditions=['sh_rcrsp']; ok(A.rehabRx('er_side').flare===true,'the injury library\'s pain limit for your condition (4/10 for a pinchy shoulder)',''); }
   // a next morning two steps over your usual is a flare too
   { const ev=[rs(30),rs(26),rs(20)]; ev.push({type:'readiness',id:'rd1',ts:day(19.6),sleep_quality:3,motivation:3,recovery:3,joints:{shoulder:2},joint_scale:3});
-    const A=load(ev); const r=A.rehabRx('er_side'); ok(r.flare===true,'worse by two steps the next morning: steps back',JSON.stringify(r)); }
+    const A=load(ev); const r=A.rehabRx('er_side'); ok(r.flare===true,'worse the next morning: a flare too',JSON.stringify(r)); }
+  { const A=load([rs(30),rs(26),rs(12,{reps:14})]); ok(!A.rehabRx('er_side').step,'one session at a dose isn\'t enough: two passing sessions in a row come before a step',''); }
   // never more than one step per window
   { const A=load([rs(30),rs(26),rs(20),rs(3,{reps:14})]); const r=A.rehabRx('er_side');
     ok(!r.step&&/one step/.test(r.why),'stepped up 3 days ago: no second step inside the week',r.why); }
@@ -4377,6 +4386,36 @@ section('105. batch L: the researched exercise library');
     const sig=ds=>JSON.stringify(ds.map(d=>d.slots.map(sl=>sl.ex+':'+sl.sets+':'+(sl.reps||[]).join('-'))));
     ok(sig(before)===sig(after),'with a history, the generated week is the same with the library as without it',sig(before).slice(0,200)+' | '+sig(after).slice(0,200)); }
   console.log('  370 rows once · ids and parents · codes stored · tags in the vocabulary, never gentler · no RISK picks · tie-break · library ranges · modifiers · evidence words · no names or numbers · Jefferson curl · your week unchanged');
+}
+
+
+section('106. batch L Part 3: the rehab rows in the rehab engine');
+{
+  let n=0; const rr=(id,d,o)=>({type:'rehab_set',id:'lr'+(n++),ts:day(d),exercise_id:id,mode:'rehab',sets:2,reps:12,secs:0,load_lb:0,slow:false,pain:0,quality:'good',...(o||{})});
+  const A=load([],true);
+  ok(A.rehabItem('wrist_ext_iso').rule==='PR-T'&&A.rehabItem('er_side').rule==='PR-G'&&A.rehabItem('glute_bridge').rule==='PR-G','each researched rehab row carries its pain rule (tendons PR-T, the rest PR-G)','');
+  // the gates: tendons up to 5/10, everything else 3/10; never looser than your condition's rule
+  { const T=A.rehabItem('wrist_ext_iso'), G=A.rehabItem('er_side');
+    ok(A.rehabPainOk({pain:5},T)&&!A.rehabPainOk({pain:6},T)&&A.rehabPainOk({pain:3},G)&&!A.rehabPainOk({pain:4},G),'no conditions: a tendon row allows 5/10, any other row 3/10','');
+    A.getCFG().conditions=['an_lateral_sprain']; ok(!A.rehabPainOk({pain:4},T),'with a condition, the stricter limit wins (an ankle sprain caps at 3)',''); A.getCFG().conditions=[]; }
+  // the timeline
+  { const B=load([rr('er_side',30),rr('er_side',26),rr('er_side',20)],true); const r=B.rehabRx('er_side');
+    ok(r.week===5&&r.of===12,'a 12-week timeline, and where you are on it ('+r.week+' of '+r.of+')','');
+    const C=load([rr('glute_bridge',10),rr('glute_bridge',5)],true); C.getCFG().conditions=['hip_gluteal_tendinopathy'];
+    ok(C.rehabItem('sidelying_abd').weeks===8,'outer-hip pain (LEAP): 8 weeks',''); }
+  // a red flag stops progression
+  { const B=load([rr('er_side',30),rr('er_side',26),rr('er_side',20)],true); B.getCFG().condRedFlags={sh_rcrsp:['Night pain that won\'t settle']};
+    const r=B.rehabRx('er_side'); ok(!r.step&&r.redFlag&&/See a professional/.test(r.why),'a red flag ticked for the shoulder: nothing steps up, and it says to see a professional',JSON.stringify(r)); }
+  ok(A.REHAB_RED_FLAGS.length===5&&A.REHAB_RED_FLAGS.some(t=>/bladder or bowel/.test(t)),'rule 13\'s red flags join every checklist','');
+  // feel-it, no step on pain, one step per window, graduation a proposal: on a researched row too
+  { const B=load([rr('tyler_twist',6),rr('tyler_twist',4),rr('tyler_twist',2)],true); const r=B.rehabRx('tyler_twist'); ok(r.stage==='feel'&&!r.step,'feel it on a researched row: no step','');
+    const C=load([rr('tyler_twist',20),rr('tyler_twist',16),rr('tyler_twist',12,{pain:6})],true); ok(!C.rehabRx('tyler_twist').step,'over 5/10 on a tendon row: no step','');
+    const D=load([rr('tyler_twist',20),rr('tyler_twist',16),rr('tyler_twist',12,{pain:5})],true); ok(D.rehabRx('tyler_twist').step,'5/10 on a tendon row is within its gate: it steps',''); }
+  // the post-session rotation: a researched row joins only when linked to a condition you've picked, and never if it's unsafe for you
+  { const src=fnSrc('buildRehab'); ok(/e\.rehabLib\.links/.test(src)&&/!rehabUnsafe\(e\.id\)\)\);/.test(src),'researched rows join the rehab block through their links, behind the same safety check','');
+    const B=load([],true); B.getCFG().conditions=['shoulder_instability','sh_rcrsp']; ok(B.rehabUnsafe('er_90'),'external rotation at 90° stays out for an unstable shoulder even when linked','');
+    ok(!/pain relief|relieve pain|relieves pain/i.test(src+fnSrc('rehabRx')+fnSrc('openInfo')),'isometrics are never described as pain relief',''); }
+  console.log('  pain rules per row · stricter wins · timeline · red flags stop progression · feel it, gates and windows on researched rows · links behind the safety check');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
