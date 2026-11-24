@@ -38,7 +38,7 @@ function stub(){
     set(){ return true; }, apply(){ return stub(); }, construct(){ return stub(); }
   });
 }
-const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','noteStatus','fbQueue','flushFeedback','sendFeedback','askSheet','warmupLibrary','warmupSuggest','stiffAreas','wuEvidence','dayForToday','placeToday','ladderPos','ladderNext','ladderPrev','ladderCurrent','ladderMoveUpDue','ladderMoveUp','ladderNotYet','templateDay','harderThan','BW_CLASS','STAND_IN','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','fornowState','fornowWindows','fornowDays','fornowTargets','programDays','fornowOffer','fornowBack','fornowAsk','FORNOW_COPY','startForNow','endForNow','answerForNow','changeForNow','boxMinutes','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
+const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','syncNow','setSyncVerifier','noteStatus','fbQueue','flushFeedback','sendFeedback','askSheet','warmupLibrary','warmupSuggest','stiffAreas','wuEvidence','dayForToday','placeToday','ladderPos','ladderNext','ladderPrev','ladderCurrent','ladderMoveUpDue','ladderMoveUp','ladderNotYet','templateDay','harderThan','BW_CLASS','STAND_IN','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','fornowState','fornowWindows','fornowDays','fornowTargets','programDays','fornowOffer','fornowBack','fornowAsk','FORNOW_COPY','startForNow','endForNow','answerForNow','changeForNow','boxMinutes','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
   'suggestFor','seedDraft','logSet','moveSlot','adjustSets','fatigueRise','impliedE1','predictedRpe','rtfFromPct',
   'MUSCLE_REP_RANGE','CFG','FATIGUE_MIN_PAIRS','FATIGUE_MIN_SESSIONS','CHART_MAX_RTF',
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
@@ -87,6 +87,7 @@ let failures=0, checks=0; const shown={};
 function fail(kind,detail){ failures++; shown[kind]=(shown[kind]||0)+1; if(shown[kind]<=3) console.log('  FAIL ['+kind+'] '+detail); }
 function ok(cond,kind,detail){ checks++; if(!cond) fail(kind,detail); }
 const section=t=>console.log('\n'+t);
+const PENDING_ASYNC=[];   // promise-based checks (batch 04 1.3) finish before the totals
 
 /* ─── 1. the grid: every branch of nextPrescription, coarse and fine steps ─── */
 section('1. direction / pairing across a grid of last sets');
@@ -4523,5 +4524,22 @@ section('111. batch 04 Part 1: tester plumbing');
   console.log('  Use a sheet → Settings · notes wait, then go · honest badge · setup pencil · no-sheet message · maintainer flag · four confirms on the sheet · update path');
 }
 
+
+section('112. batch 04 1.3: a backup is "synced" only when the sheet confirms it');
+{
+  const done=[];
+  const A=load([],true), C=A.getCFG(); C.syncUrl='https://script.google.com/macros/s/abc/exec';
+  A.setSyncVerifier(()=>Promise.resolve(false));
+  done.push(A.syncNow(true).then(r=>{ ok(r===false&&!A.STORE.getItem('trainlog.lastSync'),'a sheet that can\'t confirm (a wrong address, a broken deployment) never stamps lastSync',''); }));
+  const B=load([],true); B.getCFG().syncUrl='https://script.google.com/macros/s/abc/exec'; let seen=null;
+  B.setSyncVerifier((u,t)=>{ seen=t; return Promise.resolve(true); });
+  done.push(B.syncNow(true).then(r=>{ ok(r===true&&!!B.STORE.getItem('trainlog.lastSync')&&/^\d{4}-\d\d-\d\dT/.test(seen||''),'a confirmed backup stamps lastSync, checked against the export time it sent',''); }));
+  ok(/action=ping/.test(src)&&/function ping\(callback\)/.test(fs.readFileSync(path.join(__dirname,'..','AppsScript.gs'),'utf8')),'the Apps Script answers a light ping; older deployments are read in full','');
+  PENDING_ASYNC.push(Promise.all(done));
+  console.log('  unconfirmed never stamps · confirmed does, against the token it sent · ping, with a fallback');
+}
+
+Promise.all(PENDING_ASYNC).then(()=>{
 console.log('\n'+checks+' checks, '+failures+' failed');
 if(failures){ console.log('\n'+Object.entries(shown).map(([k,n])=>n+' x '+k).join('\n')); process.exit(1); }
+});

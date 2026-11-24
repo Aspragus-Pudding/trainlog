@@ -40,10 +40,27 @@ function doPost(e) {
 
 function doGet(e) {
   var params = (e && e.parameter) || {};
+  if (params.action === 'ping') return ping(params.callback);
   if (params.action !== 'fetch') {
     return ok('Trainlog receiver is live. The app posts here.');
   }
   return fetchRaw(params.callback);
+}
+
+/** The app's check after each backup (v1.114): when the stored backup was exported and how many lines it has,
+    without sending the whole log back. Same JSONP rule as fetchRaw. */
+function ping(callback) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName('Raw backup');
+  var out = { lines: 0, exported_at: null };
+  if (sh && sh.getLastRow() >= 3) {
+    out.lines = sh.getLastRow() - 2;
+    try { var head = JSON.parse(sh.getRange(3, 1).getValue()); out.exported_at = head && head.exported_at || null; } catch (err) {}
+  }
+  if (callback && !/^[A-Za-z_$][\w$]{0,63}$/.test(callback)) callback = '';
+  var body = JSON.stringify(out);
+  if (callback) return ContentService.createTextOutput(callback + '(' + body + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
+  return ContentService.createTextOutput(body).setMimeType(ContentService.MimeType.JSON);
 }
 
 /** Serves the Raw backup sheet back to the app, same NDJSON shape it posted.

@@ -1807,3 +1807,7 @@ The maintainer's spec, built as engine; the setup flow and the place editor are 
 - **1.6** Maintainer tools need `CFG.maintainer`. It's set once, for an install whose first set is from before 12 October 2026 (before testers) and that wasn't set up by a link. A new user without a link no longer sees them.
 - **1.7** The four riskiest native confirms are now a sheet with two labelled buttons (`askSheet`): clinician clearance, both "start over" buttons, Exit setup, and swapping an exercise with sets logged. The back gesture during setup still uses the native confirm: it runs inside a history pop, and turning it into a sheet needs its own care. The remaining 25 or so confirms and 12 alerts are lower risk and left for later.
 - **1.8** The service worker fetches index.html with `cache:'no-cache'`. The foreground update check was already there.
+
+## D90. Backups are "synced" only when the sheet confirms (v1.114.0, batch 04 1.3)
+
+After posting, the app reads back: `?action=ping` (new in AppsScript.gs: the stored backup's export time and line count), else the whole backup, searched for the export time it just sent. Only a match stamps lastSync and says "Sent to your sheet". Otherwise: "Couldn't confirm the sheet got it. Your log is safe on this phone.", and the backup reminder stays. Test it now does the same. Each backup sheet's script needs the new `AppsScript.gs` and a redeploy (ALPHA.md); without it the full read still confirms, more slowly.

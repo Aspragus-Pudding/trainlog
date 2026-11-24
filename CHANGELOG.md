@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.114.0 — 2026-11-24
+- After each backup, the app checks that your sheet really got it before saying "Sent to your sheet".
+- If it can't confirm, it says so, your backup reminder stays on, and your log is safe on this phone.
+- Whoever set up your sheet should update its script once (the tester notes say how); until then the check is slower but still works.
+
 ## 1.113.0 — 2026-11-24
 - Notes written before your setup link now wait and are sent when you apply it. Each note says Sent, Waiting to send, or Failed: tap to retry.
 - You can leave a note during setup.
