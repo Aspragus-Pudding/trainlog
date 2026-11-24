@@ -173,6 +173,9 @@ Optional, and kept on this phone only: it never goes into a backup file or your 
 ### Ask after each set
 Off by default: between sets the card is weight, reps, effort and Log set, and the finish screen asks how each exercise went, with All fine for a normal day. On brings back the rating button and "Where did it slow down?" after a hard set. A joint that is being watched is asked about after each set either way, and Something hurt? is always on the card. It's in Settings → Training.
 
+### Weight unit for one exercise
+The "lb ▸ kg" button beside the weight on the set panel switches that exercise to the other unit, for a machine marked in kilograms in a pound gym or the other way round. Switching back is exact. The rest of the app keeps your main unit.
+
 ### Rest between sets
 How long the rest timer runs after a set of this exercise. The defaults are 4 minutes for squats and deadlifts as main lifts, 3 for other main lifts, 2:30 for other compounds and 1:45 for isolation work. Add 30 seconds on the rest bar and an "Always" button keeps that time for the exercise. If you keep resting longer or shorter for three sessions, the app offers to match it.
 

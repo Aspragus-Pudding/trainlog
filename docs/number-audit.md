@@ -7,12 +7,12 @@ now next to it.
 
 | Item | Screen | Result | Why |
 |---|---|---|---|
-| Readiness score (0–100) and its band word | Dashboard, readiness card | kept | Tells you how long to warm up and whether anything steps up. The effect is on the same line (v1.71). |
-| Joint rating against your usual (n / 3) | Dashboard, readiness card | kept | Tells you which work is held or lighter today. The effect is on the same line (v1.71). |
+| Readiness score (0–100) and its band word | Today, readiness card | kept | Tells you how long to warm up and whether anything steps up. The effect is on the same line (v1.71). |
+| Joint rating against your usual (n / 3) | Today, readiness card | kept | Tells you which work is held or lighter today. The effect is on the same line (v1.71). |
 | Readiness and joint scales | Readiness sheet | kept | The legend that makes the two numbers above readable. |
-| Days to go | Dashboard | kept | You plan around your test or target date. |
-| Block and week | Dashboard and header | kept | Tells you where you are in the program. |
-| Recent bests (estimated max) | Dashboard | kept | Your progress at a glance; "estimated max" is tappable for what it means. |
+| Days to go | Today | kept | You plan around your test or target date. |
+| Block and week | Today and header | kept | Tells you where you are in the program. |
+| Recent bests (estimated max) | Today | kept | Your progress at a glance; "estimated max" is tappable for what it means. |
 | Exercises and sets done | Workout, progress card | kept | Tells you how far through the session you are. |
 | Weight × reps and RPE per set | Workout, set rows | kept | What you lift. |
 | Last time, beside each set | Workout and preview | kept | What to beat, from the same set the suggestion is priced from. |

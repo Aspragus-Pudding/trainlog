@@ -11,7 +11,7 @@ point of this test, so send them freely, even small ones.
    icon.
 3. Choose **Build it together** (recommended) or **Build it for me**, and
    answer the questions. It takes a few minutes, and you can skip anything you
-   don't know. The header shows how far along you are ("Step 3 of 9"). You see
+   don't know. The header shows how far along you are ("Step N of M"). You see
    the whole plan, with a reason for each part, before anything is saved.
 4. Six short cards explain how your program works, using your own plan. Read
    them or tap **Skip and start**. You can replay them later from **Settings →

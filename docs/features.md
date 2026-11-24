@@ -27,7 +27,7 @@ everyone.
 | Readiness: a dot and a sentence for readiness, each joint and fatigue | everyone | readiness card, under Today's plan |
 | Readiness detail: each check-in answer and what it does, sore muscles and joints with the exercises they touch, the score, a legend | everyone | tap the readiness card |
 | Volume this week per muscle, with the typical range | advanced | Volume this week card |
-| Your phases | everyone | Your phases card |
+| Your blocks | everyone | Your blocks card |
 | Recent bests (estimated max) | everyone | Recent bests card |
 | Rehab phase plans in progress | injury-prone | cards near the top, if you started one |
 | Edit program | everyone | button at the bottom |
@@ -63,6 +63,7 @@ everyone.
 | Rest timer | everyone | bottom bar after each set |
 | Where are you training today (place chips, last one first; stand-ins, said before Start) and How long do you have (Full, 45, 30, 20: what each leaves out); paired exercises as two linked cards | everyone | Train, before Start; the cards |
 | Warm-up suggestions from the check-in: one or two moves from the warm-up library for anything that felt stiffer than usual | everyone | Train, the warm-up |
+| Weight unit for one exercise: the "lb ▸ kg" button on the set panel switches this exercise's numbers, without changing the rest | everyone | set panel |
 | Add an exercise; arrows to move; Swap and How to do it on every exercise (Swap moves into How to do it once a set is logged); Log a set here, or tap a set you haven't done, to bring the set panel to that exercise | everyone | the card, the end of the list |
 | Leave (end early, with a reason) | everyone | header, top right |
 | Video prompt ("film this set") | advanced | occasionally, on main lifts |
@@ -170,14 +171,14 @@ everyone.
 
 | Feature | For | Where |
 |---|---|---|
-| Setup: Build it for me, Build it together, or Restore from a backup | everyone | first run |
+| Setup: Build it together (recommended), Build it for me, or Restore from a backup | everyone | first run |
 | Setup preview: every part with a reason and "Customize this"; nothing saved until Start first session | everyone | end of setup |
-| Set up a new program (keeps every logged set) | everyone | Lifts, bottom |
+| Set up a new program (keeps every logged set) | everyone | Edit program, bottom |
 | Keep a backup (after your first session) | everyone | first session's summary; Progress and Lifts until done |
 | The program builder (rebuild the rest of a program) | advanced | Edit program → Rebuild the rest |
 | Injury consent screen | injury-prone | first time you pick a condition |
 | Quick note (the pencil) | everyone | header, every screen |
-| Diagnostics (phone, browser, visible size, safe areas) with Copy | everyone | long-press the version number in Lifts |
+| Diagnostics (phone, browser, visible size, safe areas) with Copy | everyone | Settings → About, or a long press on the version number |
 | Errors the app records, kept in your notes until you send them | everyone | Progress → Notes |
 | Exit setup, and Continue setup later (answers kept) | everyone | setup header; a card on Today; on reopening the app |
 | "?" tour of the current screen | everyone | header, and in Edit program |

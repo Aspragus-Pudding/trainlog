@@ -27,8 +27,7 @@ For each tester:
    opening the link directly works.)
 5. Tell them it's an alpha, data loss is possible, and how to send a note
    (the ✎ pencil at the top of every screen). Ask for **what build, what screen, what you
-   tapped, what happened.** The build number is at the bottom of the
-   dashboard.
+   tapped, what happened.** The build number is in Settings → About.
 
 **Never give anyone your own backup URL or your backup file.** The backup
 address works like a password: whoever has it can read your whole log back
@@ -48,7 +47,7 @@ mid-session.
 
 **A fresh install starts clean.** No goal lifts, no program, no conditions.
 The first run is the setup (v1.64):
-- **Three ways in:** Build it for me (recommended), Build it together, or
+- **Three ways in:** Build it together (recommended), Build it for me, or
   Restore from a backup (a file or their sheet).
 - **Eight questions, each skippable:** goal,
   how long they've been lifting, days and minutes, gym and equipment,
@@ -96,7 +95,7 @@ kneecap") — about 50 entries from the injury research, across every region.
   rotator cuff pain, sprains, instability, stress fractures) the app suggests
   stopping that exercise or swapping it — advice with buttons, never a lock.
 - **Phase plans (optional):** for conditions the research gives rehab phases,
-  a tester can start a plan from the condition's card; the dashboard shows the
+  a tester can start a plan from the condition's card; Today shows the
   phase, its exercises and when to move on, and a card suggests the next phase
   once it looks ready. It never moves on by itself.
 - **Over-flagging is tested:** no condition flags more than 30% of the
@@ -124,7 +123,7 @@ Written to show testers.
 - **A setup link only fills in those addresses and your name.** It can't
   change anything else. If an address is already set, the app asks before
   replacing it. Settings checks that a backup address is a real Apps Script
-  web app, and *Test it now* doesn't save it until you tap Save.
+  web app, and saves the address as soon as it changes; *Test it now* sends a backup and checks the sheet got it.
 - **Reset to a fresh install** (Settings tab) deletes every `trainlog.` key,
   including any a future version adds, then reloads into setup.
 

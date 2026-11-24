@@ -1819,3 +1819,14 @@ After posting, the app reads back: `?action=ping` (new in AppsScript.gs: the sto
 - The real-log numbers named in the batch (`docs/batch-H-progress.md`) and the row-by-row ones I wrote this session (D77, D80) are removed. **Not done:** older decisions still quote a few of your loads (around the strapped-deadlift entry). The git history keeps everything that was ever committed: removing it needs a history rewrite and a force push, which is your call.
 - Backups (the file and the sheet) never carry `syncUrl` or `feedbackUrl` (`DEVICE_ONLY`); restore already ignored them.
 - `.gitignore`: `CLAUDE.local.md`, `*.local.md`, `shots/`, `screenshots/`.
+
+## D92. Batch 04 Parts 3 and 5: docs that disagreed, and the UI rule (v1.116.0)
+
+- features.md: Your blocks (not phases); Set up a new program is in Edit program; diagnostics are Settings → About or a long press on the version; the per-exercise lb/kg button is listed and in the guide. The Train rows already matched v1.98.
+- The version number is in Settings → About everywhere (CLAUDE.md said Lifts, ALPHA.md the dashboard). Build it together is the recommended path everywhere. README says "Step N of M". ALPHA.md's Test it now line and the old dashboard names are fixed, and number-audit.md says Today.
+- **RPE vs effort (decided):** a new lifter still sees "effort", and the docs say RPE, shown as effort if you chose that. The default isn't reversed again (D10).
+- WORKFLOW.md is five lines.
+- docs/design.md and D67 describe the OFL font plan; D68 chose system fonts. This note is the record: system fonts are current, and the font files were never added.
+- The swap route needs no first-time tip now: Swap is a labelled button on every card (v1.105).
+- The lb/kg button reads "lb ▸ kg", with a spoken label.
+- **Part 5:** the rule is in CLAUDE.md under How to work on this. Reversed by batches 02–03: D64 (the check-in as what's off today, now one row per question with 0 as your usual, D73), D65 (Train on one line with handles and gestures, now a summary with Start and arrows only, D74), and D70's drag handle (removed in D74; the arrows stay). D71's finish screen changed later, in batch N (one list, D76), not in 02–03. D66–D69 stand.

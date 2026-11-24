@@ -466,7 +466,7 @@ progression the old one never surfaced) is expected, not automatically a
 regression — use judgement, don't just read the overall percentage.
 
 **Bump `APP_VERSION` in `index.html` on every meaningful change.** It's displayed
-on the Lifts tab so the user can confirm which build is running. **Every bump
+in Settings → About so the user can confirm which build is running. **Every bump
 adds a `CHANGELOG.md` entry** (newest first, 3–5 plain lines on what a user
 would notice), then `node tools/embed-changelog.js` copies it into the app's
 "What's new" card. §54 fails if the entry, the embedded copy and `APP_VERSION`
@@ -487,6 +487,13 @@ messages should tell the user their data is safe, because it is.
 ## How to work on this
 
 **The current plan is `roadmap/ROADMAP.md`** — read it first; it sets the batch order and the decisions already made.
+
+**Interaction changes go mockup → maintainer pick → build.** Any change to
+what a user taps, where a control sits, or a gesture, on any screen used
+during a session (check-in, Train, the set card, rest, finish) is built as
+a static mockup first (light and dark, 390 px, on demo data), and the
+maintainer picks before it's wired in. Colours, type and copy can change
+without a mockup. Autonomous runs are for engine, data, docs and tests.
 
 **Plan before you write.** For anything beyond a one-line change, propose the
 approach first and wait for a yes. Prefer plan mode.

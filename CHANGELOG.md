@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.116.0 — 2026-11-24
+- The per-exercise unit button now reads "lb ▸ kg", so it's clear what it does.
+- The guide, README and tester notes now match the app: where the version number is, which setup path is recommended, and what each setting is called.
+- The guide explains the unit button.
+
 ## 1.115.0 — 2026-11-24
 - A backup file no longer contains your sheet's or your notes' address, so sharing one can't point another phone at your sheet.
 - Restoring a backup never set those anyway; now they're not in the file at all.
