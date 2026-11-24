@@ -1709,3 +1709,10 @@ Decided by the maintainer after the batch N report: under 21 days there's no red
 - `ENGINE.RETURN_BANDS` lost its 10-day band; `ENGINE.RETURN_BREAK_DAYS` is 14. The 21+ day bands are unchanged.
 - **The backtest:** HEAD engine 3.8 lb mean |load error| → **3.7 lb** (before the ramp, v1.100, it was 3.6). 5 of 318 suggestions moved, all returns of 10–18 days: four closer (an incline machine press twice, 70 → 75 and 85 → 90 lb, both exactly what was lifted; a rear-delt fly after 10 days, 30 → 40 lb against 44 lifted; a pulldown after 18 days, 270 → 280 against 290) and one further (the same fly four days later, 40 → 50 against 44). Every other row is identical. What keeps the error above 3.6 is returns of 21+ days where you came back stronger than the band (the seated lateral raise after 27 days).
 - How to reverse: put the 10-day band back in `RETURN_BANDS` and set `RETURN_BREAK_DAYS` to 0.
+
+## D81. Birth year, optional, on this phone only (v1.104.0, the maintainer's call)
+
+- Setup's bodyweight step is now "About you": bodyweight and birth year, both optional. Settings → Training has the same box.
+- Stored as `CFG.birthYear`, but listed in `DEVICE_ONLY`: `backupText()` (the file and the sheet) leaves it out, along with an unfinished setup's answer, and a restore never takes it. That breaks invariant 4 ("every setting rides along in every backup") for this one setting, on purpose: the maintainer asked for it to stay on the device.
+- Used only by `isOver60()` for the return ramp's over-60 column (lower first-session load, fewer first-week sets, the later back-to-full week). By year alone, so the year you turn 60 counts. Blank: under 60. `CFG.over60` (never set by any screen) is gone.
+- How to reverse: drop `birthYear` from `DEVICE_ONLY` to back it up like any other setting.

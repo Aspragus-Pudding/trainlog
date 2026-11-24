@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.104.0 — 2026-11-24
+- You can add your birth year in setup or in Settings → Training. It's optional.
+- It stays on this phone: it's never in a backup file or your sheet.
+- It's used for one thing: at 60 or over, coming back after three weeks or more away starts a little lighter and builds back more slowly.
+
 ## 1.103.0 — 2026-11-24
 - A break shorter than 3 weeks no longer lowers anything: you came back at or above your old weights after shorter breaks.
 - The one exception: after 2 weeks with nothing logged at all, the first session back is one step lighter, that session only.

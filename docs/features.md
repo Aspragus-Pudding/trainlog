@@ -44,6 +44,7 @@ everyone.
 | "For your shoulder" chip on a flagged exercise: the reason, the cues and the swap on its info sheet | injury-prone | set card → info sheet |
 | Pain check after a set, naming the set ("Set 2 · 80 × 10"), in plain words, with why it's asking | injury-prone | set card, after a set on a watched joint (a condition, a focused deload, a joint above your usual) |
 | Something hurt? (where, then how much; the same pain check and advice) | everyone | set card, once a set is logged |
+| Birth year (optional, on this phone only; used only for the over-60 numbers when coming back after a break) | everyone | setup (About you), Settings → Training |
 | Ask after each set: Off (default) or On (the rating button and "Where did it slow down?" between sets) | everyone | Settings → Training |
 | Exercise cards: last time (also faintly beside each planned set), setup notes, cues, warnings | everyone | each card |
 | Set panel: weight, reps, effort, the suggestion and its why | everyone | the open card |

@@ -78,7 +78,7 @@ independent. Nothing in the update path may call `removeItem`. This was audited
 explicitly — keep it that way.
 
 **4. Every user-configurable setting lives in `CFG`** and therefore rides along
-in every backup. If you add a setting, add it to the `CFG` default object. Don't
+in every backup (one exception, on the maintainer's request: `DEVICE_ONLY`, the birth year, stays on the phone). If you add a setting, add it to the `CFG` default object. Don't
 invent a new top-level localStorage key for user preferences.
 
 **5. `append()` writes to disk BEFORE pushing to the in-memory `LOG`.** If the

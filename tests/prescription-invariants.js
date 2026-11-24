@@ -4148,8 +4148,11 @@ section('102. batch N 2.1: the return ramp, per exercise, one cut in the pipelin
     ok(A.returnRamp(slot('squat'))==null,'17 days off squat but a session 3 days ago: no ramp (under 21 days)',''); }
   { const ev=hist('squat',200,16); ev.push(set('curl','back',40,10,8,1,{target:{reps:[8,12],rpe:8}}),se('back',1));
     ok(load(ev).returnRamp(slot('squat'))==null,'the step is the first session back only: a session since, and squat is back to normal',''); }
-  { const A=load(hist('squat',200,30)); A.CFG.over60=true; const r=A.returnRamp(slot('squat'));
-    ok(r&&Math.abs(r.factor-0.85)<1e-9&&r.setsMult===0.5,'over 60: the lower end of the band, and half the sets',JSON.stringify(r&&{f:r.factor,sets:r.setsMult})); }
+  { const A=load(hist('squat',200,30)); A.CFG.birthYear=new Date().getFullYear()-64; const r=A.returnRamp(slot('squat'));
+    ok(r&&Math.abs(r.factor-0.85)<1e-9&&r.setsMult===0.5,'over 60 (from the birth year): the lower end of the band, and half the sets',JSON.stringify(r&&{f:r.factor,sets:r.setsMult}));
+    A.CFG.birthYear=null; const r2=A.returnRamp(slot('squat')); ok(r2&&Math.abs(r2.factor-0.90)<1e-9,'no birth year: the under-60 numbers','');
+    A.CFG.birthYear=new Date().getFullYear()-59; ok(Math.abs(A.returnRamp(slot('squat')).factor-0.90)<1e-9,'59: the under-60 numbers','');
+    A.CFG.birthYear=1961; const bt=A.backupText(); ok(!/birthYear/.test(bt.split('\n')[0]),'the birth year never goes into a backup file or the sheet',''); }
   // the suggestion: one cut, exempt from one step and the floor, and the trace says why
   { const A=load(hist('squat',200,30)), sg=A.suggestFor(slot('squat')), t=(sg.trace||[]).find(x=>x.id==='return_ramp');
     ok(sg.lb<=180+1e-6&&t&&t.changed&&/It's been 4 weeks since your last Back squat, so today starts a little lighter/.test(t.reason),'30 days off squat: the first suggestion is at most 90% of 200, with the reason',JSON.stringify({lb:sg.lb,t:t&&t.reason})); }

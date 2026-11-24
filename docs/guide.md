@@ -164,6 +164,9 @@ Keep one exercise out of generated sessions from its info sheet. It stays in the
 ### I usually do this
 If you always do an exercise one way, such as deadlifts with straps, set it here. Suggestions, best sets, goal tracking, Today's plan and the stall check then use that version, and its numbers say so ("120 kg · with straps"). Doing it another way is still logged as its own history. After three sessions in a row done the same way, the app offers to make it your usual.
 
+### Birth year
+Optional, and kept on this phone only: it never goes into a backup file or your sheet, and restoring a backup never sets it. It changes one thing. If you're 60 or over, coming back to an exercise after three weeks or more starts a little lighter, with fewer sets that first week, and builds back to full more slowly. Leave it blank and the under-60 numbers apply. It's in setup and in Settings → Training.
+
 ### Ask after each set
 Off by default: between sets the card is weight, reps, effort and Log set, and the finish screen asks how each exercise went, with All fine for a normal day. On brings back the rating button and "Where did it slow down?" after a hard set. A joint that is being watched is asked about after each set either way, and Something hurt? is always on the card. It's in Settings → Training.
 
