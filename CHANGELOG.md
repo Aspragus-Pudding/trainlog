@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.115.0 — 2026-11-24
+- A backup file no longer contains your sheet's or your notes' address, so sharing one can't point another phone at your sheet.
+- Restoring a backup never set those anyway; now they're not in the file at all.
+- Nothing else changes in the app.
+
 ## 1.114.0 — 2026-11-24
 - After each backup, the app checks that your sheet really got it before saying "Sent to your sheet".
 - If it can't confirm, it says so, your backup reminder stays on, and your log is safe on this phone.

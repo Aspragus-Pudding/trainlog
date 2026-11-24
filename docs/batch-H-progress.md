@@ -27,9 +27,9 @@ in `docs/decisions-pending.md`.
 
 ## Backtest baseline for this run
 
-Maintainer export as of 8 Oct (169 sets): load mean |error| 5.0 lb, reps 2.0, exact load 90. Every version in this run must be IDENTICAL (nothing here touches prescriptions). v1.62.0: every number identical; only the "basis" text column differs ("from e1RM" → "from your estimated max"), compared with that column cut. Script: scratchpad btcompare.sh <ref>.
+Maintainer export as of 8 Oct (numbers kept locally). Every version in this run must be IDENTICAL (nothing here touches prescriptions). v1.62.0: every number identical; only the "basis" text column differs ("from e1RM" → "from your estimated max"), compared with that column cut. Script: scratchpad btcompare.sh <ref>.
 
-Big batch (12 Oct) baseline, maintainer export as of 12 Oct (215 suggestions): load mean |error| 5.7 lb, reps 1.8, exact load 123. Only Parts 1a and 1b (and A1 if edited sets change what is read) may move it.
+Big batch (12 Oct) baseline, maintainer export as of 12 Oct (numbers kept locally). Only Parts 1a and 1b (and A1 if edited sets change what is read) may move it.
 
 ## Merged
 
@@ -85,7 +85,7 @@ Appendix A is complete (v1.68.0–v1.74.0).
 | 3a/3b/3d setup header, How your program works, tours | done | v1.79.0 | Step N of M + bar; six cards from your plan after the preview (skip/replay); End tour, Back, scope line; §86; D53 |
 | 2 Settings tab, shorter Program | done | v1.78.0 | five tabs at 375 px; sync/backups/appearance/voice/words/equipment/rest/help/about/start over/maintainer in Settings; Edit program training only; Lifts = cards + library; changelog history in About; guide Settings tour; §85; D52 |
 | 1c rest per exercise | done | v1.77.0 | defaults 4:00/3:00/2:30/1:45 (research cited; repo research has no rest section), info sheet + Always on the rest bar, offer after 3 sessions; §84; D51 |
-| 1b strapped deadlift: usual variant | done | v1.76.0 | cause: straps track vs plain track; CFG.usualMods drives slots, bests, goals, stall; labels; proposal after 3 in a row; real log: 93 kg -> 120 kg with straps as usual; §83; D50 |
+| 1b strapped deadlift: usual variant | done | v1.76.0 | cause: straps track vs plain track; CFG.usualMods drives slots, bests, goals, stall; labels; proposal after 3 in a row; real log: the plain and strapped bests (numbers kept locally) kg with straps as usual; §83; D50 |
 | 1a rep range, one rule | done | v1.75.0 | slotRepRange() on read everywhere; main lifts follow the block; §82; fails on 1.74 (6-10), passes now (8-15); rule in CLAUDE.md; backtest identical; D49 | Note: node 22.17 on this machine crashes intermittently (SIGSEGV/SIGILL) inside the invariant suite; a rerun passes. The ship script retries once on a crash, never on a failure.
 
 ## Half-finished

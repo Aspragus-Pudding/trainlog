@@ -6,12 +6,12 @@ process; most of the rules below exist because breaking them caused a real bug.
 ## What this is
 
 A personal strength + running training app, built for a single user. One
-self-contained `index.html` (~190KB), no build step, no framework, no
+self-contained `index.html` (about 1.5 MB), no build step, no framework, no
 dependencies. Served from GitHub Pages, installed to an iPhone home screen as a
 PWA.
 
-It replaces a JuggernautAI subscription. The goal is a generated program that
-adapts to logged data, not just a workout logger.
+It replaces a commercial powerbuilding app's subscription. The goal is a generated
+program that adapts to logged data, not just a workout logger.
 
 ## Files
 
@@ -32,7 +32,7 @@ README.md               for testers: install, first session, notes, data, update
 docs/features.md        every screen and setting, who it is for, where it lives (the guide must cover every setting)
 docs/decisions-pending.md  decisions taken without asking, with how to reverse each
 ALPHA.md                tester plan, incl. what a tester's data touches — keep it true when changing network/storage code
-shoulder-protocol.md    reference doc, not used by the app
+shoulder-protocol.local.md  the maintainer's shoulder reference, local only (gitignored), not used by the app
 tests/prescription-invariants.js   prescription direction/pairing tests, run with node
 tests/backtest.js       replays the engine against a real exported log to measure suggestion accuracy
 tests/prospective.js    engine phase 2 check: were suggestions taken, did they land on target (node tests/prospective.js <export>)
@@ -78,7 +78,7 @@ independent. Nothing in the update path may call `removeItem`. This was audited
 explicitly — keep it that way.
 
 **4. Every user-configurable setting lives in `CFG`** and therefore rides along
-in every backup (one exception, on the maintainer's request: `DEVICE_ONLY`, the birth year, stays on the phone). If you add a setting, add it to the `CFG` default object. Don't
+in every backup (the exceptions are `DEVICE_ONLY`: the birth year, on the maintainer's request, and the sheet and notes addresses, which are a write key; they stay on the phone). If you add a setting, add it to the `CFG` default object. Don't
 invent a new top-level localStorage key for user preferences.
 
 **5. `append()` writes to disk BEFORE pushing to the in-memory `LOG`.** If the
@@ -474,15 +474,9 @@ disagree.
 
 ## User context
 
-- Training full body, 5 days/week. Powerbuilding, not competitive powerlifting.
-- Goal lifts: Transformer bar squat, deadlift, incline machine press (from settings, Oct 2026 — weighted chin-up was earlier).
-- Profile: size first, occasional PRs (chosen Oct 2026). New hypertrophy rules (effort ramp, calibration AMRAPs, set cap) start from the next hypertrophy block, not mid-block.
-- **Anterior shoulder instability** — labral tear with a Hill-Sachs lesion,
-  pre-surgical. The `shoulder_instability` condition flags exercises loading
-  abduction + external rotation. Take this seriously; don't weaken those flags.
-- Gym is machine-heavy. Plate set has 2.5lb minimum, no micro plates.
-- Kabuki Transformer bar = 55 lb, and its configurations are separate exercises
-  (`transformer_*`) because the lever changes what's being trained.
+The maintainer trains around a shoulder condition, with specific goal lifts and
+equipment; see `CLAUDE.local.md` (local only, not in the public repo). Whatever
+it says, the rule here stands: never weaken the `shoulder_instability` flags.
 
 ## Copy style
 

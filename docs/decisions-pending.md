@@ -1355,7 +1355,7 @@ any slot picks it set stay harmless: delete `CFG.rotation` to stop taking turns.
   and the What's new entries shown in the app.
 - **A comment naming another app** in index.html was reworded.
 
-**Worth knowing:** CLAUDE.md still says the app "replaces a JuggernautAI
+**Worth knowing:** CLAUDE.md still says the app "replaces a commercial powerbuilding app's
 subscription". It's your file, so I left it; the repo is public.
 
 **To undo:** v1.86.0 has the old names and icons.
@@ -1699,7 +1699,7 @@ Autonomous, the batch's recommended options. One modifier (`return_ramp`) in the
 - Exempt from the one-step and the floor guards, like a focused deload, or it couldn't cut more than one step.
 - "Thresholds live in engine-constants": that document isn't in this repo (CLAUDE.md says so), so they live in `ENGINE.RETURN_BANDS` in `index.html`, with their grades.
 - **Rounded to the nearest step, never above the suggestion**, so a coarse machine doesn't turn a 5% cut into a whole plate. **And never below what you've lifted since coming back**: without that, the weeks after a return were priced from the load before the gap (on your history it pulled pushdowns from 110 to 50 lb).
-- **The backtest:** 7 of 318 suggestions moved, all inside a return (five first sessions after 10–27 days away, two in the fortnight after); every other row is identical. Mean load error 3.6 → 3.8 lb, because on those days you came back stronger than the bands allow (e.g. seated lateral raise after 27 days: 50 suggested, 65 lifted). The research itself says strength losses are trivial until about 3 weeks, so the 10–20 day band may be too cautious for you. Kept as the brief's table. Starting the ramp at 21 days is a one-line change to `RETURN_BANDS`.
+- **The backtest:** 7 of 318 suggestions moved, all inside a return (five first sessions after 10–27 days away, two in the fortnight after); every other row is identical. Mean load error 3.6 → 3.8 lb, because on those days you came back stronger than the bands allow. The research itself says strength losses are trivial until about 3 weeks, so the 10–20 day band may be too cautious for you. Kept as the brief's table. Starting the ramp at 21 days is a one-line change to `RETURN_BANDS`.
 - **The backtest harness got a replay clock**: the engine now sees the time just before each set, not today. Before, anything reading dates was judged as of today. On its own it moves 0 rows; without it the ramp looked like it fired on 75 rows.
 
 ## D80. The return ramp starts at 21 days (v1.103.0, the maintainer's call)
@@ -1707,7 +1707,7 @@ Autonomous, the batch's recommended options. One modifier (`return_ramp`) in the
 Decided by the maintainer after the batch N report: under 21 days there's no reduction. The one exception: if nothing at all was logged for 14 days or more, the first session back is one load step lighter on every exercise that has history (a judgement default, the same size as a sick day). It's the first session back only; from the next one the normal rules apply, and an exercise away 21+ days still gets its band (cuts never add up, so the larger wins).
 
 - `ENGINE.RETURN_BANDS` lost its 10-day band; `ENGINE.RETURN_BREAK_DAYS` is 14. The 21+ day bands are unchanged.
-- **The backtest:** HEAD engine 3.8 lb mean |load error| → **3.7 lb** (before the ramp, v1.100, it was 3.6). 5 of 318 suggestions moved, all returns of 10–18 days: four closer (an incline machine press twice, 70 → 75 and 85 → 90 lb, both exactly what was lifted; a rear-delt fly after 10 days, 30 → 40 lb against 44 lifted; a pulldown after 18 days, 270 → 280 against 290) and one further (the same fly four days later, 40 → 50 against 44). Every other row is identical. What keeps the error above 3.6 is returns of 21+ days where you came back stronger than the band (the seated lateral raise after 27 days).
+- **The backtest:** HEAD engine 3.8 lb mean |load error| → **3.7 lb** (before the ramp, v1.100, it was 3.6). 5 of 318 suggestions moved, all returns of 10–18 days: four closer to what was lifted, one further. Every other row is identical. What keeps the error above 3.6 is returns of 21+ days where the lifter came back stronger than the band. (Row-by-row numbers stay out of the public repo.)
 - How to reverse: put the 10-day band back in `RETURN_BANDS` and set `RETURN_BREAK_DAYS` to 0.
 
 ## D81. Birth year, optional, on this phone only (v1.104.0, the maintainer's call)
@@ -1811,3 +1811,11 @@ The maintainer's spec, built as engine; the setup flow and the place editor are 
 ## D90. Backups are "synced" only when the sheet confirms (v1.114.0, batch 04 1.3)
 
 After posting, the app reads back: `?action=ping` (new in AppsScript.gs: the stored backup's export time and line count), else the whole backup, searched for the export time it just sent. Only a match stamps lastSync and says "Sent to your sheet". Otherwise: "Couldn't confirm the sheet got it. Your log is safe on this phone.", and the backup reminder stays. Test it now does the same. Each backup sheet's script needs the new `AppsScript.gs` and a redeploy (ALPHA.md); without it the full read still confirms, more slowly.
+
+## D91. Batch 04 Part 2: public-repo hygiene (v1.115.0)
+
+- CLAUDE.md's user context (the injury, goal lifts, gym and bar) moved to `CLAUDE.local.md`, which is gitignored and still read by Claude Code. The public line says the maintainer trains around a shoulder condition and the flags are never weakened. The competitor's name is gone ("a commercial powerbuilding app").
+- `shoulder-protocol.md` is now `shoulder-protocol.local.md`: untracked and ignored.
+- The real-log numbers named in the batch (`docs/batch-H-progress.md`) and the row-by-row ones I wrote this session (D77, D80) are removed. **Not done:** older decisions still quote a few of your loads (around the strapped-deadlift entry). The git history keeps everything that was ever committed: removing it needs a history rewrite and a force push, which is your call.
+- Backups (the file and the sheet) never carry `syncUrl` or `feedbackUrl` (`DEVICE_ONLY`); restore already ignored them.
+- `.gitignore`: `CLAUDE.local.md`, `*.local.md`, `shots/`, `screenshots/`.

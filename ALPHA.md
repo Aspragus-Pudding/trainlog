@@ -248,3 +248,7 @@ never reworded. The lines are in `docs/voices.md`.
 ## After an Apps Script update (v1.114)
 
 Since v1.114 the app checks that the sheet really got each backup: it asks the script when the stored backup was exported (`?action=ping`). Paste the new `AppsScript.gs` into each backup sheet's script and redeploy (Deploy → Manage deployments → edit → New version), keeping the same address. An older deployment still works: the app reads the whole backup to check instead, which is slower on a long log. If the check fails, the app says "Couldn't confirm the sheet got it. Your log is safe on this phone." and the backup reminder stays on.
+
+## What a backup file holds (v1.115)
+
+A backup file, and the copy on your sheet, never holds your sheet's or your notes' address (the write key) or your birth year. Restoring one never sets them either. If you share a backup with the person who set up the app for you, it can't point their phone at your sheet.

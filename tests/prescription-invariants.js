@@ -4539,6 +4539,17 @@ section('112. batch 04 1.3: a backup is "synced" only when the sheet confirms it
   console.log('  unconfirmed never stamps · confirmed does, against the token it sent · ping, with a fallback');
 }
 
+
+section('113. batch 04 Part 2: public-repo hygiene');
+{
+  const A=load([],true), C=A.getCFG(); C.syncUrl='https://script.google.com/macros/s/secret/exec'; C.feedbackUrl='https://script.google.com/macros/s/notes/exec';
+  const head=A.backupText().split('\n')[0];
+  ok(!/secret|notes\/exec|syncUrl|feedbackUrl/.test(head),'a backup file never carries the sheet or notes address','');
+  const md=fs.readFileSync(path.join(__dirname,'..','CLAUDE.md'),'utf8'), gi=fs.readFileSync(path.join(__dirname,'..','.gitignore'),'utf8');
+  ok(!/Hill-Sachs|labral|Juggernaut/i.test(md)&&/CLAUDE\.local\.md/.test(gi)&&/\*\.local\.md/.test(gi),'CLAUDE.md carries no medical detail or competitor name; the local file is ignored','');
+  console.log('  no addresses in backups · CLAUDE.md public-safe · local files ignored');
+}
+
 Promise.all(PENDING_ASYNC).then(()=>{
 console.log('\n'+checks+' checks, '+failures+' failed');
 if(failures){ console.log('\n'+Object.entries(shown).map(([k,n])=>n+' x '+k).join('\n')); process.exit(1); }

@@ -21,3 +21,9 @@ roadmap/batches-oct22/
 roadmap/batch-N-session-hold-home.md
 roadmap/batch-L-library-import.md
 roadmap/batch-N-followups.md
+
+# Local-only context and scratch (batch 04 2.3)
+CLAUDE.local.md
+*.local.md
+shots/
+screenshots/
