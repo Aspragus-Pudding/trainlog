@@ -1,0 +1,13 @@
+{
+  "name": "trainlog",
+  "private": true,
+  "description": "One self-contained index.html; these are only the tests.",
+  "scripts": {
+    "test": "node tests/prescription-invariants.js && node tests/injury-validate.js && node tests/simulate.js",
+    "test:mobile": "node tests/mobile.js --quick",
+    "test:mobile:full": "node tests/mobile.js"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

@@ -1830,3 +1830,8 @@ After posting, the app reads back: `?action=ping` (new in AppsScript.gs: the sto
 - The swap route needs no first-time tip now: Swap is a labelled button on every card (v1.105).
 - The lb/kg button reads "lb ▸ kg", with a spoken label.
 - **Part 5:** the rule is in CLAUDE.md under How to work on this. Reversed by batches 02–03: D64 (the check-in as what's off today, now one row per question with 0 as your usual, D73), D65 (Train on one line with handles and gestures, now a summary with Start and arrows only, D74), and D70's drag handle (removed in D74; the arrows stay). D71's finish screen changed later, in batch N (one list, D76), not in 02–03. D66–D69 stand.
+
+## D93. Batch 04 Parts 4 and 6: dead weight and missing tests (v1.117.0, v1.118.0)
+
+- **Part 4:** the injury library is embedded minified, without the fields no code reads (`sources`, `running`, `interactions`; the docs files keep them). The guide, the glossary and the voices are parsed the first time something reads them (`lazyParsed`), not at boot. Still one file, no network loads. Boot time on a Pixel-shaped Chromium at 4× CPU is in the report.
+- **Part 6:** `package.json` (`npm test`: the three node suites; `npm run test:mobile`; Playwright as a dev dependency, node_modules ignored). New checks: the first-session summary's buttons, the setup link end to end, the unit button, and the feedback queue and the sync confirmation (v1.113, v1.114). README says WebKit is the iPhone path.

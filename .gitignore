@@ -27,3 +27,5 @@ CLAUDE.local.md
 *.local.md
 shots/
 screenshots/
+node_modules/
+package-lock.json

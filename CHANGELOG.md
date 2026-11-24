@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.118.0 — 2026-11-24
+- No change you'd see: more of the app is checked by tests, and the tests have one way to run.
+- The checks cover the setup link, the first-session summary and the unit button.
+- README says how to run them, including the iPhone browser.
+
 ## 1.117.0 — 2026-11-24
 - The app file is smaller and starts a little faster: parts only needed later (the guide, the glossary) are read when you first open them.
 - The injury library inside the app drops the fields it never used.

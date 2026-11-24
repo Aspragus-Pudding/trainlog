@@ -4550,6 +4550,21 @@ section('113. batch 04 Part 2: public-repo hygiene');
   console.log('  no addresses in backups · CLAUDE.md public-safe · local files ignored');
 }
 
+
+section('114. batch 04 Part 6: the checks the audit found missing');
+{
+  // the first-session summary's buttons open the right screens
+  ok(/\$\('#sumsh'\)\.onclick=\(\)=>\{ \$\('#dlg'\)\.close\(\); TAB='set';/.test(src)&&!/\$\('#sumsh'\)\.onclick=\(\)=>\{ \$\('#dlg'\)\.close\(\); openSettings\(\)/.test(src),'the first-session summary: Use a sheet opens Settings, never Edit program','');
+  // applySetupLink end to end: the sheet address is set, the name is set, waiting notes go
+  { const A=load([],true), C=A.getCFG(); const n=A.append({type:'note',tag:'idea',text:'queued',app_version:'x',resolved:false}); A.sendFeedback(n);
+    const r=A.applySetupLink('?sync=https://script.google.com/macros/s/s1/exec&feedback=https://script.google.com/macros/s/f1/exec&who=Tess');
+    ok(r.sync&&r.feedback&&r.name&&C.syncUrl.includes('/s1/')&&C.feedbackUrl.includes('/f1/')&&C.testerName==='Tess'&&!A.fbQueue().includes(n.id),'a setup link sets the sheet, the notes address and the name, and sends what was waiting',JSON.stringify(r)); }
+  // the per-exercise lb/kg button
+  ok(/el\('button','btn s',draft\.unit\+' ▸ '\+\(draft\.unit==='lb'\?'kg':'lb'\)\)/.test(src)&&/draft\.alt=from; renderWork\(\);/.test(src),'the set panel\'s unit button says what it switches to, and switching back is exact (the value it came from is kept)','');
+  ok(fs.existsSync(path.join(__dirname,'..','package.json'))&&/"test:mobile"/.test(fs.readFileSync(path.join(__dirname,'..','package.json'),'utf8')),'npm test and npm run test:mobile are the one answer to "how do I run the tests"','');
+  console.log('  summary buttons · setup link end to end · the unit button · npm scripts');
+}
+
 Promise.all(PENDING_ASYNC).then(()=>{
 console.log('\n'+checks+' checks, '+failures+' failed');
 if(failures){ console.log('\n'+Object.entries(shown).map(([k,n])=>n+' x '+k).join('\n')); process.exit(1); }

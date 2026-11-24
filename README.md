@@ -102,3 +102,7 @@ doing.
   and tap **Continue setup**.
 - **The app also notes its own errors** under **Progress → Notes → App
   errors**. They stay on your phone unless you tap **Send to the developer**.
+
+## Running the tests (for whoever works on the app)
+
+`npm test` runs the three node suites (prescriptions, the injury library, the simulator). `npm run test:mobile` runs the phone tests in Playwright; they need `npm install` and `npx playwright install webkit chromium`. WebKit is the iPhone path, so install it even if you only have Chromium.
