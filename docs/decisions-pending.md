@@ -1691,7 +1691,7 @@ Autonomous under the batch rules. On your real history the engine moved **0 of 3
 
 Autonomous, the batch's recommended options. One modifier (`return_ramp`) in the pipeline, with the cuts: it never adds up with a sick day, soreness or the ladder (the largest applies), and it sits out a deload week and a focused deload, which already hold the load back.
 
-- **The gap** is the latest one of 10+ days between working sets on the exercise's own track (your usual respected), still open or closed within the band's weeks.
+- **The gap** is the latest one of 10+ days (21+ from v1.103, D80) between working sets on the exercise's own track (your usual respected), still open or closed within the band's weeks.
 - **The cap** is your best working load in the session before the gap × the band's first-session load, climbing in a straight line to full by the band's week. Under 60 it uses the top of each band (95/90/85/75%); over 60 (`CFG.over60`) it uses the bottom (90/85/75/65%), fewer first-week sets and the later week. **There's no age question anywhere yet**, so everyone gets the under-60 numbers until there is one; adding it to setup or Edit program is a small screen change, so it waits for your call.
 - **A sibling variant** (the same movement with other modifiers, such as strapped deadlifts) done inside the gap counts half: the gap becomes the mean of the whole gap and the time since the sibling. Recorded as the batch asked.
 - **First week back:** sets ×⅔ (10–20 days), ×⅔ or ½ (21–41), ×½ (42+), in the plan itself.
@@ -1701,3 +1701,11 @@ Autonomous, the batch's recommended options. One modifier (`return_ramp`) in the
 - **Rounded to the nearest step, never above the suggestion**, so a coarse machine doesn't turn a 5% cut into a whole plate. **And never below what you've lifted since coming back**: without that, the weeks after a return were priced from the load before the gap (on your history it pulled pushdowns from 110 to 50 lb).
 - **The backtest:** 7 of 318 suggestions moved, all inside a return (five first sessions after 10–27 days away, two in the fortnight after); every other row is identical. Mean load error 3.6 → 3.8 lb, because on those days you came back stronger than the bands allow (e.g. seated lateral raise after 27 days: 50 suggested, 65 lifted). The research itself says strength losses are trivial until about 3 weeks, so the 10–20 day band may be too cautious for you. Kept as the brief's table. Starting the ramp at 21 days is a one-line change to `RETURN_BANDS`.
 - **The backtest harness got a replay clock**: the engine now sees the time just before each set, not today. Before, anything reading dates was judged as of today. On its own it moves 0 rows; without it the ramp looked like it fired on 75 rows.
+
+## D80. The return ramp starts at 21 days (v1.103.0, the maintainer's call)
+
+Decided by the maintainer after the batch N report: under 21 days there's no reduction. The one exception: if nothing at all was logged for 14 days or more, the first session back is one load step lighter on every exercise that has history (a judgement default, the same size as a sick day). It's the first session back only; from the next one the normal rules apply, and an exercise away 21+ days still gets its band (cuts never add up, so the larger wins).
+
+- `ENGINE.RETURN_BANDS` lost its 10-day band; `ENGINE.RETURN_BREAK_DAYS` is 14. The 21+ day bands are unchanged.
+- **The backtest:** HEAD engine 3.8 lb mean |load error| → **3.7 lb** (before the ramp, v1.100, it was 3.6). 5 of 318 suggestions moved, all returns of 10–18 days: four closer (an incline machine press twice, 70 → 75 and 85 → 90 lb, both exactly what was lifted; a rear-delt fly after 10 days, 30 → 40 lb against 44 lifted; a pulldown after 18 days, 270 → 280 against 290) and one further (the same fly four days later, 40 → 50 against 44). Every other row is identical. What keeps the error above 3.6 is returns of 21+ days where you came back stronger than the band (the seated lateral raise after 27 days).
+- How to reverse: put the 10-day band back in `RETURN_BANDS` and set `RETURN_BREAK_DAYS` to 0.

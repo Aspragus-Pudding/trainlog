@@ -4138,9 +4138,16 @@ section('102. batch N 2.1: the return ramp, per exercise, one cut in the pipelin
   const hist=(id,w,g,extra)=>{ const ev=[]; for(let k=0;k<6;k++){ const d=g+3*(5-k); ev.push(set(id,'g'+id+k,w,8,8,d,{target:{reps:[6,10],rpe:8},...(extra||{})}),se('g'+id+k,d)); } return ev; };
   const slot=(id,m)=>({ex:id,role:'secondary',reps:[6,10],rpe:8,sets:4,sets_target:4,sets:[],...(m?{modifiers:m}:{})});
   // each band: the first session back is the last load × the band's factor (under 60 the top of the band)
-  [[5,null],[15,0.95],[30,0.90],[60,0.85],[100,0.75]].forEach(([g,f])=>{
+  [[5,null],[13,null],[30,0.90],[60,0.85],[100,0.75]].forEach(([g,f])=>{
     const A=load(hist('squat',200,g)), r=A.returnRamp(slot('squat'));
     ok(f==null?r==null:(r&&r.first&&Math.abs(r.factor-f)<1e-9&&Math.abs(r.cap-200*f)<1e-6),'band: '+g+' days away → '+(f==null?'no ramp':'first session at '+Math.round(f*100)+'%'),JSON.stringify(r&&{f:r.factor,cap:r.cap})); });
+  // under 21 days: nothing, unless nothing at all was logged for 14+ days — then one step, the first session back only
+  { const A=load(hist('squat',200,15)), r=A.returnRamp(slot('squat')), sg=A.suggestFor(slot('squat')), t=(sg.trace||[]).find(x=>x.id==='return_ramp');
+    ok(r&&r.step&&r.first&&t&&t.changed&&Math.abs(sg.lb-A.stepDown(slot('squat'),t.from))<1e-6&&/Nothing logged for 2 weeks, so today starts one step lighter/.test(t.reason),'15 days with nothing logged: one step lighter, with the reason',JSON.stringify({r,lb:sg.lb,t})); }
+  { const ev=hist('squat',200,17).concat([set('curl','other',40,10,8,3,{target:{reps:[8,12],rpe:8}}),se('other',3)]), A=load(ev);
+    ok(A.returnRamp(slot('squat'))==null,'17 days off squat but a session 3 days ago: no ramp (under 21 days)',''); }
+  { const ev=hist('squat',200,16); ev.push(set('curl','back',40,10,8,1,{target:{reps:[8,12],rpe:8}}),se('back',1));
+    ok(load(ev).returnRamp(slot('squat'))==null,'the step is the first session back only: a session since, and squat is back to normal',''); }
   { const A=load(hist('squat',200,30)); A.CFG.over60=true; const r=A.returnRamp(slot('squat'));
     ok(r&&Math.abs(r.factor-0.85)<1e-9&&r.setsMult===0.5,'over 60: the lower end of the band, and half the sets',JSON.stringify(r&&{f:r.factor,sets:r.setsMult})); }
   // the suggestion: one cut, exempt from one step and the floor, and the trace says why

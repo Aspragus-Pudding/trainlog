@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.103.0 — 2026-11-24
+- A break shorter than 3 weeks no longer lowers anything: you came back at or above your old weights after shorter breaks.
+- The one exception: after 2 weeks with nothing logged at all, the first session back is one step lighter, that session only.
+- After 3 weeks or more away from an exercise, the first session back still starts lighter and builds back to full over 3–6 weeks.
+
 ## 1.101.0 — 2026-11-24
 - Coming back to an exercise after 10 days or more, the first session starts a little lighter and builds back to full over 2–6 weeks, depending on how long you were away.
 - After 3 weeks or more, the first session back also stops a few reps short, and Nordics, partials and slow negatives sit out that week.
