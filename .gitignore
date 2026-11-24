@@ -15,3 +15,9 @@ Thumbs.db
 *.swp
 .vscode/
 .idea/
+
+# Batch prompts kept locally (the repo is public; some name other products)
+roadmap/batches-oct22/
+roadmap/batch-N-session-hold-home.md
+roadmap/batch-L-library-import.md
+roadmap/batch-N-followups.md
