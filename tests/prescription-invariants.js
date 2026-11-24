@@ -3373,7 +3373,7 @@ section('75. the Workout tab is the preview: one editable list, Start takes your
   const C=load([],true); C.demoSeedPersona&&C.demoSeedPersona('shoulder',3); const r3=C.todayDay(), ld=C.lastDayLine(r3);
   ok(!ld||(ld.text.startsWith('Last '+r3.name+': ')&&/: (today|yesterday|\d+ days ago)(, \d+ PRs?)?$/.test(ld.text)),'"Last Upper B: 5 days ago, 2 PRs"',ld&&ld.text);
   ok(!/'Preview workout'/.test(src)&&!/function openWorkoutPreview/.test(src),'no separate Preview workout button or sheet','');
-  ok(/'Move earlier'/.test(src)&&/onSwapAny:\(\)=>\{ \$\('#dlg'\)\.close\(\); openPlanSwap/.test(src)&&/'Remove '\+ex\.name\+' from today'/.test(src)&&/Sets on this exercise/.test(src),'preview cards carry the live card\'s controls: arrows to move, details and swap, remove, sets','');
+  ok(/'Move earlier'/.test(src)&&/onSwapAny:\(\)=>\{ \$\('#dlg'\)\.close\(\); openPlanSwap/.test(src)&&/'Remove '\+ex\.name\+' from today'/.test(src)&&/Sets on this exercise/.test(src),'preview cards carry the live card\'s controls: arrows to move, Swap and How to do it, remove, sets','');
   console.log('  move · sets · add · remove · Start takes the order · Save to program · last-time line · one list, no Preview button');
 }
 
@@ -3919,7 +3919,9 @@ section('96. Train: a summary and Start on top, the list folds open, arrows only
   ok(/Train a different day/.test(prev)&&/See the whole week/.test(prev)&&!/openTrainMenu/.test(src),'another day and the whole week are on the card, with no menu duplicating them','');
   ok(!/reorderHandle|pressGestures|moveSlotTo|data-reorder|dataset\.reorder/.test(src),'no drag handle, no long-press, no swipe','');
   ok(/'Move earlier'/.test(plan)&&/'Move later'/.test(plan)&&/'Move earlier'/.test(work)&&/'Move later'/.test(work),'every card has up and down arrows','');
-  ok(/onSwapAny/.test(plan)&&/onSwapAny/.test(work)&&/iswapany/.test(fnSrc('openInfo')),'swap stays in Details','');
+  ok(/onSwapAny/.test(plan)&&/onSwapAny/.test(work)&&/iswapany/.test(fnSrc('openInfo')),'swap stays in How to do it (the info sheet)','');
+  // batch N 1.2, option A: Swap and How to do it on every card; Swap hidden once a set is logged; no Details button on a card
+  ok(/exActions\(ex,\{swap:slot\.sets\.length\?null:/.test(work)&&/exActions\(ex,\{swap:\(\)=>openPlanSwap/.test(plan)&&!/'Details'\); det\.setAttribute/.test(src)&&/'How to do '\+ex\.name/.test(src),'1.2 A: Swap and How to do it on every card, Swap hidden once a set is logged, no Details on a card','');
   // the panel can always be brought back, and asking for it never closes it
   ok(/function logHere\(i\)\{ if\(session\.openIdx!==i\) pickSlot\(i\); renderWork\(\); showPanel\(\); \}/.test(src),'logHere only ever brings the panel','');
   ok(/else if\(slotLeft\(slot\)\)\{ const lh=el\('button','btn wide','Log a set here'\)/.test(work)&&/onclick:s\?\(\)=>openEditSet\(slot,j\):\(\)=>logHere\(i\)/.test(work),'every exercise with sets left and no panel has Log a set here, and a set not done yet does the same','');

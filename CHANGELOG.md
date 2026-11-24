@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.105.0 — 2026-11-24
+- Every exercise has two buttons: Swap, and How to do it. Details is gone.
+- How to do it holds the setup, cues, mistakes to avoid, your history, and the settings for that exercise.
+- Once you've logged a set on an exercise, Swap moves inside How to do it, and the sets you logged stay where they were done.
+
 ## 1.104.0 — 2026-11-24
 - You can add your birth year in setup or in Settings → Training. It's optional.
 - It stays on this phone: it's never in a backup file or your sheet.

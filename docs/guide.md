@@ -31,7 +31,7 @@ When a main lift goes a few weeks without a new best while you're training it ev
 The app proposes a deload when the signs show: readiness falling, the same weights feeling harder, or a flared joint. You can also add one yourself in Edit program → Blocks with "Deload week at the end".
 
 ### I want to change today's workout
-Before you start, the Train tab shows a summary of today's workout with Start right there. Show the exercises opens the list underneath, with the same cards as the live session: move an exercise with its arrows, tap a card for its details and a swap, add or remove one, or change the number of sets; each set shows what you did last time. Changes are for today only. Tap "Save to program" to keep them for that day from now on, and Start begins the session in the order you've set. The list stays open or closed the way you left it. Train a different day and See the whole week are under Start.
+Before you start, the Train tab shows a summary of today's workout with Start right there. Show the exercises opens the list underneath, with the same cards as the live session: move an exercise with its arrows, Swap it or open How to do it, add or remove one, or change the number of sets; each set shows what you did last time. Changes are for today only. Tap "Save to program" to keep them for that day from now on, and Start begins the session in the order you've set. The list stays open or closed the way you left it. Train a different day and See the whole week are under Start.
 
 ### I want my own warm-up
 The warm-up at the top of a workout is built from the day's main lifts, then your conditions, then anything sore, and each item says why it's there. Tap Edit warm-up to stop a suggestion for that day, add one from the library, or create your own warm-up or rehab exercise, for that day or every session. Rehab ones come after training.
@@ -43,7 +43,7 @@ Rehab exercises come after training, in the rehab block. Tap one to log it: the 
 On the Train tab, tap Train a different day, then Try new exercises today. Today's exercises are swapped for ones you haven't logged, with 2–3 options each for the same muscles and your equipment. Your main lifts stay as planned. Work up to RPE 7 at most: you're finding a starting point, and nothing counts as a stall or a missed suggestion. Afterwards, for each one, choose Use instead, Take turns (one each time you train that day) or Forget. The app also offers this at the start of a block and in a deload week.
 
 ### My gym doesn't have an exercise
-Tap the swap button on the exercise card and pick another, by muscle or by name. Anything you log comes first from then on. To change what the app assumes your gym has, use Settings → Equipment; anything you've logged still comes first.
+Tap Swap on the exercise card and pick another, by muscle or by name. Once you've logged a set on it, Swap moves into How to do it, and the sets you logged stay with the exercise you did them on. Anything you log comes first from then on. To change what the app assumes your gym has, use Settings → Equipment; anything you've logged still comes first.
 
 ### I want to change my program
 Edit program changes blocks, days, goal lifts and preferences, and the next session settles in with no step-up in load. In Edit program, "Rebuild the rest with the program builder" rebuilds the rest of the program from where you are, and "Set up a new program" starts a fresh one from its first block, keeping every logged set.
@@ -270,7 +270,7 @@ Edit program is where you change your blocks, goals, schedule, conditions and pr
 ## Train {tab:work}
 
 ### Each exercise `#v-work .ex`
-Each exercise is a card, and the one you're on has the set panel. To log on another, tap Log a set here, or tap a set you haven't done yet. The faint numbers beside those sets are what you did last time. Use the arrows to reorder, and Details opens everything about the exercise, with a Swap button.
+Each exercise is a card, and the one you're on has the set panel. To log on another, tap Log a set here, or tap a set you haven't done yet. The faint numbers beside those sets are what you did last time. Use the arrows to reorder. Swap picks another exercise; How to do it opens the setup, cues and mistakes to avoid, easier and harder versions, and your history. Once a set is logged, Swap is inside How to do it.
 
 ### Weight and reps `[data-tour="weight"]`
 The weight and reps are suggested in amber. Change either one and the other recomputes to hit the target RPE. For pull-ups, chin-ups, dips and assisted machines you type what is on the machine, and the line underneath shows what you are actually lifting.

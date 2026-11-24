@@ -301,14 +301,14 @@ async function detailsPlaceCheck(page, tag){
   await tapSel(page,'#v-work .ex[data-slot="'+k+'"] .exname',0);
   await tapSel(page,'#v-work [data-tour="logset"]',0); await page.evaluate(()=>stopRest()); await sleep(200);
   await page.evaluate(()=>{ window.__hgo=history.go; history.go=function(){}; });
-  await tapSel(page,'#v-work .ex[data-slot="'+k+'"] button[aria-label^="Details"]',0);
+  await tapSel(page,'#v-work .ex[data-slot="'+k+'"] button[aria-label^="How to do"]',0);
   const y0=await page.evaluate(()=>{ const sv=document.querySelector('#iswapany'); return {y:Math.round(scrollY), swap:!!sv}; });
   const did=await page.evaluate(()=>{ const c=[...document.querySelectorAll('#istep button')].find(x=>x.getAttribute('aria-pressed')==='false'); if(c){ c.click(); return 'step'; }
     const r=[...document.querySelectorAll('#irest .chip')].find(x=>x.getAttribute('aria-pressed')==='false'); if(r){ r.click(); return 'rest'; } return 'none'; });
   await sleep(400);
   const mid=await page.evaluate(()=>({y:Math.round(scrollY), swap:!!document.querySelector('#iswapany')}));
   await page.evaluate(()=>{ const b=[...document.querySelectorAll('#dlgFoot button')].reverse().find(x=>/^(Close|Done)$/i.test(x.textContent.trim())); if(b) b.click(); else $('#dlg').close(); }); await sleep(400);
-  const after=await page.evaluate(k=>{ const p=document.querySelector('#v-work [data-tour="logset"]'), c=p&&p.closest('.ex'), h=document.querySelector('#v-work .ex[data-slot="'+k+'"] button[aria-label^="Details"]').getBoundingClientRect();
+  const after=await page.evaluate(k=>{ const p=document.querySelector('#v-work [data-tour="logset"]'), c=p&&p.closest('.ex'), h=document.querySelector('#v-work .ex[data-slot="'+k+'"] button[aria-label^="How to do"]').getBoundingClientRect();
     return {y:Math.round(scrollY), panelOn:c?c.dataset.slot:null, detailsOnScreen:h.top>=0&&h.bottom<=innerHeight}; },k);
   await page.evaluate(()=>{ history.go=window.__hgo; });
   ok(did!=='none'&&y0.y>0&&mid.y===y0.y&&after.y===y0.y&&after.panelOn===String(k)&&after.detailsOnScreen, tag+' a Details edit mid-session keeps your place and the panel on that card: '+JSON.stringify({did,y0,mid,after}));

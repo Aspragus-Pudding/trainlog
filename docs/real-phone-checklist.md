@@ -40,7 +40,7 @@ app) and one Android phone (installed from Chrome). Use the demo
     there and Log set is on screen. Tapping a set you haven't done on another exercise does the same.
 12. Open an exercise's info sheet, scroll to the bottom and back, then swipe back.
     The sheet closes and you're still in the workout.
-    Then, mid-exercise on a card halfway down, open **Details**, change the smallest
+    Then, mid-exercise on a card halfway down, open **How to do it**, change the smallest
     jump or the rep range, and tap Close: you're on the same card with Log set, and
     the sheet still had **Swap this exercise** after the change (v1.96.1).
 

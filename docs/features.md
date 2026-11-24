@@ -61,7 +61,7 @@ everyone.
 | Pain rating after a set, with advice | injury-prone | after a set on a relevant exercise |
 | Condition warnings and suggested swaps | injury-prone | on the card |
 | Rest timer | everyone | bottom bar after each set |
-| Add an exercise; arrows to move; Details (with Swap); Log a set here, or tap a set you haven't done, to bring the set panel to that exercise | everyone | the card, the end of the list |
+| Add an exercise; arrows to move; Swap and How to do it on every exercise (Swap moves into How to do it once a set is logged); Log a set here, or tap a set you haven't done, to bring the set panel to that exercise | everyone | the card, the end of the list |
 | Leave (end early, with a reason) | everyone | header, top right |
 | Video prompt ("film this set") | advanced | occasionally, on main lifts |
 | Rehab and prep blocks | injury-prone | in the session, if a plan or prep applies |
