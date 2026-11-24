@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.110.0 — 2026-11-24
+- Before you start, pick where you're training today: the gym, at home with dumbbells, or no equipment. Exercises you can't do there are swapped, and the card says how many.
+- How long do you have? lets you pick 45, 30 or 20 minutes for today, and says what each leaves out.
+- Paired exercises show as two linked cards: alternate sets, and rest after both.
+
 ## 1.109.0 — 2026-11-24
 - Home exercises are on ladders: push-ups, rows, squats, hinges, curls, calf raises, core and more, from easiest to hardest.
 - The card shows where you are ("Step 6 of 11 · Push-ups"); tap it for the whole ladder.

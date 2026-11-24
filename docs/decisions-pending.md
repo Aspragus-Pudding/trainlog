@@ -1771,3 +1771,10 @@ Built as designed in `docs/home-import.md` §2 and approved with screen 6.
 - **Coming back after 21+ days:** the first week is one rung down (the batch's recommendation), then the plan is back on your rung. Under 21 days nothing changes (D80).
 - **On the card:** "Step 6 of 11 · Push-ups ▸" under the name; tap for the whole ladder with your rung marked.
 - **Strength mode** (3 × 8 on push-ups and rows) is in the data, not used: the app has no strength-mode switch for home work yet.
+
+## D86. Part 4 screens 1A, 2B and 3B (v1.110.0, the maintainer's picks)
+
+- **1A, place chips** on the Train summary card, above Start: every place (Gym, At home with dumbbells, No equipment, and your own), the last one picked first (`CFG.placeLast`, a preference). Below them, what changes: "3 exercises swapped for versions you can do there", and anything with no stand-in, which is left out for that session with its name. The place is recorded on the session; it's a per-session choice and never counts as a missed session.
+- **2B, How long do you have?** is a quiet link under the chips. The sheet has Full, 45, 30 and 20 minutes, each saying what it leaves out (`timeBox`). Today only: it resets after Start.
+- **3B, pairs** are the two existing cards, joined by a rail, with "Paired with cable row: alternate sets, rest after both. Next: bench." on the first. Which is next is rule 5 of the current-exercise rules; rest runs after the pair (v1.102).
+- Pairs appear only where a session has them: a 20- or 30-minute box, or a template.

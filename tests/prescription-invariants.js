@@ -38,7 +38,7 @@ function stub(){
     set(){ return true; }, apply(){ return stub(); }, construct(){ return stub(); }
   });
 }
-const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','ladderPos','ladderNext','ladderPrev','ladderCurrent','ladderMoveUpDue','ladderMoveUp','ladderNotYet','templateDay','harderThan','BW_CLASS','STAND_IN','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','holdState','holdWindows','holdTargets','holdDays','programDays','holdOffer','holdReview','holdBackAsk','HOLD_COPY','startHold','endHold','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
+const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','dayForToday','placeToday','ladderPos','ladderNext','ladderPrev','ladderCurrent','ladderMoveUpDue','ladderMoveUp','ladderNotYet','templateDay','harderThan','BW_CLASS','STAND_IN','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','holdState','holdWindows','holdTargets','holdDays','programDays','holdOffer','holdReview','holdBackAsk','HOLD_COPY','startHold','endHold','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
   'suggestFor','seedDraft','logSet','moveSlot','adjustSets','fatigueRise','impliedE1','predictedRpe','rtfFromPct',
   'MUSCLE_REP_RANGE','CFG','FATIGUE_MIN_PAIRS','FATIGUE_MIN_SESSIONS','CHART_MAX_RTF',
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
@@ -4479,6 +4479,22 @@ section('108. ladders: a rung is an exercise; move up by proposal; one rung down
   { const ev=[]; for(let k=0;k<4;k++) ev.push(set('decline_pushup','r'+k,0,12,8,30+3*k)); const B=load(ev,true);
     const out=B.applyReturnRamp([{...sl}]); ok(out[0].ex==='weighted_pushup'&&out[0].returnRamp.ladderDown,'30 days away: the first week back is one rung down',JSON.stringify(out[0].ex)); }
   console.log('  rungs are exercises · next and previous · move-up proposal and Not yet · the plan follows a move, never on its own · low-load names the rung · one rung down after a break');
+}
+
+
+section('109. Part 4 screens: place chips (1A), how long (2B), pairs as linked cards (3B)');
+{
+  const src=fnSrc('renderPreview'), live=fnSrc('renderWork');
+  ok(/Where are you training today\?/.test(src)&&/CFG\.placeLast=pl\.id/.test(src)&&/swapped for/.test(src),'1A: the places as chips on the Train card, the last one picked first, and what changes said before Start','');
+  ok(/How long do you have\? ▸/.test(src)&&/openHowLong\(rawDay\)/.test(src)&&/leaves out/.test(fnSrc('openHowLong')),'2B: How long do you have? behind a link, a sheet saying what each length leaves out','');
+  ok(/pairWith/.test(live)&&/alternate sets, rest after both/.test(live)&&/Next: /.test(live),'3B: paired exercises are the two existing cards, linked, with which is next','');
+  { const A=load([],true), C=A.getCFG(); A.setRoadmap([A.applyShape({type:'hyp',label:'H',weeks:6,deload:false,hyp:[]})]); C.week=['full','full','full']; C.start=new Date(Date.now()-3*864e5).toISOString().slice(0,10);
+    const d0=A.todayDay(); C.placeLast='none'; const d=A.dayForToday(d0);
+    ok(d.place==='none'&&d.slots.every(sl=>A.canDoAt(sl.ex,A.placeById('none'))),'a day at No equipment: every exercise can be done there (stand-ins, or left out with the reason)',JSON.stringify(d.slots.map(x=>x.ex)));
+    C.placeLast='gone'; ok(A.placeToday()==='gym','a place that no longer exists falls back to the gym','');
+    C.placeLast=null; ok(JSON.stringify(A.dayForToday(d0).slots.map(x=>x.ex))===JSON.stringify(d0.slots.map(x=>x.ex)),'at the gym, nothing changes','');
+  }
+  console.log('  place chips · how long sheet · linked pair cards · a no-equipment day is doable · gym unchanged');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

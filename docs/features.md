@@ -61,6 +61,7 @@ everyone.
 | Pain rating after a set, with advice | injury-prone | after a set on a relevant exercise |
 | Condition warnings and suggested swaps | injury-prone | on the card |
 | Rest timer | everyone | bottom bar after each set |
+| Where are you training today (place chips, last one first; stand-ins, said before Start) and How long do you have (Full, 45, 30, 20: what each leaves out); paired exercises as two linked cards | everyone | Train, before Start; the cards |
 | Add an exercise; arrows to move; Swap and How to do it on every exercise (Swap moves into How to do it once a set is logged); Log a set here, or tap a set you haven't done, to bring the set panel to that exercise | everyone | the card, the end of the list |
 | Leave (end early, with a reason) | everyone | header, top right |
 | Video prompt ("film this set") | advanced | occasionally, on main lifts |
