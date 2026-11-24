@@ -203,13 +203,13 @@ function simulate(key){
     });
     weekly.push(snap);
   }
-  return {key,P,trace,issues,weekly,truth,deloads,A,ivLog,ivSlots};
+  return {key,P,trace,issues,weekly,truth,deloads,A,ivLog,ivSlots,ramps};
 }
 
 /* ---------- checks (generic now; batch C adds the stall-engine ones) ---------- */
 function checks(run){
   const out=[]; const ok=(c,msg,detail)=>out.push({pass:!!c,msg,detail});
-  const {key,P,trace,weekly,issues,A}=run;
+  const {key,P,trace,weekly,issues,A}=run, ramps=run.ramps||[];
   ok(trace.length>0,'it trained','');
   ok(issues.length===0,'never prescribed a load above the lifter\'s true 1RM',JSON.stringify(issues.slice(0,3)));
   const main=['squat','deadlift','bench'];
