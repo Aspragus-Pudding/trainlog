@@ -38,7 +38,7 @@ function stub(){
     set(){ return true; }, apply(){ return stub(); }, construct(){ return stub(); }
   });
 }
-const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','templateDay','harderThan','BW_CLASS','STAND_IN','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','holdState','holdWindows','holdTargets','holdDays','programDays','holdOffer','holdReview','holdBackAsk','HOLD_COPY','startHold','endHold','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
+const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','ladderPos','ladderNext','ladderPrev','ladderCurrent','ladderMoveUpDue','ladderMoveUp','ladderNotYet','templateDay','harderThan','BW_CLASS','STAND_IN','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','holdState','holdWindows','holdTargets','holdDays','programDays','holdOffer','holdReview','holdBackAsk','HOLD_COPY','startHold','endHold','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
   'suggestFor','seedDraft','logSet','moveSlot','adjustSets','fatigueRise','impliedE1','predictedRpe','rtfFromPct',
   'MUSCLE_REP_RANGE','CFG','FATIGUE_MIN_PAIRS','FATIGUE_MIN_SESSIONS','CHART_MAX_RTF',
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
@@ -4454,6 +4454,31 @@ section('107. batch N Part 3: the home-training library');
     ok(t&&t.slots.length===7&&t.slots.filter(s=>s.pairWith).length===6&&d&&d.slots.length===6,'the three research templates build as sessions, pairs alternating','');
     ok(L.home.cardio.length===10&&L.home.cardio.every(c=>!/kcal|calorie/i.test(JSON.stringify(c)))&&L.home.cardio.find(c=>/shadow/i.test(c.name)).shoulderNote,'quiet cardio is data (minutes, an optional heart rate), no calorie figures; shadow boxing carries the shoulder note',''); }
   console.log('  home rows and parents · no repeated names · ladders resolve · plain cues · stand-ins at both places · quiet · shares · low-load rule · templates · cardio data');
+}
+
+
+section('108. ladders: a rung is an exercise; move up by proposal; one rung down after a break');
+{
+  const A=load([],true);
+  ok(A.ladderPos('decline_pushup').step===6&&A.ladderPos('decline_pushup').of===11&&A.ladderPos('incline_pushup',{height:'chair'}).step===3&&!A.ladderPos('incline_pushup'),'a rung is an exercise (with a setup modifier where two rungs share one)','');
+  ok(A.ladderNext('decline_pushup').ex==='diamond_pushup'&&A.ladderPrev('decline_pushup').ex==='weighted_pushup'&&!A.ladderNext('one_arm_pushup'),'next and previous rungs; the top has no next','');
+  const sl={ex:'decline_pushup',role:'accessory',reps:[6,15],rpe:8,sets:3,sets_target:3};
+  { const B=load([1,2,3].map(i=>set('decline_pushup','d1',0,15,7,2)),true); const due=B.ladderMoveUpDue(sl);
+    ok(due&&due.ex==='diamond_pushup'&&due.step===6,'3 × 15 at or under the RPE: a proposal to move up',JSON.stringify(due));
+    const C=load([1,2,3].map(i=>set('decline_pushup','d1',0,15,9,2)),true); ok(!C.ladderMoveUpDue(sl),'…not when it was harder than the slot\'s RPE','');
+    const D=load([1,2].map(i=>set('decline_pushup','d1',0,15,7,2)),true); ok(!D.ladderMoveUpDue(sl),'…nor with two sets','');
+    B.ladderNotYet(due); ok(!B.ladderMoveUpDue(sl),'Not yet: not asked again for that session','');
+    const E=load([1,2,3].map(i=>set('decline_pushup','d1',0,15,7,2)),true); E.ladderMoveUp(E.ladderMoveUpDue(sl));
+    ok((E.ladderCurrent('decline_pushup')||{}).ex==='diamond_pushup','Move up: the plan uses the next rung from then on (derived from the event)',''); }
+  // the plan follows the move; nothing moves on its own
+  { const B=load([1,2,3].map(i=>set('decline_pushup','d1',0,15,7,2)),true); ok(!B.ladderCurrent('decline_pushup'),'meeting the target alone never moves you: the app proposes, you decide',''); }
+  // low-load rule: past 30 reps, the next rung
+  { const B=load([{type:'bodyweight',id:'bwl',ts:day(10),bodyweight:180},set('decline_pushup','a',0,32,7,4),set('decline_pushup','a',0,32,7,4)],true), g=B.suggestFor({...sl,reps:[5,40]}), t=(g.trace||[]).find(x=>x.id==='low_load');
+    ok(t&&/next is Diamond push-up/.test(t.reason),'past 30 reps: the trace names the next rung',t&&t.reason); }
+  // the return ramp on a ladder: 21+ days away, the first week one rung down
+  { const ev=[]; for(let k=0;k<4;k++) ev.push(set('decline_pushup','r'+k,0,12,8,30+3*k)); const B=load(ev,true);
+    const out=B.applyReturnRamp([{...sl}]); ok(out[0].ex==='weighted_pushup'&&out[0].returnRamp.ladderDown,'30 days away: the first week back is one rung down',JSON.stringify(out[0].ex)); }
+  console.log('  rungs are exercises · next and previous · move-up proposal and Not yet · the plan follows a move, never on its own · low-load names the rung · one rung down after a break');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');

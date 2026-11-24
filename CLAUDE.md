@@ -243,6 +243,7 @@ included), `planFor`/`weekPlanFor`, swaps and saving a range. A stored
 - **Home training (batch N Part 3, v1.108).** Section 8 of `tools/import-library.js`: home rows (`home:true`, named), update rows on
   existing exercises (`libInfo.noise/space/homeSetup…`), ladders, templates (`templateDay`) and quiet cardio (data only) in `LIB.home`.
   `STAND_IN` leads with the research's substitution table; a `quiet` place leaves out loud rows; `low_load` caps reps at 30 a set.
+- **Ladders (v1.109).** `LIB.home.ladders`; a rung is an exercise (+ setup modifier). `ladderMoveUpDue` → a card → `ladder_move` (or `ladder_decline`); `ladderCurrent` swaps the rung in `buildDay` and stand-ins. Return after 21+ days: the first week one rung down (`applyReturnRamp`). Never moves on its own.
 - **`exPicker()`** is the one shared exercise picker (search + category chips +
   create-new). Swapping, adding, and goal-lift selection all route through it.
   Don't write a second bespoke picker — that's how mid-session swap ended up

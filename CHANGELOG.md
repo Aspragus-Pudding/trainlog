@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.109.0 — 2026-11-24
+- Home exercises are on ladders: push-ups, rows, squats, hinges, curls, calf raises, core and more, from easiest to hardest.
+- The card shows where you are ("Step 6 of 11 · Push-ups"); tap it for the whole ladder.
+- When you hit the target, a card offers the next step. You decide; Not yet keeps you where you are.
+- After three weeks or more away, the first week back is one step down.
+
 ## 1.108.0 — 2026-11-24
 - About 90 home exercises join the library: push-up and row progressions, dumbbell versions, and slant-board work.
 - How to do it shows the home setup, what to use instead of equipment you don't have, and how noisy each one is.

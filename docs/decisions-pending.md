@@ -1761,3 +1761,13 @@ Imported with the batch L codes, as the maintainer asked. The codes that stopped
 - **Templates** (silent bedroom, dumbbell supersets, one gym day plus two home days) build as sessions (`templateDay`), pairs alternating. Starting one from a screen waits for the Part 4 screens.
 - **Quiet cardio** is data only: ten activities with a dose, a heart-rate note and no calorie figures; shadow boxing carries the shoulder note. Logging minutes and heart rate needs a new card on the session screen, so it's a mockup first.
 - **Ladders** are imported as data (ten, every rung resolves); the move-up engine and the set-card line come in the next version, as designed in `docs/home-import.md` and drawn in mockup 6.
+
+## D85. Ladders (v1.109.0, batch N Part 3 design, Part 4 screen 6 as drawn)
+
+Built as designed in `docs/home-import.md` §2 and approved with screen 6.
+- **A rung is an exercise** on its own track; the incline push-up's three hand heights are one exercise with a `height` modifier, so they keep separate histories.
+- **Move up** is a card on the exercise once a session on the rung meets the ladder's target (3 × 15 push-ups, 3 × 10 overhead, 3 × 8 dips, 3 × 12 hinges, 3 × 20 calves, holds in seconds) at or under the slot's RPE. Move up appends `ladder_move`; Not yet appends `ladder_decline` for that session. The plan then uses the new rung where the old one was (`ladderCurrent`, in the generator and in stand-ins). Nothing moves on its own.
+- **The guards** are the normal ones on each rung's own track; the low-load rule names the next rung past 30 reps.
+- **Coming back after 21+ days:** the first week is one rung down (the batch's recommendation), then the plan is back on your rung. Under 21 days nothing changes (D80).
+- **On the card:** "Step 6 of 11 · Push-ups ▸" under the name; tap for the whole ladder with your rung marked.
+- **Strength mode** (3 × 8 on push-ups and rows) is in the data, not used: the app has no strength-mode switch for home work yet.
