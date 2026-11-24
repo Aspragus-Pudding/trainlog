@@ -1778,3 +1778,11 @@ Built as designed in `docs/home-import.md` §2 and approved with screen 6.
 - **2B, How long do you have?** is a quiet link under the chips. The sheet has Full, 45, 30 and 20 minutes, each saying what it leaves out (`timeBox`). Today only: it resets after Start.
 - **3B, pairs** are the two existing cards, joined by a rail, with "Paired with cable row: alternate sets, rest after both. Next: bench." on the first. Which is next is rule 5 of the current-exercise rules; rest runs after the pair (v1.102).
 - Pairs appear only where a session has them: a 20- or 30-minute box, or a template.
+
+## D87. The warm-up library and the check-in rule (v1.111.0; the picker is a mockup)
+
+- **The library** is six body parts (shoulders, hips, knees, ankles, back, wrists). It has the research's rehab rows that suit prehab (a prehab dose that isn't "not needed"), the slant-board stretches, balance and the heels-raised squat, and the app's own 18 warm-up moves. Each says its evidence: the research's grade in words, else "Coaching consensus".
+- **"What feels stiff" uses the check-in you already do:** a joint rated off your usual, or an area rated sore. There's no new question (the batch L rule: don't add a second one). Each maps to a body part: joints directly; push and pull soreness to shoulders, upper and lower back to back, glutes and hamstrings to hips, quads to knees.
+- **The rule:** one or two items for what felt stiff, research-graded first, never one your conditions make unsafe (the same lists the warm-up and rehab blocks use, plus the flags). They join the day's warm-up as a line saying why, after the usual picks; like everything there, they're a checklist, not sets, so they're never rated or counted.
+- **The day's warm-up stays editable** in the warm-up editor as before. Browsing the library by body part or by what feels stiff is the picker in the mockups (docs/design/warmup/), not wired.
+- **Gaps in the research files** (not filled from memory): no general mobility or dynamic warm-up for the hips or upper back beyond the app's own moves; knees have strength work (step-downs, decline squats) but almost no light warm-up; wrists are rehab-strength (twist-bar, curls) with no mobility drill; neck work (chin nods, isometrics) has no body part of its own, so it sits under back; nothing for the elbow on its own.

@@ -15331,5 +15331,316 @@
   "rules": {
    "lowLoadReps": 30
   }
- }
+ },
+ "warmup": [
+  {
+   "id": "er_sidelying",
+   "code": "R02",
+   "areas": [
+    "shoulders"
+   ],
+   "dose": "2×15, 1-2×/wk",
+   "grade": "B",
+   "warmupDose": false
+  },
+  {
+   "id": "er_side",
+   "code": "R03",
+   "areas": [
+    "shoulders"
+   ],
+   "dose": "2×15-20, 2×/wk",
+   "grade": "B",
+   "warmupDose": false
+  },
+  {
+   "id": "prone_t",
+   "code": "R04",
+   "areas": [
+    "shoulders"
+   ],
+   "dose": "2×12, 1-2×/wk",
+   "grade": "C",
+   "warmupDose": false
+  },
+  {
+   "id": "scaption",
+   "code": "R05",
+   "areas": [
+    "shoulders"
+   ],
+   "dose": "2×12, 1×/wk",
+   "grade": "C",
+   "warmupDose": false
+  },
+  {
+   "id": "er_90",
+   "code": "R07",
+   "areas": [
+    "shoulders"
+   ],
+   "dose": "2×12, 1×/wk",
+   "grade": "C",
+   "warmupDose": false
+  },
+  {
+   "id": "band_pullapart",
+   "code": "R08",
+   "areas": [
+    "shoulders"
+   ],
+   "dose": "2×20 in warm-up",
+   "grade": "D",
+   "warmupDose": true
+  },
+  {
+   "id": "tyler_twist",
+   "code": "R12",
+   "areas": [
+    "wrists"
+   ],
+   "dose": "1×15, 2×/wk",
+   "grade": "B",
+   "warmupDose": false
+  },
+  {
+   "id": "ecc_wrist_ext",
+   "code": "R13",
+   "areas": [
+    "wrists"
+   ],
+   "dose": "2×12, 1×/wk",
+   "grade": "B",
+   "warmupDose": false
+  },
+  {
+   "id": "rev_tyler_twist",
+   "code": "R14",
+   "areas": [
+    "wrists"
+   ],
+   "dose": "1×15, 2×/wk",
+   "grade": "C",
+   "warmupDose": false
+  },
+  {
+   "id": "pro_sup",
+   "code": "R15",
+   "areas": [
+    "wrists"
+   ],
+   "dose": "2×15, 1×/wk",
+   "grade": "D",
+   "warmupDose": false
+  },
+  {
+   "id": "wrist_curl",
+   "code": "R17",
+   "areas": [
+    "wrists"
+   ],
+   "dose": "2×15, 1×/wk",
+   "grade": "C",
+   "warmupDose": false
+  },
+  {
+   "id": "rice_bucket",
+   "code": "R18",
+   "areas": [
+    "wrists"
+   ],
+   "dose": "1-2×60 s",
+   "grade": "D",
+   "warmupDose": false
+  },
+  {
+   "id": "chin_nod",
+   "code": "R20",
+   "areas": [
+    "back"
+   ],
+   "dose": "10×10 s, 2×/wk",
+   "grade": "B",
+   "warmupDose": false
+  },
+  {
+   "id": "neck_iso",
+   "code": "R22",
+   "areas": [
+    "back"
+   ],
+   "dose": "1×10 s each, 2×/wk",
+   "grade": "C",
+   "warmupDose": false
+  },
+  {
+   "id": "thoracic_ext",
+   "code": "R23",
+   "areas": [
+    "back"
+   ],
+   "dose": "1×10 warm-up",
+   "grade": "D",
+   "warmupDose": true
+  },
+  {
+   "id": "back_ext",
+   "code": "R26",
+   "areas": [
+    "back"
+   ],
+   "dose": "2×12, 1×/wk",
+   "grade": "C",
+   "warmupDose": false
+  },
+  {
+   "id": "glute_bridge",
+   "code": "R29",
+   "areas": [
+    "hips"
+   ],
+   "dose": "2×12, 1×/wk",
+   "grade": "B",
+   "warmupDose": false
+  },
+  {
+   "id": "sidelying_abd",
+   "code": "R30",
+   "areas": [
+    "hips"
+   ],
+   "dose": "2×12, 1×/wk",
+   "grade": "B",
+   "warmupDose": false
+  },
+  {
+   "id": "copenhagen",
+   "code": "R31",
+   "areas": [
+    "hips"
+   ],
+   "dose": "1-2×6-10/side, 1-2×/wk",
+   "grade": "B",
+   "warmupDose": false
+  },
+  {
+   "id": "nordic",
+   "code": "R36",
+   "areas": [
+    "hips"
+   ],
+   "dose": "2×5, 1×/wk in season",
+   "grade": "B",
+   "warmupDose": false
+  },
+  {
+   "id": "leg_ext",
+   "code": "R39",
+   "areas": [
+    "knees"
+   ],
+   "dose": "2×12, 1×/wk",
+   "grade": "A",
+   "warmupDose": false
+  },
+  {
+   "id": "peterson_stepup",
+   "code": "R40",
+   "areas": [
+    "knees"
+   ],
+   "dose": "2×10, 1×/wk",
+   "grade": "A",
+   "warmupDose": false
+  },
+  {
+   "id": "clamshell",
+   "code": "R41",
+   "areas": [
+    "knees",
+    "hips"
+   ],
+   "dose": "2×15, 1×/wk",
+   "grade": "A",
+   "warmupDose": false
+  },
+  {
+   "id": "pogo_hop",
+   "code": "R43",
+   "areas": [
+    "knees",
+    "ankles"
+   ],
+   "dose": "1-2×10 in warm-up",
+   "grade": "C",
+   "warmupDose": true
+  },
+  {
+   "id": "rathleff_raise",
+   "code": "R46",
+   "areas": [
+    "ankles"
+   ],
+   "dose": "2×10, 1×/wk",
+   "grade": "B",
+   "warmupDose": false
+  },
+  {
+   "id": "balance_sl",
+   "code": "R47",
+   "areas": [
+    "ankles"
+   ],
+   "dose": "2×30 s/leg in warm-up, 2-3×/wk for 12 months after a sprain",
+   "grade": "A",
+   "warmupDose": true
+  },
+  {
+   "id": "band_eversion",
+   "code": "R48",
+   "areas": [
+    "ankles"
+   ],
+   "dose": "2×15, 1×/wk",
+   "grade": "C",
+   "warmupDose": false
+  },
+  {
+   "id": "slant_straight_knee_calf_stretch",
+   "code": "H086",
+   "areas": [
+    "ankles"
+   ],
+   "dose": "3x30-60s",
+   "grade": "D"
+  },
+  {
+   "id": "slant_bent_knee_calf_stretch",
+   "code": "H087",
+   "areas": [
+    "ankles"
+   ],
+   "dose": "3x30-60s",
+   "grade": "D"
+  },
+  {
+   "id": "slant_side_tilt_balance",
+   "code": "H089",
+   "areas": [
+    "ankles"
+   ],
+   "dose": "3x30s/side",
+   "grade": "D"
+  },
+  {
+   "id": "heels_elevated_bw_squat",
+   "code": "H081",
+   "areas": [
+    "knees",
+    "ankles"
+   ],
+   "dose": "15-30",
+   "grade": "D"
+  }
+ ]
 }

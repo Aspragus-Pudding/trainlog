@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.111.0 — 2026-11-24
+- A warm-up library: research-backed and coach-favourite moves for shoulders, hips, knees, ankles, back and wrists.
+- If a joint or an area feels worse than usual at the check-in, today's warm-up suggests one or two moves for it, saying why. Skip them if you like.
+- Warm-ups are never rated and never count toward your weekly sets.
+
 ## 1.110.0 — 2026-11-24
 - Before you start, pick where you're training today: the gym, at home with dumbbells, or no equipment. Exercises you can't do there are swapped, and the card says how many.
 - How long do you have? lets you pick 45, 30 or 20 minutes for today, and says what each leaves out.

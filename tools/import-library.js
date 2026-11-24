@@ -541,6 +541,18 @@ Object.values(out.exercises).forEach(e=>['easier','harder'].forEach(k=>{ if(e[k]
 out.added.filter(e=>e.homeJoint).forEach(e=>{ const pat=chainPattern(e); e.researchTags=[...new Set(e.homeJoint.map(c=>H_TAG(c,pat)).filter(Boolean))]; delete e.homeJoint; });
 counts.home={added:out.added.filter(e=>(e.codes||[]).some(c=>c[0]==='H')).length, collisions:out.home.collisions.length, updated:Object.keys(out.home.updates).filter(k=>k[0]!=='?').length, cardio:out.home.cardio.length, ladders:Object.keys(out.home.ladders).length, templates:Object.keys(out.home.templates).length};
 
+/* ── 9. the warm-up library (the maintainer's request, Nov 2026) ──
+   From the research files only: the rehab rows that suit prehab (a prehab dose that isn't "not needed"), and the
+   slant-board stretches and balance work. Grouped by body part; a row with no grade is coaching consensus. Gaps are
+   listed in docs/library-import.md, not filled from memory. */
+const WU_AREAS={'Shoulder':['shoulders'],'Elbow':['wrists'],'Elbow/wrist':['wrists'],'Wrist/hand':['wrists'],'Neck':['back'],'Neck/upper back':['back'],'Lower back':['back'],
+  'Hip':['hips'],'Hip/thigh':['hips'],'Knee':['knees'],'Knee/ankle':['knees','ankles'],'Knee/hip':['knees','hips'],'Ankle/foot':['ankles']};
+out.warmup=[];
+for(const r of REHAB){ const dose=r.prehab_dose; if(!dose||dose==='-'||/not needed/i.test(dose)) continue; const id=parentOf[r.id]; if(!id) continue;
+  out.warmup.push({id, code:r.id, areas:WU_AREAS[r.region]||[], dose, grade:gradeOf(r.grade), warmupDose:/warm-?up/i.test(dose)}); }
+for(const c of ['H086','H087','H089','H081']){ const id=hId[c]; const r=HROW[c]; if(!id||!r) continue;
+  out.warmup.push({id, code:c, areas:c==='H081'?['knees','ankles']:['ankles'], dose:r.reps, grade:gradeOf(r.grade)}); }
+counts.warmup=out.warmup.length;
 console.log(JSON.stringify(counts));
 if(CHECK){ console.log('check only: nothing written'); process.exit(0); }
 fs.writeFileSync(path.join(ROOT,'docs/library.json'),json());
@@ -573,6 +585,10 @@ ${tbl(['App exercise','Code','Field','Note'],conflicts.concat(tagConflicts()))}
 
 ${tbl(['New rows','Updated exercises','Collisions (treated as updates)','Ladders','Templates','Quiet cardio (data only)'],[[counts.home.added,counts.home.updated,counts.home.collisions,counts.home.ladders,counts.home.templates,counts.home.cardio]])}
 Collisions: ${out.home.collisions.map(c=>c[0]+' '+c[1]+' = '+c[2]).join('; ')}.
+
+## Warm-up library
+
+${out.warmup.length} items from the research files (rehab rows with a prehab dose, slant-board stretches and balance), plus the app's 18 warm-up moves. By body part: ${['shoulders','hips','knees','ankles','back','wrists'].map(a=>a+' '+out.warmup.filter(w=>w.areas.includes(a)).length).join(', ')} (research items; the app's own add to each).
 
 ## Matched to an app exercise (the code is stored on it)
 

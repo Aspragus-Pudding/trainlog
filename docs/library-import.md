@@ -146,6 +146,10 @@ New exercises carry the research's flags mapped this way **plus** their parent's
 
 Collisions: H061 DB front raise = db_front_raise; H067 DB kickback = kickback.
 
+## Warm-up library
+
+31 items from the research files (rehab rows with a prehab dose, slant-board stretches and balance), plus the app's 18 warm-up moves. By body part: shoulders 6, hips 5, knees 5, ankles 8, back 4, wrists 6 (research items; the app's own add to each).
+
 ## Matched to an app exercise (the code is stored on it)
 
 | Code | Research name | App exercise |

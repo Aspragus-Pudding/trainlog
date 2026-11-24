@@ -38,7 +38,7 @@ function stub(){
     set(){ return true; }, apply(){ return stub(); }, construct(){ return stub(); }
   });
 }
-const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','dayForToday','placeToday','ladderPos','ladderNext','ladderPrev','ladderCurrent','ladderMoveUpDue','ladderMoveUp','ladderNotYet','templateDay','harderThan','BW_CLASS','STAND_IN','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','holdState','holdWindows','holdTargets','holdDays','programDays','holdOffer','holdReview','holdBackAsk','HOLD_COPY','startHold','endHold','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
+const EXPORTS=['LIB','LIB_CODES','libRisk','libFor','libHidden','libHtml','LIB_PREFER','EVIDENCE_WORDS','swapSlotTo','repRangeOverride','modLabel','cleanMods','MOVE','genChain','normCondId','rehabUnsafe','warmupLibrary','warmupSuggest','stiffAreas','wuEvidence','dayForToday','placeToday','ladderPos','ladderNext','ladderPrev','ladderCurrent','ladderMoveUpDue','ladderMoveUp','ladderNotYet','templateDay','harderThan','BW_CLASS','STAND_IN','rehabItem','rehabPainOk','REHAB_RED_FLAGS','buildRehab','boxMinutes','canDoAt','standInFor','dayAt','placeById','allPlaces','pairOK','suggestPairs','pairPartner','pairRestsNow','timeBox','estSessionLength','ruleCurrent','syncCurrent','holdState','holdWindows','holdTargets','holdDays','programDays','holdOffer','holdReview','holdBackAsk','HOLD_COPY','startHold','endHold','weeksInARow','stallCard','returnRamp','applyReturnRamp','returnHeldOut','RETURN_BANDS','watchedJoint','jointsFor','rateExposures','rateState','fastRx','effortOverTarget','rpeDrift','rpeScatter','usualSig','newSlotFor','kgGrid','kgStepOf','kgMachine','STEP_CHOICES_KG','editStep','editedEstimate','estimateFromSet','dropLoad','previewRx','solvePlates','barKg','nextPrescription','schemeFor','EX','exById','LOG','append','sets','toLb','currentPhase','explainRx',
   'suggestFor','seedDraft','logSet','moveSlot','adjustSets','fatigueRise','impliedE1','predictedRpe','rtfFromPct',
   'MUSCLE_REP_RANGE','CFG','FATIGUE_MIN_PAIRS','FATIGUE_MIN_SESSIONS','CHART_MAX_RTF',
   'isChartFree','physicalCut','readinessScore','readinessLabel','rpeDeltaStep','stagnationProbe',
@@ -4495,6 +4495,23 @@ section('109. Part 4 screens: place chips (1A), how long (2B), pairs as linked c
     C.placeLast=null; ok(JSON.stringify(A.dayForToday(d0).slots.map(x=>x.ex))===JSON.stringify(d0.slots.map(x=>x.ex)),'at the gym, nothing changes','');
   }
   console.log('  place chips · how long sheet · linked pair cards · a no-equipment day is doable · gym unchanged');
+}
+
+
+section('110. the warm-up library and the check-in rule');
+{
+  const A=load([],true), W=A.warmupLibrary();
+  ['shoulders','hips','knees','ankles','back','wrists'].forEach(a=>ok(W.some(w=>w.areas.includes(a)),'the library covers '+a,''));
+  ok(W.filter(w=>!w.grade).every(w=>A.wuEvidence(w)==='Coaching consensus.')&&W.some(w=>w.grade==='B'&&A.wuEvidence(w)==='Backed by research.'),'labelled by the research\'s grade, else coaching consensus','');
+  ok(A.warmupSuggest(null).length===0&&A.warmupSuggest({joints:{},sore:{}}).length===0,'nothing stiff: nothing suggested','');
+  { const s=A.warmupSuggest({joints:{hip:2},sore:{}}); ok(s.length>=1&&s.length<=2&&s.every(w=>w.areas.includes('hips')&&/hips felt stiffer than usual today/.test(w.why)),'stiff hips: one or two hip warm-ups, saying why',JSON.stringify(s.map(w=>w.id))); }
+  { const s=A.warmupSuggest({joints:{shoulder:2,knee:1},sore:{}}); ok(s.length===2&&s[0].areas.includes('shoulders')&&s[1].areas.includes('knees'),'two areas: one each, never more than two',JSON.stringify(s.map(w=>w.id))); }
+  { A.getCFG().conditions=['shoulder_instability']; const s=A.warmupSuggest({joints:{shoulder:2},sore:{}});
+    ok(s.every(w=>!['er_90','prone_t','p_dislocate','p_hang'].includes(w.id)&&!(A.exById[w.id]&&A.isWarning(A.flagFor(w.id)))),'never one that loads a condition you\'ve picked (no external rotation at 90° for an unstable shoulder)',JSON.stringify(s.map(w=>w.id))); A.getCFG().conditions=[]; }
+  { const d=A.buildPrep({name:'Full body A',slots:[]},{joints:{ankle:2},sore:{},sleep:4,motivation:4,recovery:4});
+    const st=d.filter(m=>m.cat==='stiff'); ok(st.length>=1&&st.length<=2&&st.every(m=>m.suggest),'the day\'s warm-up carries the suggestion, marked as one',JSON.stringify(st.map(m=>m.id))); }
+  ok(!/type:'set'/.test(fnSrc('warmupSuggest')+fnSrc('buildPrep')),'warm-ups are never logged as sets, so never rated or counted in weekly sets','');
+  console.log('  six body parts · grade or consensus · nothing stiff, nothing suggested · one or two, with why · safe for your conditions · in the day\'s warm-up · never a set');
 }
 
 console.log('\n'+checks+' checks, '+failures+' failed');
