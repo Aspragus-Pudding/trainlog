@@ -240,7 +240,7 @@ included), `planFor`/`weekPlanFor`, swaps and saving a range. A stored
 - **The researched library (batch L, v1.106). Read `docs/library-rules.md` before touching the library.** Decisions live in `tools/import-library.js`;
   it writes `docs/library.json`, embedded as `library-data` (§105: byte-for-byte). Research codes are stored on exercises (`ex.codes`,
   `LIB_CODES`); existing exercises only get empty fields (`ex.libInfo`); new ones are built from their parent (`expandLibData`, `lib:true`).
-  RISK rows are never picked unless logged or a goal (`libRisk`); How to do it shows the library (`libHtml`, `drawEasierHarder`).
+  RISK rows are never picked unless logged or a goal (`libRisk`); How to do it shows the library (`libHtml`, `drawEasierHarder`). A research flag on an existing exercise is adopted only on the maintainer's say-so (`ADOPT_TAGS` → `addTags`, applied first in `applyLibData`); check it against the shoulder protocol and §47/§56 before adopting.
 - **Home training (batch N Part 3, v1.108).** Section 8 of `tools/import-library.js`: home rows (`home:true`, named), update rows on
   existing exercises (`libInfo.noise/space/homeSetup…`), ladders, templates (`templateDay`) and quiet cardio (data only) in `LIB.home`.
   `STAND_IN` leads with the research's substitution table; a `quiet` place leaves out loud rows; `low_load` caps reps at 30 a set.

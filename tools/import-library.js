@@ -78,6 +78,7 @@ const FLAG_TABLE=[
                               unilateral, bwplus (the bodyweight class with added weight)
    '?:why'                    the match is uncertain: left out, with its home-training children, for the maintainer
    'protocol:why'             not one exercise (a ladder, a bundle, a running plan): kept as data, not an entry
+   'split:id,id'              one research row that is two exercises: each a new entry (SPLIT below), the row kept under splits
    'skip:why'                 left out for another stated reason */
 const D={
  C001:'=squat', C002:'mod:squat:{"barpos":"low"}', C003:'=front_squat', C004:'=deadlift', C005:'=sumo_dl', C006:'=rdl',
@@ -85,7 +86,7 @@ const D={
  C014:'=bulgarian', C015:'=db_lunge', C016:'=leg_press', C017:'=hack', C018:'=pendulum', C019:'=belt_squat', C020:'=leg_ext',
  C021:'=leg_curl', C022:'=lying_curl', C023:'=nordic', C024:'=hip_thrust', C025:'=back_ext', C026:'=calf', C027:'=seated_calf',
  C028:'=incline_db', C029:'=db_bench',
- C030:'?:The app has three machine chest presses (Converging chest press, Pin-loaded machine chest press, Lying neutral-grip plate-loaded chest press) and none is a seated plate-loaded iso-lateral press. Converging chest press is the likeliest, but it is selectorised.',
+ C030:'=machine_press',   // the maintainer (Nov 24): the flat machine press
  C031:'=dip', C032:'=weighted_pushup', C033:'=cable_fly', C034:'=pec_deck', C035:'=lat_raise', C036:'=cable_raise',
  C037:'new:cable_y_raise:cable_raise', C038:'=m_rd_fly', C039:'=face_pull', C040:'=bb_curl', C041:'=curl', C042:'=bayesian_curl',
  C043:'=preacher', C044:'=hammer', C045:'=oh_ext', C046:'=pushdown', C047:'=ez_skull', C048:'=jm_press', C049:'=cg_bench',
@@ -127,7 +128,7 @@ const D={
  V100:'mod:bench:{"grip":"wide"}', V101:'new:slingshot_bench:bench:named', V102:'mod:bench:{"accom":"bands"}',
  V103:'mod:bench:{"pause":{"seconds":3,"at":"chest"}}', V104:'=bb_incline', V105:'=incline_db', V106:'=smith_incline', V107:'=incline_machine',
  V108:'=decline_press', V109:'=pin_chest_press',
- V110:'?:Its parent (C030, machine chest press) has no certain match, so the one-arm version has no parent to sit under.',
+ V110:'new:iso_chest_press_1arm:machine_press:named,unilateral',   // the maintainer: new, the one-arm version of C030
  V111:'new:db_floor_press:floor_press:named', V112:'mod:db_bench:{"grip":"neutral"}', V113:'mod:weighted_pushup:{"rom":{"kind":"deficit"}}',
  V114:'=weighted_pushup', V115:'new:incline_pushup:weighted_pushup:named', V116:'new:knee_pushup:weighted_pushup:named',
  V117:'new:ring_pushup:weighted_pushup:named', V118:'=assisted_dip', V119:'new:bench_dip:dip:named', V120:'new:ring_dip:dip:named',
@@ -137,7 +138,7 @@ const D={
  V134:'=fly', V135:'new:incline_fly:fly:named', V136:'mod:pec_deck:{"rom":{"kind":"lengthened"}}', V137:'=cable_fly',
  V138:'=pullup', V139:'=chinup', V140:'mod:pullup:{"grip":"neutral"}', V141:'=band_pullup', V142:'=assisted_pullup',
  V143:'new:neg_pullup:pullup:named', V144:'=hang', V145:'mod:pulldown:{"grip":"wide"}', V146:'=neutral_pulldown', V147:'=sa_cable_pulldown',
- V148:'?:The app has two plate-loaded pulldowns (Underhand plate-loaded lat pulldown, Single-arm plate lat pulldown); an iso-lateral high row could be either, or neither.',
+ V148:'new:iso_high_row:pulldown:named',   // the maintainer: only a plate-loaded high row would match; the app has none
  V149:'=straight_arm_pd', V150:'new:db_pullover:pullover:named', V151:'new:machine_pullover:pullover:named', V152:'=pendlay_row',
  V153:'new:yates_row:bb_row:named', V154:'=seal_row', V155:'=cs_db_row', V156:'=tbar', V157:'new:kroc_row:db_row:named,unilateral',
  V158:'=sa_cable_row', V159:'=plate_row', V160:'=machine_row', V161:'=smith_row', V162:'mod:cable_row:{"grip":"wide"}',
@@ -146,7 +147,7 @@ const D={
  V169:'=machine_raise', V170:'=cable_raise', V171:'mod:cable_raise:{"rom":{"kind":"lengthened"}}', V172:'=lat_raise',
  V173:'mod:lat_raise:{"rom":{"kind":"partial"}}', V174:'mod:cable_upright:{"grip":"wide"}', V175:'=rear_fly', V176:'=cable_rd_fly',
  V177:'new:cs_rd_row:rear_fly:named', V178:'=band_pullapart', V179:'new:ez_front_raise:db_front_raise:named', V180:'=cable_front_raise',
- V181:'?:Prone Y-raise could be the app\'s Low trap raise (below 90°) or a new exercise: a prone Y goes overhead, the app\'s low trap raise stays under 90°.',
+ V181:'new:prone_y_raise:m_rd_fly:named',   // the maintainer: a new training exercise, the same movement as R04 (SAME_MOVE)
  V182:'=ez_curl', V183:'=db_curl', V184:'=cable_curl', V185:'=spider', V186:'=pin_preacher', V187:'mod:preacher:{"rom":{"kind":"lengthened"}}',
  V188:'new:drag_curl:bb_curl:named', V189:'=conc_curl', V190:'=rev_curl', V191:'new:cross_hammer:hammer:named', V192:'=cable_hammer',
  V193:'new:machine_curl:curl:named', V194:'new:zottman:hammer:named', V195:'=db_oh_ext', V196:'new:ez_oh_ext:oh_ext:named',
@@ -163,7 +164,7 @@ const D={
  V238:'mod:rdl:{"grip":"wide"}', V239:'=bulgarian', V240:'mod:deadlift:{"rom":{"kind":"pin"},"pause":{"seconds":2,"at":"above_knee"}}',
  V241:'new:band_hip_thrust:hip_thrust:named', V242:'new:btb_y_raise:cable_y_raise:named', V243:'new:smith_larsen:larsen:named',
  R01:'=iso_er', R02:'=er_sidelying', R03:'=er_side', R04:'=prone_t', R05:'=scaption',
- R06:'?:Serratus wall slide and push-up plus: the push-up plus is close to the app\'s Scapular push-up and Serratus punch, the wall slide is neither. One row, three candidates.',
+ R06:'split:serratus_wall_slide,pushup_plus',   // the maintainer: two new rehab rows
  R07:'new:er_90:er_side:rehab', R08:'=band_pullapart', R09:'=landmine',
  R10:'protocol:A return-to-bench ladder (floor press, then board or high pin, then paused full range), kept as ladder data for the rehab engine.',
  R11:'=wrist_ext_iso', R12:'new:tyler_twist:ecc_wrist_ext:rehab', R13:'=ecc_wrist_ext', R14:'new:rev_tyler_twist:ecc_wrist_flex:rehab',
@@ -180,6 +181,18 @@ const D={
  R43:'=pogo_hop', R44:'new:iso_calf:calf:rehab,timed', R45:'protocol:Heavy slow seated and standing calf raises; logged on Seated and Standing calf raise with a tempo.',
  R46:'new:rathleff_raise:calf:rehab', R47:'new:balance_sl:-:rehab,timed', R48:'new:band_eversion:-:rehab', R49:'protocol:A return-to-running plan, not a lift.'
 };
+// a row the maintainer split in two (Nov 24): each part's own name, implement and setup; the rest of the row is shared
+const SPLIT={serratus_wall_slide:{name:'Serratus wall slide', implement:'BAND', setup:['Forearms on wall with a band'], harder:'Push-up plus'},
+  pushup_plus:{name:'Push-up plus', implement:'BW', setup:['Push-up position: wall, then incline, then floor'], easier:'Serratus wall slide'}};
+/* A training exercise and a rehab row that are the same movement (the maintainer, Nov 24): How to do it says so on
+   both. Their histories stay apart (a rehab set is never a training set). */
+const SAME_MOVE={prone_y_raise:'prone_t'};
+/* Research flags adopted on exercises the app already had (the maintainer, Nov 24): added to their own tags at load.
+   The other "would add a tag" rows stay listed under Conflicts. Face pull (C039) and the incline machine press (V107)
+   were picked too, but wait for the maintainer (D95): the shoulder protocol lists face pulls and fixed-path machine
+   pressing as safe for anterior instability (§56, §47), and the incline press's tag would put an old AC-joint
+   separation over the 10% red limit. */
+const ADOPT_TAGS={arnold:'V127'};
 // a few exercises the research names inside a bundle row; added so the bundle can point at them
 const EXTRA_NEW={mcgill_curlup:{name:'McGill curl-up',parent:'-',implement:'bodyweight',from:'R24',opts:['rehab']}};
 // own fields for new entries with no app parent ('-')
@@ -188,6 +201,7 @@ const ORPHAN={
   chin_nod:{pattern:'rehab_neck',vol:{}}, neck_iso:{pattern:'rehab_neck',vol:{}}, prone_pressup:{pattern:'prehab_lowback',vol:{}},
   askling_extender:{pattern:'rehab_hamstring',vol:{}}, askling_diver:{pattern:'rehab_hamstring',vol:{}}, askling_glider:{pattern:'rehab_hamstring',vol:{}},
   decline_squat:{pattern:'prehab_knee',vol:{}}, balance_sl:{pattern:'rehab_ankle',vol:{}}, band_eversion:{pattern:'rehab_ankle',vol:{}},
+  serratus_wall_slide:{pattern:'rehab_shoulder',vol:{}}, pushup_plus:{pattern:'rehab_shoulder',vol:{}},
   mcgill_curlup:{pattern:'prehab_lowback',vol:{}}
 };
 /* Names with a person or a brand in them, and "why" lines that carry a name or a study number, are rewritten
@@ -220,7 +234,8 @@ const NAME={cable_y_raise:'Cable Y-raise', zercher:'Zercher squat', larsen:'Lars
   plate_pinch:'Plate pinch hold', fat_grip_hold:'Fat-grip hold', kelso_shrug:'Chest-supported shrug', neck_harness:'Neck harness extension', neck_machine:'Four-way neck machine',
   plank:'Front plank', hang_knee_raise:'Hanging knee raise', bb_rollout:'Barbell rollout', landmine_rotation:'Landmine rotation', dragon_flag:'Dragon flag', l_sit:'L-sit',
   sled_push:'Sled push', band_hip_thrust:'Band hip thrust', askling_extender:'Hamstring extender (lying)', askling_diver:'Hamstring diver', askling_glider:'Hamstring glider',
-  mcgill_curlup:'Curl-up'};
+  mcgill_curlup:'Curl-up', iso_chest_press_1arm:'One-arm iso-lateral chest press', iso_high_row:'Iso-lateral high row', prone_y_raise:'Prone Y-raise',
+  serratus_wall_slide:'Serratus wall slide', pushup_plus:'Push-up plus'};
 const PEOPLE=/Nippard|Israetel|Menno|Henselmans|Mentzer|Meadows|Kroczaleski|Simmons|Hatfield|Bell\b|Anderson|Arnold|Westside|Contreras|Calgary|Juggernaut|EliteFTS|Barbell Medicine|Stronger By Science|\bSBS\b|\bRP\b|Kneesovertoes|Mountain Dog|Paul Carter|Teo|Blakley|McGill|Maeo|Pedrosa|Kassiano|Wolf|Stasinaki|Harøy|van Dyk|Askling|Kongsgaard|Silbernagel|Rathleff|Tyler|Littlewood|Hölmich|Swinton|Kikuchi|Calatayud|PeerJ|JOSPT|Cochrane|Hayden|Prehab Guys|r\/bodyweightfitness|T-Nation|Spoto|Larsen et al/;
 const NUMBERS=/\d+(\.\d+)?\s*%|\b(19|20)\d{2}\b|\d\s*×|\+\d/;
 const WHY_GENERIC={ // rewritten "why people like it" lines (no names, no study numbers)
@@ -264,9 +279,12 @@ const GRADE_OVERRIDE={V082:'C'};
 const EXTRA_TAGS={er_90:['shoulder_abd_er_loaded'], wrist_wb:['wrist_ext_loaded'], prone_pressup:['spine_ext_endrange_loaded'],
   decline_squat:['knee_flex_deep_loaded','ankle_df_deep_loaded'], rathleff_raise:['calf_endrange_loaded'], askling_extender:['hamstring_lengthened_loaded'],
   askling_diver:['hamstring_lengthened_loaded'], askling_glider:['hamstring_lengthened_loaded'], tyler_twist:['wrist_direct_loaded'],
-  rev_tyler_twist:['wrist_direct_loaded'], pro_sup:['wrist_direct_loaded'], neck_iso:['neck_loaded'], iso_calf:['calf_endrange_loaded']};
+  rev_tyler_twist:['wrist_direct_loaded'], pro_sup:['wrist_direct_loaded'], neck_iso:['neck_loaded'], iso_calf:['calf_endrange_loaded'],
+  // push-up position: the hands take weight with the wrist bent back, as on the wrist weight-bearing row
+  pushup_plus:['wrist_ext_loaded']};
 /* Tags a new entry inherits that its own position doesn't have (removed, each with its reason). */
-const TAG_REMOVE={heel_goblet:{remove:['ankle_df_deep_loaded'],why:'heels raised: the board takes the deep ankle bend out'},cyclist_squat:{remove:['ankle_df_deep_loaded'],why:'heels raised: the board takes the deep ankle bend out'},
+const TAG_REMOVE={diamond_pushup:{remove:['shoulder_horiz_abd_endrange'],why:'hands together: the elbows stay tucked, as on the close-grip bench (which carries no horizontal-abduction tag); the research flags only the wrists and elbows (V204)'},
+  heel_goblet:{remove:['ankle_df_deep_loaded'],why:'heels raised: the board takes the deep ankle bend out'},cyclist_squat:{remove:['ankle_df_deep_loaded'],why:'heels raised: the board takes the deep ankle bend out'},
   spanish_squat:{remove:['ankle_df_deep_loaded'],why:'the strap keeps the shins vertical'},wall_sit:{remove:['ankle_df_deep_loaded'],why:'shins vertical against the wall'},
   box_squat:{remove:['ankle_df_deep_loaded'],why:'sitting back to a box keeps the shins near vertical'},db_rev_lunge:{remove:['ankle_df_deep_loaded'],why:'stepping back keeps the front shin upright'},
   heels_elevated_bw_squat:{remove:['ankle_df_deep_loaded'],why:'heels raised: the board takes the deep ankle bend out'},heels_elevated_split_squat:{remove:['ankle_df_deep_loaded'],why:'heels raised: the board takes the deep ankle bend out'},
@@ -318,7 +336,8 @@ const isOriginal=id=>!!byId[id]&&!addedIds.has(id);     // in the app before thi
 /* ── 6. build ── */
 const out={about:'Built by tools/import-library.js from docs/research/exercise-library.md (batch L). The app embeds this file byte-for-byte. Edit the decisions in the tool, not this file.',
   newTags:NEW_TAGS, exercises:{}, added:[], modifiers:{}, rehab:{}, protocols:{}, uncertain:{}, skipped:{}};
-const conflicts=[], report={match:[],mod:[],add:[],uncertain:[],protocol:[]};
+const conflicts=[], report={match:[],mod:[],add:[],uncertain:[],protocol:[],split:[]};
+out.splits={};
 const parentOf={};     // research code → the app id it ended up as (for new rows' parents and home-training rows)
 const fieldsOf=r=>{ const c=coreOf(r.id)||r, own=!!r.setup;
   return {setup:list(own?r.setup:''), cues:list(own?r.cues:''), mistakes:list(own?r.mistakes:''), easier:own?r.easier:'', harder:own?r.harder:'',
@@ -331,6 +350,11 @@ for(const r of [...CORE,...VAR,...REHAB]){
   if(kind==='?'){ out.uncertain[r.id]={name:r.name, why:rest.join(':')}; report.uncertain.push([r.id,r.name,rest.join(':')]); continue; }
   if(kind==='protocol'){ out.protocols[r.id]={name:r.name, why:rest.join(':'), row:r}; report.protocol.push([r.id,r.name,rest.join(':')]); continue; }
   if(kind==='skip'){ out.skipped[r.id]={name:r.name, why:rest.join(':')}; continue; }
+  if(kind==='split'){ const ids=rest.join(':').split(',');
+    ids.forEach(id=>{ const S=SPLIT[id]; if(!S) throw new Error(r.id+': no SPLIT entry for '+id); if(byId[id]&&!addedIds.has(id)) throw new Error(r.id+': id clash with the app: '+id);
+      const e=newEntry(id,{...r,name:S.name,implement:S.implement},'-',['rehab'],{...F,setup:S.setup,easier:S.easier||'',harder:S.harder||''},true); e.splitOf=r.id; out.added.push(e);
+      if(r.stage) out.rehab[id]=rehabOf(r); });
+    out.splits[r.id]={name:r.name, into:ids, why:'one research row, two exercises (the maintainer, Nov 24)'}; report.split.push([r.id,r.name,ids.join(' and ')]); continue; }
   if(kind==='mod'){ const ex=rest[0], m=JSON.parse(rest.slice(1).join(':'));
     if(!appEx(ex)&&!D_NEW_IDS().has(ex)) throw new Error(r.id+': modifier on unknown '+ex);
     out.modifiers[r.id]={ex, modifiers:m, name:r.name, why:cleanWhy(r.id,F.why), grade:F.grade, flag:F.flag, reps:F.reps};
@@ -355,7 +379,7 @@ for(const r of [...CORE,...VAR,...REHAB]){
   throw new Error(r.id+': bad decision '+dec);
 }
 for(const [id,x] of Object.entries(EXTRA_NEW)){ const r=ROW[x.from]; out.added.push(newEntry(id,{...r,id:x.from,name:x.name,implement:'BW',joint_flags:'-',flag:''},x.parent,x.opts,{...fieldsOf(r),setup:[],cues:[],mistakes:[],easier:'',harder:'',why:''},true)); report.add.push([x.from,x.name,id+' (from the bundle)']); }
-function D_NEW_IDS(){ return new Set(Object.values(D).filter(d=>d.startsWith('new:')).map(d=>d.split(':')[1]).concat(Object.keys(EXTRA_NEW))); }
+function D_NEW_IDS(){ return new Set(Object.values(D).filter(d=>d.startsWith('new:')).map(d=>d.split(':')[1]).concat(Object.keys(EXTRA_NEW),Object.keys(SPLIT))); }
 function newEntry(id,r,parent,o,F,extra){
   const impl=IMPL[r.implement]||'bodyweight';
   const p=parent==='-'?null:(byId[parent]||null);
@@ -374,6 +398,7 @@ function newEntry(id,r,parent,o,F,extra){
   if(TAG_OVERRIDE[id]){ e.tagsOverride=TAG_OVERRIDE[id].tags; e.tagsWhy=TAG_OVERRIDE[id].why; }
   if(TAG_REMOVE[id]){ e.tagsRemove=TAG_REMOVE[id].remove; e.tagsWhy=TAG_REMOVE[id].why; }
   if(CAUTION[id]) e.caution=CAUTION[id];
+  if(SAME_MOVE[id]){ if(!byId[SAME_MOVE[id]]) throw new Error(id+': same movement as an unknown exercise'); e.sameMove=SAME_MOVE[id]; }
   if(r.region){ const j=REGION_JOINT_R[r.region]; if(j) e.rehabJoint=j; }
   return e;
 }
@@ -388,6 +413,12 @@ function rehabOf(r){
 const chainPattern=e=>{ if(e.pattern) return e.pattern; let p=e.parent; for(let i=0;i<5&&p;i++){ const a=byId[p]; if(a&&!addedIds.has(p)) return a.pattern; const n=out.added.find(x=>x.id===p); if(!n) break; if(n.pattern) return n.pattern; p=n.parent; } return null; };
 out.added.forEach(e=>{ const pat=chainPattern(e); e.researchTags=[...new Set((e.jflags||[]).map(f=>tagFor(f,pat,e.id)).filter(Boolean).concat(e.extraTags||[]))]; delete e.extraTags; });
 Object.entries(out.exercises).forEach(([id,e])=>{ const pat=(byId[id]||{}).pattern||chainPattern(out.added.find(x=>x.id===id)||{}); e.researchTags=[...new Set((e.jflags||[]).map(f=>tagFor(f,pat,id)).filter(Boolean))]; });
+// the adopted flags: the tags the research adds over the app's own, applied at load (applyLibData)
+const adopted=[];
+Object.entries(ADOPT_TAGS).forEach(([id,code])=>{ const e=out.exercises[id]; if(!e||!e.codes.includes(code)) throw new Error('ADOPT_TAGS: '+id+' does not carry '+code);
+  let have=[]; try{ have=[...APP.exTags(id)]; }catch(err){}
+  const add=(e.researchTags||[]).filter(t=>!have.includes(t)); if(!add.length) throw new Error('ADOPT_TAGS: nothing to add on '+id);
+  e.addTags=add; e.addWhy='research joint flags ('+code+') add '+add.join(', ')+' (adopted by the maintainer, Nov 24)'; adopted.push([id,code,add.join(', ')]); });
 
 /* easier / harder: the research names them in words; resolved to an app exercise (and modifier) where the words
    name a row or an app exercise, else kept as words */
@@ -411,8 +442,11 @@ const REF_TEXT={'band pulldown':'band_pulldown','single arm pulldown':'sa_cable_
   'r12':'tyler_twist','r13 heavier':'ecc_wrist_ext','r31':'copenhagen','band side steps step ups':'band_walk','knee support':'copenhagen_short','short lever':'copenhagen_short',
   'behind back cuff raise':'btb_y_raise','harness machine':'neck_harness','external rotation at side':'er_side','plate pinch':'plate_pinch','floor push up':'weighted_pushup',
   'machine abduction':'seated_abd','wrist curl hsr':'wrist_curl'};
+// a phrase that names a different exercise on one row than everywhere else
+const REF_FOR={machine_press:{'single arm':'iso_chest_press_1arm'}};
 function refOf(txt,selfId){
   const k=normN(txt); if(!k||k==='-') return null;
+  if(REF_FOR[selfId]&&REF_FOR[selfId][k]) return {text:txt, ex:REF_FOR[selfId][k]};
   if(REF_TEXT[k]&&REF_TEXT[k]!==selfId) return {text:txt, ex:REF_TEXT[k]};
   const code=RN.get(k);
   if(!code&&selfId){ const sm=SELF_MOD.find(([re])=>re.test(k)); if(sm) return {text:txt, ex:selfId, modifiers:sm[1]}; }
@@ -428,7 +462,7 @@ Object.values(out.rehab).forEach(r=>{ ['easier','harder'].forEach(k=>{ if(r[k]&&
 /* ── 7. write ── */
 const json=()=>JSON.stringify(out,null,1)+'\n';
 const counts={core:CORE.length, variants:VAR.length, rehab:REHAB.length, matched:report.match.length, modifiers:report.mod.length, added:out.added.length,
-  uncertain:report.uncertain.length, protocols:report.protocol.length, conflicts:conflicts.length};
+  uncertain:report.uncertain.length, protocols:report.protocol.length, split:report.split.length};
 /* ── 8. the home-training library (batch N Part 3, docs/research/home-training.md) ──
    Imported with the same rules (docs/library-rules.md): rows attach to their parent through the research codes stored
    above, existing exercises are updated, never re-created, and a name or alias that's already in the library is
@@ -563,8 +597,8 @@ Built by \`node tools/import-library.js\` from \`docs/research/exercise-library.
 
 ## Counts
 
-${tbl(['Rows','Matched to an app exercise','Modifiers on an app exercise','New exercises','Uncertain (left out)','Protocols (kept as data)','Conflicts (not changed)'],
- [[`${CORE.length} core, ${VAR.length} variants, ${REHAB.length} rehab`,counts.matched,counts.modifiers,counts.added,counts.uncertain,counts.protocols,counts.conflicts]])}
+${tbl(['Rows','Matched to an app exercise','Modifiers on an app exercise','New exercises','Split (one row, two exercises)','Uncertain (left out)','Protocols (kept as data)','Conflicts (not changed)','Research flags adopted'],
+ [[`${CORE.length} core, ${VAR.length} variants, ${REHAB.length} rehab`,counts.matched,counts.modifiers,counts.added,counts.split,counts.uncertain,counts.protocols,conflicts.length+tagConflicts().length,adopted.length]])}
 ## Joint flags → movement tags
 
 New tags (one line each, in \`docs/movement_tags.json\`): ${Object.entries(NEW_TAGS).map(([k,v])=>'`'+k+'` ('+v+')').join('; ')}.
@@ -575,6 +609,12 @@ New exercises carry the research's flags mapped this way **plus** their parent's
 ## Uncertain: left out for the maintainer to check
 
 ${tbl(['Code','Research name','Why'],report.uncertain)}
+## Split: one row, two exercises
+
+${tbl(['Code','Research name','Exercises'],report.split)}
+## Research flags adopted on exercises the app had
+
+${tbl(['App exercise','Code','Tags added'],adopted)}
 ## Protocols: not one exercise
 
 ${tbl(['Code','Research name','What happens to it'],report.protocol)}
@@ -599,7 +639,7 @@ ${tbl(['Code','Research name','Exercise and modifier'],report.mod)}
 ## New exercises
 
 ${tbl(['Code','Research name','App id and parent'],report.add)}`;
-function tagConflicts(){ const rows=[]; Object.entries(out.exercises).forEach(([id,e])=>{ if(!isOriginal(id)||!APP.exTags) return; let have=[]; try{ have=[...APP.exTags(id)]; }catch(err){ return; }
+function tagConflicts(){ const rows=[]; Object.entries(out.exercises).forEach(([id,e])=>{ if(!isOriginal(id)||!APP.exTags||ADOPT_TAGS[id]) return; let have=[]; try{ have=[...APP.exTags(id)]; }catch(err){ return; }
   const extra=(e.researchTags||[]).filter(t=>!have.includes(t)); if(extra.length) rows.push([id,e.codes.join(', '),'tags','the research flags would add '+extra.join(', ')+'; the app\'s tags are kept']); }); return rows; }
 fs.writeFileSync(path.join(ROOT,'docs/library-import.md'),mdOut);
 // embed byte-for-byte

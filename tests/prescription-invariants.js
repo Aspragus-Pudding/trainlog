@@ -4300,8 +4300,8 @@ section('105. batch L: the researched exercise library');
   const md=fs.readFileSync(path.join(__dirname,'..','docs','research','exercise-library.md'),'utf8');
   const codes=[...md.matchAll(/^([CVR]\d{2,3})\|/gm)].map(m=>m[1]), seen={}, put=(c,w)=>(seen[c]=seen[c]||[]).push(w);
   Object.entries(L.exercises).forEach(([id,e])=>e.codes.forEach(c=>put(c,id))); L.added.forEach(a=>(a.codes||[]).forEach(c=>put(c,a.id)));
-  ['modifiers','uncertain','protocols'].forEach(k=>Object.keys(L[k]||{}).forEach(c=>put(c,k)));
-  ok(codes.length===370&&codes.every(c=>seen[c]&&seen[c].length===1),'all 370 research rows are accounted for, each once: an exercise, a modifier, uncertain or a protocol',JSON.stringify(codes.filter(c=>!seen[c]||seen[c].length!==1).slice(0,6)));
+  ['modifiers','uncertain','protocols','splits'].forEach(k=>Object.keys(L[k]||{}).forEach(c=>put(c,k)));
+  ok(codes.length===370&&codes.every(c=>seen[c]&&seen[c].length===1),'all 370 research rows are accounted for, each once: an exercise, a modifier, a split, uncertain or a protocol',JSON.stringify(codes.filter(c=>!seen[c]||seen[c].length!==1).slice(0,6)));
   const A=load([],true), C=A.getCFG();
   ok(new Set(A.EX.map(e=>e.id)).size===A.EX.length,'every id is unique','');
   ok(L.added.every(a=>A.exById[a.id]&&A.exById[a.id].lib&&(!a.parent||A.exById[a.parent])),'every new entry is in the library, and every parent exists',JSON.stringify(L.added.filter(a=>!A.exById[a.id]||(a.parent&&!A.exById[a.parent])).map(a=>a.id)));
@@ -4594,6 +4594,27 @@ section('115. short sessions follow rule 6, and no day is ever empty (v1.119)');
           if(b.slots.length+b.leftOut.length!==p.slots.length) bad.push(day.name+' at '+m+': an exercise went missing'); }); }); }); }); });
   ok(days>100&&!bad.length,'generated weeks ('+days+' days, 5 weeks × 3 goal sets × 2 block types): never empty, the heaviest lift always kept, nothing goes missing',bad.slice(0,5).join(' | '));
   console.log('  3 rounds at 20 and 30 · the heavy lift at most 5 at 45 · the heaviest lift never left out · '+days+' generated days at three lengths');
+}
+
+section('116. the maintainer\'s library decisions (Nov 24): the five uncertain rows, the Arnold press flag');
+{
+  const L=JSON.parse(fs.readFileSync(path.join(__dirname,'..','docs','library.json'),'utf8')), A=load([],true), C=A.getCFG(), X=A.exById;
+  ok(!Object.keys(L.uncertain).length,'no research row is left uncertain',Object.keys(L.uncertain).join(' '));
+  ok((X.machine_press.codes||[]).includes('C030')&&A.LIB_CODES.C030.ex==='machine_press','C030 is the flat machine press (its code on Converging chest press)','');
+  const o=X.iso_chest_press_1arm, hr=X.iso_high_row, y=X.prone_y_raise, ws=X.serratus_wall_slide, pp=X.pushup_plus;
+  ok(o&&o.parent==='machine_press'&&o.implement==='plate'&&o.unilateral&&o.named&&(o.codes||[]).includes('V110'),'V110: new, the one-arm version of C030, plate-loaded','');
+  ok(hr&&hr.parent==='pulldown'&&hr.implement==='plate'&&hr.named&&(hr.codes||[]).includes('V148'),'V148: new (the app has no plate-loaded high row), under the pulldown','');
+  ok(y&&!y.rehab&&y.parent==='m_rd_fly'&&y.named&&y.libInfo.sameMove==='prone_t'&&X.prone_t.libInfo.sameMove==='prone_y_raise','V181: a new training exercise, the same movement as R04 both ways','');
+  ok(/The same movement/.test(A.libHtml(y,null,null))&&/rehab exercise/.test(A.libHtml(y,null,null))&&/Trained with load as Prone Y-raise/.test(A.libHtml(X.prone_t,null,null)),'How to do it says so on both','');
+  ok(A.exTags('prone_y_raise').includes('shoulder_overhead_loaded'),'the prone Y-raise carries the research\'s overhead flag (SH-OH)',A.exTags('prone_y_raise').join(' '));
+  ok(ws&&pp&&ws.rehab&&pp.rehab&&ws.rehabLib&&pp.rehabLib&&ws.rehabLib.code==='R06'&&pp.rehabLib.code==='R06'&&JSON.stringify(L.splits.R06.into)==='["serratus_wall_slide","pushup_plus"]','R06: split into two new rehab rows, each with the row\'s dose and pain rule','');
+  ok(A.exTags('pushup_plus').includes('wrist_ext_loaded')&&ws.libInfo.harder&&ws.libInfo.harder.ex==='pushup_plus'&&pp.libInfo.easier&&pp.libInfo.easier.ex==='serratus_wall_slide','the push-up plus carries the push-up position\'s wrist tag; each points at the other','');
+  ok(A.exTags('arnold').includes('shoulder_abd_er_loaded'),'the Arnold press carries the adopted flag','');
+  ok(!A.exTags('face_pull').includes('shoulder_abd_er_loaded')&&!A.exTags('incline_machine').includes('shoulder_horiz_abd_endrange'),'face pull and the incline machine press wait for the maintainer (the shoulder protocol lists both as safe; §47, §56)','');
+  ok(!A.exTags('diamond_pushup').includes('shoulder_horiz_abd_endrange')&&A.exTags('weighted_pushup').includes('shoulder_horiz_abd_endrange'),'the diamond push-up drops the inherited deep-stretch tag (hands together, elbows tucked), the push-up keeps it','');
+  { C.conditions=['shoulder_instability']; ok(A.rehabUnsafe('prone_t'),'the prone T raise is still never offered as rehab for an unstable shoulder',''); C.conditions=[]; }
+  ok(A.LIB.exercises.machine_press.harder&&A.LIB.exercises.machine_press.harder.ex==='iso_chest_press_1arm','the machine press\'s harder version is its one-arm press (V110), not the cable fly','');
+  console.log('  C030 on the flat machine press · V110, V148 new · V181 linked to R04 · R06 split · the Arnold press tagged · face pull and the incline machine press wait · the diamond push-up narrowed');
 }
 
 Promise.all(PENDING_ASYNC).then(()=>{

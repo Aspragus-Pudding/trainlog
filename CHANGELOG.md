@@ -6,6 +6,12 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.120.0 — 2026-11-24
+- Five new exercises from the research library: a one-arm iso-lateral chest press, an iso-lateral high row and a prone Y-raise, plus two shoulder rehab exercises, the serratus wall slide and the push-up plus.
+- How to do it on the prone Y-raise and the prone T raise says they're the same movement, one trained with load and one as rehab.
+- The converging chest press shows the research's setup, cues and why people like it.
+- The Arnold press carries the research's shoulder flag. The diamond push-up no longer carries the push-up's deep-chest-stretch flag: hands together keep the elbows tucked.
+
 ## 1.119.0 — 2026-11-24
 - How long do you have? now follows the research's rule for short sessions: at 20 and 30 minutes every exercise is paired, 3 rounds each.
 - At 45 minutes your heaviest lift goes first, at most 5 sets, and the rest are paired.

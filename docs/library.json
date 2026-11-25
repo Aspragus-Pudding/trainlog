@@ -1102,6 +1102,50 @@
     "shoulder_horiz_abd_endrange"
    ]
   },
+  "machine_press": {
+   "codes": [
+    "C030"
+   ],
+   "setup": [
+    "Seat so handles line up with mid-chest",
+    "blades back",
+    "feet planted"
+   ],
+   "cues": [
+    "Keep shoulder blades back",
+    "press without locking out hard",
+    "lower slowly into the stretch"
+   ],
+   "mistakes": [
+    "seat too high",
+    "shoulders rolling forward"
+   ],
+   "easier": {
+    "text": "push-up",
+    "ex": "weighted_pushup"
+   },
+   "harder": {
+    "text": "single-arm",
+    "ex": "iso_chest_press_1arm"
+   },
+   "why": "Train close to failure safely with no spotter",
+   "grade": "D",
+   "home": false,
+   "reps": [
+    8,
+    12
+   ],
+   "rir": [
+    0,
+    1
+   ],
+   "jflags": [
+    "SH-HABD"
+   ],
+   "researchTags": [
+    "shoulder_horiz_abd_endrange"
+   ]
+  },
   "dip": {
    "codes": [
     "C031"
@@ -3403,7 +3447,11 @@
    "researchTags": [
     "shoulder_overhead_loaded",
     "shoulder_abd_er_loaded"
-   ]
+   ],
+   "addTags": [
+    "shoulder_abd_er_loaded"
+   ],
+   "addWhy": "research joint flags (V127) add shoulder_abd_er_loaded (adopted by the maintainer, Nov 24)"
   },
   "bn_press": {
    "codes": [
@@ -5873,6 +5921,30 @@
    "researchTags": []
   },
   {
+   "id": "iso_chest_press_1arm",
+   "name": "One-arm iso-lateral chest press",
+   "parent": "machine_press",
+   "implement": "plate",
+   "codes": [
+    "V110"
+   ],
+   "named": true,
+   "unilateral": true,
+   "grade": "D",
+   "home": false,
+   "reps": [
+    8,
+    12
+   ],
+   "jflags": [
+    "SH-HABD"
+   ],
+   "emphasis": "unilateral",
+   "researchTags": [
+    "shoulder_horiz_abd_endrange"
+   ]
+  },
+  {
    "id": "db_floor_press",
    "name": "Dumbbell floor press",
    "parent": "floor_press",
@@ -6195,6 +6267,29 @@
    ]
   },
   {
+   "id": "iso_high_row",
+   "name": "Iso-lateral high row",
+   "parent": "pulldown",
+   "implement": "plate",
+   "codes": [
+    "V148"
+   ],
+   "named": true,
+   "grade": "D",
+   "home": false,
+   "reps": [
+    8,
+    12
+   ],
+   "jflags": [
+    "SH-OH"
+   ],
+   "emphasis": "lats",
+   "researchTags": [
+    "shoulder_hang_traction"
+   ]
+  },
+  {
    "id": "db_pullover",
    "name": "Dumbbell pullover",
    "parent": "pullover",
@@ -6455,6 +6550,30 @@
    ]
   },
   {
+   "id": "prone_y_raise",
+   "name": "Prone Y-raise",
+   "parent": "m_rd_fly",
+   "implement": "dumbbell",
+   "codes": [
+    "V181"
+   ],
+   "named": true,
+   "grade": "C",
+   "home": true,
+   "reps": [
+    10,
+    15
+   ],
+   "jflags": [
+    "SH-OH"
+   ],
+   "emphasis": "lower traps",
+   "sameMove": "prone_t",
+   "researchTags": [
+    "shoulder_overhead_loaded"
+   ]
+  },
+  {
    "id": "drag_curl",
    "name": "Drag curl",
    "parent": "bb_curl",
@@ -6679,6 +6798,10 @@
     "EL-STRESS"
    ],
    "emphasis": "triceps at home",
+   "tagsRemove": [
+    "shoulder_horiz_abd_endrange"
+   ],
+   "tagsWhy": "hands together: the elbows stay tucked, as on the close-grip bench (which carries no horizontal-abduction tag); the research flags only the wrists and elbows (V204)",
    "researchTags": [
     "wrist_ext_loaded",
     "elbow_ext_endrange_loaded"
@@ -7087,6 +7210,68 @@
    "emphasis": "chest, no leg drive",
    "researchTags": [
     "shoulder_horiz_abd_endrange"
+   ]
+  },
+  {
+   "id": "serratus_wall_slide",
+   "name": "Serratus wall slide",
+   "parent": null,
+   "implement": "band",
+   "codes": [],
+   "pattern": "rehab_shoulder",
+   "vol": {},
+   "rehab": true,
+   "setup": [
+    "Forearms on wall with a band"
+   ],
+   "cues": [
+    "Reach long like pushing the wall away",
+    "let blades wrap around your ribs",
+    "slow"
+   ],
+   "mistakes": [
+    "arching low back",
+    "shrugging"
+   ],
+   "harder": {
+    "text": "Push-up plus",
+    "ex": "pushup_plus"
+   },
+   "grade": "C",
+   "rehabJoint": "shoulder",
+   "splitOf": "R06",
+   "researchTags": []
+  },
+  {
+   "id": "pushup_plus",
+   "name": "Push-up plus",
+   "parent": null,
+   "implement": "bodyweight",
+   "codes": [],
+   "pattern": "rehab_shoulder",
+   "vol": {},
+   "rehab": true,
+   "setup": [
+    "Push-up position: wall, then incline, then floor"
+   ],
+   "cues": [
+    "Reach long like pushing the wall away",
+    "let blades wrap around your ribs",
+    "slow"
+   ],
+   "mistakes": [
+    "arching low back",
+    "shrugging"
+   ],
+   "easier": {
+    "text": "Serratus wall slide",
+    "ex": "serratus_wall_slide"
+   },
+   "grade": "C",
+   "rehabJoint": "shoulder",
+   "splitOf": "R06",
+   "researchTags": [
+    "wrist_ext_loaded"
    ]
   },
   {
@@ -12537,6 +12722,52 @@
     "text": "full overhead"
    }
   },
+  "serratus_wall_slide": {
+   "code": "R06",
+   "links": [],
+   "warmup": false,
+   "weeks": 12,
+   "region": "Shoulder",
+   "condition": "scapular upward rotation",
+   "stage": "EI",
+   "startDose": "3×10-12, 3×/wk",
+   "progression": "Wall → incline → floor push-up plus",
+   "painRule": "PR-G",
+   "painNote": "PR-G",
+   "advanceWhen": "15 floor push-up plus pain-free",
+   "prehabDose": "2×12, 1-2×/wk",
+   "grade": "C",
+   "equipment": "wall;band",
+   "easier": {
+    "text": "wall"
+   },
+   "harder": {
+    "text": "floor push-up plus"
+   }
+  },
+  "pushup_plus": {
+   "code": "R06",
+   "links": [],
+   "warmup": false,
+   "weeks": 12,
+   "region": "Shoulder",
+   "condition": "scapular upward rotation",
+   "stage": "EI",
+   "startDose": "3×10-12, 3×/wk",
+   "progression": "Wall → incline → floor push-up plus",
+   "painRule": "PR-G",
+   "painNote": "PR-G",
+   "advanceWhen": "15 floor push-up plus pain-free",
+   "prehabDose": "2×12, 1-2×/wk",
+   "grade": "C",
+   "equipment": "wall;band",
+   "easier": {
+    "text": "wall"
+   },
+   "harder": {
+    "text": "floor push-up plus"
+   }
+  },
   "er_90": {
    "code": "R07",
    "links": [
@@ -13616,29 +13847,18 @@
    }
   }
  },
- "uncertain": {
-  "C030": {
-   "name": "Machine chest press",
-   "why": "The app has three machine chest presses (Converging chest press, Pin-loaded machine chest press, Lying neutral-grip plate-loaded chest press) and none is a seated plate-loaded iso-lateral press. Converging chest press is the likeliest, but it is selectorised."
-  },
-  "V110": {
-   "name": "Iso-lateral chest press (one arm)",
-   "why": "Its parent (C030, machine chest press) has no certain match, so the one-arm version has no parent to sit under."
-  },
-  "V148": {
-   "name": "Iso-lateral high row / pulldown",
-   "why": "The app has two plate-loaded pulldowns (Underhand plate-loaded lat pulldown, Single-arm plate lat pulldown); an iso-lateral high row could be either, or neither."
-  },
-  "V181": {
-   "name": "Prone Y-raise",
-   "why": "Prone Y-raise could be the app's Low trap raise (below 90°) or a new exercise: a prone Y goes overhead, the app's low trap raise stays under 90°."
-  },
+ "uncertain": {},
+ "skipped": {},
+ "splits": {
   "R06": {
    "name": "Serratus wall slide / push-up plus",
-   "why": "Serratus wall slide and push-up plus: the push-up plus is close to the app's Scapular push-up and Serratus punch, the wall slide is neither. One row, three candidates."
+   "into": [
+    "serratus_wall_slide",
+    "pushup_plus"
+   ],
+   "why": "one research row, two exercises (the maintainer, Nov 24)"
   }
  },
- "skipped": {},
  "home": {
   "updates": {
    "db_front_raise": {

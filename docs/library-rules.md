@@ -22,7 +22,7 @@ From the research, where given: setup, cues, mistakes, easier and harder version
 
 ## Research codes
 
-A research row's code (C001, V045, R12, and later files' codes) is stored on the exercise it maps to (`ex.codes`), or with the modifier signature it became (`LIB_CODES`). A later research file refers to a parent by its code. A code never moves to another exercise once shipped.
+A research row's code (C001, V045, R12, and later files' codes) is stored on the exercise it maps to (`ex.codes`), or with the modifier signature it became (`LIB_CODES`). A later research file refers to a parent by its code. A code never moves to another exercise once shipped. A row that is two exercises is split (`'split:id,id'`, the `SPLIT` table): both are new entries, and the row is listed once under `splits`.
 
 ## Match first, never a second copy
 
@@ -39,6 +39,8 @@ New modifier kinds go at the end of `modSig()`, so no existing signature changes
 Map the research's joint flags through the table in `docs/library-import.md`. Use an existing tag wherever one fits; add a new one only when nothing does, with a one-line definition in `docs/movement_tags.json`, and only if some exercise carries it. A new exercise carries its parent's tags plus whatever the research flags add. It's never gentler than its parent. Never soften a `shoulder_instability` row. Where a row has no flags (the rehab table), add a tag only where the row's own setup puts a joint in a tagged position (`EXTRA_TAGS`), and say so.
 
 Over-flagging is a hard test: if `tests/injury-validate.js` fails, narrow the tags, don't loosen the limits.
+
+A research flag on an exercise the app already had is adopted only on the maintainer's say-so (`ADOPT_TAGS`, applied at load with its reason). Check it against the maintainer's own condition notes and §47/§56 first: where they disagree, ask. A training exercise and a rehab row that are the same movement say so on both (`SAME_MOVE`); their histories stay apart.
 
 ## Evidence wording
 

@@ -4,9 +4,9 @@ Built by `node tools/import-library.js` from `docs/research/exercise-library.md`
 
 ## Counts
 
-| Rows | Matched to an app exercise | Modifiers on an app exercise | New exercises | Uncertain (left out) | Protocols (kept as data) | Conflicts (not changed) |
-|---|---|---|---|---|---|---|
-| 78 core, 243 variants, 49 rehab | 182 | 51 | 124 | 5 | 9 | 25 |
+| Rows | Matched to an app exercise | Modifiers on an app exercise | New exercises | Split (one row, two exercises) | Uncertain (left out) | Protocols (kept as data) | Conflicts (not changed) | Research flags adopted |
+|---|---|---|---|---|---|---|---|---|
+| 78 core, 243 variants, 49 rehab | 183 | 51 | 129 | 1 | 0 | 9 | 68 | 1 |
 
 ## Joint flags → movement tags
 
@@ -45,11 +45,19 @@ New exercises carry the research's flags mapped this way **plus** their parent's
 
 | Code | Research name | Why |
 |---|---|---|
-| C030 | Machine chest press | The app has three machine chest presses (Converging chest press, Pin-loaded machine chest press, Lying neutral-grip plate-loaded chest press) and none is a seated plate-loaded iso-lateral press. Converging chest press is the likeliest, but it is selectorised. |
-| V110 | Iso-lateral chest press (one arm) | Its parent (C030, machine chest press) has no certain match, so the one-arm version has no parent to sit under. |
-| V148 | Iso-lateral high row / pulldown | The app has two plate-loaded pulldowns (Underhand plate-loaded lat pulldown, Single-arm plate lat pulldown); an iso-lateral high row could be either, or neither. |
-| V181 | Prone Y-raise | Prone Y-raise could be the app's Low trap raise (below 90°) or a new exercise: a prone Y goes overhead, the app's low trap raise stays under 90°. |
-| R06 | Serratus wall slide / push-up plus | Serratus wall slide and push-up plus: the push-up plus is close to the app's Scapular push-up and Serratus punch, the wall slide is neither. One row, three candidates. |
+
+
+## Split: one row, two exercises
+
+| Code | Research name | Exercises |
+|---|---|---|
+| R06 | Serratus wall slide / push-up plus | serratus_wall_slide and pushup_plus |
+
+## Research flags adopted on exercises the app had
+
+| App exercise | Code | Tags added |
+|---|---|---|
+| arnold | V127 | shoulder_abd_er_loaded |
 
 ## Protocols: not one exercise
 
@@ -106,6 +114,7 @@ New exercises carry the research's flags mapped this way **plus** their parent's
 | pendulum | C018 | tags | the research flags would add knee_forward_loaded; the app's tags are kept |
 | leg_curl | C021, V060 | tags | the research flags would add hamstring_lengthened_loaded; the app's tags are kept |
 | hip_thrust | C024 | tags | the research flags would add spine_ext_endrange_loaded; the app's tags are kept |
+| machine_press | C030 | tags | the research flags would add shoulder_horiz_abd_endrange; the app's tags are kept |
 | pec_deck | C034 | tags | the research flags would add shoulder_horiz_abd_endrange; the app's tags are kept |
 | face_pull | C039 | tags | the research flags would add shoulder_abd_er_loaded; the app's tags are kept |
 | bb_curl | C040 | tags | the research flags would add wrist_ext_loaded; the app's tags are kept |
@@ -125,7 +134,6 @@ New exercises carry the research's flags mapped this way **plus** their parent's
 | kb_swing | V049 | tags | the research flags would add hinge_heavy; the app's tags are kept |
 | cable_add | V090 | tags | the research flags would add adductor_lengthened_loaded; the app's tags are kept |
 | incline_machine | V107 | tags | the research flags would add shoulder_horiz_abd_endrange; the app's tags are kept |
-| arnold | V127 | tags | the research flags would add shoulder_abd_er_loaded; the app's tags are kept |
 | assisted_pullup | V142 | tags | the research flags would add shoulder_hang_traction; the app's tags are kept |
 | neutral_pulldown | V146 | tags | the research flags would add shoulder_hang_traction; the app's tags are kept |
 | sa_cable_pulldown | V147 | tags | the research flags would add shoulder_hang_traction; the app's tags are kept |
@@ -182,6 +190,7 @@ Collisions: H061 DB front raise = db_front_raise; H067 DB kickback = kickback.
 | C027 | Seated calf raise | seated_calf (Seated calf raise) |
 | C028 | Incline dumbbell press | incline_db (Incline DB press) |
 | C029 | Dumbbell bench press | db_bench (Flat DB press) |
+| C030 | Machine chest press | machine_press (Converging chest press) |
 | C031 | Weighted dip | dip (Dip) |
 | C032 | Push-up | weighted_pushup (Push-up) |
 | C033 | Cable fly | cable_fly (Cable fly) |
@@ -447,6 +456,7 @@ Collisions: H061 DB front raise = db_front_raise; H067 DB kickback = kickback.
 | V096 | Seated calf raise (DB on knees) | db_seated_calf under seated_calf |
 | V097 | Tib bar raise | tib_bar under tib_raise |
 | V101 | Slingshot bench | slingshot_bench under bench |
+| V110 | Iso-lateral chest press (one arm) | iso_chest_press_1arm under machine_press |
 | V111 | Dumbbell floor press | db_floor_press under floor_press |
 | V115 | Incline push-up | incline_pushup under weighted_pushup |
 | V116 | Knee push-up | knee_pushup under weighted_pushup |
@@ -461,6 +471,7 @@ Collisions: H061 DB front raise = db_front_raise; H067 DB kickback = kickback.
 | V133 | Single-arm cable fly | sa_cable_fly under cable_fly |
 | V135 | Incline dumbbell fly | incline_fly under fly |
 | V143 | Negative pull-up | neg_pullup under pullup |
+| V148 | Iso-lateral high row / pulldown | iso_high_row under pulldown |
 | V150 | Dumbbell pullover | db_pullover under pullover |
 | V151 | Machine pullover | machine_pullover under pullover |
 | V153 | Yates row | yates_row under bb_row |
@@ -472,6 +483,7 @@ Collisions: H061 DB front raise = db_front_raise; H067 DB kickback = kickback.
 | V168 | Super-ROM lateral raise | super_rom_raise under lat_raise |
 | V177 | Chest-supported rear-delt row | cs_rd_row under rear_fly |
 | V179 | EZ-bar front raise (underhand) | ez_front_raise under db_front_raise |
+| V181 | Prone Y-raise | prone_y_raise under m_rd_fly |
 | V188 | Drag curl | drag_curl under bb_curl |
 | V191 | Cross-body hammer curl | cross_hammer under hammer |
 | V193 | Selectorised biceps machine | machine_curl under curl |
