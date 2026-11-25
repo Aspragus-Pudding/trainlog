@@ -6,6 +6,11 @@ you'd notice using the app. The top entry is copied into `index.html`
 dashboard after an update. `tests/prescription-invariants.js` fails if that copy,
 this file's top entry and `APP_VERSION` disagree.
 
+## 1.120.1 — 2026-11-24
+- How to do it on the prone Y-raise reads the right way round: it's the same movement as the prone T raise, a rehab exercise.
+- The T raise's rehab dose and pain rule are its own.
+- Nothing else changes.
+
 ## 1.120.0 — 2026-11-24
 - Five new exercises from the research library: a one-arm iso-lateral chest press, an iso-lateral high row and a prone Y-raise, plus two shoulder rehab exercises, the serratus wall slide and the push-up plus.
 - How to do it on the prone Y-raise and the prone T raise says they're the same movement, one trained with load and one as rehab.
